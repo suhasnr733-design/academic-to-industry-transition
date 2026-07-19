@@ -106,3 +106,65 @@ def process_resume(resume_id):
         'resume_id': resume_id,
         'status': 'completed'
     }), 200
+# backend/app/api/v1/resume/routes.py (Update)
+
+@resume_bp.route('/batch-process', methods=['POST'])
+@jwt_required()
+def batch_process_resumes():
+    """Process multiple resumes in batch"""
+    current_user_id = get_jwt_identity()
+    
+    data = request.get_json()
+    if not data or 'resume_ids' not in data:
+        return jsonify({'error': 'resume_ids required'}), 400
+    
+    resume_ids = data['resume_ids']
+    
+    # Verify all resumes belong to user
+    resumes = Resume.query.filter(
+        Resume.id.in_(resume_ids),
+        Resume.user_id == current_user_id
+    ).all()
+    
+    if len(resumes) != len(resume_ids):
+        return jsonify({'error': 'Some resumes not found'}), 404
+    
+    from app.services.resume_processor import ResumeProcessor
+    processor = ResumeProcessor()
+    
+    result = processor.process_batch(resume_ids)
+    
+    return jsonify({
+        'message': f'Processing {result["processed"]} resumes',
+        'processed': result['processed']
+    }), 202
+
+@resume_bp.route('/<int:resume_id>/reprocess', methods=['POST'])
+@jwt_required()
+def reprocess_resume(resume_id):
+    """Reprocess an existing resume"""
+    current_user_id = get_jwt_identity()
+    
+    resume = Resume.query.filter_by(
+        id=resume_id,
+        user_id=current_user_id
+    ).first()
+    
+    if not resume:
+        return jsonify({'error': 'Resume not found'}), 404
+    
+    # Reset status
+    resume.status = 'pending'
+    resume.skills = []
+    resume.employability_score = None
+    resume.skill_gaps = []
+    db.session.commit()
+    
+    from app.services.resume_processor import ResumeProcessor
+    processor = ResumeProcessor()
+    processor.process_resume_async(resume_id)
+    
+    return jsonify({
+        'message': 'Resume reprocessing started',
+        'resume_id': resume_id
+    }), 202    
