@@ -6,6 +6,7 @@ import json
 import time
 import random
 import re
+import requests
 
 class JobScraper(BaseScraper):
     """Scrape job listings from various portals"""
@@ -229,21 +230,32 @@ class JobScraper(BaseScraper):
             self.logger.info(f"Scraping for keyword: {keyword}")
             
             # Scrape from each portal
-            naukri_jobs = self.scrape_naukri(keyword, location)
-            all_jobs.extend(naukri_jobs)
+            self.logger.warning("Skipping Naukri")
+            naukri_jobs = []
             
             linkedin_jobs = self.scrape_linkedin(keyword, location)
             all_jobs.extend(linkedin_jobs)
             
-            indeed_jobs = self.scrape_indeed(keyword, location)
-            all_jobs.extend(indeed_jobs)
+            self.logger.warning("Skipping Indeed (403 Forbidden)")
+            indeed_jobs = []
             
-            self.logger.info(f"Total jobs for {keyword}: {len(naukri_jobs) + len(linkedin_jobs) + len(indeed_jobs)}")
+            self.logger.info(
+                f"Total jobs for {keyword}: {len(naukri_jobs) + len(linkedin_jobs)}"
+            )
         
         return all_jobs
     
     def scrape(self, **kwargs) -> List[Dict[str, Any]]:
         """Main scrape method"""
-        keywords = kwargs.get('keywords', ['Software Engineer', 'Data Scientist'])
+        keywords = kwargs.get(
+            'keywords',
+            ['Software Engineer', 'Data Scientist']
+        )
         location = kwargs.get('location', 'Bangalore')
         return self.scrape_all(keywords, location)
+
+    def parse_item(self, item):
+        """
+        Required implementation of abstract method from BaseScraper.
+        """
+        return item

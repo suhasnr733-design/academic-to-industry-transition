@@ -119,22 +119,24 @@ class CourseScraper(BaseScraper):
     
     def scrape(self, **kwargs) -> List[Dict[str, Any]]:
         """Main scrape method"""
+
         all_courses = []
-        
-        # Get courses from all platforms
-        coursera_courses = self.scrape_coursera(
-            kwargs.get('search_term'),
-            kwargs.get('max_items', 100)
-        )
-        all_courses.extend(coursera_courses)
-        
-        udemy_courses = self.scrape_udemy(
-            kwargs.get('search_term'),
-            kwargs.get('max_items', 50)
-        )
-        all_courses.extend(udemy_courses)
-        
-        nptel_courses = self.scrape_nptel(kwargs.get('domain'))
+
+        # Skip Coursera
+        self.logger.warning("Skipping Coursera (API unavailable)")
+
+        # Skip Udemy
+        self.logger.warning("Skipping Udemy (API unavailable)")
+
+        # Only scrape NPTEL
+        nptel_courses = self.scrape_nptel(kwargs.get("domain"))
         all_courses.extend(nptel_courses)
-        
+
         return all_courses
+    
+    def parse_item(self, item):
+        
+        """
+        Required implementation of abstract method from BaseScraper.
+        """
+        return item
