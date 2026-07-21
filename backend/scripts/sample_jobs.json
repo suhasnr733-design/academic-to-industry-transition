@@ -1,0 +1,88 @@
+{
+  "jobs": [
+    {
+      "title": "Data Scientist",
+      "company": "Google",
+      "description": "Design and implement machine learning models for various Google products. Work on cutting-edge AI technologies.",
+      "required_skills": ["Python", "Machine Learning", "SQL", "Statistics", "Data Visualization", "Deep Learning"],
+      "experience_required": 3,
+      "location": "Bangalore",
+      "salary_range": "20-30 LPA",
+      "job_type": "Full-time",
+      "domain": "AI/ML",
+      "source": "Sample",
+      "source_url": "https://careers.google.com",
+      "posted_date": "2026-01-15"
+    },
+    {
+      "title": "Software Engineer",
+      "company": "Microsoft",
+      "description": "Develop and maintain enterprise software solutions. Work on cloud-native applications.",
+      "required_skills": ["Java", "Python", "SQL", "Data Structures", "Git", "Azure"],
+      "experience_required": 2,
+      "location": "Hyderabad",
+      "salary_range": "15-25 LPA",
+      "job_type": "Full-time",
+      "domain": "Software Development",
+      "source": "Sample",
+      "source_url": "https://careers.microsoft.com",
+      "posted_date": "2026-01-10"
+    },
+    {
+      "title": "DevOps Engineer",
+      "company": "Amazon",
+      "description": "Manage cloud infrastructure and CI/CD pipelines. Ensure high availability and scalability.",
+      "required_skills": ["AWS", "Docker", "Kubernetes", "Linux", "Jenkins", "Git"],
+      "experience_required": 3,
+      "location": "Bangalore",
+      "salary_range": "18-28 LPA",
+      "job_type": "Full-time",
+      "domain": "Cloud/DevOps",
+      "source": "Sample",
+      "source_url": "https://aws.amazon.com/careers",
+      "posted_date": "2026-01-12"
+    },
+    {
+      "title": "Frontend Developer",
+      "company": "Flipkart",
+      "description": "Build responsive web applications using modern frameworks. Focus on user experience.",
+      "required_skills": ["JavaScript", "React", "HTML", "CSS", "Git", "Redux"],
+      "experience_required": 1,
+      "location": "Chennai",
+      "salary_range": "12-18 LPA",
+      "job_type": "Full-time",
+      "domain": "Web Development",
+      "source": "Sample",
+      "source_url": "https://careers.flipkart.com",
+      "posted_date": "2026-01-08"
+    },
+    {
+      "title": "Backend Developer",
+      "company": "Paytm",
+      "description": "Design and implement REST APIs and microservices. Scale applications for millions of users.",
+      "required_skills": ["Python", "Django", "SQL", "APIs", "Git", "Redis"],
+      "experience_required": 2,
+      "location": "Delhi",
+      "salary_range": "14-22 LPA",
+      "job_type": "Full-time",
+      "domain": "Software Development",
+      "source": "Sample",
+      "source_url": "https://careers.paytm.com",
+      "posted_date": "2026-01-05"
+    },
+    {
+      "title": "ML Engineer",
+      "company": "Meta",
+      "description": "Build and deploy machine learning models at scale. Work on recommendation systems.",
+      "required_skills": ["Python", "Machine Learning", "Deep Learning", "PyTorch", "AWS", "SQL"],
+      "experience_required": 2,
+      "location": "Bangalore",
+      "salary_range": "22-35 LPA",
+      "job_type": "Full-time",
+      "domain": "AI/ML",
+      "source": "Sample",
+      "source_url": "https://www.metacareers.com",
+      "posted_date": "2026-01-03"
+    }
+  ]
+}
