@@ -1,0 +1,41 @@
+# backend/ml_service/docker-compose.yml
+
+version: '3.8'
+
+services:
+  ml-service:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data/models:/app/data/models
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - ml_network
+
+networks:
+  ml_network:
+    driver: bridge
+    # docker-compose.yml (Updated in root)
+
+version: '3.8'
+
+services:
+  # ... existing services ...
+
+  ml-service:
+    build:
+      context: ./backend/ml_service
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data/models:/app/data/models
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - app_network
+    restart: unless-stopped
+
+  # ... other services ....
