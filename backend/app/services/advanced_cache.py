@@ -5,23 +5,76 @@ import json
 import hashlib
 from functools import wraps
 from flask import request, current_app
-from app.extensions import redis_client
-import logging
+import time
+import pickle
+from typing import Any, Callable, Dict
 
 logger = logging.getLogger(__name__)
 
 class AdvancedCache:
-    """Advanced caching with multiple strategies"""
+    """Advanced caching with Redis"""
     
-    @staticmethod
-    def cache_response(ttl=300, key_prefix=None, vary_by_user=False):
-        """Cache API responses with variations"""
+    def __init__(self, redis_url='redis://localhost:6379/0'):
+        self.redis = redis.from_url(redis_url)
+        self.default_ttl = 3600  # 1 hour
+    
+    def get(self, key: str) -> Any:
+        """Get value from cache"""
+        try:
+            value = self.redis.get(key)
+            if value:
+                return pickle.loads(value)
+            return None
+        except Exception as e:
+            logger.error(f"Cache get error: {e}")
+            return None
+    
+    def set(self, key: str, value: Any, ttl: int = None) -> bool:
+        """Set value in cache"""
+        try:
+            ttl = ttl or self.default_ttl
+            self.redis.setex(key, ttl, pickle.dumps(value))
+            return True
+        except Exception as e:
+            logger.error(f"Cache set error: {e}")
+            return False
+    
+    def delete(self, key: str) -> bool:
+        """Delete key from cache"""
+        try:
+            self.redis.delete(key)
+            return True
+        except Exception as e:
+            logger.error(f"Cache delete error: {e}")
+            return False
+    
+    def clear_pattern(self, pattern: str) -> int:
+        """Clear keys matching pattern"""
+        try:
+            keys = self.redis.keys(f"*{pattern}*")
+            if keys:
+                return self.redis.delete(*keys)
+            return 0
+        except Exception as e:
+            logger.error(f"Cache clear pattern error: {e}")
+            return 0
+    
+    def get_or_set(self, key: str, func: Callable, ttl: int = None) -> Any:
+        """Get from cache or execute function"""
+        value = self.get(key)
+        if value is not None:
+            return value
+        
+        value = func()
+        self.set(key, value, ttl)
+        return value
+    
+    def cache_response(self, ttl: int = None, key_prefix: str = None,
+                      vary_by_user: bool = False, vary_by_params: bool = True):
+        """Decorator for caching API responses"""
         def decorator(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
-                if not redis_client:
-                    return func(*args, **kwargs)
-                
                 # Build cache key
                 key_parts = [key_prefix or func.__name__, request.path]
                 
@@ -31,77 +84,66 @@ class AdvancedCache:
                     if user_id:
                         key_parts.append(f"user_{user_id}")
                 
-                # Add query params to key
-                for key, value in sorted(request.args.items()):
-                    key_parts.append(f"{key}={value}")
+                if vary_by_params:
+                    for key, value in sorted(request.args.items()):
+                        key_parts.append(f"{key}={value}")
                 
                 cache_key = hashlib.md5(':'.join(key_parts).encode()).hexdigest()
                 
-                # Try to get from cache
-                cached = redis_client.get(cache_key)
-                if cached:
-                    return json.loads(cached)
+                # Try cache
+                cached = self.get(cache_key)
+                if cached is not None:
+                    return cached
                 
                 # Execute function
                 result = func(*args, **kwargs)
                 
                 # Cache result
                 if result and hasattr(result, 'status_code') and result.status_code < 400:
-                    redis_client.setex(cache_key, ttl, json.dumps(result.get_json()))
+                    if hasattr(result, 'get_json'):
+                        self.set(cache_key, result.get_json(), ttl)
+                    else:
+                        self.set(cache_key, result, ttl)
                 
                 return result
             return wrapper
         return decorator
     
-    @staticmethod
-    def invalidate_pattern(pattern):
-        """Invalidate all cache keys matching pattern"""
-        if not redis_client:
-            return
-        try:
-            keys = redis_client.keys(f"*{pattern}*")
-            if keys:
-                redis_client.delete(*keys)
-        except Exception as e:
-            logger.error(f"Cache invalidation error: {e}")
-    
-    @staticmethod
-    def cache_aggregate(ttl=600, key_prefix='aggregate'):
-        """Cache aggregate data with TTL"""
+    def cache_aggregate(self, ttl: int = 600, key_prefix: str = 'aggregate'):
+        """Cache aggregate data"""
         def decorator(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
-                if not redis_client:
-                    return func(*args, **kwargs)
-                
                 cache_key = f"{key_prefix}:{func.__name__}"
-                cached = redis_client.get(cache_key)
                 
-                if cached:
-                    return json.loads(cached)
+                # Try cache
+                cached = self.get(cache_key)
+                if cached is not None:
+                    return cached
                 
+                # Execute function
                 result = func(*args, **kwargs)
-                redis_client.setex(cache_key, ttl, json.dumps(result))
+                
+                # Cache result
+                self.set(cache_key, result, ttl)
                 return result
             return wrapper
         return decorator
     
-    @staticmethod
-    def cache_warmup(func, *args, **kwargs):
-        """Warm up cache with data"""
-        cache_key = f"warmup:{func.__name__}"
-        if not redis_client:
-            return
-        
+    def invalidate_user_cache(self, user_id: int):
+        """Invalidate all cache for a user"""
+        return self.clear_pattern(f"user_{user_id}")
+    
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """Get cache statistics"""
         try:
-            data = func(*args, **kwargs)
-            redis_client.setex(cache_key, 3600, json.dumps(data))
-            logger.info(f"Cache warmed up for {func.__name__}")
+            info = self.redis.info()
+            return {
+                'used_memory': info.get('used_memory_human', '0B'),
+                'total_keys': len(self.redis.keys('*')),
+                'hit_rate': info.get('keyspace_hits', 0) / max(1, info.get('keyspace_misses', 0) + info.get('keyspace_hits', 0)),
+                'connected_clients': info.get('connected_clients', 0)
+            }
         except Exception as e:
-            logger.error(f"Cache warmup error: {e}")
-
-# Usage example
-@AdvancedCache.cache_response(ttl=600, key_prefix='jobs', vary_by_user=True)
-def get_cached_jobs():
-    # Function implementation
-    pass
+            logger.error(f"Cache stats error: {e}")
+            return {'error': str(e)}
