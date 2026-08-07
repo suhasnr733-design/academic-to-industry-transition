@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 from app import db, bcrypt
+=======
+from app.extensions import db, bcrypt
+>>>>>>> main
 from datetime import datetime
 
 class User(db.Model):
