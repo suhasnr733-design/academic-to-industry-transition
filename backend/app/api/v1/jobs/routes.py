@@ -3,6 +3,8 @@ from app.extensions import db
 from app.models import Job
 from app.api.v1.jobs import jobs_bp
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
 from app.services.cache_service import cached_response
 
 @jobs_bp.route('', methods=['GET'])
@@ -31,6 +33,7 @@ def get_jobs():
         page=page, per_page=per_page
     )
 =======
+>>>>>>> main
 
 @jobs_bp.route('', methods=['GET'])
 def get_jobs():
@@ -43,7 +46,10 @@ def get_jobs():
         query = query.filter(Job.domain == domain)
     
     pagination = query.order_by(Job.posted_date.desc()).paginate(page=page, per_page=per_page)
+<<<<<<< HEAD
+=======
 >>>>>>> 2030d95c258619aabe6b95adc937342934a82c28
+>>>>>>> main
     
     return jsonify({
         'jobs': [j.to_dict() for j in pagination.items],
@@ -52,6 +58,8 @@ def get_jobs():
         'pages': pagination.pages
     }), 200
 
+<<<<<<< HEAD
+=======
 <<<<<<< HEAD
 @jobs_bp.route('/domains', methods=['GET'])
 @cached_response(ttl=86400, key_prefix='job_domains')
@@ -71,10 +79,14 @@ def get_job(job_id):
         return jsonify({'error': 'Job not found'}), 404
     return jsonify(job.to_dict()), 200
 =======
+>>>>>>> main
 @jobs_bp.route('/<int:job_id>', methods=['GET'])
 def get_job(job_id):
     job = Job.query.get(job_id)
     if not job:
         return jsonify({'error': 'Job not found'}), 404
     return jsonify(job.to_dict()), 200
+<<<<<<< HEAD
+=======
 >>>>>>> 2030d95c258619aabe6b95adc937342934a82c28
+>>>>>>> main

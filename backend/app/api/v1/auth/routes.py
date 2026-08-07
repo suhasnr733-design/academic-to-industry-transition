@@ -1,24 +1,34 @@
 <<<<<<< HEAD
+﻿from flask import request, jsonify, current_app
+=======
+<<<<<<< HEAD
 ﻿# backend/app/api/v1/auth/routes.py
 
 from flask import request, jsonify, current_app
 =======
 ﻿from flask import request, jsonify, current_app
 >>>>>>> 2030d95c258619aabe6b95adc937342934a82c28
+>>>>>>> main
 from flask_jwt_extended import (
     create_access_token, 
     create_refresh_token,
     jwt_required,
+<<<<<<< HEAD
+    get_jwt_identity
+=======
 <<<<<<< HEAD
     get_jwt_identity,
     get_jwt
 =======
     get_jwt_identity
 >>>>>>> 2030d95c258619aabe6b95adc937342934a82c28
+>>>>>>> main
 )
 from app.extensions import db, limiter
 from app.models import User
 from app.api.v1.auth import auth_bp
+<<<<<<< HEAD
+=======
 <<<<<<< HEAD
 from app.services.rate_limiter import auth_rate_limit, public_rate_limit
 from app.services.notification_service import NotificationService
@@ -701,6 +711,7 @@ def delete_account():
             'message': str(e)
         }), 500
 =======
+>>>>>>> main
 from datetime import datetime
 
 @auth_bp.route('/register', methods=['POST'])
@@ -805,4 +816,7 @@ def change_password():
     db.session.commit()
     
     return jsonify({'message': 'Password changed successfully'}), 200
+<<<<<<< HEAD
+=======
 >>>>>>> 2030d95c258619aabe6b95adc937342934a82c28
+>>>>>>> main

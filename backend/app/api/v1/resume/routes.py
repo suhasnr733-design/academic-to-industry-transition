@@ -1,8 +1,11 @@
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
 # backend/app/api/v1/resume/routes.py
 
 =======
 >>>>>>> 2030d95c258619aabe6b95adc937342934a82c28
+>>>>>>> main
 import os
 import uuid
 from flask import request, jsonify, current_app
@@ -11,6 +14,8 @@ from werkzeug.utils import secure_filename
 from app.extensions import db
 from app.models import User, Resume
 from app.api.v1.resume import resume_bp
+<<<<<<< HEAD
+=======
 <<<<<<< HEAD
 from app.services.resume_processor import ResumeProcessor
 from app.services.file_service import FileService
@@ -925,6 +930,7 @@ def download_resume(resume_id):
             'message': str(e)
         }), 500
 =======
+>>>>>>> main
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
@@ -1025,4 +1031,7 @@ def process_resume(resume_id):
         'resume_id': resume_id,
         'status': 'completed'
     }), 200
+<<<<<<< HEAD
+=======
 >>>>>>> 2030d95c258619aabe6b95adc937342934a82c28
+>>>>>>> main

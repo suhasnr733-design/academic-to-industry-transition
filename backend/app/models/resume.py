@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+from app import db
+=======
 from app.extensions import db
+>>>>>>> main
 from datetime import datetime
 
 class Resume(db.Model):
