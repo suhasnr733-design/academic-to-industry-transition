@@ -1,52 +1,48 @@
-# backend/app/services/prediction_service.py
+# backend/app/services/prediction_service.py (Updated)
 
-import joblib
-import numpy as np
-import pandas as pd
+import requests
+import json
 from flask import current_app
 import logging
 
 logger = logging.getLogger(__name__)
 
 class PredictionService:
-    """Employability prediction service"""
+    """Prediction service that calls ML microservice"""
     
     def __init__(self):
-        self.model = None
-        self.scaler = None
-        self.features = None
-        self.load_model()
-    
-    def load_model(self):
-        """Load trained model and artifacts"""
-        try:
-            self.model = joblib.load('data/models/ensemble_model.pkl')
-            self.scaler = joblib.load('data/models/scaler.pkl')
-            self.features = joblib.load('data/models/feature_columns.pkl')
-            logger.info("✅ Model loaded successfully")
-        except Exception as e:
-            logger.error(f"❌ Error loading model: {e}")
+        self.ml_service_url = 'http://ml-service:8000'
     
     def predict_employability(self, student_data):
-        """Predict employability for a student"""
+        """Call ML service for prediction"""
         try:
-            # Prepare features
-            features = {f: student_data.get(f, 0) for f in self.features}
-            X = np.array([features[f] for f in self.features]).reshape(1, -1)
-            X_scaled = self.scaler.transform(X)
+            response = requests.post(
+                f'{self.ml_service_url}/predict',
+                json=student_data,
+                timeout=5
+            )
             
-            # Predict
-            prediction = self.model.predict(X_scaled)[0]
-            probability = self.model.predict_proba(X_scaled)[0]
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logger.error(f"ML service error: {response.text}")
+                return {'error': 'ML service unavailable'}
+        except requests.exceptions.RequestException as e:
+            logger.error(f"ML service connection error: {e}")
+            return {'error': 'ML service unreachable'}
+    
+    def predict_batch(self, students_data):
+        """Batch prediction"""
+        try:
+            response = requests.post(
+                f'{self.ml_service_url}/predict/batch',
+                json=students_data,
+                timeout=30
+            )
             
-            return {
-                'employable': bool(prediction),
-                'confidence': round(max(probability) * 100, 2),
-                'probability': {
-                    'not_employable': round(probability[0] * 100, 2),
-                    'employable': round(probability[1] * 100, 2)
-                }
-            }
+            if response.status_code == 200:
+                return response.json()
+            else:
+                return {'error': 'ML service error'}
         except Exception as e:
-            logger.error(f"Prediction error: {e}")
             return {'error': str(e)}
