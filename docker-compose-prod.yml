@@ -1,0 +1,172 @@
+# docker-compose-backend-prod.yml
+
+version: '3.8'
+
+services:
+  # ============ Gateway Service ============
+  gateway:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.gateway
+    container_name: gateway
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:5001
+      - RESUME_SERVICE_URL=http://resume-service:5002
+      - JOB_SERVICE_URL=http://job-service:5003
+      - ML_SERVICE_URL=http://ml-service:8000
+      - NOTIFICATION_SERVICE_URL=http://notification-service:5004
+      - ADMIN_SERVICE_URL=http://admin-service:5005
+    volumes:
+      - ./nginx/gateway.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - auth-service
+      - resume-service
+      - job-service
+      - ml-service
+    networks:
+      - backend_network
+
+  # ============ Auth Service ============
+  auth-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.auth
+    container_name: auth-service
+    ports:
+      - "5001:5001"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/ai_db
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backend_network
+
+  # ============ Resume Service ============
+  resume-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.resume
+    container_name: resume-service
+    ports:
+      - "5002:5002"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/ai_db
+      - REDIS_URL=redis://redis:6379/0
+      - UPLOAD_FOLDER=/app/uploads
+    volumes:
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backend_network
+
+  # ============ Job Service ============
+  job-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.job
+    container_name: job-service
+    ports:
+      - "5003:5003"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/ai_db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backend_network
+
+  # ============ ML Service ============
+  ml-service:
+    build:
+      context: ./backend/ml_service
+      dockerfile: Dockerfile
+    container_name: ml-service
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_PATH=/app/data/models
+    volumes:
+      - ./data/models:/app/data/models
+    networks:
+      - backend_network
+
+  # ============ Notification Service ============
+  notification-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.notification
+    container_name: notification-service
+    ports:
+      - "5004:5004"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+    depends_on:
+      - redis
+    networks:
+      - backend_network
+
+  # ============ Admin Service ============
+  admin-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.admin
+    container_name: admin-service
+    ports:
+      - "5005:5005"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/ai_db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    networks:
+      - backend_network
+
+  # ============ Database ============
+  db:
+    image: postgres:15
+    container_name: backend_db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=ai_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend_network
+
+  # ============ Redis ============
+  redis:
+    image: redis:7-alpine
+    container_name: backend_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend_network
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  backend_network:
+    driver: bridge

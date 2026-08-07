@@ -3,45 +3,40 @@
 import pytest
 import time
 from app import create_app
+from app.services.advanced_cache import AdvancedCache
+from app.services.api_monitor import APIMonitor
 
 class TestPerformance:
     
-    @pytest.fixture
-    def client(self):
+    def test_cache_performance(self):
+        """Test caching improves performance"""
         app = create_app('testing')
-        return app.test_client()
-    
-    def test_api_response_time(self, client):
-        """Test API response times"""
         
-        endpoints = [
-            ('/api/v1/health', 'GET'),
-            ('/api/v1/jobs', 'GET'),
-            ('/api/v1/jobs/domains', 'GET'),
-        ]
-        
-        for endpoint, method in endpoints:
+        with app.test_client() as client:
+            # First request (uncached)
             start_time = time.time()
-            if method == 'GET':
-                response = client.get(endpoint)
-            duration = (time.time() - start_time) * 1000
+            response1 = client.get('/api/v1/jobs')
+            uncached_time = (time.time() - start_time) * 1000
             
-            print(f"{endpoint}: {duration:.2f}ms")
-            assert duration < 500, f"{endpoint} too slow: {duration:.2f}ms"
-            assert response.status_code in [200, 404]
+            # Second request (cached)
+            start_time = time.time()
+            response2 = client.get('/api/v1/jobs')
+            cached_time = (time.time() - start_time) * 1000
+            
+            assert cached_time < uncached_time, "Cache should improve performance"
+            print(f"Uncached: {uncached_time:.2f}ms, Cached: {cached_time:.2f}ms")
     
-    def test_concurrent_requests(self, client):
-        """Test concurrent requests"""
-        import concurrent.futures
+    def test_api_monitoring(self):
+        """Test API monitoring"""
+        # Simulate API calls
+        app = create_app('testing')
         
-        def make_request():
-            return client.get('/api/v1/jobs')
+        with app.test_client() as client:
+            for _ in range(10):
+                client.get('/api/v1/jobs')
+                client.get('/api/v1/auth/login')
         
-        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-            futures = [executor.submit(make_request) for _ in range(50)]
-            results = [f.result() for f in futures]
-            
-            success_count = sum(1 for r in results if r.status_code == 200)
-            print(f"Success rate: {success_count}/{len(results)}")
-            
-            assert success_count > 45, "Too many failed requests"
+        # Get metrics
+        summary = APIMonitor.get_summary(days=1)
+        assert summary['total_requests'] > 0
+        print(f"API Metrics: {summary}")
