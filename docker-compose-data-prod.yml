@@ -1,0 +1,111 @@
+# docker-compose-data-prod.yml
+
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - data_network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - data_network
+
+  postgres:
+    image: postgres:15
+    container_name: warehouse_db
+    environment:
+      POSTGRES_USER: warehouse
+      POSTGRES_PASSWORD: warehouse123
+      POSTGRES_DB: warehouse
+    ports:
+      - "5432:5432"
+    volumes:
+      - warehouse_data:/var/lib/postgresql/data
+      - ./scripts/data_warehouse.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - data_network
+
+  mlflow:
+    image: mlflow/mlflow:latest
+    container_name: mlflow
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_BACKEND_URI=postgresql://warehouse:warehouse123@postgres:5432/warehouse
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri postgresql://warehouse:warehouse123@postgres:5432/warehouse
+    depends_on:
+      - postgres
+    networks:
+      - data_network
+
+  spark-master:
+    image: bitnami/spark:3.4.0
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    networks:
+      - data_network
+
+  spark-worker:
+    image: bitnami/spark:3.4.0
+    container_name: spark-worker
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+    depends_on:
+      - spark-master
+    networks:
+      - data_network
+
+  data-pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile.data
+    container_name: data-pipeline
+    environment:
+      - DATABASE_URL=postgresql://warehouse:warehouse123@postgres:5432/warehouse
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - SPARK_MASTER_URL=spark://spark-master:7077
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      - postgres
+      - kafka
+      - mlflow
+      - spark-master
+    networks:
+      - data_network
+
+volumes:
+  kafka_data:
+  warehouse_data:
+
+networks:
+  data_network:
+    driver: bridge
