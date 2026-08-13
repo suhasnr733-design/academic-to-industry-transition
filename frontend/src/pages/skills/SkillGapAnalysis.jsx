@@ -166,3 +166,5 @@ export const SkillGapAnalysis = () => {
     </div>
   )
 }
+
+export default SkillGapAnalysis

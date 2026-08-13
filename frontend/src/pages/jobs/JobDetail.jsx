@@ -142,3 +142,5 @@ export const JobDetail = () => {
     </div>
   )
 }
+
+export default JobDetail

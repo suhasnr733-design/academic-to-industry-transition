@@ -139,3 +139,5 @@ export const ResumeUpload = () => {
     </div>
   )
 }
+
+export default ResumeUpload

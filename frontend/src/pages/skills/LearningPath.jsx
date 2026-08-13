@@ -91,3 +91,5 @@ export const LearningPath = () => {
     </div>
   )
 }
+
+export default LearningPath

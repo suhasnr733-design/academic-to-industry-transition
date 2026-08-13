@@ -13,22 +13,22 @@ import { ProtectedRoute, AdminRoute, FacultyRoute } from './components/common/Pr
 import { LoadingFallback } from './components/common/LoadingFallback'
 
 // Lazy loaded page components
-const Login = lazy(() => import('./pages/auth/Login'))
-const Register = lazy(() => import('./pages/auth/Register'))
-const Dashboard = lazy(() => import('./pages/student/Dashboard'))
-const FacultyDashboard = lazy(() => import('./pages/faculty/Dashboard'))
-const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'))
-const ResumeUpload = lazy(() => import('./pages/resume/ResumeUpload'))
-const ResumeList = lazy(() => import('./pages/resume/ResumeList'))
-const ResumeDetail = lazy(() => import('./pages/resume/ResumeDetail'))
-const JobList = lazy(() => import('./pages/jobs/JobList'))
-const JobDetail = lazy(() => import('./pages/jobs/JobDetail'))
-const SkillGapAnalysis = lazy(() => import('./pages/skills/SkillGapAnalysis'))
-const LearningPath = lazy(() => import('./pages/skills/LearningPath'))
-const Profile = lazy(() => import('./pages/settings/Profile'))
-const Settings = lazy(() => import('./pages/settings/Settings'))
-const Assessment = lazy(() => import('./pages/assessments/Assessment'))
-const Notifications = lazy(() => import('./pages/notifications/Notifications'))
+const Login = lazy(() => import('./pages/auth/Login').then(m => ({ default: m.default || m.Login })))
+const Register = lazy(() => import('./pages/auth/Register').then(m => ({ default: m.default || m.Register })))
+const Dashboard = lazy(() => import('./pages/student/Dashboard').then(m => ({ default: m.default || m.Dashboard })))
+const FacultyDashboard = lazy(() => import('./pages/faculty/Dashboard').then(m => ({ default: m.default || m.FacultyDashboard })))
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard').then(m => ({ default: m.default || m.AdminDashboard })))
+const ResumeUpload = lazy(() => import('./pages/resume/ResumeUpload').then(m => ({ default: m.default || m.ResumeUpload })))
+const ResumeList = lazy(() => import('./pages/resume/ResumeList').then(m => ({ default: m.default || m.ResumeList })))
+const ResumeDetail = lazy(() => import('./pages/resume/ResumeDetail').then(m => ({ default: m.default || m.ResumeDetail })))
+const JobList = lazy(() => import('./pages/jobs/JobList').then(m => ({ default: m.default || m.JobList })))
+const JobDetail = lazy(() => import('./pages/jobs/JobDetail').then(m => ({ default: m.default || m.JobDetail })))
+const SkillGapAnalysis = lazy(() => import('./pages/skills/SkillGapAnalysis').then(m => ({ default: m.default || m.SkillGapAnalysis })))
+const LearningPath = lazy(() => import('./pages/skills/LearningPath').then(m => ({ default: m.default || m.LearningPath })))
+const Profile = lazy(() => import('./pages/settings/Profile').then(m => ({ default: m.default || m.Profile })))
+const Settings = lazy(() => import('./pages/settings/Settings').then(m => ({ default: m.default || m.Settings })))
+const Assessment = lazy(() => import('./pages/assessments/Assessment').then(m => ({ default: m.default || m.Assessment })))
+const Notifications = lazy(() => import('./pages/notifications/Notifications').then(m => ({ default: m.default || m.Notifications })))
 
 function App() {
   return (
