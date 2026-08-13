@@ -5,24 +5,55 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useResume } from '../../hooks/useResume'
 import { Button } from '../../components/common/Button'
 import { Heading } from '../../components/common/Typography'
-import { ArrowLeftIcon, DocumentTextIcon } from '@heroicons/react/outline'
+import { ArrowLeftIcon } from '@heroicons/react/outline'
 
 export const ResumeDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { getResume, isLoading } = useResume()
+  const { getResume, deleteResume, isLoading } = useResume()
   const [resume, setResume] = React.useState(null)
+  const [fetchError, setFetchError] = React.useState(null)
 
   React.useEffect(() => {
-    const fetchResume = async () => {
-      const data = await getResume(id)
-      setResume(data)
+    const fetchResumeData = async () => {
+      if (!id) return
+      try {
+        setFetchError(null)
+        const data = await getResume(id)
+        setResume(data)
+      } catch (err) {
+        console.error('Failed to fetch resume:', err)
+        setFetchError(err.message || 'Failed to load resume details')
+      }
     }
-    fetchResume()
-  }, [id, getResume])
+    fetchResumeData()
+  }, [id])
 
-  if (isLoading || !resume) {
-    return <div className="flex justify-center py-12"><div className="spinner" /></div>
+  const handleDelete = async () => {
+    if (window.confirm('Are you sure you want to delete this resume?')) {
+      await deleteResume(id)
+      navigate('/resume')
+    }
+  }
+
+  if (isLoading && !resume) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
+      </div>
+    )
+  }
+
+  if (fetchError || !resume) {
+    return (
+      <div className="max-w-4xl mx-auto py-12 text-center">
+        <Heading level={3} className="text-gray-800">Resume Not Found</Heading>
+        <p className="text-gray-500 mt-2">{fetchError || 'Could not find the requested resume.'}</p>
+        <Button className="mt-6" onClick={() => navigate('/resume')}>
+          Back to Resumes
+        </Button>
+      </div>
+    )
   }
 
   return (
@@ -42,12 +73,16 @@ export const ResumeDetail = () => {
             <div>
               <Heading level={2}>{resume.filename}</Heading>
               <p className="text-gray-500 mt-1">
-                Uploaded on {new Date(resume.created_at).toLocaleDateString()}
+                Uploaded on {resume.created_at ? new Date(resume.created_at).toLocaleDateString() : 'N/A'}
               </p>
             </div>
             <div className="flex space-x-2">
-              <Button variant="outline" size="sm">Download</Button>
-              <Button variant="danger" size="sm">Delete</Button>
+              <Button variant="outline" size="sm" onClick={() => navigate(`/skills/${resume.id}`)}>
+                Skill Gap Analysis
+              </Button>
+              <Button variant="danger" size="sm" onClick={handleDelete}>
+                Delete
+              </Button>
             </div>
           </div>
         </div>

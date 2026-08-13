@@ -53,6 +53,20 @@ export const useResume = () => {
     }
   }
 
+  const getResume = async (id) => {
+    try {
+      setIsLoading(true)
+      const res = await api.get(`/resume/${id}`)
+      return res.data
+    } catch (err) {
+      console.log('Error fetching resume:', err)
+      setError(err.response?.data?.error || 'Failed to load resume details')
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const deleteResume = async (id) => {
     try {
       await api.delete(`/resume/${id}`)
@@ -68,6 +82,7 @@ export const useResume = () => {
     isLoading,
     error,
     fetchResumes,
+    getResume,
     uploadResume,
     deleteResume
   }
