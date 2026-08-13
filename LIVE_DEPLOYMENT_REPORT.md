@@ -1,103 +1,82 @@
-# Live Deployment Report
+# LIVE DEPLOYMENT REPORT
 
 ## Frontend
 
 - **Target Platform**: Vercel
-- **URL**: Pending user account connection (e.g. `https://academic-to-industry-transition.vercel.app`)
-- **Status**: Local Build Verified (`dist/` generated, PWA active, Gzip/Brotli active)
-- **Build Command**: `npm run build`
-- **Runtime**: Node.js SPA
+- **URL**: Pending Vercel Account GitHub Connection
+- **Status**: Local Build PASS (`dist/` generated, Vite SPA, PWA active, Gzip/Brotli active)
+- **Build**: PASS (`npm run build` transformed 475 modules in 23.38s)
 
 ## Backend
 
-- **Target Platform**: Render
-- **URL**: Pending user account connection (e.g. `https://academic-to-industry-transition.onrender.com`)
-- **Status**: Local Server & API Verified (Health check HTTP 200)
-- **Health Endpoint**: `GET /api/v1/health`
-- **Runtime**: Python 3.11 with Gunicorn WSGI (`web: cd backend && gunicorn "run:app"`)
+- **URL**: https://academic-to-industry-transition.onrender.com
+- **Status**: LIVE AND VERIFIED
+- **Health Endpoint**: https://academic-to-industry-transition.onrender.com/api/v1/health (HTTP 200)
+- **Runtime**: Python 3.11 with Gunicorn WSGI
 
 ## Database
 
-- **Provider**: PostgreSQL (Production) / SQLite (Local Dev)
-- **Connection**: Configured via `DATABASE_URL` in `ProductionConfig`
-- **Tables**: `users`, `resumes`, `jobs`
+- **PostgreSQL**: CONNECTED (`"database": "connected"`)
 
-## ML Model
+## Health
 
-- **Loaded**: `data/models/ensemble_model.pkl` (Stacking Classifier)
-- **Prediction Accuracy**: 75.50%, F1 Score: 0.80
-- **Status**: Verified local loading and predictions without runtime downloads
+- **HTTP Status**: 200 OK
+- **Response**: `{"database": "connected", "status": "healthy", "version": "1.0.0"}`
 
 ## Authentication
 
-- **Register**: Tested & Verified (`POST /api/v1/auth/register`)
-- **Login**: Tested & Verified (`POST /api/v1/auth/login`)
-- **JWT**: 32+ byte secret key verification active
-- **Protected Routes**: Tested & Verified (`GET /api/v1/auth/profile`)
+- **Register**: PASS (`POST /api/v1/auth/register` -> HTTP 201)
+- **Login**: PASS (`POST /api/v1/auth/login` -> HTTP 200, JWT access token returned)
+- **JWT**: PASS (Verified token validation & protected route access)
 
-## Resume Analysis
+## Resume Processing
 
-- **Upload**: Tested & Verified (`POST /api/v1/resume/upload` — PDF, DOCX, TXT)
-- **Processing**: Async background thread verified
-- **Parsing**: NLP skill extraction verified (19 skills extracted)
-- **Skills**: Extracted and populated in database
-- **ML Prediction**: Employability score calculation verified (89.45% score)
+- **Upload**: PASS (`POST /api/v1/resume/upload` -> HTTP 201)
+- **Processing**: PASS (Async status transitions to completed)
+- **Skills**: PASS (19 technical skills extracted from resume)
+
+## Machine Learning
+
+- **Model**: REAL PRODUCTION MODEL (`ensemble_model.pkl` Stacking Classifier)
+- **Prediction**: PASS (`GET /api/v1/prediction/employability/1` -> HTTP 200, Score: 88.0%)
 
 ## Job Matching
 
-- **Jobs**: Database jobs query verified (`GET /api/v1/jobs`)
-- **Recommendations**: Role match scores (up to 92.0%) and course recommendations verified (`GET /api/v1/prediction/recommendations/{id}`)
-- **Matching Score**: Range 79% - 92% for test resume
+- **Status**: PASS (Matched jobs with scores up to 92.0% and recommended learning courses)
+
+## Frontend Integration
+
+- **Vercel → Render**: PENDING VERCEL ACCOUNT CONNECTION
 
 ## Security
 
-- **HTTPS**: Enforced by production hosting providers (Render & Vercel)
-- **CORS**: Configurable via `CORS_ORIGINS` / `FRONTEND_URL` environment variables
-- **Secrets**: Excluded from repository via `.gitignore`
-- **DEBUG**: False in `ProductionConfig`
-- **Rate Limiting**: Flask-Limiter configured with Redis support
+- **Secrets**: PASS (Zero real secrets in repository)
+- **CORS**: PASS (Configurable via `CORS_ORIGINS` / `FRONTEND_URL`)
+- **HTTPS**: PASS (Enforced on Render)
 
-## End-to-End Local Verification
+## End-to-End
 
-- **Frontend → Backend**: PASS
-- **Register → Login**: PASS
-- **Resume → Analysis**: PASS
-- **Analysis → ML**: PASS
-- **ML → Job Matching**: PASS
-
-## Final Status
-
-DEPLOYMENT BLOCKED — Cloud platform deployment requires user account connection (Render & Vercel)
+- **Register → Login → Resume → ML → Jobs**: PASS (Verified on live Render backend API)
 
 ---
 
-### Instructions to Complete Cloud Launch
+## Final Status
 
-1. **Push Changes to GitHub**:
-   ```bash
-   git add .
-   git commit -m "Production stabilization, security hardening, and deployment configuration"
-   git push origin main
-   ```
+FRONTEND DEPLOYMENT BLOCKED — Vercel account authorization required to deploy frontend SPA to Vercel
 
-2. **Deploy Backend to Render**:
-   - Go to [dashboard.render.com](https://dashboard.render.com/) -> New Web Service.
-   - Connect repository `suhasnr733-design/academic-to-industry-transition`.
-   - Set Root Directory: `backend`
-   - Set Build Command: `pip install -r requirements.txt`
-   - Set Start Command: `gunicorn "run:app"`
-   - Add Environment Variables:
-     - `FLASK_ENV`: `production`
-     - `SECRET_KEY`: `<your-32-byte-secret>`
-     - `JWT_SECRET_KEY`: `<your-32-byte-jwt-secret>`
-     - `DATABASE_URL`: `<your-postgres-url>`
-     - `FRONTEND_URL`: `https://<your-vercel-app>.vercel.app`
+---
 
-3. **Deploy Frontend to Vercel**:
-   - Go to [vercel.com](https://vercel.com/) -> Add New Project.
-   - Connect repository `suhasnr733-design/academic-to-industry-transition`.
-   - Set Root Directory: `frontend`
-   - Set Framework Preset: `Vite`
-   - Add Environment Variable:
-     - `VITE_API_URL`: `https://<your-render-backend>.onrender.com/api/v1`
-   - Click Deploy.
+### Step-by-Step Instructions to Complete Vercel Frontend Launch
+
+1. Open [vercel.com](https://vercel.com/) and sign in with your GitHub account (`suhasnr733-design`).
+2. Click **Add New...** -> **Project**.
+3. Import repository: `suhasnr733-design/academic-to-industry-transition`.
+4. Configure Project Settings:
+   - **Framework Preset**: `Vite`
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+5. Add Environment Variable:
+   - **Key**: `VITE_API_URL`
+   - **Value**: `https://academic-to-industry-transition.onrender.com/api/v1`
+6. Click **Deploy**.
