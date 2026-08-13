@@ -46,6 +46,10 @@ describe('Complete User Flow', () => {
     // 6. View Dashboard
     cy.visit('/dashboard')
     cy.get('[data-testid="dashboard-stats"]').should('be.visible')
+
+    // 7. View Real-time Dashboard
+    cy.visit('/dashboard/realtime')
+    cy.contains('Real-time Dashboard').should('be.visible')
   })
 
   it('should handle mobile view', () => {
@@ -53,5 +57,19 @@ describe('Complete User Flow', () => {
     cy.visit('/login')
     cy.get('[data-testid="mobile-menu-button"]').click()
     cy.get('[data-testid="mobile-menu"]').should('be.visible')
+  })
+
+  it('should work offline', () => {
+    // Simulate offline
+    cy.visit('/dashboard')
+    cy.wait(1000)
+    
+    // Go offline
+    cy.window().then((win) => {
+      cy.stub(win.navigator, 'onLine').value(false)
+    })
+    
+    cy.reload()
+    cy.contains('dashboard').should('exist')
   })
 })

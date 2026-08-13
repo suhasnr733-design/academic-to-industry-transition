@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { visualizer } from 'rollup-plugin-visualizer'
 import compression from 'vite-plugin-compression'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   plugins: [
@@ -15,6 +16,45 @@ export default defineConfig({
     compression({
       algorithm: 'brotliCompress',
       ext: '.br'
+    }),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      manifest: {
+        name: 'Academic-to-Industry Transition',
+        short_name: 'AI Transition',
+        description: 'Intelligent Academic-to-Industry Transition Support System',
+        theme_color: '#3b82f6',
+        background_color: '#ffffff',
+        icons: [
+          {
+            src: 'icon-192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'icon-512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/api\./,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 3600
+              }
+            }
+          }
+        ]
+      }
     }),
     visualizer({
       filename: 'dist/stats.html',
@@ -31,7 +71,8 @@ export default defineConfig({
           'redux-vendor': ['@reduxjs/toolkit', 'react-redux', 'redux-persist'],
           'ui-vendor': ['@headlessui/react', '@heroicons/react', 'framer-motion'],
           'chart-vendor': ['chart.js', 'react-chartjs-2'],
-          'form-vendor': ['react-hook-form', '@hookform/resolvers', 'yup']
+          'form-vendor': ['react-hook-form', '@hookform/resolvers', 'yup'],
+          'api-vendor': ['axios', 'socket.io-client']
         }
       }
     },
