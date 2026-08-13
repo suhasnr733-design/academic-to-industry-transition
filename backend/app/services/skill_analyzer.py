@@ -28,28 +28,53 @@ class SkillAnalyzer:
     
     def analyze_gaps(self, current_skills, target_role=None, domain=None):
         """Analyze skill gaps for a target role"""
-        # Get target skills
         target_skills = self._get_target_skills(target_role, domain)
         
         if not target_skills:
             return {
-                'error': 'No target skills defined',
                 'current_skills': current_skills,
                 'target_skills': [],
                 'missing_skills': [],
-                'matching_skills': []
+                'matching_skills': [],
+                'match_percentage': 0
             }
         
-        current_set = set([s.lower() for s in current_skills])
-        target_set = set([s.lower() for s in target_skills])
+        skill_aliases = {
+            'amazon web services': 'aws',
+            'aws cloud': 'aws',
+            'react.js': 'react',
+            'reactjs': 'react',
+            'node.js': 'node.js',
+            'nodejs': 'node.js',
+            'rest api': 'apis',
+            'restful api': 'apis',
+            'ml': 'machine learning',
+            'dl': 'deep learning'
+        }
+
+        current_normalized = set()
+        for s in (current_skills or []):
+            s_low = str(s).strip().lower()
+            current_normalized.add(s_low)
+            if s_low in skill_aliases:
+                current_normalized.add(skill_aliases[s_low])
         
-        missing = list(target_set - current_set)
-        matching = list(current_set.intersection(target_set))
+        matching = []
+        missing = []
         
-        # Categorize gaps
+        for t_skill in target_skills:
+            t_low = str(t_skill).strip().lower()
+            alias = skill_aliases.get(t_low, t_low)
+            if t_low in current_normalized or alias in current_normalized:
+                matching.append(t_skill)
+            else:
+                missing.append(t_skill)
+        
         critical_gaps = self._categorize_gaps(missing, 'critical')
         important_gaps = self._categorize_gaps(missing, 'important')
         nice_to_have = self._categorize_gaps(missing, 'nice_to_have')
+        
+        match_percentage = round((len(matching) / len(target_skills)) * 100, 2) if target_skills else 0
         
         return {
             'current_skills': current_skills,
@@ -62,7 +87,7 @@ class SkillAnalyzer:
                 'nice_to_have': nice_to_have
             },
             'total_gaps': len(missing),
-            'match_percentage': round((len(matching) / len(target_set)) * 100, 2) if target_set else 0
+            'match_percentage': match_percentage
         }
     
     def _get_target_skills(self, target_role, domain):

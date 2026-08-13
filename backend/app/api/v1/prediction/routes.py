@@ -8,8 +8,11 @@ from app.api.v1.prediction import prediction_bp
 from app.services.prediction_service import PredictionService
 from app.services.recommendation_service import RecommendationService
 
+from app.services.skill_analyzer import SkillAnalyzer
+
 prediction_service = PredictionService()
 rec_service = RecommendationService()
+skill_analyzer = SkillAnalyzer()
 
 @prediction_bp.route('/employability/<int:resume_id>', methods=['GET'])
 @jwt_required()
@@ -102,6 +105,8 @@ def get_recommendations(resume_id):
         return jsonify({'error': str(e)}), 500
 
 @prediction_bp.route('/resume/<int:resume_id>/gap', methods=['GET'])
+@prediction_bp.route('/skill-gap/<int:resume_id>', methods=['GET'])
+@prediction_bp.route('/gap/<int:resume_id>', methods=['GET'])
 @jwt_required()
 def get_skill_gap(resume_id):
     """Get skill gap analysis for a target role"""
@@ -112,16 +117,23 @@ def get_skill_gap(resume_id):
             return jsonify({'error': 'Resume not found'}), 404
         
         target_role = request.args.get('target_role', 'Software Engineer')
-        current_skills = resume.skills or ['Python', 'SQL', 'Git']
-        target_skills = ['Python', 'Machine Learning', 'SQL', 'Docker', 'AWS']
-        missing_skills = [s for s in target_skills if s not in current_skills]
+        domain = request.args.get('domain')
+        
+        skills = resume.skills or []
+        gap_data = skill_analyzer.analyze_gaps(skills, target_role=target_role, domain=domain)
+        rec_data = skill_analyzer.get_recommendations(skills, gap_data.get('missing_skills', []))
         
         return jsonify({
+            'resume_id': resume_id,
             'target_role': target_role,
-            'current_skills': current_skills,
-            'target_skills': target_skills,
-            'missing_skills': missing_skills,
-            'match_percentage': round(((len(target_skills) - len(missing_skills)) / len(target_skills)) * 100, 2)
+            'current_skills': skills,
+            'target_skills': gap_data.get('target_skills', []),
+            'matching_skills': gap_data.get('matching_skills', []),
+            'missing_skills': gap_data.get('missing_skills', []),
+            'match_percentage': gap_data.get('match_percentage', 0),
+            'gap_categories': gap_data.get('gap_categories', {}),
+            'recommendations': rec_data.get('recommendations', []),
+            'learning_path': rec_data.get('learning_path', [])
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500

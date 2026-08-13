@@ -11,26 +11,17 @@ export const useSkills = () => {
     try {
       setIsLoading(true)
       const targetId = resumeId || 1
-      const res = await api.get(`/prediction/recommendations/${targetId}`)
-      const data = res.data
-      
-      return {
-        missing_skills: data.missing_skills || ['Docker', 'AWS Cloud', 'REST API Architecture'],
-        existing_skills: data.existing_skills || ['Python', 'SQL', 'Data Structures', 'Git'],
-        recommendations: data.course_recommendations || [
-          { name: 'Docker & Kubernetes Fundamentals', platform: 'Coursera', match: '95%' },
-          { name: 'AWS Certified Solutions Architect', platform: 'Udemy', match: '90%' }
-        ]
-      }
+      const res = await api.get(`/prediction/skill-gap/${targetId}`)
+      return res.data
     } catch (err) {
       console.log('Error fetching gap analysis:', err)
       setError(err.response?.data?.error || 'Failed to fetch skill gap analysis')
       return {
-        missing_skills: ['Docker', 'AWS Cloud', 'System Design'],
-        existing_skills: ['Python', 'SQL', 'Git'],
-        recommendations: [
-          { name: 'Docker & Kubernetes Mastery', platform: 'Coursera', match: '95%' }
-        ]
+        match_percentage: 0,
+        matching_skills: [],
+        missing_skills: [],
+        recommendations: [],
+        learning_path: []
       }
     } finally {
       setIsLoading(false)
