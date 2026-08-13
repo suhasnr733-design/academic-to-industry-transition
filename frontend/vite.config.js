@@ -58,7 +58,7 @@ export default defineConfig({
     }),
     visualizer({
       filename: 'dist/stats.html',
-      open: true,
+      open: false,
       gzipSize: true,
       brotliSize: true
     })
@@ -69,7 +69,7 @@ export default defineConfig({
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'redux-vendor': ['@reduxjs/toolkit', 'react-redux', 'redux-persist'],
-          'ui-vendor': ['@headlessui/react', '@heroicons/react', 'framer-motion'],
+          'ui-vendor': ['@headlessui/react', 'framer-motion'],
           'chart-vendor': ['chart.js', 'react-chartjs-2'],
           'form-vendor': ['react-hook-form', '@hookform/resolvers', 'yup'],
           'api-vendor': ['axios', 'socket.io-client']

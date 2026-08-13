@@ -7,8 +7,8 @@ import { Button } from '../../components/common/Button'
 import { Heading } from '../../components/common/Typography'
 import { 
   ArrowLeftIcon, 
-  MapPinIcon, 
-  CurrencyRupeeIcon,
+  LocationMarkerIcon as MapPinIcon, 
+  CurrencyDollarIcon as CurrencyRupeeIcon,
   BriefcaseIcon,
   CalendarIcon,
   ShareIcon,

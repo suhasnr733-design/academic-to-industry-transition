@@ -1,5 +1,6 @@
 # data_pipeline/scrapers/job_scraper.py
 
+import requests
 from data_pipeline.scrapers.base_scraper import BaseScraper
 from typing import Dict, List, Any
 import json

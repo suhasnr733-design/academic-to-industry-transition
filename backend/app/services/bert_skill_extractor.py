@@ -1,7 +1,10 @@
-# backend/app/services/bert_skill_extractor.py
-
-import torch
-from transformers import AutoTokenizer, AutoModel
+try:
+    import torch
+    from transformers import AutoTokenizer, AutoModel
+except ImportError:
+    torch = None
+    AutoTokenizer = None
+    AutoModel = None
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import logging

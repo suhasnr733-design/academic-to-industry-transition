@@ -1,7 +1,11 @@
-# backend/app/services/transformers_parser.py
-
-import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+try:
+    import torch
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+except ImportError:
+    torch = None
+    AutoTokenizer = None
+    AutoModelForSequenceClassification = None
+    pipeline = None
 import numpy as np
 import re
 
@@ -9,20 +13,26 @@ class TransformersParser:
     """Advanced resume parsing using Transformers"""
     
     def __init__(self):
-        # Load models
-        self.skill_extractor = pipeline(
-            "token-classification",
-            model="dslim/bert-base-NER",
-            aggregation_strategy="simple"
-        )
+        # Load models safely
+        try:
+            if pipeline is not None:
+                self.skill_extractor = pipeline(
+                    "token-classification",
+                    model="dslim/bert-base-NER",
+                    aggregation_strategy="simple"
+                )
+                self.classifier = pipeline(
+                    "text-classification",
+                    model="distilbert-base-uncased-finetuned-sst-2-english"
+                )
+            else:
+                self.skill_extractor = None
+                self.classifier = None
+        except Exception:
+            self.skill_extractor = None
+            self.classifier = None
         
-        self.classifier = pipeline(
-            "text-classification",
-            model="distilbert-base-uncased-finetuned-sst-2-english"
-        )
-        
-        # Load domain-specific model
-        self.domain_model = self._load_domain_model()
+        self.domain_model = None
     
     def _load_domain_model(self):
         """Load domain classification model"""
@@ -30,14 +40,16 @@ class TransformersParser:
         pass
     
     def extract_skills(self, text):
-        """Extract skills using NER"""
-        # Use NER to extract entities
-        entities = self.skill_extractor(text)
-        
+        """Extract skills using NER and keyword fallback"""
         skills = []
-        for entity in entities:
-            if entity['entity_group'] in ['ORG', 'PRODUCT']:
-                skills.append(entity['word'])
+        if self.skill_extractor is not None:
+            try:
+                entities = self.skill_extractor(text)
+                for entity in entities:
+                    if entity.get('entity_group') in ['ORG', 'PRODUCT']:
+                        skills.append(entity.get('word'))
+            except Exception:
+                pass
         
         # Add skill keywords
         skill_keywords = ['Python', 'Java', 'SQL', 'Machine Learning', 'Deep Learning',
@@ -55,10 +67,8 @@ class TransformersParser:
         domains = ['AI/ML', 'Software Development', 'Data Science', 
                   'Cloud/DevOps', 'Web Development']
         
-        # Use domain-specific classification
         scores = {}
         for domain in domains:
-            # Simple keyword matching (can be replaced with trained model)
             keywords = {
                 'AI/ML': ['machine learning', 'deep learning', 'neural', 'ai', 'tensorflow'],
                 'Software Development': ['software', 'developer', 'programming', 'code'],
@@ -77,5 +87,5 @@ class TransformersParser:
         return {
             'skills': self.extract_skills(text),
             'domain': self.classify_domain(text),
-            'entities': self.skill_extractor(text)
+            'entities': self.skill_extractor(text) if self.skill_extractor is not None else []
         }

@@ -43,20 +43,15 @@ class ProductionHardening:
     @staticmethod
     def setup_health_checks(app):
         """Setup health check endpoints"""
+        if 'health_check' not in app.view_functions:
+            @app.route('/health')
+            def health_check():
+                return {'status': 'healthy', 'timestamp': datetime.now().isoformat()}
         
-        @app.route('/health')
-        def health_check():
-            return {'status': 'healthy', 'timestamp': datetime.now().isoformat()}
-        
-        @app.route('/ready')
-        def readiness_check():
-            # Check dependencies
-            status = {
-                'database': 'ok',
-                'redis': 'ok',
-                'models': 'ok'
-            }
-            return status
+        if 'readiness_check' not in app.view_functions:
+            @app.route('/ready')
+            def readiness_check():
+                return {'database': 'ok', 'redis': 'ok', 'models': 'ok'}
     
     @staticmethod
     def setup_graceful_shutdown():

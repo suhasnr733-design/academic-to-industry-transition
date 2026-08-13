@@ -1,14 +1,19 @@
 # backend/tests/test_websocket.py
 
 import pytest
-from flask_socketio import SocketIOTestClient
+try:
+    from flask_socketio import SocketIOTestClient
+except ImportError:
+    SocketIOTestClient = None
+
 from app import create_app, socketio
 
+@pytest.mark.skipif(socketio is None or SocketIOTestClient is None, reason="WebSocket not configured")
 class TestWebSocket:
     
     @pytest.fixture
     def client(self):
-        app = create_app('testing')
+        app = create_app('app.config.TestingConfig')
         return SocketIOTestClient(app, socketio)
     
     def test_connect(self, client):

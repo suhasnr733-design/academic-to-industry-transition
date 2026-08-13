@@ -15,7 +15,7 @@ class TestProductionReadiness:
     
     def test_health_endpoint(self):
         """Test health check endpoint"""
-        app = create_app('production')
+        app = create_app('app.config.TestingConfig')
         ProductionHardening.setup_health_checks(app)
         
         with app.test_client() as client:

@@ -31,15 +31,15 @@ class SkillKnowledgeGraph:
         for skill, attrs in skills.items():
             self.graph.add_node(skill, **attrs)
         
-        # Add relationships (prerequisites)
+        # Add relationships (prerequisites: prereq -> skill)
         prerequisites = [
-            ('Python', 'Data Structures'),
-            ('Java', 'Data Structures'),
-            ('Machine Learning', 'Python'),
-            ('Deep Learning', 'Machine Learning'),
-            ('React', 'JavaScript'),
-            ('Docker', 'Linux'),
-            ('AWS', 'Linux'),
+            ('Data Structures', 'Python'),
+            ('Data Structures', 'Java'),
+            ('Python', 'Machine Learning'),
+            ('Machine Learning', 'Deep Learning'),
+            ('JavaScript', 'React'),
+            ('Linux', 'Docker'),
+            ('Linux', 'AWS'),
         ]
         
         for prereq, skill in prerequisites:

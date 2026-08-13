@@ -3,4 +3,11 @@ venv-data/
 __pycache__/
 *.pyc
 .env
+backend/.env
 .env.data
+logs/
+uploads/
+scratch/
+instance/
+frontend/node_modules/
+frontend/dist/

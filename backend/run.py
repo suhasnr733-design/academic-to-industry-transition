@@ -1,5 +1,6 @@
-<<<<<<< HEAD
-﻿import sys
+# backend/run.py
+
+import sys
 import os
 
 # Add the backend directory to Python path
@@ -11,11 +12,3 @@ app = create_app('app.config.DevelopmentConfig')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-=======
-﻿from app import create_app
-
-app = create_app()
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
->>>>>>> main

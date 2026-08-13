@@ -8,8 +8,8 @@ import { Heading } from '../../components/common/Typography'
 import { Input } from '../../components/common/Input'
 import { 
   BriefcaseIcon, 
-  MapPinIcon, 
-  CurrencyRupeeIcon,
+  LocationMarkerIcon as MapPinIcon, 
+  CurrencyDollarIcon as CurrencyRupeeIcon,
   SearchIcon,
   FilterIcon
 } from '@heroicons/react/outline'

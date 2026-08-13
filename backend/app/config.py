@@ -26,7 +26,7 @@ class Config:
     # Upload
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'uploads')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
-    ALLOWED_EXTENSIONS = {'pdf', 'docx'}
+    ALLOWED_EXTENSIONS = {'pdf', 'docx', 'doc', 'txt'}
     
     # ML
     MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data/models')
@@ -47,4 +47,4 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or ('sqlite:///' + os.path.join(tempfile.gettempdir(), 'prod.db'))

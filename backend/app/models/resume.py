@@ -1,8 +1,6 @@
-<<<<<<< HEAD
+# backend/app/models/resume.py
+
 from app import db
-=======
-from app.extensions import db
->>>>>>> main
 from datetime import datetime
 
 class Resume(db.Model):
@@ -20,6 +18,7 @@ class Resume(db.Model):
     education = db.Column(db.JSON, default=list)
     experience = db.Column(db.JSON, default=dict)
     projects = db.Column(db.JSON, default=list)
+    certifications = db.Column(db.JSON, default=list)
     
     employability_score = db.Column(db.Float)
     recommended_roles = db.Column(db.JSON, default=list)
@@ -42,6 +41,7 @@ class Resume(db.Model):
             'education': self.education or [],
             'experience': self.experience or {},
             'projects': self.projects or [],
+            'certifications': self.certifications or [],
             'employability_score': self.employability_score,
             'recommended_roles': self.recommended_roles or [],
             'skill_gaps': self.skill_gaps or [],

@@ -1,8 +1,6 @@
-<<<<<<< HEAD
+# backend/app/models/job.py
+
 from app import db
-=======
-from app.extensions import db
->>>>>>> main
 from datetime import datetime
 
 class Job(db.Model):
