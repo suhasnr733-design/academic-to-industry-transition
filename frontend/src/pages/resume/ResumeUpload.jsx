@@ -73,7 +73,10 @@ export const ResumeUpload = () => {
     }
 
     try {
-      const result = await uploadResume(file)
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      const result = await uploadResume(formData)
       toast.success('Resume uploaded successfully!')
       const resumeId = result?.id || result?.resume_id || result?.resume?.id
       if (resumeId) {

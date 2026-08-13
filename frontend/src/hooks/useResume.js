@@ -37,7 +37,11 @@ export const useResume = () => {
         formData.append('file', fileOrFormData)
       }
       
-      const res = await api.post('/resume/upload', formData)
+      const res = await api.post('/resume/upload', formData, {
+        headers: {
+          'Content-Type': undefined
+        }
+      })
       toast.success('Resume uploaded successfully')
       fetchResumes()
       return res.data

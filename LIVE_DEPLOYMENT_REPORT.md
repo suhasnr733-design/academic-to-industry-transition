@@ -32,7 +32,7 @@ Register:
 PASS (`POST /api/v1/auth/register` -> HTTP 201)
 
 Login:
-PASS (`POST /api/v1/auth/login` -> HTTP 200, JWT token returned)
+PASS (`POST /api/v1/auth/login` -> HTTP 200, Username & Email identifiers supported)
 
 JWT:
 PASS (Token validation & profile access verified)
@@ -43,10 +43,10 @@ Upload:
 PASS (`POST /api/v1/resume/upload` -> HTTP 201)
 
 Processing:
-PASS (Async background worker verified)
+PASS (Async background worker status verified)
 
 Skills:
-PASS (19 technical skills parsed)
+PASS (Technical skill extraction verified)
 
 ## Machine Learning
 
@@ -69,7 +69,7 @@ PASS (`VITE_API_URL=https://academic-to-industry-transition.onrender.com/api/v1`
 ## Security
 
 Secrets:
-PASS (No hardcoded secrets in repository)
+PASS (Zero hardcoded secrets in repository)
 
 CORS:
 PASS (Configured origin whitelisting)
@@ -79,7 +79,7 @@ PASS (Enforced on Render & Vercel)
 
 ## End-to-End
 
-Register → Login → Resume → ML → Jobs:
+Register → Login → Resume Upload → ML → Jobs:
 PASS
 
 ---
