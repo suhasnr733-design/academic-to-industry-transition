@@ -20,6 +20,9 @@ class User(db.Model):
     bio = db.Column(db.Text, nullable=True)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     is_email_verified = db.Column(db.Boolean, default=False, nullable=False)
+    oauth_provider = db.Column(db.String(30), nullable=True)
+    oauth_provider_id = db.Column(db.String(100), nullable=True, index=True)
+    profile_picture = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     last_login = db.Column(db.DateTime, nullable=True)
 
@@ -46,6 +49,8 @@ class User(db.Model):
             'bio': self.bio,
             'is_active': self.is_active,
             'is_email_verified': self.is_email_verified,
+            'oauth_provider': self.oauth_provider,
+            'profile_picture': self.profile_picture,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'last_login': self.last_login.isoformat() if self.last_login else None
         }

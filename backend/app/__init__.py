@@ -97,6 +97,23 @@ def create_app(config_class='app.config.DevelopmentConfig'):
     with app.app_context():
         from app.models import User, Job, Resume
         db.create_all()
+
+        # Schema migration check for OAuth columns
+        try:
+            with db.engine.connect() as conn:
+                from sqlalchemy import inspect
+                inspector = inspect(db.engine)
+                if 'users' in inspector.get_table_names():
+                    columns = [c['name'] for c in inspector.get_columns('users')]
+                    if 'oauth_provider' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN oauth_provider VARCHAR(30)"))
+                    if 'oauth_provider_id' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN oauth_provider_id VARCHAR(100)"))
+                    if 'profile_picture' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255)"))
+                    conn.commit()
+        except Exception as e:
+            logger.warning(f"OAuth columns auto-migration notice: {e}")
         
         # Seed admin user safely
         if not User.query.filter_by(username='admin').first():

@@ -15,6 +15,7 @@ import { LoadingFallback } from './components/common/LoadingFallback'
 // Lazy loaded page components
 const Login = lazy(() => import('./pages/auth/Login').then(m => ({ default: m.default || m.Login })))
 const Register = lazy(() => import('./pages/auth/Register').then(m => ({ default: m.default || m.Register })))
+const AuthCallback = lazy(() => import('./pages/auth/AuthCallback').then(m => ({ default: m.default || m.AuthCallback })))
 const Dashboard = lazy(() => import('./pages/student/Dashboard').then(m => ({ default: m.default || m.Dashboard })))
 const FacultyDashboard = lazy(() => import('./pages/faculty/Dashboard').then(m => ({ default: m.default || m.FacultyDashboard })))
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard').then(m => ({ default: m.default || m.AdminDashboard })))
@@ -42,6 +43,7 @@ function App() {
                   <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
                     
                     <Route element={<ProtectedRoute />}>
                       <Route path="/" element={<Navigate to="/dashboard" />} />

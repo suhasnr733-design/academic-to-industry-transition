@@ -359,3 +359,246 @@ def delete_account():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+# ============================================
+# OAUTH HELPER
+# ============================================
+import os
+import secrets
+import urllib.parse
+import requests
+from flask import current_app, redirect
+
+def find_or_create_oauth_user(provider, provider_id, email, full_name, picture=None):
+    """Find existing user by OAuth ID or email, or create a new student account."""
+    if not email:
+        raise ValueError("OAuth provider did not return a valid email address.")
+
+    # 1. Check existing user by provider & provider_id
+    user = User.query.filter_by(oauth_provider=provider, oauth_provider_id=str(provider_id)).first()
+    if user:
+        user.last_login = datetime.utcnow()
+        if picture and not user.profile_picture:
+            user.profile_picture = picture
+        db.session.commit()
+        return user
+
+    # 2. Check existing user by email -> safely link account
+    user = User.query.filter_by(email=email).first()
+    if user:
+        user.oauth_provider = provider
+        user.oauth_provider_id = str(provider_id)
+        user.is_email_verified = True
+        user.last_login = datetime.utcnow()
+        if picture and not user.profile_picture:
+            user.profile_picture = picture
+        db.session.commit()
+        return user
+
+    # 3. Create new OAuth user
+    base_username = email.split('@')[0]
+    base_username = re.sub(r'[^a-zA-Z0-9_]', '', base_username) or 'user'
+    username = base_username
+    counter = 1
+    while User.query.filter_by(username=username).first():
+        username = f"{base_username}_{counter}"
+        counter += 1
+
+    random_password = os.urandom(24).hex()
+    user = User(
+        username=username,
+        email=email,
+        full_name=full_name or username,
+        role='student',
+        is_active=True,
+        is_email_verified=True,
+        oauth_provider=provider,
+        oauth_provider_id=str(provider_id),
+        profile_picture=picture,
+        last_login=datetime.utcnow()
+    )
+    user.set_password(random_password)
+    db.session.add(user)
+    db.session.commit()
+    return user
+
+# ============================================
+# GOOGLE OAUTH ENDPOINTS
+# ============================================
+@auth_bp.route('/google', methods=['GET'])
+def google_auth():
+    """Initiate Google OAuth authentication flow"""
+    client_id = current_app.config.get('GOOGLE_CLIENT_ID')
+    redirect_uri = current_app.config.get('GOOGLE_REDIRECT_URI')
+    frontend_url = current_app.config.get('FRONTEND_URL')
+
+    if not client_id or not current_app.config.get('GOOGLE_CLIENT_SECRET'):
+        logger.warning("Google OAuth credentials missing in configuration.")
+        return redirect(f"{frontend_url}/auth/callback?error=google_oauth_not_configured")
+
+    state = secrets.token_urlsafe(16)
+    params = {
+        'client_id': client_id,
+        'redirect_uri': redirect_uri,
+        'response_type': 'code',
+        'scope': 'openid email profile',
+        'state': state,
+        'access_type': 'online'
+    }
+    auth_url = f"https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(params)}"
+    return redirect(auth_url)
+
+@auth_bp.route('/google/callback', methods=['GET'])
+def google_callback():
+    """Google OAuth callback handler"""
+    frontend_url = current_app.config.get('FRONTEND_URL')
+    error = request.args.get('error')
+    code = request.args.get('code')
+
+    if error or not code:
+        logger.error(f"Google OAuth error: {error}")
+        return redirect(f"{frontend_url}/auth/callback?error={error or 'google_code_missing'}")
+
+    client_id = current_app.config.get('GOOGLE_CLIENT_ID')
+    client_secret = current_app.config.get('GOOGLE_CLIENT_SECRET')
+    redirect_uri = current_app.config.get('GOOGLE_REDIRECT_URI')
+
+    if not client_id or not client_secret:
+        return redirect(f"{frontend_url}/auth/callback?error=google_oauth_not_configured")
+
+    try:
+        # Exchange code for tokens
+        token_resp = requests.post('https://oauth2.googleapis.com/token', data={
+            'code': code,
+            'client_id': client_id,
+            'client_secret': client_secret,
+            'redirect_uri': redirect_uri,
+            'grant_type': 'authorization_code'
+        }, timeout=10)
+        
+        if token_resp.status_code != 200:
+            logger.error(f"Google token exchange failed: {token_resp.text}")
+            return redirect(f"{frontend_url}/auth/callback?error=google_token_failed")
+
+        token_data = token_resp.json()
+        access_token_val = token_data.get('access_token')
+
+        # Fetch Google user profile
+        userinfo_resp = requests.get('https://www.googleapis.com/oauth2/v3/userinfo', headers={
+            'Authorization': f'Bearer {access_token_val}'
+        }, timeout=10)
+
+        if userinfo_resp.status_code != 200:
+            logger.error(f"Google userinfo failed: {userinfo_resp.text}")
+            return redirect(f"{frontend_url}/auth/callback?error=google_userinfo_failed")
+
+        user_info = userinfo_resp.json()
+        email = user_info.get('email')
+        sub = user_info.get('sub')
+        name = user_info.get('name')
+        picture = user_info.get('picture')
+
+        user = find_or_create_oauth_user('google', sub, email, name, picture)
+
+        access_token = create_access_token(identity=str(user.id))
+        refresh_token = create_refresh_token(identity=str(user.id))
+
+        params = urllib.parse.urlencode({
+            'token': access_token,
+            'refresh_token': refresh_token
+        })
+        return redirect(f"{frontend_url}/auth/callback?{params}")
+
+    except Exception as e:
+        logger.error(f"Google callback exception: {e}")
+        return redirect(f"{frontend_url}/auth/callback?error=google_callback_exception")
+
+# ============================================
+# LINKEDIN OAUTH ENDPOINTS
+# ============================================
+@auth_bp.route('/linkedin', methods=['GET'])
+def linkedin_auth():
+    """Initiate LinkedIn OAuth OpenID Connect flow"""
+    client_id = current_app.config.get('LINKEDIN_CLIENT_ID')
+    redirect_uri = current_app.config.get('LINKEDIN_REDIRECT_URI')
+    frontend_url = current_app.config.get('FRONTEND_URL')
+
+    if not client_id or not current_app.config.get('LINKEDIN_CLIENT_SECRET'):
+        logger.warning("LinkedIn OAuth credentials missing in configuration.")
+        return redirect(f"{frontend_url}/auth/callback?error=linkedin_oauth_not_configured")
+
+    state = secrets.token_urlsafe(16)
+    params = {
+        'client_id': client_id,
+        'redirect_uri': redirect_uri,
+        'response_type': 'code',
+        'scope': 'openid profile email',
+        'state': state
+    }
+    auth_url = f"https://www.linkedin.com/oauth/v2/authorization?{urllib.parse.urlencode(params)}"
+    return redirect(auth_url)
+
+@auth_bp.route('/linkedin/callback', methods=['GET'])
+def linkedin_callback():
+    """LinkedIn OAuth callback handler"""
+    frontend_url = current_app.config.get('FRONTEND_URL')
+    error = request.args.get('error')
+    code = request.args.get('code')
+
+    if error or not code:
+        logger.error(f"LinkedIn OAuth error: {error}")
+        return redirect(f"{frontend_url}/auth/callback?error={error or 'linkedin_code_missing'}")
+
+    client_id = current_app.config.get('LINKEDIN_CLIENT_ID')
+    client_secret = current_app.config.get('LINKEDIN_CLIENT_SECRET')
+    redirect_uri = current_app.config.get('LINKEDIN_REDIRECT_URI')
+
+    if not client_id or not client_secret:
+        return redirect(f"{frontend_url}/auth/callback?error=linkedin_oauth_not_configured")
+
+    try:
+        # Exchange code for tokens
+        token_resp = requests.post('https://www.linkedin.com/oauth/v2/accessToken', data={
+            'grant_type': 'authorization_code',
+            'code': code,
+            'redirect_uri': redirect_uri,
+            'client_id': client_id,
+            'client_secret': client_secret
+        }, headers={'Content-Type': 'application/x-www-form-urlencoded'}, timeout=10)
+
+        if token_resp.status_code != 200:
+            logger.error(f"LinkedIn token exchange failed: {token_resp.text}")
+            return redirect(f"{frontend_url}/auth/callback?error=linkedin_token_failed")
+
+        token_data = token_resp.json()
+        access_token_val = token_data.get('access_token')
+
+        # Fetch LinkedIn Userinfo (OpenID Connect standard)
+        userinfo_resp = requests.get('https://api.linkedin.com/v2/userinfo', headers={
+            'Authorization': f'Bearer {access_token_val}'
+        }, timeout=10)
+
+        if userinfo_resp.status_code != 200:
+            logger.error(f"LinkedIn userinfo failed: {userinfo_resp.text}")
+            return redirect(f"{frontend_url}/auth/callback?error=linkedin_userinfo_failed")
+
+        user_info = userinfo_resp.json()
+        email = user_info.get('email')
+        sub = user_info.get('sub')
+        name = user_info.get('name') or f"{user_info.get('given_name', '')} {user_info.get('family_name', '')}".strip()
+        picture = user_info.get('picture')
+
+        user = find_or_create_oauth_user('linkedin', sub, email, name, picture)
+
+        access_token = create_access_token(identity=str(user.id))
+        refresh_token = create_refresh_token(identity=str(user.id))
+
+        params = urllib.parse.urlencode({
+            'token': access_token,
+            'refresh_token': refresh_token
+        })
+        return redirect(f"{frontend_url}/auth/callback?{params}")
+
+    except Exception as e:
+        logger.error(f"LinkedIn callback exception: {e}")
+        return redirect(f"{frontend_url}/auth/callback?error=linkedin_callback_exception")

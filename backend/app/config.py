@@ -35,6 +35,17 @@ class Config:
     API_PREFIX = '/api'
     API_VERSION = 'v1'
 
+    # OAuth Configurations
+    FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://academic-to-industry-transition.vercel.app')
+    
+    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
+    GOOGLE_REDIRECT_URI = os.environ.get('GOOGLE_REDIRECT_URI', 'https://academic-to-industry-transition.onrender.com/api/v1/auth/google/callback')
+    
+    LINKEDIN_CLIENT_ID = os.environ.get('LINKEDIN_CLIENT_ID')
+    LINKEDIN_CLIENT_SECRET = os.environ.get('LINKEDIN_CLIENT_SECRET')
+    LINKEDIN_REDIRECT_URI = os.environ.get('LINKEDIN_REDIRECT_URI', 'https://academic-to-industry-transition.onrender.com/api/v1/auth/linkedin/callback')
+
 class DevelopmentConfig(Config):
     DEBUG = True
     # Safe absolute path away from OneDrive
