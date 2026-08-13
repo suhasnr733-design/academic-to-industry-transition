@@ -57,8 +57,8 @@ export const Login = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <Input
-              label="Username"
-              placeholder="Enter your username"
+              label="Username or Email"
+              placeholder="Enter your username or email"
               {...register('username')}
               error={errors.username?.message}
             />

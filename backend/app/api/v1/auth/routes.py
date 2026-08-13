@@ -119,16 +119,16 @@ def login():
                 'message': 'Please provide your password'
             }), 400
         
-        user = None
-        if data.get('username'):
-            user = User.query.filter_by(username=data['username']).first()
-        elif data.get('email'):
-            user = User.query.filter_by(email=data['email']).first()
-        else:
+        login_identifier = data.get('username') or data.get('email') or data.get('login')
+        if not login_identifier:
             return jsonify({
                 'error': 'Username or email required',
                 'message': 'Please provide username or email'
             }), 400
+        
+        user = User.query.filter(
+            (User.username == login_identifier) | (User.email == login_identifier)
+        ).first()
         
         if not user or not user.check_password(data['password']):
             logger.warning(f"Failed login attempt for: {data.get('username') or data.get('email')}")
