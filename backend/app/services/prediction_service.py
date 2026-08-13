@@ -20,6 +20,15 @@ class PredictionService:
     
     def _load_local_model(self):
         try:
+            import sys
+            # Handle scikit-learn cross-version module path alias for _loss
+            try:
+                import sklearn.ensemble._gb_losses as _gb_losses
+                sys.modules['_loss'] = _gb_losses
+                sys.modules['sklearn.ensemble._loss'] = _gb_losses
+            except Exception:
+                pass
+
             base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
             model_path = os.path.join(base_dir, 'data/models/ensemble_model.pkl')
             scaler_path = os.path.join(base_dir, 'data/models/scaler.pkl')

@@ -98,20 +98,27 @@ def create_app(config_class='app.config.DevelopmentConfig'):
         from app.models import User, Job, Resume
         db.create_all()
         
-        # Seed admin user if missing
+        # Seed admin user safely
         if not User.query.filter_by(username='admin').first():
-            admin = User(
-                username='admin',
-                email='admin@example.com',
-                full_name='System Administrator',
-                role='admin',
-                is_active=True,
-                is_email_verified=True
-            )
-            admin.set_password('Admin@123')
-            db.session.add(admin)
-            db.session.commit()
-            print("ADMIN USER: Created admin / Admin@123")
+            admin_password = None
+            if app.config.get('DEBUG'):
+                admin_password = 'Admin@123'
+            else:
+                admin_password = os.environ.get('ADMIN_INITIAL_PASSWORD')
+                
+            if admin_password:
+                admin = User(
+                    username='admin',
+                    email=os.environ.get('ADMIN_EMAIL', 'admin@example.com'),
+                    full_name='System Administrator',
+                    role='admin',
+                    is_active=True,
+                    is_email_verified=True
+                )
+                admin.set_password(admin_password)
+                db.session.add(admin)
+                db.session.commit()
+                print("ADMIN USER: Created initial admin user from secure configuration.")
         
         # Seed sample jobs if empty
         if Job.query.count() == 0:
