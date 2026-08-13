@@ -26,14 +26,18 @@ export const useResume = () => {
     fetchResumes()
   }, [])
 
-  const uploadResume = async (file) => {
+  const uploadResume = async (fileOrFormData) => {
     try {
       setIsLoading(true)
-      const formData = new FormData()
-      formData.append('file', file)
-      const res = await api.post('/resume/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      let formData
+      if (fileOrFormData instanceof FormData) {
+        formData = fileOrFormData
+      } else {
+        formData = new FormData()
+        formData.append('file', fileOrFormData)
+      }
+      
+      const res = await api.post('/resume/upload', formData)
       toast.success('Resume uploaded successfully')
       fetchResumes()
       return res.data

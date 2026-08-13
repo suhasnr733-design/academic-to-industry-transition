@@ -73,14 +73,11 @@ export const ResumeUpload = () => {
     }
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      
-      const result = await uploadResume(formData)
+      const result = await uploadResume(file)
       toast.success('Resume uploaded successfully!')
-      const resumeId = result?.id || result?.resume_id
+      const resumeId = result?.id || result?.resume_id || result?.resume?.id
       if (resumeId) {
-        navigate(`/resume/${resumeId}/status`)
+        navigate(`/resume/${resumeId}`)
       } else {
         navigate('/resume')
       }
