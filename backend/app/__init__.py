@@ -48,7 +48,9 @@ def create_app(config_class='app.config.DevelopmentConfig'):
     migrate.init_app(app, db)
     jwt.init_app(app)
     bcrypt.init_app(app)
-    cors.init_app(app, resources={r"/api/*": {"origins": "*"}})
+    cors_origins = os.environ.get('CORS_ORIGINS', os.environ.get('FRONTEND_URL', '*'))
+    origins_list = [o.strip() for o in cors_origins.split(',')] if ',' in cors_origins else cors_origins
+    cors.init_app(app, resources={r"/api/*": {"origins": origins_list}}, supports_credentials=True)
     limiter.init_app(app)
     
     # JWT Loader handlers

@@ -83,6 +83,13 @@ class ResumeParser:
             return self.extract_text_from_pdf(file_path)
         elif file_type.lower() in ['docx', 'doc']:
             return self.extract_text_from_docx(file_path)
+        elif file_type.lower() == 'txt':
+            try:
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    return f.read()
+            except Exception as e:
+                print(f"Error reading TXT: {e}")
+                return ""
         else:
             raise ValueError(f"Unsupported file type: {file_type}")
         # backend/app/services/resume_parser.py (continued)

@@ -21,7 +21,7 @@ class ResumeProcessor:
     def process_resume(self, resume_id: int):
         """Process a resume in background"""
         try:
-            resume = Resume.query.get(resume_id)
+            resume = db.session.get(Resume, resume_id)
             if not resume:
                 self.logger.error(f"Resume {resume_id} not found")
                 return
@@ -60,7 +60,7 @@ class ResumeProcessor:
         except Exception as e:
             self.logger.error(f"Error processing resume {resume_id}: {e}")
             try:
-                resume = Resume.query.get(resume_id)
+                resume = db.session.get(Resume, resume_id)
                 if resume:
                     resume.status = 'failed'
                     resume.error_message = str(e)

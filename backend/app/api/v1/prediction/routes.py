@@ -17,7 +17,7 @@ def predict_employability(resume_id):
     """Predict employability score and model details for a resume"""
     try:
         current_user_id = int(get_jwt_identity())
-        user = User.query.get(current_user_id)
+        user = db.session.get(User, current_user_id)
         if not user:
             return jsonify({'error': 'User not found'}), 404
         

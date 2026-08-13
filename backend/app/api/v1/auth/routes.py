@@ -204,7 +204,7 @@ def get_profile():
     """Get current user profile"""
     try:
         current_user_id = int(get_jwt_identity())
-        user = User.query.get(current_user_id)
+        user = db.session.get(User, current_user_id)
         
         if not user:
             return jsonify({

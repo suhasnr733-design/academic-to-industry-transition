@@ -47,4 +47,11 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or ('sqlite:///' + os.path.join(tempfile.gettempdir(), 'prod.db'))
+    TESTING = False
+    
+    # Handle postgres:// legacy URLs from platforms like Heroku/Render
+    _db_url = os.environ.get('DATABASE_URL')
+    if _db_url and _db_url.startswith('postgres://'):
+        _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+    
+    SQLALCHEMY_DATABASE_URI = _db_url or ('sqlite:///' + os.path.join(tempfile.gettempdir(), 'prod.db'))

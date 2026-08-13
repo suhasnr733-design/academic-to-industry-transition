@@ -1,13 +1,46 @@
+# Environments & Virtual Environments
 venv/
+.venv/
 venv-data/
+
+# Environment Variables & Secrets (Keep .env.example)
+.env
+*.env
+!.env.example
+!*.env.example
+
+# Python cache & bytecode
 __pycache__/
 *.pyc
-.env
-backend/.env
-.env.data
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs & Databases
+*.log
 logs/
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads & Temp scratch files
 uploads/
 scratch/
-instance/
+
+# Node & Frontend Build Artifacts
+node_modules/
 frontend/node_modules/
 frontend/dist/
+frontend/build/
+dist/
+build/
+.pnpm-debug.log*
+
+# IDE & OS Artifacts
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
