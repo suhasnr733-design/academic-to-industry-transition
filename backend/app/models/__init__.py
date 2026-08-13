@@ -4,5 +4,7 @@ from app.models.user import User, AuditLog
 from app.models.resume import Resume
 from app.models.job import Job
 from app.models.ab_test import ABTest, ABTestVariant
+from app.models.notification import Notification
+from app.models.assessment import AssessmentResult
 
-__all__ = ['User', 'AuditLog', 'Resume', 'Job', 'ABTest', 'ABTestVariant']
+__all__ = ['User', 'AuditLog', 'Resume', 'Job', 'ABTest', 'ABTestVariant', 'Notification', 'AssessmentResult']

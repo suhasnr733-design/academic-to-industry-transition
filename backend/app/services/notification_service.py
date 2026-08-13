@@ -1,7 +1,8 @@
-# backend/app/services/notification_service.py
-
-from app.extensions import db, mail
-from flask_mail import Message
+from app import db
+try:
+    from flask_mail import Message
+except ImportError:
+    Message = None
 from flask import current_app, render_template
 import logging
 from datetime import datetime

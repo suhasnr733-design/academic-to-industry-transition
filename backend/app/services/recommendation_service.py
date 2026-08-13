@@ -53,10 +53,14 @@ class RecommendationService:
                 
                 for idx in top_indices:
                     course = self.course_data.iloc[idx]
+                    title_str = str(course.get('title', 'Course'))
+                    desc = str(course.get('description', ''))
+                    if not desc or desc == 'nan':
+                        desc = f"Skill building course focused on {title_str}"
                     recommendations.append({
-                        'title': str(course.get('title', 'Course')),
+                        'title': title_str,
                         'platform': str(course.get('platform', 'Online')),
-                        'description': f"Skill building course for {skills[0] if skills else 'industry'}",
+                        'description': desc,
                         'similarity_score': round(float(similarities[idx]) * 100, 2)
                     })
                 return recommendations
