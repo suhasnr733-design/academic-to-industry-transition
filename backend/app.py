@@ -1,4 +1,4 @@
-﻿from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
@@ -14,9 +14,24 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = "MySuperSecretKeyForJWT2024ThatIsVeryLong"
 
 db = SQLAlchemy(app)
-bcrypt = Bcrypt(app)
-cors = CORS(app)
-jwt = JWTManager(app)
+import os, re
+
+allowed_origins = [
+    'https://academic-to-industry-transition.vercel.app',
+    'https://academic-to-industry-transition.onrender.com',
+    re.compile(r'^https://academic-to-industry-transition-.*\.vercel\.app$'),
+    re.compile(r'^https://academic-to-industry-transition.*\.vercel\.app$'),
+    re.compile(r'^http://localhost(:\d+)?$'),
+    re.compile(r'^http://127\.0\.0\.1(:\d+)?$')
+]
+
+cors = CORS(
+    app,
+    resources={r"/*": {"origins": allowed_origins}},
+    supports_credentials=True,
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"]
+)
 
 JWT_SECRET = "MySuperSecretKeyForJWT2024ThatIsVeryLong"
 

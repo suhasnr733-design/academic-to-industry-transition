@@ -11,6 +11,8 @@ from flask_bcrypt import Bcrypt
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
+import re
+
 # Initialize extensions
 db = SQLAlchemy()
 migrate = Migrate()
@@ -48,9 +50,31 @@ def create_app(config_class='app.config.DevelopmentConfig'):
     migrate.init_app(app, db)
     jwt.init_app(app)
     bcrypt.init_app(app)
-    cors_origins = os.environ.get('CORS_ORIGINS', os.environ.get('FRONTEND_URL', '*'))
-    origins_list = [o.strip() for o in cors_origins.split(',')] if ',' in cors_origins else cors_origins
-    cors.init_app(app, resources={r"/api/*": {"origins": origins_list}}, supports_credentials=True)
+    
+    # Configure production-safe CORS origins
+    allowed_origins = [
+        'https://academic-to-industry-transition.vercel.app',
+        'https://academic-to-industry-transition.onrender.com',
+        re.compile(r'^https://academic-to-industry-transition-.*\.vercel\.app$'),
+        re.compile(r'^https://academic-to-industry-transition.*\.vercel\.app$'),
+        re.compile(r'^http://localhost(:\d+)?$'),
+        re.compile(r'^http://127\.0\.0\.1(:\d+)?$')
+    ]
+    
+    env_origins_str = os.environ.get('CORS_ORIGINS', os.environ.get('FRONTEND_URL', ''))
+    if env_origins_str:
+        for raw_origin in env_origins_str.split(','):
+            origin = raw_origin.strip()
+            if origin and origin != '*' and origin not in allowed_origins:
+                allowed_origins.append(origin)
+                
+    cors.init_app(
+        app,
+        resources={r"/*": {"origins": allowed_origins}},
+        supports_credentials=True,
+        methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"]
+    )
     limiter.init_app(app)
     
     # JWT Loader handlers
