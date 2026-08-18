@@ -1,3 +1,4 @@
+import json
 # data_pipeline/loaders/database_loader.py
 
 import pandas as pd
@@ -122,15 +123,22 @@ class DatabaseLoader:
         return self._load_dataframe(df, 'skill_mappings')
     
     def _load_dataframe(self, df: pd.DataFrame, table_name: str) -> int:
-        """Load dataframe to database table"""
+        '''Load dataframe to database table'''
         try:
+            self.create_tables()
             # Convert any list columns to JSON strings
             for col in df.columns:
                 if df[col].apply(lambda x: isinstance(x, list)).any():
-                    df[col] = df[col].apply(lambda x: pd.json.dumps(x) if isinstance(x, list) else x)
-            
+                    df[col] = df[col].apply(lambda x: json.dumps(x) if isinstance(x, list) else x)
+            # Match columns with database table
+            with self.engine.connect() as conn:
+                res = conn.execute(text(f'PRAGMA table_info({table_name})'))
+                db_cols = [row[1] for row in res.fetchall()]
+                if db_cols:
+                    valid_cols = [c for c in df.columns if c in db_cols]
+                    df = df[valid_cols]
             df.to_sql(table_name, self.engine, if_exists='append', index=False)
-            self.logger.info(f"Loaded {len(df)} rows into {table_name}")
+            self.logger.info(f'Loaded {len(df)} rows into {table_name}')
             return len(df)
         except SQLAlchemyError as e:
             self.logger.error(f"Error loading to {table_name}: {e}")
