@@ -65,9 +65,16 @@ class MultiLevelCache:
                         key_parts.append(f"{k}={v}")
                 
                 cache_key = hashlib.md5(':'.join(key_parts).encode()).hexdigest()
-                cached = self.get(cache_key)
-                if cached is not None:
-                    return cached
+                
+                no_cache = request and (
+                    request.headers.get('Cache-Control') == 'no-cache' or 
+                    request.headers.get('Pragma') == 'no-cache'
+                )
+                
+                if not no_cache:
+                    cached = self.get(cache_key)
+                    if cached is not None:
+                        return cached
                 
                 result = func(*args, **kwargs)
                 self.set(cache_key, result, ttl)
