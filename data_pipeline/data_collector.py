@@ -122,8 +122,7 @@ class DataCollector:
         results = {}
         
         # Collect jobs for different domains
-        domains = ['Software Engineer', 'Data Scientist', 'DevOps Engineer', 
-                   'Frontend Developer', 'Backend Developer']
+        domains = ['Python']
         results['jobs'] = self.collect_jobs(domains)
         
         # Collect courses

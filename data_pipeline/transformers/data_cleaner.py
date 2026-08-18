@@ -27,19 +27,30 @@ class DataCleaner:
         self.logger.info(f"Removed duplicates. Remaining rows: {len(df_clean)}")
         
         # Handle missing values
-        df_clean['description'] = df_clean['description'].fillna('')
-        df_clean['location'] = df_clean['location'].fillna('Unknown')
-        df_clean['salary'] = df_clean['salary'].fillna('Not Specified')
+        if 'description' not in df_clean.columns: df_clean['description'] = ''
+        else: df_clean['description'] = df_clean['description'].fillna('')
+        if 'location' not in df_clean.columns: df_clean['location'] = 'Unknown'
+        else: df_clean['location'] = df_clean['location'].fillna('Unknown')
+        if 'salary' not in df_clean.columns: df_clean['salary'] = 'Not Specified'
+        else: df_clean['salary'] = df_clean['salary'].fillna('Not Specified')
         
         # Clean skills column
-        if 'skills' in df_clean.columns:
-            df_clean['skills'] = df_clean['skills'].apply(self._clean_skills)
+        if 'skills' not in df_clean.columns:
+            df_clean['skills'] = [[] for _ in range(len(df_clean))]
         else:
-            df_clean['skills'] = df_clean.apply(self._extract_skills_from_description, axis=1)
-        
+            df_clean['skills'] = df_clean['skills'].apply(self._clean_skills)
+
         # Extract domain from title
         df_clean['domain'] = df_clean['title'].apply(self._extract_domain)
-        
+
+        # Fill empty skills from description or domain fallback
+        empty_mask = df_clean['skills'].apply(lambda x: not x or len(x) == 0)
+        for idx in df_clean[empty_mask].index:
+            ext_skills = self._extract_skills_from_description(df_clean.loc[idx])
+            if not ext_skills:
+                dom_val = df_clean.loc[idx, 'domain']
+                ext_skills = [dom_val] if dom_val and dom_val != 'Other' else ['Software Engineering']
+            df_clean.at[idx, 'skills'] = ext_skills
         # Clean location
         df_clean['city'] = df_clean['location'].apply(self._extract_city)
         
@@ -60,7 +71,8 @@ class DataCleaner:
         df_clean = df_clean.drop_duplicates(subset=['title', 'platform'], keep='first')
         
         # Handle missing values
-        df_clean['description'] = df_clean['description'].fillna('')
+        if 'description' not in df_clean.columns: df_clean['description'] = ''
+        else: df_clean['description'] = df_clean['description'].fillna('')
         df_clean['skills'] = df_clean.get('skills', pd.Series()).apply(
             lambda x: x if isinstance(x, list) else []
         )

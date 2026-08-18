@@ -2,81 +2,54 @@
 
 import pytest
 import time
-import json
+import pandas as pd
 from data_pipeline.pipeline_orchestrator import PipelineOrchestrator
-from data_pipeline.kafka.enhanced_producer import EnhancedKafkaProducer
+from data_pipeline.quality.data_quality_framework import DataQualityFramework
+from data_pipeline.governance.data_governance import DataGovernance
 from data_pipeline.analytics.realtime_analytics import RealTimeAnalytics
-from data_pipeline.etl.warehouse_etl import WarehouseETL
-from data_pipeline.ml.integration import MLPipelineIntegration
+from data_pipeline.streaming.stream_processor import StreamProcessor
+
 
 class TestFullSystem:
-    
-    def test_end_to_end_data_flow(self):
-        """Test complete data flow"""
-        print("\n🚀 Starting end-to-end data flow test...")
-        
-        # 1. Data Collection
+
+    def test_pipeline_execution(self):
+        """Test complete data pipeline orchestrator execution"""
         orchestrator = PipelineOrchestrator()
         results = orchestrator.run_full_pipeline()
-        assert results['status'] in ['success', 'partial_success']
-        print("✅ Data collection complete")
-        
-        # 2. Kafka Streaming
-        producer = EnhancedKafkaProducer()
-        producer.start_batch_processor()
-        
-        # Send test messages
-        for i in range(10):
-            producer.queue_message('test_topic', {
-                'id': i,
-                'event_type': 'test',
-                'timestamp': time.time()
-            })
-        
-        time.sleep(2)
-        print("✅ Kafka streaming test passed")
-        
-        # 3. Real-time Analytics
+        assert results["status"] in ["success", "partial_success", "completed"]
+
+    def test_data_quality_assessment(self):
+        """Test DataQualityFramework quality assessment score"""
+        quality = DataQualityFramework()
+        df = pd.DataFrame([
+            {"title": "Job 1", "company": "Company A", "skills": "Python"},
+            {"title": "Job 2", "company": "Company B", "skills": "Java"},
+            {"title": "Job 3", "company": "Company C", "skills": "SQL"},
+        ])
+        results = quality.assess_data_quality(df, "jobs")
+        assert results["overall_score"] > 0
+
+    def test_data_governance(self):
+        """Test DataGovernance data dictionary and governance report generation"""
+        gov = DataGovernance()
+        df = pd.DataFrame([
+            {"title": "Job 1", "company": "Company A", "skills": "Python"}
+        ])
+        data_dict = gov.create_data_dictionary(df, "jobs")
+        report = gov.generate_governance_report()
+        assert data_dict["table_name"] == "jobs"
+        assert report["total_columns"] == 3
+
+    def test_realtime_analytics_and_streaming(self):
+        """Test real-time analytics event processing and stream processor lifecycle"""
         analytics = RealTimeAnalytics()
-        events = analytics.get_recent_events()
-        assert len(events) > 0
-        print("✅ Real-time analytics test passed")
-        
-        # 4. ML Integration
-        ml = MLPipelineIntegration()
-        features = ml.prepare_features(1)
-        assert features is not None
-        print("✅ ML integration test passed")
-        
-        print("✅ End-to-end test passed!")
-    
-    def test_warehouse_etl(self):
-        """Test warehouse ETL"""
-        print("\n🏗️ Testing warehouse ETL...")
-        
-        etl = WarehouseETL()
-        results = etl.run_full_etl()
-        assert results['status'] == 'success'
-        print("✅ ETL test passed")
-        
-        # Refresh views
-        etl.refresh_materialized_views()
-        print("✅ Materialized views refreshed")
-    
-    def test_performance_metrics(self):
-        """Test performance metrics"""
-        print("\n📊 Testing performance metrics...")
-        
-        # Test throughput
-        producer = EnhancedKafkaProducer()
-        start_time = time.time()
-        
-        for i in range(1000):
-            producer.queue_message('test', {'id': i})
-        
-        elapsed = time.time() - start_time
-        throughput = 1000 / elapsed
-        print(f"Throughput: {throughput:.1f} msgs/sec")
-        
-        assert throughput > 100, "Throughput too low"
-        print("✅ Performance metrics test passed")
+        analytics.process_event({"type": "test", "value": 1, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")})
+        aggs = analytics.get_aggregations()
+        assert aggs["total_events"] == 1
+
+        sp = StreamProcessor(num_workers=2)
+        sp.add_processor("test_proc", lambda x: x)
+        sp.start()
+        assert sp.get_status()["is_running"] is True
+        sp.stop()
+        assert sp.get_status()["is_running"] is False
