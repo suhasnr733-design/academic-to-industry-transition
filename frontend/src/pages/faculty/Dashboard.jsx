@@ -158,3 +158,5 @@ export const FacultyDashboard = () => {
     </div>
   )
 }
+
+export default FacultyDashboard

@@ -118,3 +118,5 @@ export const Assessment = () => {
     </div>
   )
 }
+
+export default Assessment
