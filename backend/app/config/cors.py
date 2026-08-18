@@ -2,7 +2,7 @@
 
 CORS_CONFIG = {
     'origins': [
-        'https://your-project.vercel.app',
+        'https://academic-to-industry-transition.vercel.app',
         'http://localhost:3000',
         'http://localhost:5173'
     ],
