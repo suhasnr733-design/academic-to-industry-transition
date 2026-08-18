@@ -1,6 +1,9 @@
 # data_pipeline/streaming/stream_processor.py
 
 import asyncio
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Callable
 from collections import deque
@@ -9,6 +12,65 @@ import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+class StreamProcessor:
+    """Streaming Data Processor powered by ThreadPoolExecutor"""
+
+    def __init__(self, num_workers: int = 4):
+        self.num_workers = num_workers
+        self.executor = None
+        self.is_running = False
+        self.processors = {}
+        self._thread = None
+        self._stop_event = threading.Event()
+
+    def add_processor(self, name_or_func, processor_func=None):
+        """Add a custom processor function"""
+        if processor_func is None:
+            name = getattr(name_or_func, '__name__', str(name_or_func))
+            func = name_or_func
+        else:
+            name = str(name_or_func)
+            func = processor_func
+        self.processors[name] = func
+
+    def start(self):
+        """Start thread pool executor and background processing loop"""
+        if self.is_running:
+            return
+        self.executor = ThreadPoolExecutor(max_workers=self.num_workers)
+        self.is_running = True
+        self._stop_event.clear()
+        self._thread = threading.Thread(target=self._processing_loop, daemon=True)
+        self._thread.start()
+        logger.info("StreamProcessor started")
+
+    def stop(self):
+        """Stop background processing loop and shutdown executor"""
+        if not self.is_running:
+            return
+        self.is_running = False
+        self._stop_event.set()
+        if self._thread and self._thread.is_alive():
+            self._thread.join(timeout=2.0)
+        if self.executor:
+            self.executor.shutdown(wait=False, cancel_futures=True)
+            self.executor = None
+        logger.info("StreamProcessor stopped")
+
+    def _processing_loop(self):
+        """Background worker loop"""
+        while self.is_running and not self._stop_event.is_set():
+            time.sleep(0.1)
+
+    def get_status(self) -> Dict[str, Any]:
+        """Get stream processor running status and active processor names"""
+        return {
+            "is_running": self.is_running,
+            "processors": list(self.processors.keys()),
+        }
+
 
 class RealTimeStreamProcessor:
     """Real-time stream processing engine"""
@@ -113,9 +175,9 @@ class RealTimeStreamProcessor:
     def start(self):
         """Start the stream processor"""
         self.is_running = True
-        logger.info("✅ Stream processor started")
+        logger.info("Stream processor started")
     
     def stop(self):
         """Stop the stream processor"""
         self.is_running = False
-        logger.info("✅ Stream processor stopped")
+        logger.info("Stream processor stopped")

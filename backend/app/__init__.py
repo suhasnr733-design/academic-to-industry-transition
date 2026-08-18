@@ -2,7 +2,7 @@
 
 import os
 from datetime import timedelta
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
@@ -52,29 +52,64 @@ def create_app(config_class='app.config.DevelopmentConfig'):
     bcrypt.init_app(app)
     
     # Configure production-safe CORS origins
-    allowed_origins = [
+    allowed_exact_origins = [
         'https://academic-to-industry-transition.vercel.app',
-        'https://academic-to-industry-transition.onrender.com',
-        re.compile(r'^https://academic-to-industry-transition-.*\.vercel\.app$'),
-        re.compile(r'^https://academic-to-industry-transition.*\.vercel\.app$'),
-        re.compile(r'^http://localhost(:\d+)?$'),
-        re.compile(r'^http://127\.0\.0\.1(:\d+)?$')
+        'https://academic-to-industry-transition.onrender.com'
     ]
     
     env_origins_str = os.environ.get('CORS_ORIGINS', os.environ.get('FRONTEND_URL', ''))
     if env_origins_str:
         for raw_origin in env_origins_str.split(','):
             origin = raw_origin.strip()
-            if origin and origin != '*' and origin not in allowed_origins:
-                allowed_origins.append(origin)
-                
+            if origin and origin != '*' and origin not in allowed_exact_origins:
+                allowed_exact_origins.append(origin)
+
+    allowed_origin_patterns = [
+        r'https://academic-to-industry-transition-.*\.vercel\.app',
+        r'https://academic-to-industry-transition.*\.vercel\.app',
+        r'http://localhost:\d+',
+        r'http://127\.0\.0\.1:\d+',
+        re.compile(r'^https://academic-to-industry-transition-.*\.vercel\.app$'),
+        re.compile(r'^https://academic-to-industry-transition.*\.vercel\.app$'),
+        re.compile(r'^http://localhost(:\d+)?$'),
+        re.compile(r'^http://127\.0\.0\.1(:\d+)?$')
+    ]
+    
+    cors_origins_list = allowed_exact_origins + allowed_origin_patterns
+
     cors.init_app(
         app,
-        resources={r"/*": {"origins": allowed_origins}},
+        resources={r"/*": {"origins": cors_origins_list}},
         supports_credentials=True,
         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"]
     )
+
+    def is_origin_allowed(origin):
+        if not origin:
+            return False
+        if origin in allowed_exact_origins:
+            return True
+        if re.match(r'^https://academic-to-industry-transition-.*\.vercel\.app$', origin):
+            return True
+        if re.match(r'^https://academic-to-industry-transition.*\.vercel\.app$', origin):
+            return True
+        if re.match(r'^http://localhost(:\d+)?$', origin):
+            return True
+        if re.match(r'^http://127\.0\.0\.1(:\d+)?$', origin):
+            return True
+        return False
+
+    @app.after_request
+    def add_cors_headers_fallback(response):
+        origin = request.headers.get('Origin')
+        if origin and is_origin_allowed(origin):
+            response.headers['Access-Control-Allow-Origin'] = origin
+            response.headers['Access-Control-Allow-Credentials'] = 'true'
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type, X-Requested-With, Accept, Origin'
+        return response
+
     limiter.init_app(app)
     
     # JWT Loader handlers
