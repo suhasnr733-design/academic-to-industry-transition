@@ -1,4 +1,4 @@
-# Dockerfile
+# frontend/Dockerfile
 
 FROM node:18-alpine AS builder
 
@@ -8,10 +8,10 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Copy source code
+# Copy source
 COPY . .
 
-# Build the app
+# Build application
 RUN npm run build
 
 # Production image
@@ -22,6 +22,9 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy custom nginx config
+COPY default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
