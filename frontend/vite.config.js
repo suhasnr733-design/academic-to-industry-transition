@@ -1,4 +1,4 @@
-// frontend/vite.config.js (Production optimized)
+// frontend/vite.config.js
 
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -38,22 +38,6 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/api\./,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 3600,
-              },
-            },
-          },
-        ],
-      },
     }),
     visualizer({
       filename: 'dist/stats.html',
@@ -69,8 +53,7 @@ export default defineConfig({
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'redux-vendor': ['@reduxjs/toolkit', 'react-redux', 'redux-persist'],
           'ui-vendor': ['@headlessui/react', 'framer-motion'],
-          'chart-vendor': ['recharts'],
-          'form-vendor': ['react-hook-form', '@hookform/resolvers', 'yup'],
+          'chart-vendor': ['chart.js', 'react-chartjs-2', 'recharts'],
           'api-vendor': ['axios', 'socket.io-client'],
         },
       },
@@ -95,11 +78,11 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://academic-to-industry-transition.onrender.com',
         changeOrigin: true,
       },
       '/ws': {
-        target: 'ws://localhost:5000',
+        target: 'ws://academic-to-industry-transition.onrender.com',
         ws: true,
       },
     },
