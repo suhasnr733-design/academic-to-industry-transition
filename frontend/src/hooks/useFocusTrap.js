@@ -29,17 +29,20 @@ export const useFocusTrap = (isActive = true) => {
       }
       
       if (e.key === 'Escape') {
-        // Allow escape handlers if needed
+        // Close modal logic
+        const closeButton = elementRef.current?.querySelector('[data-close]')
+        if (closeButton) closeButton.click()
       }
     }
     
-    // Focus first element on activation
-    firstElement.focus()
+    // Focus first element with smooth delay
+    const timer = setTimeout(() => firstElement?.focus(), 100)
     
     const currentRef = elementRef.current
     currentRef.addEventListener('keydown', handleKeyDown)
     
     return () => {
+      clearTimeout(timer)
       currentRef?.removeEventListener('keydown', handleKeyDown)
     }
   }, [isActive])
