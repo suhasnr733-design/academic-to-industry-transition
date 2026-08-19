@@ -29,14 +29,26 @@ export const ScreenReaderOnly = ({ children }) => {
   return <span className="sr-only">{children}</span>
 }
 
-export const SkipLink = ({ targetId = 'main-content', text = 'Skip to main content' }) => {
+export const SkipLink = () => {
   return (
     <a
-      href={`#${targetId}`}
-      className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:bg-white focus:text-primary-600 focus:p-4 focus:rounded-lg focus:shadow-xl focus:ring-2 focus:ring-primary-500"
+      href="#main-content"
+      className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:bg-white focus:p-4 focus:rounded-lg focus:shadow-lg focus:text-primary-600"
     >
-      {text}
+      Skip to main content
     </a>
+  )
+}
+
+export const LiveRegion = ({ children, polite = true }) => {
+  return (
+    <div 
+      aria-live={polite ? 'polite' : 'assertive'}
+      aria-atomic="true"
+      className="sr-only"
+    >
+      {children}
+    </div>
   )
 }
 
