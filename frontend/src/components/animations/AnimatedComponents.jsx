@@ -31,6 +31,27 @@ export const ScaleIn = ({ children, delay = 0, className = '', ...props }) => {
   )
 }
 
+export const SlideIn = ({ children, direction = 'left', delay = 0, className = '', ...props }) => {
+  const directions = {
+    left: { x: -50 },
+    right: { x: 50 },
+    up: { y: 50 },
+    down: { y: -50 },
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, ...(directions[direction] || directions.left) }}
+      animate={{ opacity: 1, x: 0, y: 0 }}
+      transition={{ duration: 0.5, delay }}
+      className={className}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
 export const StaggerChildren = ({ children, staggerDelay = 0.1, className = '', ...props }) => {
   return (
     <motion.div
@@ -69,9 +90,30 @@ export const StaggerItem = ({ children, className = '', ...props }) => {
   )
 }
 
+export const Pulse = ({ children, className = '', ...props }) => {
+  return (
+    <motion.div
+      animate={{
+        scale: [1, 1.05, 1],
+      }}
+      transition={{
+        duration: 2,
+        repeat: Infinity,
+        repeatType: 'reverse',
+      }}
+      className={className}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
 export default {
   FadeIn,
   ScaleIn,
+  SlideIn,
   StaggerChildren,
   StaggerItem,
+  Pulse,
 }
