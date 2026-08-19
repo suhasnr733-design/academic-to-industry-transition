@@ -43,11 +43,15 @@ describe('Complete User Flow', () => {
     cy.visit('/jobs')
     cy.get('[data-testid="job-list"]').should('be.visible')
 
-    // 6. View Dashboard
+    // 6. View Skill Analysis
+    cy.visit('/skills')
+    cy.get('[data-testid="skill-chart"]').should('be.visible')
+
+    // 7. View Dashboard
     cy.visit('/dashboard')
     cy.get('[data-testid="dashboard-stats"]').should('be.visible')
 
-    // 7. View Real-time Dashboard
+    // 8. View Real-time Dashboard
     cy.visit('/dashboard/realtime')
     cy.contains('Real-time Dashboard').should('be.visible')
   })
@@ -57,6 +61,12 @@ describe('Complete User Flow', () => {
     cy.visit('/login')
     cy.get('[data-testid="mobile-menu-button"]').click()
     cy.get('[data-testid="mobile-menu"]').should('be.visible')
+  })
+
+  it('should support dark mode', () => {
+    cy.visit('/login')
+    cy.get('[data-testid="theme-toggle"]').click()
+    cy.get('html').should('have.attr', 'data-theme', 'dark')
   })
 
   it('should work offline', () => {
