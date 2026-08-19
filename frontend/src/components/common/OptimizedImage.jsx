@@ -2,13 +2,21 @@
 
 import React, { useState } from 'react'
 
-export const OptimizedImage = ({ src, alt = '', className = '', width, height, ...props }) => {
+export const OptimizedImage = ({ 
+  src, 
+  alt = '', 
+  className = '', 
+  width, 
+  height,
+  placeholder = true,
+  ...props 
+}) => {
   const [isLoaded, setIsLoaded] = useState(false)
   const [error, setError] = useState(false)
 
   return (
     <div className="relative overflow-hidden inline-block" style={{ width, height }}>
-      {!isLoaded && !error && (
+      {!isLoaded && !error && placeholder && (
         <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg" />
       )}
       <img

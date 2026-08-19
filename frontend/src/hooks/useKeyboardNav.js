@@ -1,39 +1,26 @@
 // frontend/src/hooks/useKeyboardNav.js
 
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 
-export const useKeyboardNav = (handlers = {}) => {
+export const useKeyboardNav = ({ onEscape, onEnter, onArrow, onSpace } = {}) => {
   useEffect(() => {
     const handleKeyDown = (e) => {
-      const { key, target } = e
-      
-      // Arrow keys for navigation
-      if (key === 'ArrowDown' || key === 'ArrowUp') {
-        e.preventDefault()
-        const current = target
-        const next = key === 'ArrowDown' 
-          ? current.nextElementSibling 
-          : current.previousElementSibling
-        
-        if (next && next.focus) {
-          next.focus()
-        }
-      }
-      
-      // Enter to click
-      if (key === 'Enter' && target?.click) {
-        target.click()
-      }
-      
-      // Escape to close
-      if (key === 'Escape' && handlers?.onEscape) {
-        handlers.onEscape()
-      }
-      
-      // Space to toggle
-      if (key === ' ' && handlers?.onSpace) {
-        e.preventDefault()
-        handlers.onSpace()
+      switch (e.key) {
+        case 'Escape':
+          onEscape?.()
+          break
+        case 'Enter':
+          onEnter?.()
+          break
+        case 'ArrowDown':
+        case 'ArrowUp':
+          onArrow?.(e)
+          break
+        case ' ':
+          onSpace?.(e)
+          break
+        default:
+          break
       }
     }
     
@@ -42,7 +29,30 @@ export const useKeyboardNav = (handlers = {}) => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [handlers])
+  }, [onEscape, onEnter, onArrow, onSpace])
+}
+
+export const useRovingIndex = (itemCount, initialIndex = 0) => {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex)
+  
+  const getNextIndex = (direction) => {
+    if (direction === 'next') {
+      return (currentIndex + 1) % itemCount
+    }
+    return (currentIndex - 1 + itemCount) % itemCount
+  }
+  
+  const handleKeyDown = (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setCurrentIndex(getNextIndex('next'))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setCurrentIndex(getNextIndex('prev'))
+    }
+  }
+  
+  return { currentIndex, setCurrentIndex, handleKeyDown }
 }
 
 export default useKeyboardNav
