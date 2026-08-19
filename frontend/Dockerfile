@@ -4,27 +4,16 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies
 COPY package*.json ./
 RUN npm ci
 
-# Copy source
 COPY . .
-
-# Build application
 RUN npm run build
 
-# Production image
 FROM nginx:alpine
 
-# Copy build files
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
-
-# Copy custom nginx config
-COPY default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
