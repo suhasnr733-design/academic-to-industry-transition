@@ -27,8 +27,11 @@ class DataCleaner:
         self.logger.info(f"Removed duplicates. Remaining rows: {len(df_clean)}")
         
         # Handle missing values
+        if 'title' not in df_clean.columns: df_clean['title'] = 'Unknown'
+        else: df_clean['title'] = df_clean['title'].fillna('Unknown')
         if 'description' not in df_clean.columns: df_clean['description'] = ''
         else: df_clean['description'] = df_clean['description'].fillna('')
+
         if 'location' not in df_clean.columns: df_clean['location'] = 'Unknown'
         else: df_clean['location'] = df_clean['location'].fillna('Unknown')
         if 'salary' not in df_clean.columns: df_clean['salary'] = 'Not Specified'
@@ -170,7 +173,11 @@ class DataCleaner:
     
     def _extract_domain(self, title):
         """Extract domain from job title"""
+        if pd.isna(title) or not title or not isinstance(title, str):
+            return 'Other'
+
         domains = {
+
             'Data Scientist': 'AI/ML',
             'Machine Learning': 'AI/ML',
             'Data Engineer': 'Data',
