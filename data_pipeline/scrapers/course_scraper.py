@@ -138,3 +138,8 @@ class CourseScraper(BaseScraper):
         all_courses.extend(nptel_courses)
         
         return all_courses
+    def parse_item(self, item) -> Dict[str, Any]:
+        """Parse individual item"""
+        if isinstance(item, dict):
+            return item
+        return {}

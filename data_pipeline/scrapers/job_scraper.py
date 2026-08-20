@@ -1,5 +1,6 @@
 # data_pipeline/scrapers/job_scraper.py
 
+import requests
 from data_pipeline.scrapers.base_scraper import BaseScraper
 from typing import Dict, List, Any
 import json
@@ -39,7 +40,7 @@ class JobScraper(BaseScraper):
                 
             except Exception as e:
                 self.logger.error(f"Error scraping page {page}: {e}")
-                continue
+                break
         
         return jobs
     
@@ -118,7 +119,7 @@ class JobScraper(BaseScraper):
                 
             except Exception as e:
                 self.logger.error(f"Error scraping LinkedIn page {page}: {e}")
-                continue
+                break
         
         return jobs
     
@@ -187,7 +188,7 @@ class JobScraper(BaseScraper):
                 
             except Exception as e:
                 self.logger.error(f"Error scraping Indeed page {page}: {e}")
-                continue
+                break
         
         return jobs
     
@@ -247,3 +248,8 @@ class JobScraper(BaseScraper):
         keywords = kwargs.get('keywords', ['Software Engineer', 'Data Scientist'])
         location = kwargs.get('location', 'Bangalore')
         return self.scrape_all(keywords, location)
+    def parse_item(self, item) -> Dict[str, Any]:
+        """Parse individual item"""
+        if isinstance(item, dict):
+            return item
+        return {}

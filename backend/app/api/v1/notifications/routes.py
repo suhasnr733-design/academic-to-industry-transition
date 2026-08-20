@@ -2,7 +2,7 @@
 
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.extensions import db
+from app import db
 from app.models import Notification, User
 from app.api.v1.notifications import notifications_bp
 from app.services.notification_service import NotificationService

@@ -4,18 +4,16 @@ import re
 import PyPDF2
 import docx
 from typing import List, Dict, Any
-import spacy
-import nltk
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-
-# Initialize spaCy model
 try:
-    nlp = spacy.load("en_core_web_sm")
-except:
-    import os
-    os.system("python -m spacy download en_core_web_sm")
-    nlp = spacy.load("en_core_web_sm")
+    import spacy
+    try:
+        nlp = spacy.load("en_core_web_sm")
+    except Exception:
+        nlp = None
+except ImportError:
+    spacy = None
+    nlp = None
+import nltk
 
 class ResumeParser:
     """Parse resumes and extract structured information"""
@@ -85,6 +83,13 @@ class ResumeParser:
             return self.extract_text_from_pdf(file_path)
         elif file_type.lower() in ['docx', 'doc']:
             return self.extract_text_from_docx(file_path)
+        elif file_type.lower() == 'txt':
+            try:
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    return f.read()
+            except Exception as e:
+                print(f"Error reading TXT: {e}")
+                return ""
         else:
             raise ValueError(f"Unsupported file type: {file_type}")
         # backend/app/services/resume_parser.py (continued)
@@ -102,11 +107,15 @@ class ResumeParser:
                 found_skills.append(skill)
         
         # Method 2: spaCy NER for organizations and products
-        doc = nlp(text)
-        for ent in doc.ents:
-            if ent.label_ in ["ORG", "PRODUCT"] and ent.text in self.all_skills:
-                if ent.text not in found_skills:
-                    found_skills.append(ent.text)
+        if nlp is not None:
+            try:
+                doc = nlp(text)
+                for ent in doc.ents:
+                    if ent.label_ in ["ORG", "PRODUCT"] and ent.text in self.all_skills:
+                        if ent.text not in found_skills:
+                            found_skills.append(ent.text)
+            except Exception:
+                pass
         
         # Method 3: Extract from bullet points using patterns
         skill_patterns = [
@@ -305,3 +314,13 @@ class ResumeParser:
                 'error': str(e),
                 'success': False
             }
+
+    def parse_resume_text(self, text: str) -> Dict[str, Any]:
+        """Parse raw resume text directly"""
+        return {
+            'success': True,
+            'skills': self.extract_skills(text),
+            'education': self.extract_education(text),
+            'experience': self.extract_experience(text),
+            'projects': self.extract_projects(text)
+        }

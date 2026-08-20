@@ -30,3 +30,5 @@ def admin_required(f):
 def faculty_required(f):
     """Faculty or admin decorator"""
     return role_required(['faculty', 'admin'])(f)
+
+faculty_or_admin_required = faculty_required

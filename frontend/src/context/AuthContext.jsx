@@ -53,6 +53,15 @@ export const AuthProvider = ({ children }) => {
     return response.data
   }
 
+  const handleOAuthLogin = async (accessToken, refreshToken) => {
+    localStorage.setItem('access_token', accessToken)
+    if (refreshToken) {
+      localStorage.setItem('refresh_token', refreshToken)
+    }
+    api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
+    await fetchUser()
+  }
+
   const logout = () => {
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
@@ -75,6 +84,7 @@ export const AuthProvider = ({ children }) => {
       login,
       register,
       logout,
+      handleOAuthLogin,
       updateProfile,
     }}>
       {children}

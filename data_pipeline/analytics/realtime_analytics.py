@@ -18,6 +18,62 @@ class RealTimeAnalytics:
         self.historical_data = []
         self.cache = {}
         self.last_update = None
+        self.events = []
+        self.aggregations = {}
+        self.windows = {}
+
+    def process_event(self, event: Dict[str, Any]):
+        """Process real-time event, extract minute window, and update aggregations"""
+        ts_str = event.get('timestamp')
+        if ts_str:
+            try:
+                dt = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
+            except Exception:
+                dt = datetime.now()
+        else:
+            dt = datetime.now()
+
+        window_key = dt.strftime('%Y-%m-%d %H:%M')
+        event_copy = dict(event)
+        event_copy['_window'] = window_key
+        event_copy['_dt'] = dt
+        self.events.append(event_copy)
+        self._update_aggregations(event_copy)
+
+    def _update_aggregations(self, event: Dict[str, Any]):
+        """Update aggregation counters for event type and minute window"""
+        e_type = event.get('type') or event.get('event_type') or 'unknown'
+        window_key = event.get('_window', datetime.now().strftime('%Y-%m-%d %H:%M'))
+        
+        self.aggregations[e_type] = self.aggregations.get(e_type, 0) + 1
+        
+        if window_key not in self.windows:
+            self.windows[window_key] = {}
+        self.windows[window_key][e_type] = self.windows[window_key].get(e_type, 0) + 1
+
+    def get_aggregations(self) -> Dict[str, Any]:
+        """Return overall aggregations, active windows count, and total events count"""
+        return {
+            'aggregations': self.aggregations,
+            'active_windows': len(self.windows),
+            'total_events': len(self.events)
+        }
+
+    def get_time_series(self, event_type: str, minutes: int = 10) -> Dict[str, Any]:
+        """Return minute-based time series timestamps and values for target event_type"""
+        now = datetime.now()
+        timestamps = []
+        values = []
+        for i in range(minutes - 1, -1, -1):
+            t = now - timedelta(minutes=i)
+            w_key = t.strftime('%Y-%m-%d %H:%M')
+            timestamps.append(w_key)
+            val = self.windows.get(w_key, {}).get(event_type, 0)
+            values.append(val)
+        return {
+            'timestamps': timestamps,
+            'values': values
+        }
     
     def update_metrics(self, events: List[Dict[str, Any]]):
         """Update metrics from events"""

@@ -1,148 +1,83 @@
 # backend/app/services/resume_processor.py
 
-<<<<<<< HEAD
 import threading
-import time
+import logging
+from flask import current_app
 from app import db
 from app.models import Resume
 from app.services.resume_parser import ResumeParser
+from app.services.skill_analyzer import SkillAnalyzer
+
+logger = logging.getLogger(__name__)
 
 class ResumeProcessor:
     """Background processor for resumes"""
     
     def __init__(self):
         self.parser = ResumeParser()
-    
-    def process_resume(self, resume_id):
-        """Process a resume in the background"""
-        try:
-            # Get resume
-            resume = Resume.query.get(resume_id)
-            if not resume:
-                print(f"Resume {resume_id} not found")
-=======
-import os
-import uuid
-import threading
-from flask import current_app
-from app.extensions import db
-from app.models import Resume
-from app.services.resume_parser import ResumeParser
-from app.services.skill_analyzer import SkillAnalyzer
-from app.services.enhanced_resume_parser import EnhancedResumeParser
-import logging
-
-logger = logging.getLogger(__name__)
-
-class ResumeProcessor:
-    """Enhanced background processor for resumes"""
-    
-    def __init__(self):
-        self.parser = EnhancedResumeParser()
         self.analyzer = SkillAnalyzer()
         self.logger = logging.getLogger(__name__)
     
     def process_resume(self, resume_id: int):
-        """Process a resume in the background"""
+        """Process a resume in background"""
         try:
-            resume = Resume.query.get(resume_id)
+            resume = db.session.get(Resume, resume_id)
             if not resume:
                 self.logger.error(f"Resume {resume_id} not found")
->>>>>>> main
                 return
             
-            # Update status to processing
             resume.status = 'processing'
             db.session.commit()
             
-<<<<<<< HEAD
-            # Parse resume
-            file_extension = resume.filename.rsplit('.', 1)[1].lower()
+            file_extension = resume.filename.rsplit('.', 1)[1].lower() if '.' in resume.filename else ''
             parsed_data = self.parser.parse_resume(
                 resume.file_path,
                 file_extension
-=======
-            # Parse resume using enhanced parser
-            file_type = resume.file_type
-            parsed_data = self.parser.parse_resume(
-                resume.file_path,
-                file_type
->>>>>>> main
             )
             
             if not parsed_data.get('success', False):
                 resume.status = 'failed'
-<<<<<<< HEAD
-                db.session.commit()
-                print(f"Resume {resume_id} parsing failed: {parsed_data.get('error')}")
-                return
-            
-            # Update resume with parsed data
-            resume.skills = parsed_data.get('skills', [])
-            resume.education = parsed_data.get('education', [])
-            resume.experience = parsed_data.get('experience', {})
-            resume.projects = parsed_data.get('projects', [])
-            resume.status = 'completed'
-            
-            db.session.commit()
-            print(f"Resume {resume_id} processed successfully")
-            
-        except Exception as e:
-            # Update status to failed
-            resume = Resume.query.get(resume_id)
-            if resume:
-                resume.status = 'failed'
-                db.session.commit()
-            print(f"Error processing resume {resume_id}: {str(e)}")
-    
-    def process_resume_async(self, resume_id):
-        """Process resume in a separate thread"""
-        thread = threading.Thread(target=self.process_resume, args=(resume_id,))
-        thread.start()
-        return thread
-=======
                 resume.error_message = parsed_data.get('error', 'Parsing failed')
                 db.session.commit()
                 self.logger.error(f"Resume {resume_id} parsing failed: {resume.error_message}")
                 return
             
-            # Use enhanced extraction
-            text = parsed_data.get('text', '')
-            enhanced_result = self.parser.extract_skills_enhanced(text)
-            
-            # Update resume with parsed data
-            resume.skills = enhanced_result.get('all_skills', [])
+            resume.skills = parsed_data.get('skills', [])
             resume.education = parsed_data.get('education', [])
             resume.experience = parsed_data.get('experience', {})
             resume.projects = parsed_data.get('projects', [])
-            resume.certifications = parsed_data.get('certifications', [])
             
-            # Analyze skills and get recommendations
-            analysis = self.analyzer.analyze_gaps(
-                current_skills=resume.skills or [],
-                target_role='Software Engineer'
-            )
-            
-            resume.employability_score = analysis.get('match_percentage', 0)
+            # Simple employability calculation based on skills and projects
+            skill_count = len(resume.skills or [])
+            score = min(50.0 + skill_count * 5.0, 95.0)
+            resume.employability_score = score
             resume.recommended_roles = ['Software Engineer', 'Data Scientist']
-            resume.skill_gaps = analysis.get('missing_skills', [])
-            
             resume.status = 'completed'
-            db.session.commit()
             
+            db.session.commit()
             self.logger.info(f"Resume {resume_id} processed successfully")
             
         except Exception as e:
-            resume = Resume.query.get(resume_id)
-            if resume:
-                resume.status = 'failed'
-                resume.error_message = str(e)
-                db.session.commit()
             self.logger.error(f"Error processing resume {resume_id}: {e}")
+            try:
+                resume = db.session.get(Resume, resume_id)
+                if resume:
+                    resume.status = 'failed'
+                    resume.error_message = str(e)
+                    db.session.commit()
+            except Exception as db_err:
+                self.logger.error(f"Failed to update error status: {db_err}")
     
     def process_resume_async(self, resume_id: int):
         """Process resume in a separate thread"""
-        thread = threading.Thread(target=self.process_resume, args=(resume_id,))
+        try:
+            app = current_app._get_current_object()
+            def runner():
+                with app.app_context():
+                    self.process_resume(resume_id)
+            thread = threading.Thread(target=runner)
+        except Exception:
+            thread = threading.Thread(target=self.process_resume, args=(resume_id,))
         thread.daemon = True
         thread.start()
         return thread
@@ -154,9 +89,7 @@ class ResumeProcessor:
             thread = self.process_resume_async(resume_id)
             threads.append(thread)
         
-        # Wait for all threads to complete
         for thread in threads:
             thread.join()
         
         return {'processed': len(threads)}
->>>>>>> main

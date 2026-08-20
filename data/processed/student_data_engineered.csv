@@ -1,0 +1,1001 @@
+student_id,department,year_of_study,cgpa,skill_count,skills,internship_months,projects,certifications,workshops,placed,skill_diversity,total_experience,cgpa_normalized,certification_score,skill_cgpa_ratio,exp_skill_ratio,department_encoded
+STU0001,Mechanical,3,5.0,9,"['Python', 'MongoDB', 'Linux', 'Java', 'Node.js', 'CSS', 'NLP', 'SQL', 'Django']",3,4,0,9,0,9,11,0.5,9,1.5,1.1,5
+STU0002,Electrical,4,6.11,5,"['Linux', 'React', 'Docker', 'Python', 'Django']",3,3,3,7,0,5,9,0.611,13,0.7032348804500703,1.5,2
+STU0003,Mechanical,4,9.05,4,"['HTML', 'C++', 'Django', 'Python']",4,1,4,7,0,4,6,0.905,15,0.3980099502487562,1.2,5
+STU0004,Computer Science,3,6.72,11,"['SQL', 'Java', 'HTML', 'CSS', 'Machine Learning', 'Django', 'Docker', 'NLP', 'C++', 'Deep Learning', 'MongoDB']",0,3,0,7,0,11,6,0.6719999999999999,7,1.4248704663212435,0.5,1
+STU0005,Civil,4,5.53,9,"['Git', 'SQL', 'JavaScript', 'Linux', 'Node.js', 'Java', 'Machine Learning', 'MySQL', 'Docker']",3,4,2,6,0,9,11,0.553,10,1.3782542113323124,1.1,0
+STU0006,Electrical,4,9.18,7,"['React', 'Machine Learning', 'Python', 'Node.js', 'HTML', 'NLP', 'Java']",3,3,3,3,1,7,9,0.9179999999999999,9,0.68762278978389,1.125,2
+STU0007,Computer Science,3,6.62,9,"['NLP', 'Java', 'Git', 'React', 'HTML', 'MySQL', 'Machine Learning', 'CSS', 'Django']",6,2,0,3,0,9,10,0.662,3,1.1811023622047243,1.0,1
+STU0008,Electronics,3,5.7,9,"['Docker', 'Node.js', 'MongoDB', 'JavaScript', 'NLP', 'Linux', 'CSS', 'SQL', 'Machine Learning']",3,1,3,6,1,9,5,0.5700000000000001,12,1.3432835820895521,0.5,3
+STU0009,Information Science,4,8.89,8,"['Django', 'Docker', 'MongoDB', 'Machine Learning', 'JavaScript', 'AWS', 'React', 'SQL']",3,3,0,0,1,8,9,0.889,0,0.8088978766430738,1.0,4
+STU0010,Computer Science,4,6.63,11,"['Docker', 'Linux', 'MySQL', 'AWS', 'HTML', 'Git', 'CSS', 'React', 'Deep Learning', 'Java', 'Python']",2,2,2,3,1,11,6,0.663,7,1.4416775884665793,0.5,1
+STU0011,Mechanical,4,9.77,3,"['Python', 'Git', 'Deep Learning']",3,0,3,0,0,3,3,0.977,6,0.2785515320334262,0.75,5
+STU0012,Civil,3,8.03,10,"['Git', 'SQL', 'Java', 'Docker', 'HTML', 'Machine Learning', 'React', 'Node.js', 'AWS', 'Django']",1,4,0,0,1,10,9,0.8029999999999999,0,1.1074197120708749,0.8181818181818182,0
+STU0013,Computer Science,4,9.09,5,"['Deep Learning', 'Java', 'Django', 'Machine Learning', 'JavaScript']",6,4,4,6,1,5,14,0.909,14,0.49554013875123887,2.3333333333333335,1
+STU0014,Civil,3,7.65,4,"['HTML', 'SQL', 'Git', 'MongoDB']",1,1,2,1,1,4,3,0.765,5,0.4624277456647399,0.6,0
+STU0015,Computer Science,3,9.71,9,"['HTML', 'Django', 'Node.js', 'MySQL', 'MongoDB', 'CSS', 'Deep Learning', 'Linux', 'Machine Learning']",5,1,1,5,1,9,7,0.9710000000000001,7,0.8403361344537814,0.7,1
+STU0016,Electronics,4,7.48,8,"['Django', 'Java', 'Linux', 'Machine Learning', 'C++', 'Node.js', 'MongoDB', 'CSS']",5,2,0,7,1,8,9,0.748,7,0.9433962264150942,1.0,3
+STU0017,Electronics,3,8.15,9,"['Deep Learning', 'C++', 'AWS', 'SQL', 'MySQL', 'JavaScript', 'Linux', 'React', 'MongoDB']",4,5,4,6,1,9,14,0.8150000000000001,14,0.9836065573770492,1.4,3
+STU0018,Information Science,4,9.56,5,"['CSS', 'React', 'Java', 'C++', 'Node.js']",3,1,3,9,1,5,5,0.9560000000000001,15,0.47348484848484845,0.8333333333333334,4
+STU0019,Information Science,3,7.62,3,"['Docker', 'CSS', 'Django']",4,3,2,0,1,3,10,0.762,4,0.34802784222737815,2.5,4
+STU0020,Civil,3,9.5,4,"['AWS', 'CSS', 'HTML', 'Linux']",7,3,0,4,1,4,13,0.95,4,0.38095238095238093,2.6,0
+STU0021,Civil,4,9.33,7,"['Deep Learning', 'Docker', 'CSS', 'Linux', 'Machine Learning', 'Django', 'AWS']",5,3,0,5,1,7,11,0.933,5,0.6776379477250726,1.375,0
+STU0022,Electrical,4,8.61,3,"['Java', 'React', 'AWS']",6,0,4,4,0,3,6,0.861,12,0.3121748178980229,1.5,2
+STU0023,Electronics,4,8.39,7,"['Django', 'SQL', 'React', 'MySQL', 'Linux', 'HTML', 'AWS']",4,4,4,5,1,7,12,0.8390000000000001,13,0.7454739084132055,1.5,3
+STU0024,Electronics,4,7.74,3,"['Git', 'React', 'Java']",3,3,4,8,1,3,9,0.774,16,0.34324942791762014,2.25,3
+STU0025,Electrical,4,8.02,11,"['Deep Learning', 'Node.js', 'Java', 'MongoDB', 'React', 'JavaScript', 'C++', 'SQL', 'Docker', 'AWS', 'Git']",5,0,4,5,1,11,5,0.8019999999999999,13,1.2195121951219512,0.4166666666666667,2
+STU0026,Mechanical,4,6.25,9,"['Django', 'C++', 'Python', 'Docker', 'JavaScript', 'Node.js', 'MySQL', 'Java', 'SQL']",2,5,0,8,0,9,12,0.625,8,1.2413793103448276,1.2,5
+STU0027,Information Science,3,6.81,5,"['SQL', 'AWS', 'C++', 'Deep Learning', 'Linux']",1,0,2,0,1,5,1,0.6809999999999999,4,0.6402048655569783,0.16666666666666666,4
+STU0028,Computer Science,4,7.16,3,"['Machine Learning', 'SQL', 'Python']",5,0,2,3,0,3,5,0.716,7,0.3676470588235294,1.25,1
+STU0029,Mechanical,4,7.02,4,"['NLP', 'SQL', 'MongoDB', 'Node.js']",4,4,1,2,1,4,12,0.702,4,0.49875311720698257,2.4,5
+STU0030,Civil,4,8.82,4,"['HTML', 'NLP', 'Machine Learning', 'MySQL']",1,0,1,0,0,4,1,0.882,2,0.40733197556008144,0.2,0
+STU0031,Electronics,4,8.2,7,"['Django', 'Machine Learning', 'HTML', 'Git', 'Docker', 'Python', 'MongoDB']",1,4,1,2,1,7,9,0.82,4,0.7608695652173914,1.125,3
+STU0032,Electrical,3,6.33,4,"['React', 'SQL', 'MongoDB', 'Linux']",0,0,2,3,0,4,0,0.633,7,0.5457025920873124,0.0,2
+STU0033,Computer Science,4,7.56,9,"['Python', 'Node.js', 'MySQL', 'MongoDB', 'HTML', 'SQL', 'Linux', 'CSS', 'Git']",6,0,4,9,1,9,6,0.756,17,1.0514018691588787,0.6,1
+STU0034,Electronics,4,6.36,8,"['HTML', 'React', 'Django', 'Deep Learning', 'Python', 'MongoDB', 'CSS', 'JavaScript']",5,3,1,1,0,8,11,0.636,3,1.0869565217391304,1.2222222222222223,3
+STU0035,Electrical,3,6.91,7,"['Django', 'Java', 'Machine Learning', 'MySQL', 'Git', 'HTML', 'NLP']",3,2,3,5,1,7,7,0.6910000000000001,11,0.8849557522123893,0.875,2
+STU0036,Electronics,3,5.55,5,"['JavaScript', 'Django', 'MySQL', 'Node.js', 'Python']",1,5,4,3,0,5,11,0.5549999999999999,11,0.7633587786259542,1.8333333333333333,3
+STU0037,Electronics,4,8.81,4,"['Deep Learning', 'CSS', 'Linux', 'Node.js']",6,0,4,1,0,4,6,0.881,9,0.4077471967380224,1.2,3
+STU0038,Computer Science,4,6.13,5,"['Java', 'Machine Learning', 'JavaScript', 'MongoDB', 'Django']",5,1,3,8,1,5,7,0.613,14,0.7012622720897616,1.1666666666666667,1
+STU0039,Mechanical,4,5.56,10,"['MySQL', 'Deep Learning', 'Git', 'SQL', 'HTML', 'Java', 'MongoDB', 'Machine Learning', 'Node.js', 'NLP']",5,2,2,7,0,10,9,0.5559999999999999,11,1.524390243902439,0.8181818181818182,5
+STU0040,Civil,4,5.49,3,"['Linux', 'Machine Learning', 'React']",4,3,4,7,0,3,10,0.549,15,0.4622496147919877,2.5,0
+STU0041,Electrical,3,6.92,6,"['Python', 'JavaScript', 'Node.js', 'React', 'MySQL', 'CSS']",6,1,2,9,0,6,8,0.692,13,0.7575757575757576,1.1428571428571428,2
+STU0042,Computer Science,3,7.04,3,"['Machine Learning', 'CSS', 'Node.js']",4,5,0,5,1,3,14,0.704,5,0.373134328358209,3.5,1
+STU0043,Information Science,4,5.55,7,"['AWS', 'Linux', 'Django', 'Machine Learning', 'NLP', 'MongoDB', 'Java']",3,0,1,5,0,7,3,0.5549999999999999,7,1.0687022900763359,0.375,4
+STU0044,Civil,4,6.99,3,"['C++', 'Node.js', 'AWS']",3,4,0,6,0,3,11,0.6990000000000001,6,0.37546933667083854,2.75,0
+STU0045,Electronics,4,8.67,5,"['HTML', 'Machine Learning', 'JavaScript', 'Git', 'Deep Learning']",3,0,4,6,1,5,3,0.867,14,0.5170630816959669,0.5,3
+STU0046,Information Science,4,8.84,5,"['CSS', 'Machine Learning', 'AWS', 'SQL', 'HTML']",2,2,0,7,1,5,6,0.884,7,0.508130081300813,1.0,4
+STU0047,Civil,4,7.8,10,"['React', 'MongoDB', 'NLP', 'C++', 'MySQL', 'Python', 'Node.js', 'Machine Learning', 'Java', 'JavaScript']",3,1,1,0,1,10,5,0.78,2,1.1363636363636362,0.45454545454545453,0
+STU0048,Computer Science,4,9.73,4,"['Deep Learning', 'Machine Learning', 'JavaScript', 'React']",6,0,1,2,0,4,6,0.9730000000000001,4,0.3727865796831314,1.2,1
+STU0049,Electrical,3,7.66,11,"['MySQL', 'C++', 'MongoDB', 'Python', 'Git', 'React', 'AWS', 'NLP', 'CSS', 'HTML', 'Django']",0,5,1,6,0,11,10,0.766,8,1.2702078521939955,0.8333333333333334,2
+STU0050,Electronics,3,5.88,11,"['C++', 'Deep Learning', 'Docker', 'MongoDB', 'Linux', 'MySQL', 'Django', 'SQL', 'Git', 'Python', 'Machine Learning']",4,3,2,9,0,11,10,0.588,13,1.5988372093023255,0.8333333333333334,3
+STU0051,Computer Science,4,9.04,6,"['Machine Learning', 'AWS', 'Node.js', 'Linux', 'SQL', 'Docker']",0,5,2,1,1,6,10,0.9039999999999999,5,0.5976095617529881,1.4285714285714286,1
+STU0052,Information Science,4,5.03,7,"['SQL', 'HTML', 'CSS', 'Git', 'Java', 'NLP', 'C++']",3,2,4,0,0,7,7,0.503,8,1.1608623548922057,0.875,4
+STU0053,Information Science,4,9.74,3,"['Machine Learning', 'SQL', 'Django']",4,1,1,6,1,3,6,0.974,8,0.27932960893854747,1.5,4
+STU0054,Electronics,4,8.12,9,"['Linux', 'Python', 'HTML', 'CSS', 'Django', 'Machine Learning', 'MongoDB', 'NLP', 'SQL']",7,2,3,1,1,9,11,0.8119999999999999,7,0.986842105263158,1.1,3
+STU0055,Civil,4,7.22,10,"['C++', 'Deep Learning', 'MongoDB', 'Django', 'Docker', 'Machine Learning', 'HTML', 'Linux', 'MySQL', 'Java']",1,5,2,6,1,10,11,0.722,10,1.2165450121654502,1.0,0
+STU0056,Civil,3,5.53,5,"['C++', 'CSS', 'Java', 'Python', 'Git']",5,5,1,3,1,5,15,0.553,5,0.7656967840735068,2.5,0
+STU0057,Computer Science,4,9.24,3,"['Linux', 'JavaScript', 'CSS']",7,2,4,1,1,3,11,0.924,9,0.29296875,2.75,1
+STU0058,Civil,3,9.24,6,"['SQL', 'NLP', 'Git', 'MySQL', 'JavaScript', 'HTML']",2,3,1,0,1,6,8,0.924,2,0.5859375,1.1428571428571428,0
+STU0059,Computer Science,4,5.62,5,"['NLP', 'Machine Learning', 'JavaScript', 'Python', 'Docker']",0,2,0,1,1,5,4,0.562,1,0.7552870090634441,0.6666666666666666,1
+STU0060,Information Science,4,9.09,11,"['Node.js', 'C++', 'Python', 'AWS', 'JavaScript', 'SQL', 'Git', 'Docker', 'MySQL', 'Machine Learning', 'Django']",7,4,4,2,1,11,15,0.909,10,1.0901883052527255,1.25,4
+STU0061,Computer Science,3,7.97,10,"['SQL', 'JavaScript', 'Django', 'Docker', 'Machine Learning', 'Deep Learning', 'NLP', 'HTML', 'Node.js', 'Git']",5,3,4,9,1,10,11,0.7969999999999999,17,1.1148272017837237,1.0,1
+STU0062,Electronics,4,5.56,9,"['Node.js', 'MongoDB', 'NLP', 'Python', 'C++', 'CSS', 'Linux', 'React', 'MySQL']",1,3,4,2,0,9,7,0.5559999999999999,10,1.3719512195121952,0.7,3
+STU0063,Electronics,3,7.98,11,"['C++', 'React', 'JavaScript', 'MySQL', 'Deep Learning', 'Node.js', 'MongoDB', 'Machine Learning', 'Python', 'NLP', 'Django']",2,1,1,3,1,11,4,0.798,5,1.2249443207126949,0.3333333333333333,3
+STU0064,Information Science,4,9.1,9,"['AWS', 'React', 'Docker', 'MongoDB', 'SQL', 'HTML', 'Node.js', 'MySQL', 'Java']",6,4,4,3,1,9,14,0.9099999999999999,11,0.8910891089108911,1.4,4
+STU0065,Computer Science,4,9.29,6,"['Machine Learning', 'Java', 'JavaScript', 'Node.js', 'Linux', 'Django']",6,1,4,2,1,6,8,0.9289999999999999,10,0.5830903790087464,1.1428571428571428,1
+STU0066,Computer Science,4,9.42,4,"['CSS', 'AWS', 'Docker', 'Machine Learning']",2,3,0,6,1,4,8,0.942,6,0.3838771593090211,1.6,1
+STU0067,Computer Science,4,8.27,6,"['JavaScript', 'Git', 'Docker', 'Django', 'Python', 'Machine Learning']",1,5,2,8,1,6,11,0.827,12,0.6472491909385114,1.5714285714285714,1
+STU0068,Information Science,4,9.24,11,"['Git', 'C++', 'HTML', 'JavaScript', 'Machine Learning', 'MongoDB', 'Java', 'Docker', 'Django', 'Linux', 'SQL']",5,0,4,3,1,11,5,0.924,11,1.07421875,0.4166666666666667,4
+STU0069,Electronics,4,6.43,4,"['HTML', 'MySQL', 'SQL', 'AWS']",3,1,3,3,0,4,5,0.643,9,0.5383580080753702,1.0,3
+STU0070,Civil,4,6.05,6,"['Deep Learning', 'AWS', 'NLP', 'Python', 'HTML', 'React']",6,5,3,7,1,6,16,0.605,13,0.851063829787234,2.2857142857142856,0
+STU0071,Mechanical,4,9.61,5,"['SQL', 'Linux', 'Docker', 'Django', 'Python']",1,4,3,4,1,5,9,0.961,10,0.471253534401508,1.5,5
+STU0072,Computer Science,3,6.72,6,"['Python', 'Django', 'React', 'Docker', 'C++', 'Git']",2,4,1,7,1,6,10,0.6719999999999999,9,0.7772020725388601,1.4285714285714286,1
+STU0073,Electronics,4,7.47,10,"['React', 'AWS', 'C++', 'MongoDB', 'Django', 'Node.js', 'Python', 'MySQL', 'CSS', 'Deep Learning']",0,3,1,6,0,10,6,0.747,8,1.180637544273908,0.5454545454545454,3
+STU0074,Electrical,3,7.07,4,"['Node.js', 'Linux', 'Deep Learning', 'Machine Learning']",3,2,3,0,0,4,7,0.7070000000000001,6,0.4956629491945477,1.4,2
+STU0075,Electrical,3,5.59,11,"['MySQL', 'JavaScript', 'Node.js', 'Java', 'Machine Learning', 'Docker', 'C++', 'SQL', 'CSS', 'Django', 'React']",4,3,1,0,0,11,10,0.5589999999999999,2,1.6691957511380882,0.8333333333333334,2
+STU0076,Information Science,3,7.55,7,"['CSS', 'MongoDB', 'JavaScript', 'Deep Learning', 'C++', 'Django', 'AWS']",6,5,4,3,1,7,16,0.755,11,0.8187134502923976,2.0,4
+STU0077,Mechanical,4,6.17,9,"['Node.js', 'NLP', 'SQL', 'Deep Learning', 'C++', 'Machine Learning', 'Git', 'Linux', 'MySQL']",1,0,3,7,1,9,1,0.617,13,1.2552301255230125,0.1,5
+STU0078,Electrical,4,6.39,5,"['Deep Learning', 'C++', 'SQL', 'MongoDB', 'MySQL']",2,3,1,5,0,5,8,0.639,7,0.6765899864682003,1.3333333333333333,2
+STU0079,Computer Science,4,8.34,4,"['MySQL', 'Machine Learning', 'Git', 'Java']",3,4,0,0,1,4,11,0.834,0,0.4282655246252677,2.2,1
+STU0080,Electrical,4,5.52,5,"['AWS', 'JavaScript', 'MySQL', 'Python', 'SQL']",4,1,4,3,0,5,6,0.5519999999999999,11,0.7668711656441718,1.0,2
+STU0081,Information Science,4,6.23,7,"['JavaScript', 'Machine Learning', 'Python', 'React', 'Java', 'MySQL', 'CSS']",3,5,2,2,0,7,13,0.623,6,0.9681881051175656,1.625,4
+STU0082,Electrical,4,8.92,4,"['C++', 'React', 'Linux', 'CSS']",3,4,1,6,1,4,11,0.892,8,0.40322580645161293,2.2,2
+STU0083,Mechanical,3,7.03,8,"['AWS', 'CSS', 'JavaScript', 'NLP', 'SQL', 'HTML', 'C++', 'Java']",1,0,1,2,1,8,1,0.7030000000000001,4,0.99626400996264,0.1111111111111111,5
+STU0084,Electronics,4,6.23,9,"['Node.js', 'AWS', 'Deep Learning', 'React', 'SQL', 'MySQL', 'Machine Learning', 'CSS', 'Docker']",4,4,0,8,1,9,12,0.623,8,1.2448132780082988,1.2,3
+STU0085,Mechanical,4,7.86,4,"['NLP', 'Docker', 'Git', 'Linux']",0,0,2,5,0,4,0,0.786,9,0.4514672686230249,0.0,5
+STU0086,Mechanical,4,8.51,4,"['Git', 'Deep Learning', 'Python', 'Django']",5,3,3,9,1,4,11,0.851,15,0.4206098843322818,2.2,5
+STU0087,Computer Science,4,8.22,11,"['Java', 'Node.js', 'Git', 'MongoDB', 'Docker', 'HTML', 'CSS', 'AWS', 'Deep Learning', 'JavaScript', 'C++']",3,5,1,7,1,11,13,0.8220000000000001,9,1.193058568329718,1.0833333333333333,1
+STU0088,Electrical,4,6.34,8,"['Machine Learning', 'Deep Learning', 'MySQL', 'React', 'CSS', 'Git', 'Linux', 'C++']",1,3,1,6,0,8,7,0.634,8,1.0899182561307903,0.7777777777777778,2
+STU0089,Information Science,4,5.83,8,"['MySQL', 'Node.js', 'Django', 'Docker', 'Linux', 'SQL', 'JavaScript', 'Deep Learning']",1,2,1,3,0,8,5,0.583,5,1.171303074670571,0.5555555555555556,4
+STU0090,Information Science,3,7.43,11,"['Machine Learning', 'NLP', 'JavaScript', 'Java', 'React', 'HTML', 'Linux', 'Git', 'Node.js', 'Deep Learning', 'C++']",6,3,4,3,1,11,12,0.743,11,1.3048635824436536,1.0,4
+STU0091,Mechanical,4,8.76,8,"['Docker', 'SQL', 'MySQL', 'CSS', 'AWS', 'Linux', 'Python', 'JavaScript']",5,2,3,0,1,8,9,0.876,6,0.819672131147541,1.0,5
+STU0092,Information Science,3,6.99,10,"['Node.js', 'Python', 'Deep Learning', 'C++', 'React', 'Linux', 'MongoDB', 'Machine Learning', 'Java', 'Django']",5,4,4,5,1,10,13,0.6990000000000001,13,1.2515644555694618,1.1818181818181819,4
+STU0093,Mechanical,3,7.34,7,"['C++', 'Django', 'SQL', 'Deep Learning', 'Node.js', 'AWS', 'Docker']",2,0,3,4,1,7,2,0.734,10,0.8393285371702638,0.25,5
+STU0094,Information Science,3,6.51,7,"['AWS', 'Docker', 'JavaScript', 'Deep Learning', 'Machine Learning', 'Python', 'MySQL']",0,1,3,0,1,7,2,0.651,6,0.9320905459387484,0.25,4
+STU0095,Computer Science,4,5.41,10,"['Node.js', 'MongoDB', 'Git', 'Linux', 'Machine Learning', 'NLP', 'SQL', 'HTML', 'C++', 'Docker']",2,0,4,2,0,10,2,0.541,10,1.5600624024960998,0.18181818181818182,1
+STU0096,Electronics,3,7.47,7,"['Python', 'Git', 'Linux', 'Django', 'Java', 'AWS', 'CSS']",0,0,0,1,0,7,0,0.747,1,0.8264462809917357,0.0,3
+STU0097,Computer Science,4,8.9,6,"['Python', 'Linux', 'C++', 'NLP', 'Django', 'Deep Learning']",3,1,2,9,1,6,5,0.89,13,0.6060606060606061,0.7142857142857143,1
+STU0098,Information Science,4,8.22,9,"['AWS', 'JavaScript', 'MySQL', 'MongoDB', 'Python', 'Linux', 'C++', 'Git', 'HTML']",5,0,3,8,1,9,5,0.8220000000000001,14,0.9761388286334056,0.5,4
+STU0099,Mechanical,4,8.29,7,"['C++', 'Python', 'Linux', 'Java', 'MySQL', 'HTML', 'SQL']",3,2,1,2,1,7,7,0.829,4,0.7534983853606029,0.875,5
+STU0100,Civil,4,9.22,7,"['MySQL', 'Java', 'CSS', 'Docker', 'MongoDB', 'AWS', 'SQL']",1,2,0,9,1,7,5,0.922,9,0.684931506849315,0.625,0
+STU0101,Information Science,4,8.26,9,"['React', 'C++', 'HTML', 'Django', 'JavaScript', 'Git', 'Python', 'MySQL', 'NLP']",7,2,2,4,1,9,11,0.826,8,0.9719222462203024,1.1,4
+STU0102,Civil,4,9.2,6,"['Java', 'MongoDB', 'AWS', 'Deep Learning', 'Python', 'NLP']",4,5,2,7,1,6,14,0.9199999999999999,11,0.5882352941176471,2.0,0
+STU0103,Electronics,4,8.53,9,"['Deep Learning', 'Python', 'MongoDB', 'NLP', 'Node.js', 'Linux', 'Django', 'JavaScript', 'HTML']",0,1,3,0,0,9,2,0.853,6,0.944386149003148,0.2,3
+STU0104,Civil,4,5.79,11,"['Machine Learning', 'C++', 'React', 'NLP', 'Docker', 'MongoDB', 'HTML', 'Java', 'Node.js', 'JavaScript', 'Django']",2,0,4,5,0,11,2,0.579,13,1.6200294550810015,0.16666666666666666,0
+STU0105,Electrical,3,9.34,5,"['Git', 'Linux', 'JavaScript', 'CSS', 'React']",2,0,0,3,1,5,2,0.9339999999999999,3,0.4835589941972921,0.3333333333333333,2
+STU0106,Electronics,3,9.09,11,"['Django', 'Linux', 'Node.js', 'MySQL', 'HTML', 'Python', 'Java', 'Deep Learning', 'Git', 'React', 'AWS']",2,3,1,9,1,11,8,0.909,11,1.0901883052527255,0.6666666666666666,3
+STU0107,Information Science,3,7.37,6,"['C++', 'Django', 'Linux', 'Machine Learning', 'NLP', 'Node.js']",4,1,4,2,1,6,6,0.737,10,0.7168458781362006,0.8571428571428571,4
+STU0108,Information Science,3,8.47,3,"['AWS', 'C++', 'Git']",0,5,0,0,1,3,10,0.8470000000000001,0,0.3167898627243928,2.5,4
+STU0109,Civil,3,5.54,8,"['MongoDB', 'NLP', 'JavaScript', 'AWS', 'SQL', 'Git', 'C++', 'React']",2,1,2,2,1,8,4,0.554,6,1.2232415902140672,0.4444444444444444,0
+STU0110,Electrical,4,5.45,6,"['JavaScript', 'Linux', 'Django', 'C++', 'Python', 'Machine Learning']",2,3,0,9,0,6,8,0.545,9,0.9302325581395349,1.1428571428571428,2
+STU0111,Electrical,4,9.31,9,"['CSS', 'Java', 'AWS', 'Linux', 'Python', 'JavaScript', 'MySQL', 'SQL', 'Node.js']",1,1,3,3,1,9,3,0.931,9,0.8729388942774006,0.3,2
+STU0112,Computer Science,4,9.65,9,"['MySQL', 'NLP', 'Docker', 'Node.js', 'Django', 'SQL', 'HTML', 'JavaScript', 'Machine Learning']",2,0,3,6,1,9,2,0.9650000000000001,12,0.8450704225352113,0.2,1
+STU0113,Information Science,3,5.38,9,"['Docker', 'React', 'MongoDB', 'Git', 'Linux', 'MySQL', 'Python', 'C++', 'Node.js']",4,2,4,8,1,9,8,0.538,16,1.4106583072100314,0.8,4
+STU0114,Mechanical,4,8.96,11,"['Docker', 'AWS', 'Python', 'JavaScript', 'Django', 'Machine Learning', 'MySQL', 'SQL', 'C++', 'CSS', 'MongoDB']",5,0,4,2,1,11,5,0.8960000000000001,10,1.104417670682731,0.4166666666666667,5
+STU0115,Electronics,4,5.8,5,"['Django', 'Linux', 'React', 'Machine Learning', 'Docker']",3,3,0,7,0,5,9,0.58,7,0.7352941176470589,1.5,3
+STU0116,Information Science,4,6.25,11,"['Java', 'Deep Learning', 'MongoDB', 'React', 'Docker', 'JavaScript', 'Python', 'AWS', 'Machine Learning', 'SQL', 'NLP']",0,5,2,6,0,11,10,0.625,10,1.5172413793103448,0.8333333333333334,4
+STU0117,Civil,4,8.96,8,"['NLP', 'HTML', 'JavaScript', 'Linux', 'AWS', 'Java', 'CSS', 'Machine Learning']",2,0,3,3,1,8,2,0.8960000000000001,9,0.8032128514056224,0.2222222222222222,0
+STU0118,Mechanical,4,6.43,11,"['MongoDB', 'MySQL', 'C++', 'Java', 'JavaScript', 'NLP', 'Machine Learning', 'Deep Learning', 'Node.js', 'Python', 'Linux']",2,5,0,3,0,11,12,0.643,3,1.4804845222072678,1.0,5
+STU0119,Computer Science,3,5.55,11,"['CSS', 'Machine Learning', 'MySQL', 'Git', 'SQL', 'React', 'MongoDB', 'JavaScript', 'HTML', 'Java', 'Deep Learning']",4,0,4,8,0,11,4,0.5549999999999999,16,1.6793893129770994,0.3333333333333333,1
+STU0120,Electrical,4,8.07,3,"['MongoDB', 'JavaScript', 'Python']",6,3,3,3,1,3,12,0.807,9,0.33076074972436603,3.0,2
+STU0121,Computer Science,4,9.36,5,"['SQL', 'C++', 'Django', 'HTML', 'Linux']",2,3,1,0,1,5,8,0.9359999999999999,2,0.48262548262548266,1.3333333333333333,1
+STU0122,Electrical,3,8.85,3,"['JavaScript', 'HTML', 'Java']",0,5,1,5,1,3,10,0.885,7,0.30456852791878175,2.5,2
+STU0123,Civil,3,6.32,10,"['Java', 'SQL', 'Linux', 'Git', 'CSS', 'AWS', 'Docker', 'Machine Learning', 'MongoDB', 'NLP']",0,3,2,7,1,10,6,0.632,11,1.366120218579235,0.5454545454545454,0
+STU0124,Electronics,4,5.58,3,"['CSS', 'MySQL', 'NLP']",3,3,0,0,0,3,9,0.558,0,0.45592705167173253,2.25,3
+STU0125,Information Science,3,8.56,9,"['HTML', 'JavaScript', 'Docker', 'MongoDB', 'NLP', 'SQL', 'React', 'Python', 'CSS']",4,5,2,7,1,9,14,0.8560000000000001,11,0.9414225941422594,1.4,4
+STU0126,Mechanical,3,6.94,5,"['Django', 'Linux', 'C++', 'Java', 'MySQL']",4,0,4,5,1,5,4,0.6940000000000001,13,0.6297229219143576,0.6666666666666666,5
+STU0127,Information Science,4,5.68,5,"['HTML', 'Django', 'MongoDB', 'Docker', 'Java']",7,0,0,3,0,5,7,0.568,3,0.7485029940119761,1.1666666666666667,4
+STU0128,Information Science,3,7.33,5,"['C++', 'MySQL', 'AWS', 'JavaScript', 'Node.js']",7,2,2,3,1,5,11,0.733,7,0.6002400960384153,1.8333333333333333,4
+STU0129,Electrical,4,5.42,8,"['Node.js', 'React', 'Python', 'Java', 'SQL', 'MySQL', 'JavaScript', 'C++']",2,5,3,0,0,8,12,0.542,6,1.2461059190031152,1.3333333333333333,2
+STU0130,Computer Science,4,6.64,7,"['SQL', 'Docker', 'Python', 'NLP', 'Django', 'Git', 'React']",3,4,3,6,0,7,11,0.6639999999999999,12,0.9162303664921466,1.375,1
+STU0131,Electronics,4,5.71,10,"['Node.js', 'Docker', 'HTML', 'JavaScript', 'MySQL', 'Machine Learning', 'NLP', 'CSS', 'React', 'Linux']",4,0,4,3,1,10,4,0.571,11,1.4903129657228018,0.36363636363636365,3
+STU0132,Electrical,4,9.56,8,"['C++', 'MySQL', 'Django', 'Node.js', 'Java', 'Docker', 'Machine Learning', 'SQL']",1,3,3,3,1,8,7,0.9560000000000001,9,0.7575757575757576,0.7777777777777778,2
+STU0133,Mechanical,3,8.67,6,"['SQL', 'Git', 'Django', 'NLP', 'Linux', 'HTML']",3,4,2,8,1,6,11,0.867,12,0.6204756980351603,1.5714285714285714,5
+STU0134,Electronics,3,5.65,3,"['MongoDB', 'SQL', 'Node.js']",5,4,3,1,0,3,13,0.5650000000000001,7,0.45112781954887216,3.25,3
+STU0135,Information Science,3,8.16,11,"['Deep Learning', 'Java', 'Node.js', 'CSS', 'NLP', 'Docker', 'HTML', 'Linux', 'SQL', 'Django', 'MongoDB']",6,0,3,2,1,11,6,0.8160000000000001,8,1.2008733624454149,0.5,4
+STU0136,Computer Science,4,9.58,9,"['Django', 'Python', 'MongoDB', 'JavaScript', 'Machine Learning', 'HTML', 'Git', 'AWS', 'NLP']",2,5,1,7,1,9,12,0.958,9,0.8506616257088847,1.2,1
+STU0137,Electronics,4,6.08,8,"['MySQL', 'SQL', 'Python', 'Node.js', 'HTML', 'Deep Learning', 'Machine Learning', 'CSS']",0,5,4,4,0,8,10,0.608,12,1.1299435028248588,1.1111111111111112,3
+STU0138,Information Science,4,8.46,8,"['Django', 'Git', 'C++', 'Python', 'Node.js', 'Docker', 'JavaScript', 'HTML']",3,5,1,1,1,8,13,0.8460000000000001,3,0.8456659619450316,1.4444444444444444,4
+STU0139,Computer Science,3,8.56,11,"['C++', 'SQL', 'HTML', 'Linux', 'React', 'Deep Learning', 'JavaScript', 'Docker', 'Django', 'CSS', 'Java']",4,3,2,8,1,11,10,0.8560000000000001,12,1.1506276150627615,0.8333333333333334,1
+STU0140,Information Science,3,7.71,11,"['Machine Learning', 'Node.js', 'JavaScript', 'Git', 'Deep Learning', 'HTML', 'MongoDB', 'Linux', 'React', 'CSS', 'Python']",3,2,0,7,1,11,7,0.771,7,1.2629161882893225,0.5833333333333334,4
+STU0141,Information Science,4,5.5,7,"['Git', 'Java', 'Docker', 'JavaScript', 'CSS', 'C++', 'MongoDB']",5,3,0,2,0,7,11,0.55,2,1.0769230769230769,1.375,4
+STU0142,Electronics,4,7.92,5,"['Deep Learning', 'MySQL', 'Git', 'Django', 'Python']",1,0,3,1,1,5,1,0.792,7,0.5605381165919282,0.16666666666666666,3
+STU0143,Electronics,4,6.82,7,"['AWS', 'Docker', 'Git', 'Django', 'JavaScript', 'MySQL', 'Linux']",7,1,0,3,1,7,9,0.682,3,0.8951406649616368,1.125,3
+STU0144,Civil,4,5.08,8,"['Django', 'HTML', 'C++', 'Java', 'React', 'AWS', 'Linux', 'JavaScript']",2,5,0,1,0,8,12,0.508,1,1.3157894736842106,1.3333333333333333,0
+STU0145,Information Science,4,5.73,9,"['MongoDB', 'Java', 'Docker', 'Git', 'CSS', 'Python', 'Machine Learning', 'React', 'Node.js']",7,2,4,8,1,9,11,0.5730000000000001,16,1.337295690936107,1.1,4
+STU0146,Electronics,4,7.99,9,"['Docker', 'AWS', 'Machine Learning', 'Git', 'Django', 'Deep Learning', 'C++', 'Python', 'Linux']",1,2,4,2,1,9,5,0.799,10,1.0011123470522802,0.5,3
+STU0147,Mechanical,4,8.31,10,"['Java', 'HTML', 'JavaScript', 'C++', 'AWS', 'Machine Learning', 'Node.js', 'Django', 'CSS', 'MongoDB']",1,0,1,4,1,10,1,0.8310000000000001,6,1.0741138560687433,0.09090909090909091,5
+STU0148,Mechanical,4,7.08,10,"['Django', 'C++', 'SQL', 'Linux', 'Git', 'JavaScript', 'React', 'Node.js', 'Docker', 'MySQL']",5,2,4,7,1,10,9,0.708,15,1.2376237623762376,0.8181818181818182,5
+STU0149,Electrical,3,6.25,3,"['Docker', 'JavaScript', 'Python']",0,1,2,6,0,3,2,0.625,10,0.41379310344827586,0.5,2
+STU0150,Civil,4,7.2,8,"['Node.js', 'Linux', 'Machine Learning', 'C++', 'Django', 'CSS', 'Docker', 'AWS']",0,2,3,7,1,8,4,0.72,13,0.9756097560975611,0.4444444444444444,0
+STU0151,Computer Science,3,7.31,11,"['Node.js', 'MySQL', 'Python', 'CSS', 'Docker', 'C++', 'JavaScript', 'Java', 'AWS', 'React', 'Linux']",4,4,1,3,1,11,12,0.731,5,1.3237063778580027,1.0,1
+STU0152,Computer Science,3,6.85,9,"['React', 'AWS', 'NLP', 'CSS', 'Node.js', 'Django', 'Machine Learning', 'MySQL', 'Linux']",4,2,1,3,1,9,8,0.6849999999999999,5,1.1464968152866242,0.8,1
+STU0153,Electronics,3,7.78,6,"['MongoDB', 'Docker', 'C++', 'JavaScript', 'SQL', 'Linux']",2,3,1,2,1,6,8,0.778,4,0.6833712984054668,1.1428571428571428,3
+STU0154,Information Science,4,9.1,9,"['CSS', 'Node.js', 'C++', 'MySQL', 'Python', 'NLP', 'Django', 'Deep Learning', 'Java']",3,5,0,3,1,9,13,0.9099999999999999,3,0.8910891089108911,1.3,4
+STU0155,Computer Science,4,5.22,7,"['HTML', 'CSS', 'JavaScript', 'Django', 'Node.js', 'MongoDB', 'NLP']",3,4,4,4,1,7,11,0.522,12,1.1254019292604502,1.375,1
+STU0156,Information Science,4,8.18,8,"['Node.js', 'Python', 'Java', 'NLP', 'Linux', 'Deep Learning', 'Docker', 'AWS']",6,0,4,6,1,8,6,0.818,14,0.8714596949891068,0.6666666666666666,4
+STU0157,Electronics,4,8.4,7,"['MySQL', 'Java', 'AWS', 'NLP', 'C++', 'Python', 'Node.js']",2,1,0,0,1,7,4,0.8400000000000001,0,0.7446808510638298,0.5,3
+STU0158,Information Science,4,7.15,8,"['Java', 'AWS', 'Machine Learning', 'Django', 'C++', 'React', 'JavaScript', 'Docker']",1,2,0,6,1,8,5,0.7150000000000001,6,0.9815950920245399,0.5555555555555556,4
+STU0159,Mechanical,4,9.55,11,"['MongoDB', 'NLP', 'React', 'Git', 'Machine Learning', 'JavaScript', 'Python', 'C++', 'HTML', 'Deep Learning', 'SQL']",0,0,2,9,0,11,0,0.9550000000000001,13,1.0426540284360188,0.0,5
+STU0160,Electronics,4,7.42,5,"['AWS', 'HTML', 'Node.js', 'Django', 'Git']",2,5,4,2,1,5,12,0.742,10,0.5938242280285035,2.0,3
+STU0161,Electronics,3,8.24,11,"['Python', 'Django', 'Git', 'MongoDB', 'AWS', 'MySQL', 'Docker', 'Machine Learning', 'Deep Learning', 'JavaScript', 'Linux']",3,0,0,4,1,11,3,0.8240000000000001,4,1.1904761904761905,0.25,3
+STU0162,Electrical,4,6.79,3,"['JavaScript', 'SQL', 'Linux']",3,0,4,3,0,3,3,0.679,11,0.3851091142490372,0.75,2
+STU0163,Information Science,4,7.79,8,"['Linux', 'C++', 'Git', 'JavaScript', 'Deep Learning', 'SQL', 'HTML', 'NLP']",0,2,0,6,0,8,4,0.779,6,0.9101251422070535,0.4444444444444444,4
+STU0164,Electrical,3,5.44,5,"['AWS', 'MongoDB', 'React', 'HTML', 'Node.js']",1,5,4,1,1,5,11,0.544,9,0.7763975155279502,1.8333333333333333,2
+STU0165,Electrical,4,8.54,11,"['HTML', 'Machine Learning', 'React', 'MySQL', 'JavaScript', 'MongoDB', 'AWS', 'C++', 'Django', 'Docker', 'Java']",7,4,2,7,1,11,15,0.8539999999999999,11,1.1530398322851154,1.25,2
+STU0166,Information Science,4,8.23,11,"['CSS', 'Machine Learning', 'Docker', 'React', 'HTML', 'NLP', 'Deep Learning', 'Java', 'Linux', 'C++', 'Git']",7,5,0,9,1,11,17,0.8230000000000001,9,1.191765980498375,1.4166666666666667,4
+STU0167,Mechanical,3,8.43,4,"['MySQL', 'CSS', 'Java', 'HTML']",7,0,4,6,0,4,7,0.843,14,0.4241781548250265,1.4,5
+STU0168,Electrical,4,8.95,3,"['Django', 'Node.js', 'SQL']",2,4,2,9,1,3,10,0.8949999999999999,13,0.30150753768844224,2.5,2
+STU0169,Mechanical,4,5.17,10,"['NLP', 'C++', 'HTML', 'Java', 'MongoDB', 'Linux', 'SQL', 'Git', 'JavaScript', 'MySQL']",2,4,1,9,0,10,10,0.517,11,1.6207455429497568,0.9090909090909091,5
+STU0170,Information Science,4,9.45,10,"['Python', 'JavaScript', 'Docker', 'C++', 'React', 'MySQL', 'Django', 'Linux', 'Node.js', 'Machine Learning']",6,0,2,5,1,10,6,0.945,9,0.9569377990430623,0.5454545454545454,4
+STU0171,Computer Science,4,7.66,8,"['Django', 'Docker', 'Deep Learning', 'MongoDB', 'AWS', 'Node.js', 'React', 'Git']",0,4,4,9,1,8,8,0.766,17,0.9237875288683602,0.8888888888888888,1
+STU0172,Electronics,4,5.93,9,"['Java', 'MongoDB', 'React', 'NLP', 'C++', 'CSS', 'AWS', 'Node.js', 'Django']",5,4,1,6,1,9,13,0.593,8,1.2987012987012987,1.3,3
+STU0173,Electronics,3,7.6,8,"['Deep Learning', 'C++', 'CSS', 'Machine Learning', 'MongoDB', 'Django', 'Java', 'MySQL']",5,0,2,9,1,8,5,0.76,13,0.9302325581395349,0.5555555555555556,3
+STU0174,Information Science,3,8.62,5,"['MongoDB', 'HTML', 'React', 'Python', 'Linux']",0,2,2,9,1,5,4,0.8619999999999999,13,0.5197505197505198,0.6666666666666666,4
+STU0175,Electrical,4,8.71,4,"['CSS', 'SQL', 'C++', 'Node.js']",6,4,0,0,1,4,14,0.8710000000000001,0,0.4119464469618949,2.8,2
+STU0176,Information Science,4,8.8,11,"['JavaScript', 'Java', 'SQL', 'Django', 'Docker', 'MySQL', 'HTML', 'Python', 'MongoDB', 'React', 'AWS']",5,4,2,2,1,11,13,0.8800000000000001,6,1.1224489795918366,1.0833333333333333,4
+STU0177,Civil,4,7.16,5,"['MongoDB', 'Git', 'HTML', 'Python', 'Django']",4,4,3,9,1,5,12,0.716,15,0.6127450980392157,2.0,0
+STU0178,Civil,4,5.32,5,"['CSS', 'HTML', 'C++', 'MongoDB', 'Git']",7,0,1,9,1,5,7,0.532,11,0.7911392405063291,1.1666666666666667,0
+STU0179,Civil,4,9.09,6,"['Docker', 'Machine Learning', 'Java', 'SQL', 'Django', 'Linux']",4,5,1,9,1,6,14,0.909,11,0.5946481665014867,2.0,0
+STU0180,Electrical,4,8.17,8,"['HTML', 'Git', 'CSS', 'C++', 'SQL', 'JavaScript', 'Docker', 'NLP']",7,0,0,2,1,8,7,0.817,2,0.8724100327153762,0.7777777777777778,2
+STU0181,Civil,4,6.77,3,"['C++', 'NLP', 'Python']",3,0,4,5,0,3,3,0.6769999999999999,13,0.3861003861003861,0.75,0
+STU0182,Mechanical,4,7.77,7,"['Git', 'Python', 'C++', 'SQL', 'Machine Learning', 'Java', 'MySQL']",7,5,2,3,1,7,17,0.7769999999999999,7,0.798175598631699,2.125,5
+STU0183,Electronics,3,5.08,5,"['Java', 'JavaScript', 'Docker', 'Machine Learning', 'Deep Learning']",6,5,1,0,1,5,16,0.508,2,0.8223684210526315,2.6666666666666665,3
+STU0184,Computer Science,4,6.02,5,"['MongoDB', 'React', 'Python', 'CSS', 'MySQL']",2,4,3,1,0,5,10,0.602,7,0.7122507122507123,1.6666666666666667,1
+STU0185,Electronics,4,8.35,8,"['Django', 'NLP', 'Python', 'Machine Learning', 'Node.js', 'SQL', 'HTML', 'C++']",0,5,1,5,1,8,10,0.835,7,0.8556149732620321,1.1111111111111112,3
+STU0186,Civil,4,9.61,9,"['JavaScript', 'Node.js', 'Linux', 'HTML', 'AWS', 'C++', 'Deep Learning', 'Machine Learning', 'Django']",2,3,1,1,1,9,8,0.961,3,0.8482563619227145,0.8,0
+STU0187,Computer Science,4,9.25,4,"['Java', 'AWS', 'Node.js', 'HTML']",7,2,4,6,1,4,11,0.925,14,0.3902439024390244,2.2,1
+STU0188,Information Science,3,6.47,6,"['CSS', 'C++', 'Java', 'NLP', 'Python', 'MongoDB']",5,2,1,1,0,6,9,0.647,3,0.8032128514056225,1.2857142857142858,4
+STU0189,Electrical,4,6.75,6,"['Django', 'Python', 'JavaScript', 'Java', 'Deep Learning', 'NLP']",3,4,4,3,0,6,11,0.675,11,0.7741935483870968,1.5714285714285714,2
+STU0190,Electrical,4,6.47,4,"['MongoDB', 'Linux', 'Node.js', 'AWS']",0,1,4,7,0,4,2,0.647,15,0.535475234270415,0.4,2
+STU0191,Computer Science,4,8.15,4,"['CSS', 'Docker', 'Deep Learning', 'MongoDB']",3,3,2,6,1,4,9,0.8150000000000001,10,0.4371584699453552,1.8,1
+STU0192,Mechanical,3,6.93,4,"['AWS', 'Git', 'MongoDB', 'Java']",3,0,4,5,0,4,3,0.693,13,0.5044136191677175,0.6,5
+STU0193,Computer Science,3,7.67,5,"['Python', 'HTML', 'SQL', 'Deep Learning', 'MySQL']",6,4,4,3,1,5,14,0.767,11,0.5767012687427913,2.3333333333333335,1
+STU0194,Electronics,3,6.41,7,"['Linux', 'Django', 'HTML', 'C++', 'React', 'Node.js', 'Docker']",7,1,2,6,0,7,9,0.641,10,0.9446693657219973,1.125,3
+STU0195,Mechanical,4,7.45,9,"['Node.js', 'NLP', 'Deep Learning', 'SQL', 'Docker', 'React', 'C++', 'Django', 'Machine Learning']",3,0,3,9,1,9,3,0.745,15,1.0650887573964498,0.3,5
+STU0196,Information Science,4,5.96,9,"['HTML', 'MySQL', 'JavaScript', 'React', 'SQL', 'CSS', 'Docker', 'Machine Learning', 'AWS']",2,2,2,0,0,9,6,0.596,4,1.293103448275862,0.6,4
+STU0197,Electrical,3,5.2,7,"['SQL', 'Git', 'Java', 'JavaScript', 'Linux', 'Machine Learning', 'NLP']",6,3,2,0,0,7,12,0.52,4,1.129032258064516,1.5,2
+STU0198,Computer Science,4,5.38,8,"['Linux', 'CSS', 'Django', 'Java', 'C++', 'React', 'JavaScript', 'NLP']",2,3,0,9,0,8,8,0.538,9,1.2539184952978057,0.8888888888888888,1
+STU0199,Electronics,3,8.18,10,"['Python', 'Django', 'HTML', 'MySQL', 'Docker', 'C++', 'Java', 'Machine Learning', 'AWS', 'JavaScript']",1,3,1,2,1,10,7,0.818,4,1.0893246187363834,0.6363636363636364,3
+STU0200,Electrical,4,8.32,5,"['Python', 'React', 'AWS', 'Django', 'CSS']",0,5,0,1,1,5,10,0.8320000000000001,1,0.5364806866952789,1.6666666666666667,2
+STU0201,Electrical,4,8.16,7,"['JavaScript', 'Django', 'NLP', 'C++', 'Deep Learning', 'Linux', 'Java']",1,4,3,2,1,7,9,0.8160000000000001,8,0.7641921397379913,1.125,2
+STU0202,Electrical,4,5.32,5,"['Git', 'CSS', 'Docker', 'Java', 'AWS']",7,1,0,7,0,5,9,0.532,7,0.7911392405063291,1.5,2
+STU0203,Electrical,4,5.66,9,"['Deep Learning', 'Docker', 'CSS', 'C++', 'Django', 'NLP', 'MySQL', 'Python', 'SQL']",1,5,1,4,1,9,11,0.5660000000000001,6,1.3513513513513513,1.1,2
+STU0204,Information Science,4,6.32,10,"['Java', 'SQL', 'Deep Learning', 'Node.js', 'JavaScript', 'HTML', 'React', 'Django', 'C++', 'NLP']",7,2,3,5,0,10,11,0.632,11,1.366120218579235,1.0,4
+STU0205,Electronics,4,7.94,11,"['Linux', 'JavaScript', 'Node.js', 'C++', 'MySQL', 'AWS', 'React', 'Python', 'MongoDB', 'NLP', 'Django']",2,3,2,0,1,11,8,0.794,4,1.2304250559284116,0.6666666666666666,3
+STU0206,Mechanical,4,5.34,6,"['Git', 'Node.js', 'CSS', 'Deep Learning', 'Machine Learning', 'HTML']",6,5,3,7,0,6,16,0.534,13,0.9463722397476341,2.2857142857142856,5
+STU0207,Information Science,3,8.02,6,"['Docker', 'Python', 'Machine Learning', 'NLP', 'Linux', 'SQL']",2,5,1,5,1,6,12,0.8019999999999999,7,0.6651884700665189,1.7142857142857142,4
+STU0208,Electronics,4,7.63,7,"['Python', 'Node.js', 'C++', 'MySQL', 'MongoDB', 'NLP', 'Linux']",0,4,1,3,0,7,8,0.763,5,0.8111239860950175,1.0,3
+STU0209,Computer Science,3,5.12,3,"['JavaScript', 'Java', 'Docker']",3,3,0,1,0,3,9,0.512,1,0.49019607843137253,2.25,1
+STU0210,Information Science,3,5.48,5,"['MongoDB', 'C++', 'Linux', 'MySQL', 'Python']",0,0,2,3,0,5,0,0.548,7,0.7716049382716049,0.0,4
+STU0211,Mechanical,4,8.51,7,"['SQL', 'Django', 'HTML', 'Deep Learning', 'MongoDB', 'Python', 'React']",7,5,0,9,1,7,17,0.851,9,0.7360672975814931,2.125,5
+STU0212,Civil,4,8.01,6,"['C++', 'Node.js', 'AWS', 'MongoDB', 'CSS', 'HTML']",4,5,1,6,1,6,14,0.8009999999999999,8,0.6659267480577137,2.0,0
+STU0213,Civil,4,6.96,7,"['Node.js', 'CSS', 'AWS', 'Java', 'Python', 'React', 'NLP']",7,1,4,5,0,7,9,0.696,13,0.8793969849246231,1.125,0
+STU0214,Electrical,4,8.96,4,"['NLP', 'Java', 'HTML', 'MongoDB']",1,4,3,6,1,4,9,0.8960000000000001,12,0.4016064257028112,1.8,2
+STU0215,Mechanical,4,7.97,8,"['Deep Learning', 'MySQL', 'React', 'CSS', 'Docker', 'MongoDB', 'HTML', 'Python']",3,1,1,1,1,8,5,0.7969999999999999,3,0.8918617614269789,0.5555555555555556,5
+STU0216,Information Science,4,6.21,9,"['React', 'Git', 'MySQL', 'CSS', 'AWS', 'Node.js', 'Docker', 'C++', 'NLP']",7,3,3,2,0,9,13,0.621,8,1.2482662968099862,1.3,4
+STU0217,Civil,4,6.55,5,"['React', 'MongoDB', 'JavaScript', 'Linux', 'HTML']",7,0,1,4,0,5,7,0.655,6,0.6622516556291391,1.1666666666666667,0
+STU0218,Computer Science,4,8.23,6,"['HTML', 'JavaScript', 'CSS', 'C++', 'SQL', 'Django']",3,5,2,1,1,6,13,0.8230000000000001,5,0.6500541711809317,1.8571428571428572,1
+STU0219,Mechanical,4,8.35,7,"['C++', 'Python', 'Node.js', 'NLP', 'Django', 'Git', 'SQL']",3,0,0,3,1,7,3,0.835,3,0.7486631016042781,0.375,5
+STU0220,Electronics,3,9.41,5,"['Django', 'Java', 'Node.js', 'Machine Learning', 'MongoDB']",1,4,4,3,1,5,9,0.9410000000000001,11,0.4803073967339097,1.5,3
+STU0221,Mechanical,3,7.91,3,"['Git', 'NLP', 'Java']",3,2,0,7,0,3,7,0.791,7,0.3367003367003367,1.75,5
+STU0222,Mechanical,4,5.64,9,"['AWS', 'CSS', 'React', 'JavaScript', 'Django', 'MongoDB', 'Java', 'Node.js', 'NLP']",2,3,2,4,0,9,8,0.564,8,1.355421686746988,0.8,5
+STU0223,Electronics,3,6.08,6,"['MongoDB', 'Python', 'Docker', 'Java', 'Machine Learning', 'HTML']",7,1,1,2,0,6,9,0.608,4,0.847457627118644,1.2857142857142858,3
+STU0224,Electronics,4,5.74,11,"['Docker', 'HTML', 'Python', 'Node.js', 'SQL', 'AWS', 'React', 'MongoDB', 'Java', 'CSS', 'Git']",2,2,3,5,1,11,6,0.5740000000000001,11,1.632047477744807,0.5,3
+STU0225,Civil,3,6.9,6,"['MongoDB', 'MySQL', 'Java', 'SQL', 'JavaScript', 'Machine Learning']",0,5,1,5,0,6,10,0.6900000000000001,7,0.7594936708860759,1.4285714285714286,0
+STU0226,Electrical,3,7.12,11,"['HTML', 'Node.js', 'Machine Learning', 'JavaScript', 'Java', 'CSS', 'Deep Learning', 'AWS', 'React', 'MySQL', 'Git']",3,1,0,9,1,11,5,0.712,9,1.3546798029556648,0.4166666666666667,2
+STU0227,Computer Science,3,6.0,3,"['C++', 'NLP', 'React']",1,3,0,6,0,3,7,0.6,6,0.42857142857142855,1.75,1
+STU0228,Mechanical,4,8.98,10,"['Git', 'React', 'Linux', 'Machine Learning', 'AWS', 'CSS', 'JavaScript', 'Python', 'HTML', 'MongoDB']",5,5,2,1,1,10,15,0.898,5,1.002004008016032,1.3636363636363635,5
+STU0229,Electrical,4,9.49,6,"['MySQL', 'SQL', 'AWS', 'Java', 'HTML', 'C++']",0,1,0,9,1,6,2,0.9490000000000001,9,0.5719733079122974,0.2857142857142857,2
+STU0230,Electronics,4,9.35,9,"['Django', 'MySQL', 'Machine Learning', 'MongoDB', 'React', 'Linux', 'C++', 'AWS', 'CSS']",3,2,1,3,1,9,7,0.9349999999999999,5,0.8695652173913043,0.7,3
+STU0231,Civil,4,7.3,3,"['MongoDB', 'Python', 'React']",1,4,4,6,1,3,9,0.73,14,0.36144578313253006,2.25,0
+STU0232,Civil,3,5.12,9,"['Docker', 'Python', 'HTML', 'React', 'SQL', 'Java', 'MongoDB', 'Node.js', 'AWS']",7,4,2,8,0,9,15,0.512,12,1.4705882352941175,1.5,0
+STU0233,Computer Science,3,8.82,9,"['Deep Learning', 'C++', 'Docker', 'SQL', 'Linux', 'MongoDB', 'Machine Learning', 'Django', 'AWS']",5,5,0,3,1,9,15,0.882,3,0.9164969450101833,1.5,1
+STU0234,Electrical,4,5.85,8,"['JavaScript', 'NLP', 'CSS', 'MongoDB', 'SQL', 'Python', 'Machine Learning', 'React']",1,2,1,7,0,8,5,0.585,9,1.1678832116788322,0.5555555555555556,2
+STU0235,Electronics,4,8.99,7,"['Python', 'CSS', 'SQL', 'Deep Learning', 'HTML', 'Linux', 'React']",3,0,0,2,1,7,3,0.899,2,0.7007007007007007,0.375,3
+STU0236,Mechanical,4,8.13,9,"['Linux', 'Node.js', 'Machine Learning', 'Java', 'React', 'AWS', 'CSS', 'HTML', 'SQL']",7,5,4,6,1,9,17,0.8130000000000001,14,0.985761226725082,1.7,5
+STU0237,Computer Science,4,8.36,5,"['Java', 'Django', 'Node.js', 'SQL', 'C++']",7,5,4,1,1,5,17,0.836,9,0.5341880341880342,2.8333333333333335,1
+STU0238,Mechanical,4,7.11,9,"['Deep Learning', 'MySQL', 'Docker', 'MongoDB', 'Django', 'Python', 'Linux', 'HTML', 'Node.js']",3,4,4,0,1,9,11,0.7110000000000001,8,1.1097410604192355,1.1,5
+STU0239,Electrical,4,8.43,11,"['SQL', 'Machine Learning', 'NLP', 'Python', 'Git', 'HTML', 'JavaScript', 'C++', 'React', 'Java', 'Linux']",3,4,4,2,1,11,11,0.843,10,1.166489925768823,0.9166666666666666,2
+STU0240,Civil,4,5.79,11,"['MongoDB', 'SQL', 'Docker', 'HTML', 'Python', 'Machine Learning', 'CSS', 'React', 'Git', 'NLP', 'JavaScript']",7,3,1,1,0,11,13,0.579,3,1.6200294550810015,1.0833333333333333,0
+STU0241,Mechanical,4,8.83,8,"['AWS', 'MongoDB', 'CSS', 'C++', 'NLP', 'Python', 'HTML', 'MySQL']",3,0,2,8,1,8,3,0.883,12,0.8138351983723296,0.3333333333333333,5
+STU0242,Mechanical,4,6.06,7,"['Docker', 'Deep Learning', 'HTML', 'Linux', 'Python', 'CSS', 'JavaScript']",4,1,4,3,0,7,6,0.606,11,0.991501416430595,0.75,5
+STU0243,Information Science,4,5.73,10,"['Deep Learning', 'SQL', 'Python', 'C++', 'MySQL', 'Linux', 'Django', 'Machine Learning', 'HTML', 'Docker']",6,1,3,6,0,10,8,0.5730000000000001,12,1.4858841010401187,0.7272727272727273,4
+STU0244,Mechanical,4,8.76,9,"['Python', 'React', 'Linux', 'Docker', 'JavaScript', 'AWS', 'Node.js', 'NLP', 'Git']",7,0,3,8,1,9,7,0.876,14,0.9221311475409836,0.7,5
+STU0245,Electrical,4,6.45,9,"['HTML', 'NLP', 'Git', 'Deep Learning', 'Machine Learning', 'Linux', 'Java', 'AWS', 'React']",4,2,1,1,0,9,8,0.645,3,1.2080536912751678,0.8,2
+STU0246,Electrical,3,6.39,9,"['Python', 'Linux', 'JavaScript', 'SQL', 'Node.js', 'MongoDB', 'HTML', 'NLP', 'Git']",5,2,0,0,0,9,9,0.639,0,1.2178619756427604,0.9,2
+STU0247,Electrical,4,7.29,5,"['Docker', 'Django', 'C++', 'MongoDB', 'Machine Learning']",7,4,2,3,1,5,15,0.729,7,0.6031363088057902,2.5,2
+STU0248,Civil,4,9.69,3,"['AWS', 'Node.js', 'NLP']",4,5,3,0,1,3,14,0.969,6,0.28063610851262866,3.5,0
+STU0249,Information Science,4,7.25,11,"['C++', 'Git', 'Docker', 'SQL', 'Deep Learning', 'Machine Learning', 'HTML', 'Python', 'Django', 'NLP', 'React']",4,4,2,4,1,11,12,0.725,8,1.3333333333333333,1.0,4
+STU0250,Electronics,4,7.74,3,"['MongoDB', 'AWS', 'C++']",0,4,1,8,0,3,8,0.774,10,0.34324942791762014,2.0,3
+STU0251,Electrical,3,8.41,8,"['Deep Learning', 'MongoDB', 'Machine Learning', 'MySQL', 'C++', 'Git', 'HTML', 'Node.js']",1,0,3,5,1,8,1,0.841,11,0.8501594048884166,0.1111111111111111,2
+STU0252,Electrical,3,7.21,9,"['Node.js', 'Deep Learning', 'SQL', 'Git', 'C++', 'Linux', 'Docker', 'Django', 'NLP']",2,1,1,6,1,9,4,0.721,8,1.0962241169305724,0.4,2
+STU0253,Electronics,4,9.76,3,"['Python', 'Git', 'JavaScript']",5,0,0,7,0,3,5,0.976,7,0.2788104089219331,1.25,3
+STU0254,Civil,3,6.57,11,"['AWS', 'React', 'HTML', 'SQL', 'Django', 'MongoDB', 'NLP', 'MySQL', 'CSS', 'Docker', 'Linux']",1,2,1,0,1,11,5,0.657,2,1.453104359313078,0.4166666666666667,0
+STU0255,Electronics,4,5.96,3,"['MySQL', 'HTML', 'Node.js']",6,3,1,3,1,3,12,0.596,5,0.4310344827586207,3.0,3
+STU0256,Mechanical,3,6.32,4,"['JavaScript', 'AWS', 'React', 'Django']",6,3,2,9,1,4,12,0.632,13,0.5464480874316939,2.4,5
+STU0257,Computer Science,4,9.26,11,"['Node.js', 'SQL', 'NLP', 'React', 'Docker', 'MySQL', 'MongoDB', 'Django', 'AWS', 'Deep Learning', 'C++']",7,1,2,6,1,11,9,0.9259999999999999,10,1.0721247563352827,0.75,1
+STU0258,Mechanical,4,6.74,6,"['NLP', 'Django', 'Git', 'AWS', 'Node.js', 'Docker']",2,3,0,1,0,6,8,0.674,1,0.7751937984496123,1.1428571428571428,5
+STU0259,Computer Science,3,7.32,11,"['SQL', 'C++', 'Java', 'Docker', 'AWS', 'JavaScript', 'Django', 'NLP', 'MySQL', 'React', 'Linux']",5,0,3,0,1,11,5,0.732,6,1.3221153846153846,0.4166666666666667,1
+STU0260,Civil,3,8.54,10,"['NLP', 'JavaScript', 'Linux', 'C++', 'Django', 'React', 'CSS', 'Node.js', 'Git', 'Docker']",7,2,3,8,1,10,11,0.8539999999999999,14,1.0482180293501049,1.0,0
+STU0261,Mechanical,4,7.08,7,"['AWS', 'Git', 'Deep Learning', 'CSS', 'JavaScript', 'React', 'Node.js']",6,1,2,7,1,7,8,0.708,11,0.8663366336633663,1.0,5
+STU0262,Mechanical,3,6.05,8,"['Machine Learning', 'Deep Learning', 'C++', 'Django', 'Linux', 'HTML', 'Java', 'Git']",1,1,0,9,0,8,3,0.605,9,1.1347517730496455,0.3333333333333333,5
+STU0263,Mechanical,4,9.69,6,"['Node.js', 'C++', 'HTML', 'MongoDB', 'JavaScript', 'Django']",6,4,0,1,1,6,14,0.969,1,0.5612722170252573,2.0,5
+STU0264,Electronics,4,6.89,5,"['HTML', 'Python', 'Node.js', 'MongoDB', 'AWS']",6,2,3,4,0,5,10,0.689,10,0.6337135614702155,1.6666666666666667,3
+STU0265,Electrical,4,6.47,5,"['MySQL', 'Docker', 'JavaScript', 'SQL', 'Java']",6,5,1,5,0,5,16,0.647,7,0.6693440428380187,2.6666666666666665,2
+STU0266,Electronics,4,8.66,3,"['React', 'Git', 'Node.js']",1,5,4,2,1,3,11,0.866,10,0.3105590062111801,2.75,3
+STU0267,Computer Science,4,6.33,11,"['Python', 'C++', 'CSS', 'JavaScript', 'AWS', 'Node.js', 'Django', 'Linux', 'MySQL', 'MongoDB', 'Docker']",4,3,1,6,1,11,10,0.633,8,1.500682128240109,0.8333333333333334,1
+STU0268,Computer Science,4,6.35,8,"['Git', 'Deep Learning', 'React', 'SQL', 'HTML', 'Node.js', 'AWS', 'MySQL']",6,0,2,1,0,8,6,0.635,5,1.08843537414966,0.6666666666666666,1
+STU0269,Electrical,4,5.19,11,"['MongoDB', 'AWS', 'Docker', 'C++', 'CSS', 'Git', 'HTML', 'Python', 'NLP', 'MySQL', 'Linux']",2,2,1,5,0,11,6,0.519,7,1.777059773828756,0.5,2
+STU0270,Information Science,3,8.64,7,"['NLP', 'Docker', 'JavaScript', 'CSS', 'HTML', 'MongoDB', 'C++']",5,0,3,7,1,7,5,0.8640000000000001,13,0.7261410788381742,0.625,4
+STU0271,Civil,4,9.63,10,"['Python', 'MySQL', 'Node.js', 'Git', 'SQL', 'JavaScript', 'Java', 'Deep Learning', 'React', 'Django']",4,4,3,1,1,10,12,0.9630000000000001,7,0.940733772342427,1.0909090909090908,0
+STU0272,Civil,4,9.36,10,"['JavaScript', 'MongoDB', 'CSS', 'C++', 'Java', 'MySQL', 'Python', 'Git', 'SQL', 'Machine Learning']",7,3,2,3,1,10,13,0.9359999999999999,7,0.9652509652509653,1.1818181818181819,0
+STU0273,Computer Science,3,6.53,6,"['Java', 'MongoDB', 'SQL', 'CSS', 'Node.js', 'C++']",3,3,1,4,0,6,9,0.653,6,0.796812749003984,1.2857142857142858,1
+STU0274,Electrical,3,9.79,7,"['Django', 'Git', 'Linux', 'React', 'Node.js', 'Python', 'MongoDB']",2,0,4,2,1,7,2,0.9789999999999999,10,0.648748841519926,0.25,2
+STU0275,Civil,3,7.6,8,"['Machine Learning', 'AWS', 'MySQL', 'Deep Learning', 'CSS', 'Docker', 'Python', 'C++']",0,1,0,3,0,8,2,0.76,3,0.9302325581395349,0.2222222222222222,0
+STU0276,Mechanical,4,8.82,6,"['SQL', 'Node.js', 'Django', 'AWS', 'Git', 'Docker']",3,0,2,8,1,6,3,0.882,12,0.6109979633401221,0.42857142857142855,5
+STU0277,Computer Science,3,7.13,4,"['CSS', 'Machine Learning', 'HTML', 'AWS']",7,5,3,3,1,4,17,0.713,9,0.49200492004920054,3.4,1
+STU0278,Electrical,3,7.25,11,"['Java', 'Node.js', 'C++', 'Python', 'Docker', 'Deep Learning', 'AWS', 'Git', 'CSS', 'Linux', 'Machine Learning']",4,2,4,1,1,11,8,0.725,9,1.3333333333333333,0.6666666666666666,2
+STU0279,Civil,3,9.28,6,"['React', 'C++', 'Docker', 'Python', 'CSS', 'Git']",1,1,2,2,1,6,3,0.9279999999999999,6,0.5836575875486382,0.42857142857142855,0
+STU0280,Mechanical,4,8.66,3,"['MongoDB', 'NLP', 'Git']",0,5,4,0,1,3,10,0.866,8,0.3105590062111801,2.5,5
+STU0281,Electronics,3,6.34,8,"['MySQL', 'Django', 'Machine Learning', 'C++', 'Java', 'Git', 'HTML', 'NLP']",7,0,0,2,1,8,7,0.634,2,1.0899182561307903,0.7777777777777778,3
+STU0282,Electronics,4,9.37,5,"['MySQL', 'Deep Learning', 'Docker', 'Python', 'C++']",0,4,1,2,1,5,8,0.9369999999999999,4,0.4821600771456124,1.3333333333333333,3
+STU0283,Mechanical,4,6.95,8,"['React', 'AWS', 'Git', 'MySQL', 'NLP', 'CSS', 'MongoDB', 'Docker']",4,3,0,4,0,8,10,0.6950000000000001,4,1.0062893081761006,1.1111111111111112,5
+STU0284,Civil,4,5.16,11,"['Deep Learning', 'Django', 'MySQL', 'JavaScript', 'CSS', 'Git', 'MongoDB', 'AWS', 'React', 'Python', 'Linux']",3,4,2,5,1,11,11,0.516,9,1.7857142857142856,0.9166666666666666,0
+STU0285,Electronics,4,8.45,3,"['React', 'MongoDB', 'SQL']",6,3,1,5,1,3,12,0.845,7,0.3174603174603175,3.0,3
+STU0286,Computer Science,3,6.31,11,"['Git', 'Python', 'Deep Learning', 'CSS', 'MySQL', 'Linux', 'MongoDB', 'Machine Learning', 'Node.js', 'AWS', 'JavaScript']",3,4,3,7,0,11,11,0.631,13,1.5047879616963065,0.9166666666666666,1
+STU0287,Electronics,3,6.83,7,"['HTML', 'Deep Learning', 'React', 'C++', 'Node.js', 'Linux', 'AWS']",6,1,1,5,1,7,8,0.683,7,0.8939974457215837,1.0,3
+STU0288,Electrical,4,6.03,8,"['Docker', 'React', 'AWS', 'Deep Learning', 'Node.js', 'SQL', 'Java', 'Django']",4,1,0,2,0,8,6,0.603,2,1.1379800853485063,0.6666666666666666,2
+STU0289,Mechanical,3,6.5,5,"['JavaScript', 'Deep Learning', 'Python', 'Java', 'Docker']",2,0,0,1,0,5,2,0.65,1,0.6666666666666666,0.3333333333333333,5
+STU0290,Electrical,4,7.55,8,"['Linux', 'Java', 'Docker', 'AWS', 'CSS', 'Python', 'MongoDB', 'Node.js']",1,0,0,7,1,8,1,0.755,7,0.935672514619883,0.1111111111111111,2
+STU0291,Information Science,4,9.46,5,"['MySQL', 'Node.js', 'Python', 'CSS', 'Linux']",6,3,0,1,1,5,12,0.9460000000000001,1,0.4780114722753346,2.0,4
+STU0292,Civil,3,7.4,9,"['Node.js', 'Docker', 'HTML', 'C++', 'Python', 'SQL', 'Machine Learning', 'React', 'Java']",0,3,0,5,1,9,6,0.74,5,1.0714285714285714,0.6,0
+STU0293,Civil,3,6.28,8,"['Node.js', 'React', 'MySQL', 'Django', 'Docker', 'SQL', 'AWS', 'C++']",4,3,4,6,1,8,10,0.628,14,1.0989010989010988,1.1111111111111112,0
+STU0294,Electrical,4,9.79,9,"['SQL', 'Python', 'Deep Learning', 'AWS', 'MongoDB', 'MySQL', 'Docker', 'React', 'Node.js']",2,4,3,0,1,9,10,0.9789999999999999,6,0.8341056533827619,1.0,2
+STU0295,Civil,4,7.82,3,"['MongoDB', 'NLP', 'React']",6,2,1,1,0,3,10,0.782,3,0.3401360544217687,2.5,0
+STU0296,Mechanical,3,6.71,7,"['Deep Learning', 'Django', 'Linux', 'C++', 'React', 'Docker', 'JavaScript']",4,4,4,9,1,7,12,0.671,17,0.9079118028534371,1.5,5
+STU0297,Electrical,3,5.66,7,"['Deep Learning', 'MySQL', 'AWS', 'Machine Learning', 'Node.js', 'NLP', 'Docker']",0,2,0,4,0,7,4,0.5660000000000001,4,1.0510510510510511,0.5,2
+STU0298,Computer Science,4,7.52,5,"['C++', 'Java', 'JavaScript', 'MySQL', 'Python']",7,5,4,0,1,5,17,0.752,8,0.5868544600938967,2.8333333333333335,1
+STU0299,Computer Science,3,7.97,10,"['Git', 'MongoDB', 'Node.js', 'Docker', 'CSS', 'Java', 'C++', 'Python', 'SQL', 'Django']",6,1,1,3,1,10,8,0.7969999999999999,5,1.1148272017837237,0.7272727272727273,1
+STU0300,Electronics,3,5.16,5,"['NLP', 'React', 'C++', 'Git', 'Deep Learning']",4,5,0,2,1,5,14,0.516,2,0.8116883116883117,2.3333333333333335,3
+STU0301,Information Science,3,6.95,3,"['Docker', 'JavaScript', 'HTML']",1,2,1,1,0,3,5,0.6950000000000001,3,0.3773584905660377,1.25,4
+STU0302,Computer Science,4,7.25,9,"['MySQL', 'MongoDB', 'CSS', 'AWS', 'Deep Learning', 'Docker', 'SQL', 'React', 'Linux']",2,5,3,8,1,9,12,0.725,14,1.0909090909090908,1.2,1
+STU0303,Civil,3,7.58,5,"['C++', 'JavaScript', 'Django', 'React', 'CSS']",4,3,3,6,1,5,10,0.758,12,0.5827505827505828,1.6666666666666667,0
+STU0304,Electrical,4,6.07,7,"['AWS', 'Machine Learning', 'CSS', 'Deep Learning', 'Django', 'React', 'JavaScript']",2,4,1,3,0,7,10,0.607,5,0.9900990099009901,1.25,2
+STU0305,Civil,4,5.02,5,"['C++', 'CSS', 'NLP', 'React', 'Java']",1,5,0,5,1,5,11,0.502,5,0.8305647840531563,1.8333333333333333,0
+STU0306,Electrical,4,9.8,6,"['Python', 'SQL', 'React', 'Linux', 'Node.js', 'Git']",5,4,3,6,1,6,13,0.9800000000000001,12,0.5555555555555555,1.8571428571428572,2
+STU0307,Electronics,4,5.98,6,"['Git', 'JavaScript', 'Deep Learning', 'SQL', 'Linux', 'MongoDB']",4,5,0,9,0,6,14,0.5980000000000001,9,0.8595988538681948,2.0,3
+STU0308,Electronics,4,9.05,11,"['Git', 'Python', 'HTML', 'Machine Learning', 'Deep Learning', 'React', 'MongoDB', 'SQL', 'Linux', 'CSS', 'Java']",1,1,3,9,1,11,3,0.905,15,1.0945273631840795,0.25,3
+STU0309,Information Science,3,8.91,4,"['Git', 'Deep Learning', 'Python', 'Java']",3,1,2,6,1,4,5,0.891,10,0.4036326942482341,1.0,4
+STU0310,Information Science,4,5.69,10,"['JavaScript', 'Django', 'Linux', 'CSS', 'HTML', 'Machine Learning', 'Python', 'SQL', 'C++', 'MySQL']",6,2,1,2,0,10,10,0.5690000000000001,4,1.4947683109118086,0.9090909090909091,4
+STU0311,Electrical,4,5.14,11,"['SQL', 'Docker', 'C++', 'CSS', 'Deep Learning', 'Java', 'MySQL', 'Node.js', 'AWS', 'MongoDB', 'React']",2,0,2,1,0,11,2,0.514,5,1.7915309446254073,0.16666666666666666,2
+STU0312,Electrical,4,6.05,9,"['HTML', 'JavaScript', 'Machine Learning', 'Node.js', 'SQL', 'AWS', 'C++', 'Deep Learning', 'React']",1,5,1,6,1,9,11,0.605,8,1.2765957446808511,1.1,2
+STU0313,Electronics,4,8.41,9,"['MySQL', 'Deep Learning', 'CSS', 'NLP', 'Django', 'SQL', 'Python', 'C++', 'MongoDB']",1,2,2,9,1,9,5,0.841,13,0.9564293304994687,0.5,3
+STU0314,Mechanical,4,5.48,3,"['React', 'Java', 'MySQL']",0,1,4,7,0,3,2,0.548,15,0.4629629629629629,0.5,5
+STU0315,Information Science,4,8.79,5,"['SQL', 'HTML', 'Django', 'AWS', 'Docker']",0,0,4,2,0,5,0,0.8789999999999999,10,0.5107252298263535,0.0,4
+STU0316,Electronics,4,9.65,9,"['AWS', 'MongoDB', 'HTML', 'MySQL', 'Java', 'Linux', 'Node.js', 'C++', 'Docker']",4,0,4,4,1,9,4,0.9650000000000001,12,0.8450704225352113,0.4,3
+STU0317,Civil,4,8.95,4,"['SQL', 'AWS', 'Linux', 'Machine Learning']",4,3,4,4,1,4,10,0.8949999999999999,12,0.4020100502512563,2.0,0
+STU0318,Electronics,4,7.81,8,"['React', 'MySQL', 'Django', 'Machine Learning', 'Git', 'JavaScript', 'NLP', 'SQL']",6,4,0,5,1,8,14,0.7809999999999999,5,0.9080590238365495,1.5555555555555556,3
+STU0319,Computer Science,4,5.49,6,"['C++', 'Django', 'Deep Learning', 'Git', 'Machine Learning', 'Node.js']",4,3,2,1,0,6,10,0.549,5,0.9244992295839753,1.4285714285714286,1
+STU0320,Civil,4,9.1,8,"['Django', 'CSS', 'Docker', 'MongoDB', 'AWS', 'C++', 'NLP', 'Deep Learning']",6,0,0,8,1,8,6,0.9099999999999999,8,0.7920792079207921,0.6666666666666666,0
+STU0321,Electronics,4,6.6,11,"['Git', 'NLP', 'Node.js', 'Linux', 'Python', 'Machine Learning', 'CSS', 'Django', 'Java', 'React', 'JavaScript']",4,5,0,2,0,11,14,0.6599999999999999,2,1.4473684210526316,1.1666666666666667,3
+STU0322,Mechanical,4,6.58,4,"['Git', 'Linux', 'NLP', 'AWS']",7,0,0,5,0,4,7,0.658,5,0.5277044854881267,1.4,5
+STU0323,Civil,4,6.35,11,"['NLP', 'AWS', 'SQL', 'MongoDB', 'Docker', 'React', 'Machine Learning', 'Deep Learning', 'Node.js', 'Java', 'MySQL']",7,0,3,9,0,11,7,0.635,15,1.4965986394557824,0.5833333333333334,0
+STU0324,Civil,4,9.02,11,"['Java', 'Python', 'JavaScript', 'Django', 'Deep Learning', 'MySQL', 'Git', 'AWS', 'Linux', 'CSS', 'SQL']",0,3,2,4,1,11,6,0.9019999999999999,8,1.097804391217565,0.5,0
+STU0325,Electrical,4,8.55,4,"['HTML', 'Python', 'Node.js', 'AWS']",2,4,1,6,1,4,10,0.8550000000000001,8,0.41884816753926696,2.0,2
+STU0326,Information Science,4,5.65,8,"['MySQL', 'CSS', 'Django', 'Java', 'Git', 'Python', 'AWS', 'SQL']",5,4,3,3,0,8,13,0.5650000000000001,9,1.2030075187969924,1.4444444444444444,4
+STU0327,Mechanical,3,9.25,7,"['Deep Learning', 'Git', 'Django', 'JavaScript', 'CSS', 'MySQL', 'AWS']",5,2,3,3,1,7,9,0.925,9,0.6829268292682927,1.125,5
+STU0328,Mechanical,3,9.8,4,"['AWS', 'MongoDB', 'Node.js', 'SQL']",6,2,0,1,1,4,10,0.9800000000000001,1,0.37037037037037035,2.0,5
+STU0329,Mechanical,4,8.71,10,"['React', 'Django', 'Docker', 'Python', 'HTML', 'Linux', 'Node.js', 'AWS', 'NLP', 'MongoDB']",0,1,1,8,1,10,2,0.8710000000000001,10,1.0298661174047372,0.18181818181818182,5
+STU0330,Information Science,4,6.7,9,"['Python', 'AWS', 'React', 'Deep Learning', 'Git', 'Django', 'Linux', 'C++', 'HTML']",7,2,4,6,0,9,11,0.67,14,1.1688311688311688,1.1,4
+STU0331,Electronics,4,7.97,11,"['HTML', 'Python', 'NLP', 'CSS', 'Java', 'Docker', 'React', 'Deep Learning', 'JavaScript', 'C++', 'Git']",4,2,0,9,1,11,8,0.7969999999999999,9,1.226309921962096,0.6666666666666666,3
+STU0332,Electrical,3,9.62,5,"['SQL', 'C++', 'Docker', 'Machine Learning', 'Django']",7,4,3,0,1,5,15,0.962,6,0.4708097928436912,2.5,2
+STU0333,Electrical,4,6.53,10,"['Linux', 'CSS', 'NLP', 'JavaScript', 'C++', 'MySQL', 'Machine Learning', 'Java', 'Node.js', 'Django']",3,1,0,2,0,10,5,0.653,2,1.3280212483399734,0.45454545454545453,2
+STU0334,Computer Science,4,7.52,8,"['Machine Learning', 'Node.js', 'AWS', 'Git', 'MongoDB', 'Java', 'SQL', 'Docker']",3,5,4,8,1,8,13,0.752,16,0.9389671361502347,1.4444444444444444,1
+STU0335,Civil,3,9.18,7,"['Django', 'MongoDB', 'Deep Learning', 'Git', 'MySQL', 'JavaScript', 'NLP']",0,0,0,5,0,7,0,0.9179999999999999,5,0.68762278978389,0.0,0
+STU0336,Information Science,4,8.41,9,"['Node.js', 'Java', 'MongoDB', 'Git', 'HTML', 'Machine Learning', 'Linux', 'Deep Learning', 'JavaScript']",2,3,2,6,1,9,8,0.841,10,0.9564293304994687,0.8,4
+STU0337,Computer Science,3,5.79,10,"['CSS', 'Deep Learning', 'C++', 'NLP', 'Machine Learning', 'Git', 'HTML', 'MySQL', 'Python', 'React']",6,0,3,9,0,10,6,0.579,15,1.4727540500736378,0.5454545454545454,1
+STU0338,Electrical,3,6.34,11,"['SQL', 'NLP', 'Python', 'Java', 'React', 'MongoDB', 'JavaScript', 'Git', 'C++', 'Node.js', 'Docker']",1,5,0,3,1,11,11,0.634,3,1.4986376021798364,0.9166666666666666,2
+STU0339,Electrical,4,5.6,10,"['NLP', 'JavaScript', 'Django', 'Git', 'Java', 'SQL', 'MongoDB', 'Node.js', 'HTML', 'Deep Learning']",6,1,3,8,1,10,8,0.5599999999999999,14,1.5151515151515151,0.7272727272727273,2
+STU0340,Information Science,3,5.36,6,"['Deep Learning', 'AWS', 'Python', 'Machine Learning', 'NLP', 'Django']",5,2,3,4,0,6,9,0.536,10,0.9433962264150942,1.2857142857142858,4
+STU0341,Mechanical,4,5.45,8,"['Machine Learning', 'Node.js', 'Git', 'AWS', 'SQL', 'NLP', 'C++', 'Linux']",5,5,0,2,0,8,15,0.545,2,1.2403100775193798,1.6666666666666667,5
+STU0342,Information Science,4,5.56,3,"['HTML', 'Django', 'React']",5,3,4,7,0,3,11,0.5559999999999999,15,0.4573170731707317,2.75,4
+STU0343,Civil,3,9.28,5,"['Django', 'C++', 'HTML', 'Docker', 'MySQL']",6,0,1,0,1,5,6,0.9279999999999999,2,0.4863813229571985,1.0,0
+STU0344,Computer Science,3,7.44,3,"['Machine Learning', 'CSS', 'MongoDB']",7,5,4,1,0,3,17,0.744,9,0.3554502369668246,4.25,1
+STU0345,Electronics,4,9.45,9,"['Machine Learning', 'Django', 'React', 'NLP', 'MySQL', 'Node.js', 'MongoDB', 'CSS', 'Git']",4,1,0,6,1,9,6,0.945,6,0.861244019138756,0.6,3
+STU0346,Mechanical,3,7.12,9,"['MySQL', 'Docker', 'MongoDB', 'Django', 'C++', 'React', 'Deep Learning', 'Linux', 'Machine Learning']",0,0,4,4,0,9,0,0.712,12,1.108374384236453,0.0,5
+STU0347,Mechanical,4,5.56,11,"['Deep Learning', 'C++', 'React', 'Git', 'NLP', 'Linux', 'JavaScript', 'Java', 'Node.js', 'CSS', 'Python']",5,4,0,9,0,11,13,0.5559999999999999,9,1.676829268292683,1.0833333333333333,5
+STU0348,Civil,3,7.41,10,"['CSS', 'AWS', 'HTML', 'JavaScript', 'Java', 'Machine Learning', 'Node.js', 'Python', 'C++', 'Deep Learning']",5,5,0,0,1,10,15,0.741,0,1.1890606420927468,1.3636363636363635,0
+STU0349,Mechanical,4,7.51,11,"['Java', 'CSS', 'AWS', 'JavaScript', 'SQL', 'Node.js', 'HTML', 'Machine Learning', 'React', 'Django', 'Deep Learning']",1,1,2,5,1,11,3,0.751,9,1.2925969447708578,0.25,5
+STU0350,Information Science,4,9.67,9,"['JavaScript', 'SQL', 'Linux', 'Docker', 'Machine Learning', 'MongoDB', 'Django', 'C++', 'Deep Learning']",1,3,2,9,1,9,7,0.967,13,0.8434864104967198,0.7,4
+STU0351,Computer Science,4,5.43,6,"['SQL', 'Django', 'Deep Learning', 'HTML', 'Docker', 'C++']",2,4,3,9,0,6,10,0.5429999999999999,15,0.9331259720062208,1.4285714285714286,1
+STU0352,Civil,4,6.72,9,"['AWS', 'MySQL', 'Python', 'C++', 'HTML', 'NLP', 'Docker', 'CSS', 'JavaScript']",2,1,4,3,1,9,4,0.6719999999999999,11,1.1658031088082903,0.4,0
+STU0353,Computer Science,3,9.2,8,"['MySQL', 'C++', 'Node.js', 'Git', 'Machine Learning', 'Java', 'CSS', 'AWS']",2,2,2,4,1,8,6,0.9199999999999999,8,0.7843137254901962,0.6666666666666666,1
+STU0354,Electrical,4,5.12,9,"['Node.js', 'Linux', 'React', 'JavaScript', 'CSS', 'Java', 'HTML', 'Python', 'MySQL']",6,3,2,8,0,9,12,0.512,12,1.4705882352941175,1.2,2
+STU0355,Electrical,4,5.36,11,"['Deep Learning', 'Linux', 'MySQL', 'Git', 'HTML', 'C++', 'NLP', 'Python', 'JavaScript', 'Machine Learning', 'Java']",2,5,4,0,0,11,12,0.536,8,1.7295597484276728,1.0,2
+STU0356,Civil,4,5.82,3,"['Python', 'CSS', 'JavaScript']",2,0,3,2,1,3,2,0.5820000000000001,8,0.4398826979472141,0.5,0
+STU0357,Computer Science,3,7.75,7,"['Deep Learning', 'Java', 'Docker', 'Linux', 'Python', 'SQL', 'React']",6,0,3,0,1,7,6,0.775,6,0.8,0.75,1
+STU0358,Civil,4,7.06,8,"['Python', 'C++', 'JavaScript', 'MongoDB', 'CSS', 'MySQL', 'Deep Learning', 'Linux']",7,5,1,4,1,8,17,0.706,6,0.9925558312655088,1.8888888888888888,0
+STU0359,Computer Science,3,6.6,9,"['Deep Learning', 'Linux', 'C++', 'React', 'Git', 'CSS', 'AWS', 'Java', 'Node.js']",3,0,4,0,0,9,3,0.6599999999999999,8,1.1842105263157896,0.3,1
+STU0360,Computer Science,4,8.72,9,"['SQL', 'CSS', 'NLP', 'React', 'HTML', 'Docker', 'Node.js', 'JavaScript', 'Git']",5,0,2,3,1,9,5,0.8720000000000001,7,0.9259259259259258,0.5,1
+STU0361,Information Science,4,8.25,3,"['Python', 'MySQL', 'HTML']",4,1,4,4,0,3,6,0.825,12,0.32432432432432434,1.5,4
+STU0362,Information Science,4,6.59,4,"['C++', 'React', 'AWS', 'Machine Learning']",6,1,3,5,0,4,8,0.659,11,0.5270092226613966,1.6,4
+STU0363,Mechanical,3,6.46,9,"['Linux', 'SQL', 'Machine Learning', 'HTML', 'Java', 'C++', 'Python', 'MongoDB', 'NLP']",4,0,1,1,0,9,4,0.646,3,1.2064343163538873,0.4,5
+STU0364,Electronics,4,9.53,11,"['NLP', 'Git', 'SQL', 'C++', 'Docker', 'JavaScript', 'Linux', 'Python', 'HTML', 'Machine Learning', 'MySQL']",2,5,3,0,1,11,12,0.953,6,1.0446343779677114,1.0,3
+STU0365,Electronics,4,6.26,11,"['Node.js', 'JavaScript', 'Deep Learning', 'SQL', 'Django', 'HTML', 'Linux', 'AWS', 'MySQL', 'NLP', 'React']",6,5,0,3,1,11,16,0.626,3,1.5151515151515151,1.3333333333333333,3
+STU0366,Mechanical,4,9.08,7,"['Java', 'Python', 'Git', 'Docker', 'Machine Learning', 'Node.js', 'JavaScript']",3,3,2,8,1,7,9,0.908,12,0.6944444444444444,1.125,5
+STU0367,Electrical,3,7.58,8,"['SQL', 'Linux', 'Deep Learning', 'MySQL', 'Node.js', 'CSS', 'MongoDB', 'Java']",7,3,0,0,1,8,13,0.758,0,0.9324009324009324,1.4444444444444444,2
+STU0368,Computer Science,4,9.65,4,"['Docker', 'Machine Learning', 'Java', 'Django']",3,1,3,6,1,4,5,0.9650000000000001,12,0.3755868544600939,1.0,1
+STU0369,Civil,4,6.69,9,"['AWS', 'MongoDB', 'JavaScript', 'HTML', 'Java', 'C++', 'Python', 'Deep Learning', 'SQL']",0,1,0,6,1,9,2,0.669,6,1.1703511053315994,0.2,0
+STU0370,Computer Science,4,5.19,8,"['NLP', 'HTML', 'Deep Learning', 'JavaScript', 'Django', 'React', 'Docker', 'Machine Learning']",2,2,0,4,1,8,6,0.519,4,1.2924071082390953,0.6666666666666666,1
+STU0371,Information Science,4,5.38,5,"['Deep Learning', 'CSS', 'Python', 'Django', 'Linux']",2,3,0,5,1,5,8,0.538,5,0.7836990595611285,1.3333333333333333,4
+STU0372,Mechanical,3,7.18,11,"['Node.js', 'JavaScript', 'CSS', 'HTML', 'Machine Learning', 'Java', 'Docker', 'Linux', 'C++', 'MySQL', 'MongoDB']",2,3,1,4,1,11,8,0.718,6,1.3447432762836187,0.6666666666666666,5
+STU0373,Information Science,4,7.23,7,"['Linux', 'Java', 'JavaScript', 'Machine Learning', 'CSS', 'MySQL', 'NLP']",7,0,1,0,1,7,7,0.7230000000000001,2,0.850546780072904,0.875,4
+STU0374,Mechanical,4,5.28,10,"['CSS', 'NLP', 'AWS', 'MongoDB', 'HTML', 'Node.js', 'Docker', 'SQL', 'MySQL', 'Python']",6,0,0,9,1,10,6,0.528,9,1.592356687898089,0.5454545454545454,5
+STU0375,Mechanical,3,9.02,4,"['Git', 'HTML', 'React', 'C++']",6,5,0,5,1,4,16,0.9019999999999999,5,0.3992015968063872,3.2,5
+STU0376,Electronics,4,5.05,9,"['React', 'CSS', 'AWS', 'Python', 'SQL', 'Deep Learning', 'MongoDB', 'Java', 'C++']",4,3,4,7,0,9,10,0.505,15,1.4876033057851241,1.0,3
+STU0377,Electronics,3,9.72,3,"['Node.js', 'HTML', 'SQL']",0,4,1,2,1,3,8,0.9720000000000001,4,0.2798507462686567,2.0,3
+STU0378,Civil,4,7.44,6,"['Linux', 'MySQL', 'Node.js', 'JavaScript', 'Django', 'NLP']",5,5,3,8,1,6,15,0.744,14,0.7109004739336492,2.142857142857143,0
+STU0379,Mechanical,4,7.19,8,"['SQL', 'MySQL', 'Django', 'Python', 'JavaScript', 'AWS', 'Java', 'Linux']",3,1,4,0,1,8,5,0.7190000000000001,8,0.9768009768009767,0.5555555555555556,5
+STU0380,Electronics,4,7.6,6,"['NLP', 'SQL', 'Deep Learning', 'HTML', 'JavaScript', 'Linux']",0,4,2,7,0,6,8,0.76,11,0.6976744186046512,1.1428571428571428,3
+STU0381,Computer Science,3,9.1,9,"['Git', 'MongoDB', 'AWS', 'Django', 'Linux', 'React', 'Deep Learning', 'Java', 'SQL']",0,3,2,4,1,9,6,0.9099999999999999,8,0.8910891089108911,0.6,1
+STU0382,Electronics,4,8.67,9,"['HTML', 'JavaScript', 'MongoDB', 'C++', 'MySQL', 'Python', 'SQL', 'Java', 'Node.js']",1,0,2,8,1,9,1,0.867,12,0.9307135470527405,0.1,3
+STU0383,Electronics,4,9.39,11,"['NLP', 'Django', 'Machine Learning', 'MySQL', 'Python', 'AWS', 'C++', 'Node.js', 'CSS', 'HTML', 'Deep Learning']",1,5,2,9,1,11,11,0.9390000000000001,13,1.0587102983638113,0.9166666666666666,3
+STU0384,Mechanical,3,7.15,6,"['NLP', 'Java', 'SQL', 'C++', 'HTML', 'MongoDB']",7,1,4,9,1,6,9,0.7150000000000001,17,0.7361963190184049,1.2857142857142858,5
+STU0385,Computer Science,4,6.0,9,"['React', 'SQL', 'JavaScript', 'C++', 'AWS', 'MongoDB', 'Node.js', 'CSS', 'MySQL']",5,0,0,7,1,9,5,0.6,7,1.2857142857142858,0.5,1
+STU0386,Computer Science,3,5.19,10,"['Node.js', 'Deep Learning', 'HTML', 'JavaScript', 'Django', 'SQL', 'React', 'NLP', 'Docker', 'Java']",3,1,2,8,0,10,5,0.519,12,1.615508885298869,0.45454545454545453,1
+STU0387,Mechanical,4,5.33,3,"['Git', 'C++', 'HTML']",2,5,1,9,0,3,12,0.533,11,0.47393364928909953,3.0,5
+STU0388,Electrical,4,7.35,11,"['React', 'Python', 'Linux', 'Java', 'CSS', 'NLP', 'MongoDB', 'Git', 'Node.js', 'MySQL', 'Django']",4,2,2,8,1,11,8,0.735,12,1.3173652694610778,0.6666666666666666,2
+STU0389,Electrical,3,7.59,5,"['Deep Learning', 'React', 'NLP', 'AWS', 'JavaScript']",4,1,0,7,1,5,6,0.759,7,0.5820721769499418,1.0,2
+STU0390,Information Science,4,5.43,11,"['Docker', 'HTML', 'CSS', 'Git', 'SQL', 'C++', 'JavaScript', 'Python', 'Node.js', 'Django', 'React']",4,5,1,6,0,11,14,0.5429999999999999,8,1.7107309486780715,1.1666666666666667,4
+STU0391,Electronics,4,8.0,3,"['MySQL', 'Git', 'SQL']",3,5,4,3,0,3,13,0.8,11,0.3333333333333333,3.25,3
+STU0392,Mechanical,4,5.56,9,"['Machine Learning', 'React', 'CSS', 'Git', 'Linux', 'Node.js', 'Deep Learning', 'Java', 'Django']",7,4,3,9,0,9,15,0.5559999999999999,15,1.3719512195121952,1.5,5
+STU0393,Mechanical,3,7.5,6,"['CSS', 'MongoDB', 'Docker', 'SQL', 'Node.js', 'Deep Learning']",2,4,0,0,1,6,10,0.75,0,0.7058823529411765,1.4285714285714286,5
+STU0394,Mechanical,4,8.25,6,"['Deep Learning', 'Machine Learning', 'Linux', 'Django', 'Java', 'React']",2,0,4,6,1,6,2,0.825,14,0.6486486486486487,0.2857142857142857,5
+STU0395,Information Science,4,5.18,6,"['Java', 'Machine Learning', 'React', 'HTML', 'AWS', 'C++']",7,0,0,3,0,6,7,0.518,3,0.970873786407767,1.0,4
+STU0396,Civil,3,8.33,5,"['Machine Learning', 'Deep Learning', 'CSS', 'Docker', 'SQL']",6,5,3,1,1,5,16,0.833,7,0.5359056806002144,2.6666666666666665,0
+STU0397,Information Science,4,9.24,7,"['Machine Learning', 'Deep Learning', 'C++', 'Django', 'NLP', 'JavaScript', 'MongoDB']",0,0,3,4,0,7,0,0.924,10,0.68359375,0.0,4
+STU0398,Civil,3,6.32,6,"['SQL', 'MySQL', 'JavaScript', 'Deep Learning', 'HTML', 'CSS']",0,4,1,6,0,6,8,0.632,8,0.819672131147541,1.1428571428571428,0
+STU0399,Mechanical,4,9.61,8,"['CSS', 'NLP', 'Docker', 'MySQL', 'Git', 'C++', 'Java', 'MongoDB']",0,3,0,5,1,8,6,0.961,5,0.7540056550424129,0.6666666666666666,5
+STU0400,Computer Science,4,6.4,5,"['JavaScript', 'Machine Learning', 'AWS', 'Deep Learning', 'C++']",4,3,2,7,1,5,10,0.64,11,0.6756756756756757,1.6666666666666667,1
+STU0401,Electrical,4,7.57,8,"['Django', 'JavaScript', 'Linux', 'CSS', 'Node.js', 'HTML', 'C++', 'React']",0,4,1,0,0,8,8,0.757,2,0.9334889148191365,0.8888888888888888,2
+STU0402,Electrical,4,9.34,7,"['SQL', 'AWS', 'Git', 'JavaScript', 'NLP', 'Deep Learning', 'HTML']",1,4,0,6,1,7,9,0.9339999999999999,6,0.6769825918762089,1.125,2
+STU0403,Information Science,4,7.46,7,"['Java', 'JavaScript', 'MongoDB', 'C++', 'Git', 'MySQL', 'Docker']",1,3,0,8,1,7,7,0.746,8,0.8274231678486996,0.875,4
+STU0404,Civil,3,9.29,9,"['Python', 'Node.js', 'Django', 'Deep Learning', 'Linux', 'NLP', 'Git', 'CSS', 'Machine Learning']",4,0,1,6,1,9,4,0.9289999999999999,8,0.8746355685131196,0.4,0
+STU0405,Computer Science,4,8.46,3,"['AWS', 'MongoDB', 'Machine Learning']",0,2,4,4,1,3,4,0.8460000000000001,12,0.3171247357293869,1.0,1
+STU0406,Electronics,3,6.28,8,"['CSS', 'C++', 'Node.js', 'Git', 'Python', 'JavaScript', 'MongoDB', 'SQL']",7,2,2,6,0,8,11,0.628,10,1.0989010989010988,1.2222222222222223,3
+STU0407,Civil,4,9.06,9,"['Java', 'JavaScript', 'Docker', 'HTML', 'Git', 'AWS', 'SQL', 'MySQL', 'C++']",7,3,0,3,1,9,13,0.906,3,0.8946322067594433,1.3,0
+STU0408,Civil,3,5.35,7,"['Python', 'Machine Learning', 'Git', 'Java', 'Deep Learning', 'NLP', 'MySQL']",4,2,1,1,0,7,8,0.5349999999999999,3,1.1023622047244095,1.0,0
+STU0409,Electronics,4,6.64,5,"['HTML', 'Git', 'Machine Learning', 'Node.js', 'MySQL']",6,5,4,4,0,5,16,0.6639999999999999,12,0.6544502617801048,2.6666666666666665,3
+STU0410,Civil,4,5.76,10,"['AWS', 'JavaScript', 'Python', 'CSS', 'Git', 'MySQL', 'Docker', 'SQL', 'Deep Learning', 'MongoDB']",0,3,0,5,0,10,6,0.576,5,1.4792899408284024,0.5454545454545454,0
+STU0411,Information Science,3,7.42,11,"['MySQL', 'SQL', 'Machine Learning', 'HTML', 'NLP', 'C++', 'Django', 'Java', 'Python', 'Docker', 'Node.js']",4,5,0,4,1,11,14,0.742,4,1.3064133016627077,1.1666666666666667,4
+STU0412,Electronics,4,5.12,5,"['Django', 'MySQL', 'Deep Learning', 'NLP', 'Linux']",0,2,2,0,0,5,4,0.512,4,0.8169934640522876,0.6666666666666666,3
+STU0413,Computer Science,4,6.19,11,"['MySQL', 'Deep Learning', 'Django', 'Docker', 'AWS', 'SQL', 'Machine Learning', 'Java', 'Git', 'HTML', 'React']",1,3,2,2,0,11,7,0.619,6,1.5299026425591098,0.5833333333333334,1
+STU0414,Computer Science,4,9.53,4,"['Machine Learning', 'SQL', 'CSS', 'C++']",4,3,0,3,1,4,10,0.953,3,0.3798670465337132,2.0,1
+STU0415,Civil,3,8.27,6,"['Machine Learning', 'React', 'Django', 'JavaScript', 'NLP', 'Java']",4,2,1,6,1,6,8,0.827,8,0.6472491909385114,1.1428571428571428,0
+STU0416,Computer Science,3,6.8,11,"['MongoDB', 'Docker', 'SQL', 'Python', 'CSS', 'AWS', 'NLP', 'Linux', 'Node.js', 'MySQL', 'Django']",3,1,1,1,1,11,5,0.6799999999999999,3,1.4102564102564104,0.4166666666666667,1
+STU0417,Civil,4,7.46,10,"['MongoDB', 'Linux', 'HTML', 'Git', 'NLP', 'Machine Learning', 'MySQL', 'Docker', 'Django', 'CSS']",2,4,2,1,1,10,10,0.746,5,1.1820330969267139,0.9090909090909091,0
+STU0418,Mechanical,4,8.86,3,"['MySQL', 'Docker', 'Deep Learning']",3,0,2,7,0,3,3,0.8859999999999999,11,0.30425963488843816,0.75,5
+STU0419,Electronics,4,8.42,10,"['Django', 'MongoDB', 'NLP', 'Java', 'SQL', 'React', 'MySQL', 'HTML', 'Docker', 'Machine Learning']",7,5,3,6,1,10,17,0.842,12,1.0615711252653928,1.5454545454545454,3
+STU0420,Computer Science,3,9.27,5,"['Node.js', 'Java', 'AWS', 'Machine Learning', 'NLP']",7,1,0,8,1,5,9,0.9269999999999999,8,0.48685491723466406,1.5,1
+STU0421,Electrical,4,8.21,10,"['Python', 'Deep Learning', 'HTML', 'React', 'Git', 'CSS', 'Node.js', 'MySQL', 'Linux', 'MongoDB']",3,5,2,9,1,10,13,0.8210000000000001,13,1.0857763300760042,1.1818181818181819,2
+STU0422,Computer Science,4,5.17,10,"['MongoDB', 'Python', 'Git', 'Java', 'Node.js', 'React', 'CSS', 'Deep Learning', 'Linux', 'MySQL']",6,4,0,8,0,10,14,0.517,8,1.6207455429497568,1.2727272727272727,1
+STU0423,Information Science,3,5.56,8,"['Python', 'JavaScript', 'Java', 'NLP', 'Git', 'Django', 'Docker', 'Deep Learning']",1,2,2,3,0,8,5,0.5559999999999999,7,1.2195121951219512,0.5555555555555556,4
+STU0424,Information Science,4,9.05,4,"['Linux', 'CSS', 'HTML', 'Python']",3,2,3,5,1,4,7,0.905,11,0.3980099502487562,1.4,4
+STU0425,Information Science,4,8.94,8,"['Deep Learning', 'Git', 'React', 'Python', 'MongoDB', 'HTML', 'Java', 'CSS']",2,3,1,2,1,8,8,0.8939999999999999,4,0.8048289738430584,0.8888888888888888,4
+STU0426,Computer Science,3,8.4,11,"['Linux', 'HTML', 'React', 'MySQL', 'SQL', 'MongoDB', 'AWS', 'Node.js', 'Java', 'Django', 'Python']",2,0,3,5,1,11,2,0.8400000000000001,11,1.1702127659574468,0.16666666666666666,1
+STU0427,Computer Science,4,9.5,11,"['Django', 'MySQL', 'Linux', 'Java', 'Machine Learning', 'Docker', 'MongoDB', 'Deep Learning', 'JavaScript', 'Git', 'Node.js']",7,0,1,6,1,11,7,0.95,8,1.0476190476190477,0.5833333333333334,1
+STU0428,Mechanical,4,6.74,6,"['HTML', 'C++', 'React', 'Linux', 'Git', 'MongoDB']",3,0,1,3,1,6,3,0.674,5,0.7751937984496123,0.42857142857142855,5
+STU0429,Mechanical,4,7.81,3,"['JavaScript', 'Deep Learning', 'Node.js']",2,1,1,8,0,3,4,0.7809999999999999,10,0.34052213393870606,1.0,5
+STU0430,Computer Science,3,8.81,5,"['HTML', 'MySQL', 'React', 'Node.js', 'AWS']",6,4,4,6,1,5,14,0.881,14,0.509683995922528,2.3333333333333335,1
+STU0431,Electrical,4,6.38,11,"['React', 'JavaScript', 'Git', 'Machine Learning', 'Python', 'MySQL', 'Deep Learning', 'C++', 'Linux', 'Docker', 'Django']",1,4,1,2,0,11,9,0.638,4,1.4905149051490516,0.75,2
+STU0432,Electronics,3,7.36,8,"['Docker', 'Node.js', 'HTML', 'Python', 'JavaScript', 'Django', 'CSS', 'NLP']",0,0,0,6,0,8,0,0.736,6,0.9569377990430623,0.0,3
+STU0433,Mechanical,3,5.03,3,"['Java', 'Deep Learning', 'AWS']",0,2,2,4,0,3,4,0.503,8,0.49751243781094523,1.0,5
+STU0434,Electrical,4,6.96,9,"['NLP', 'Deep Learning', 'AWS', 'SQL', 'C++', 'JavaScript', 'Docker', 'Node.js', 'React']",1,4,4,9,0,9,9,0.696,17,1.1306532663316582,0.9,2
+STU0435,Information Science,4,8.86,3,"['Node.js', 'CSS', 'Deep Learning']",1,4,2,0,1,3,9,0.8859999999999999,4,0.30425963488843816,2.25,4
+STU0436,Civil,4,7.18,8,"['MySQL', 'Linux', 'Machine Learning', 'NLP', 'React', 'Python', 'C++', 'Java']",6,4,2,4,1,8,14,0.718,8,0.9779951100244499,1.5555555555555556,0
+STU0437,Mechanical,4,6.54,5,"['AWS', 'Django', 'Deep Learning', 'Java', 'C++']",1,3,3,4,0,5,7,0.654,10,0.6631299734748011,1.1666666666666667,5
+STU0438,Information Science,4,7.12,9,"['AWS', 'JavaScript', 'MySQL', 'CSS', 'Deep Learning', 'Docker', 'Git', 'HTML', 'Java']",1,1,4,4,1,9,3,0.712,12,1.108374384236453,0.3,4
+STU0439,Electronics,4,5.6,6,"['Git', 'Docker', 'SQL', 'MySQL', 'Python', 'Linux']",0,3,2,2,1,6,6,0.5599999999999999,6,0.9090909090909092,0.8571428571428571,3
+STU0440,Electrical,3,6.01,4,"['Django', 'Deep Learning', 'HTML', 'Java']",4,3,4,3,1,4,10,0.601,11,0.5706134094151213,2.0,2
+STU0441,Information Science,4,5.13,7,"['CSS', 'NLP', 'JavaScript', 'Django', 'C++', 'Node.js', 'MySQL']",1,4,0,5,0,7,9,0.513,5,1.1419249592169658,1.125,4
+STU0442,Civil,4,7.15,6,"['MongoDB', 'Docker', 'Java', 'JavaScript', 'AWS', 'SQL']",3,0,2,0,1,6,3,0.7150000000000001,4,0.7361963190184049,0.42857142857142855,0
+STU0443,Mechanical,3,9.09,11,"['CSS', 'SQL', 'AWS', 'Python', 'HTML', 'Django', 'Node.js', 'JavaScript', 'MySQL', 'React', 'NLP']",5,3,3,8,1,11,11,0.909,14,1.0901883052527255,0.9166666666666666,5
+STU0444,Information Science,4,7.18,9,"['Django', 'Linux', 'JavaScript', 'Python', 'Machine Learning', 'Java', 'NLP', 'Git', 'HTML']",3,5,4,4,1,9,13,0.718,12,1.1002444987775062,1.3,4
+STU0445,Electronics,4,6.22,8,"['HTML', 'Java', 'CSS', 'AWS', 'Docker', 'Django', 'Linux', 'Node.js']",7,1,2,9,0,8,9,0.622,13,1.10803324099723,1.0,3
+STU0446,Computer Science,4,8.31,3,"['Django', 'CSS', 'Docker']",5,5,0,1,1,3,15,0.8310000000000001,1,0.32223415682062295,3.75,1
+STU0447,Mechanical,3,7.1,9,"['HTML', 'SQL', 'Java', 'Linux', 'Docker', 'MySQL', 'CSS', 'NLP', 'Deep Learning']",2,2,0,1,1,9,6,0.71,1,1.1111111111111112,0.6,5
+STU0448,Civil,4,6.11,10,"['Java', 'MySQL', 'Django', 'MongoDB', 'Machine Learning', 'Deep Learning', 'C++', 'HTML', 'SQL', 'React']",3,3,3,7,1,10,9,0.611,13,1.4064697609001406,0.8181818181818182,0
+STU0449,Information Science,3,9.4,3,"['Docker', 'Django', 'MongoDB']",4,0,4,2,0,3,4,0.9400000000000001,10,0.28846153846153844,1.0,4
+STU0450,Civil,4,7.99,11,"['Node.js', 'SQL', 'Machine Learning', 'Docker', 'Python', 'React', 'Java', 'MySQL', 'CSS', 'Deep Learning', 'Linux']",0,4,2,0,0,11,8,0.799,4,1.2235817575083425,0.6666666666666666,0
+STU0451,Information Science,4,5.44,6,"['Django', 'Docker', 'C++', 'MySQL', 'Node.js', 'Machine Learning']",5,0,4,9,0,6,5,0.544,17,0.9316770186335404,0.7142857142857143,4
+STU0452,Information Science,4,9.13,9,"['Git', 'AWS', 'Java', 'C++', 'React', 'CSS', 'Python', 'NLP', 'MongoDB']",4,5,2,4,1,9,14,0.913,8,0.8884501480750246,1.4,4
+STU0453,Computer Science,4,6.93,11,"['React', 'Machine Learning', 'Deep Learning', 'Linux', 'CSS', 'Django', 'HTML', 'AWS', 'MySQL', 'Java', 'NLP']",6,4,2,4,0,11,14,0.693,8,1.3871374527112232,1.1666666666666667,1
+STU0454,Electronics,4,9.33,5,"['MongoDB', 'C++', 'Java', 'AWS', 'Docker']",5,5,3,9,1,5,15,0.933,15,0.484027105517909,2.5,3
+STU0455,Electronics,4,7.6,7,"['Docker', 'MongoDB', 'Django', 'HTML', 'AWS', 'CSS', 'Linux']",4,5,2,2,1,7,14,0.76,6,0.813953488372093,1.75,3
+STU0456,Mechanical,4,6.98,10,"['Machine Learning', 'CSS', 'C++', 'Deep Learning', 'Docker', 'NLP', 'MySQL', 'Linux', 'JavaScript', 'MongoDB']",3,3,1,1,0,10,9,0.6980000000000001,3,1.2531328320802004,0.8181818181818182,5
+STU0457,Information Science,4,8.14,9,"['Node.js', 'MongoDB', 'Python', 'JavaScript', 'React', 'Django', 'MySQL', 'NLP', 'SQL']",1,5,2,9,1,9,11,0.8140000000000001,13,0.9846827133479211,1.1,4
+STU0458,Mechanical,4,7.91,9,"['Deep Learning', 'Django', 'React', 'Docker', 'CSS', 'Node.js', 'SQL', 'Linux', 'HTML']",5,1,3,2,1,9,7,0.791,8,1.0101010101010102,0.7,5
+STU0459,Electrical,4,9.45,9,"['MongoDB', 'AWS', 'Node.js', 'Django', 'SQL', 'C++', 'Deep Learning', 'Git', 'CSS']",1,5,0,0,1,9,11,0.945,0,0.861244019138756,1.1,2
+STU0460,Mechanical,4,7.38,8,"['Node.js', 'AWS', 'Django', 'CSS', 'SQL', 'Python', 'JavaScript', 'MongoDB']",0,4,1,0,1,8,8,0.738,2,0.9546539379474942,0.8888888888888888,5
+STU0461,Computer Science,3,6.38,11,"['Linux', 'Docker', 'HTML', 'C++', 'Python', 'Java', 'NLP', 'CSS', 'JavaScript', 'Node.js', 'Django']",2,5,1,2,0,11,12,0.638,4,1.4905149051490516,1.0,1
+STU0462,Civil,4,6.19,5,"['React', 'JavaScript', 'Node.js', 'MySQL', 'AWS']",2,5,4,0,0,5,12,0.619,8,0.6954102920723226,2.0,0
+STU0463,Civil,3,8.16,3,"['C++', 'Python', 'MySQL']",2,4,1,2,1,3,10,0.8160000000000001,4,0.32751091703056767,2.5,0
+STU0464,Computer Science,3,5.71,7,"['Node.js', 'MongoDB', 'AWS', 'Deep Learning', 'C++', 'JavaScript', 'HTML']",5,5,3,5,0,7,15,0.571,11,1.0432190760059612,1.875,1
+STU0465,Electronics,3,6.58,9,"['AWS', 'CSS', 'React', 'Node.js', 'Java', 'Machine Learning', 'C++', 'MongoDB', 'Deep Learning']",5,0,4,2,0,9,5,0.658,10,1.187335092348285,0.5,3
+STU0466,Information Science,4,9.48,4,"['C++', 'MongoDB', 'Git', 'Deep Learning']",1,5,0,4,1,4,11,0.9480000000000001,4,0.38167938931297707,2.2,4
+STU0467,Electronics,4,8.96,8,"['Python', 'Django', 'SQL', 'Deep Learning', 'Java', 'Machine Learning', 'Git', 'CSS']",2,5,4,7,1,8,12,0.8960000000000001,15,0.8032128514056224,1.3333333333333333,3
+STU0468,Mechanical,3,8.89,9,"['Django', 'SQL', 'Linux', 'React', 'CSS', 'Node.js', 'Docker', 'MySQL', 'Python']",1,5,3,8,1,9,11,0.889,14,0.910010111223458,1.1,5
+STU0469,Mechanical,4,8.63,6,"['Docker', 'AWS', 'C++', 'CSS', 'Machine Learning', 'Django']",2,2,4,7,1,6,6,0.8630000000000001,15,0.6230529595015576,0.8571428571428571,5
+STU0470,Electrical,4,8.46,4,"['MySQL', 'Django', 'Linux', 'SQL']",1,5,0,6,1,4,11,0.8460000000000001,6,0.4228329809725158,2.2,2
+STU0471,Civil,3,6.51,6,"['Django', 'C++', 'Node.js', 'HTML', 'Linux', 'AWS']",6,4,2,5,1,6,14,0.651,9,0.7989347536617843,2.0,0
+STU0472,Civil,4,7.16,6,"['Node.js', 'Django', 'React', 'C++', 'NLP', 'MongoDB']",1,4,0,8,1,6,9,0.716,8,0.7352941176470588,1.2857142857142858,0
+STU0473,Information Science,4,6.79,11,"['HTML', 'C++', 'React', 'Java', 'MySQL', 'Django', 'Machine Learning', 'Node.js', 'NLP', 'Docker', 'MongoDB']",4,2,0,8,1,11,8,0.679,8,1.4120667522464698,0.6666666666666666,4
+STU0474,Electrical,4,7.52,5,"['Docker', 'CSS', 'Deep Learning', 'Java', 'Django']",4,0,0,1,1,5,4,0.752,1,0.5868544600938967,0.6666666666666666,2
+STU0475,Mechanical,4,5.19,3,"['Git', 'SQL', 'NLP']",6,1,2,2,1,3,8,0.519,6,0.4846526655896607,2.0,5
+STU0476,Electrical,4,5.52,11,"['React', 'Node.js', 'Linux', 'NLP', 'Deep Learning', 'HTML', 'Python', 'C++', 'MySQL', 'Machine Learning', 'MongoDB']",0,5,4,9,1,11,10,0.5519999999999999,17,1.687116564417178,0.8333333333333334,2
+STU0477,Electrical,3,7.76,8,"['Python', 'AWS', 'MySQL', 'Deep Learning', 'JavaScript', 'Docker', 'Git', 'React']",0,4,1,5,1,8,8,0.776,7,0.9132420091324202,0.8888888888888888,2
+STU0478,Computer Science,3,6.78,9,"['SQL', 'MySQL', 'Machine Learning', 'Django', 'NLP', 'HTML', 'C++', 'Python', 'AWS']",6,1,3,6,0,9,8,0.678,12,1.1568123393316194,0.8,1
+STU0479,Mechanical,4,7.89,9,"['JavaScript', 'Docker', 'Linux', 'Java', 'React', 'Deep Learning', 'MySQL', 'SQL', 'NLP']",7,4,0,3,1,9,15,0.7889999999999999,3,1.012373453318335,1.5,5
+STU0480,Electronics,3,8.44,9,"['Django', 'Docker', 'Linux', 'Node.js', 'Deep Learning', 'HTML', 'Python', 'React', 'MongoDB']",6,1,4,6,1,9,8,0.844,14,0.9533898305084746,0.8,3
+STU0481,Electronics,4,7.5,10,"['C++', 'Linux', 'HTML', 'Node.js', 'Machine Learning', 'Deep Learning', 'SQL', 'MySQL', 'MongoDB', 'CSS']",3,1,3,0,1,10,5,0.75,6,1.1764705882352942,0.45454545454545453,3
+STU0482,Computer Science,4,7.61,4,"['JavaScript', 'Deep Learning', 'SQL', 'Node.js']",0,1,3,1,0,4,2,0.761,7,0.4645760743321719,0.4,1
+STU0483,Civil,4,9.11,7,"['SQL', 'Docker', 'JavaScript', 'Git', 'MongoDB', 'Linux', 'NLP']",3,5,2,0,1,7,13,0.9109999999999999,4,0.6923837784371909,1.625,0
+STU0484,Information Science,4,9.58,7,"['JavaScript', 'HTML', 'SQL', 'Deep Learning', 'Django', 'NLP', 'Java']",0,3,3,3,1,7,6,0.958,9,0.6616257088846881,0.75,4
+STU0485,Electronics,4,6.8,8,"['Deep Learning', 'Node.js', 'Django', 'AWS', 'MongoDB', 'Java', 'CSS', 'HTML']",5,4,1,8,1,8,13,0.6799999999999999,10,1.0256410256410258,1.4444444444444444,3
+STU0486,Electronics,3,7.15,8,"['Git', 'Java', 'Node.js', 'HTML', 'JavaScript', 'Docker', 'Linux', 'Deep Learning']",2,0,0,9,1,8,2,0.7150000000000001,9,0.9815950920245399,0.2222222222222222,3
+STU0487,Electrical,4,7.15,9,"['Docker', 'JavaScript', 'Node.js', 'Python', 'NLP', 'MongoDB', 'AWS', 'MySQL', 'Java']",4,5,4,4,1,9,14,0.7150000000000001,12,1.1042944785276072,1.4,2
+STU0488,Electrical,4,5.7,10,"['AWS', 'MongoDB', 'NLP', 'HTML', 'Docker', 'Python', 'Machine Learning', 'Java', 'Linux', 'JavaScript']",5,1,1,7,0,10,7,0.5700000000000001,9,1.4925373134328357,0.6363636363636364,2
+STU0489,Computer Science,4,8.94,11,"['Machine Learning', 'C++', 'JavaScript', 'Deep Learning', 'NLP', 'Git', 'Java', 'MySQL', 'Node.js', 'HTML', 'AWS']",1,3,1,1,1,11,7,0.8939999999999999,3,1.1066398390342054,0.5833333333333334,1
+STU0490,Mechanical,4,6.91,8,"['Linux', 'Deep Learning', 'Git', 'JavaScript', 'Java', 'MySQL', 'Machine Learning', 'Node.js']",3,4,2,0,0,8,11,0.6910000000000001,4,1.011378002528445,1.2222222222222223,5
+STU0491,Civil,4,6.0,10,"['JavaScript', 'Machine Learning', 'Node.js', 'Git', 'Python', 'NLP', 'MongoDB', 'C++', 'Django', 'HTML']",5,5,0,8,0,10,15,0.6,8,1.4285714285714286,1.3636363636363635,0
+STU0492,Computer Science,3,8.13,7,"['JavaScript', 'HTML', 'Python', 'Linux', 'MySQL', 'Machine Learning', 'MongoDB']",7,2,2,9,1,7,11,0.8130000000000001,13,0.7667031763417305,1.375,1
+STU0493,Information Science,3,8.87,7,"['Git', 'Docker', 'MySQL', 'Java', 'AWS', 'MongoDB', 'SQL']",7,1,3,6,1,7,9,0.8869999999999999,12,0.7092198581560284,1.125,4
+STU0494,Civil,4,8.9,10,"['CSS', 'HTML', 'MongoDB', 'Machine Learning', 'AWS', 'Django', 'React', 'JavaScript', 'Node.js', 'Linux']",4,1,1,6,1,10,6,0.89,8,1.0101010101010102,0.5454545454545454,0
+STU0495,Information Science,4,7.44,7,"['Linux', 'AWS', 'MongoDB', 'HTML', 'CSS', 'Node.js', 'Java']",0,5,0,3,1,7,10,0.744,3,0.8293838862559241,1.25,4
+STU0496,Information Science,4,9.05,5,"['Machine Learning', 'Deep Learning', 'C++', 'SQL', 'NLP']",1,3,1,4,1,5,7,0.905,6,0.49751243781094523,1.1666666666666667,4
+STU0497,Computer Science,4,9.66,11,"['Docker', 'React', 'C++', 'Python', 'MongoDB', 'Node.js', 'JavaScript', 'Java', 'Machine Learning', 'Django', 'Git']",1,1,4,3,1,11,3,0.966,11,1.0318949343339587,0.25,1
+STU0498,Electrical,4,9.44,10,"['C++', 'CSS', 'Deep Learning', 'Node.js', 'JavaScript', 'Docker', 'React', 'NLP', 'Django', 'SQL']",3,4,4,6,1,10,11,0.944,14,0.9578544061302683,1.0,2
+STU0499,Mechanical,3,7.99,3,"['Git', 'Django', 'NLP']",0,5,3,4,0,3,10,0.799,10,0.3337041156840934,2.5,5
+STU0500,Electrical,4,7.62,7,"['Linux', 'Machine Learning', 'SQL', 'NLP', 'Django', 'C++', 'Node.js']",5,5,1,0,1,7,15,0.762,2,0.8120649651972157,1.875,2
+STU0501,Information Science,3,9.7,4,"['Node.js', 'Git', 'NLP', 'Docker']",1,4,0,8,1,4,9,0.97,8,0.3738317757009346,1.8,4
+STU0502,Electronics,3,5.21,6,"['Git', 'Machine Learning', 'Java', 'React', 'CSS', 'SQL']",4,5,1,9,1,6,14,0.521,11,0.966183574879227,2.0,3
+STU0503,Computer Science,4,6.82,5,"['CSS', 'JavaScript', 'React', 'C++', 'Docker']",3,1,0,9,1,5,5,0.682,9,0.639386189258312,0.8333333333333334,1
+STU0504,Mechanical,3,7.63,4,"['React', 'SQL', 'Node.js', 'HTML']",0,2,4,1,0,4,4,0.763,9,0.46349942062572425,0.8,5
+STU0505,Electrical,3,5.9,8,"['Deep Learning', 'C++', 'Django', 'Node.js', 'HTML', 'NLP', 'Docker', 'Linux']",3,0,3,6,1,8,3,0.5900000000000001,12,1.1594202898550725,0.3333333333333333,2
+STU0506,Mechanical,4,8.39,11,"['Node.js', 'AWS', 'Java', 'NLP', 'CSS', 'Linux', 'MongoDB', 'Django', 'Deep Learning', 'Python', 'React']",5,5,1,8,1,11,15,0.8390000000000001,10,1.1714589989350372,1.25,5
+STU0507,Information Science,4,6.32,5,"['JavaScript', 'Machine Learning', 'NLP', 'Node.js', 'MongoDB']",4,2,4,9,0,5,8,0.632,17,0.6830601092896175,1.3333333333333333,4
+STU0508,Information Science,4,7.45,10,"['Git', 'Node.js', 'SQL', 'Django', 'AWS', 'Deep Learning', 'Python', 'C++', 'MongoDB', 'Docker']",3,5,1,4,1,10,13,0.745,6,1.183431952662722,1.1818181818181819,4
+STU0509,Civil,4,8.39,7,"['Git', 'NLP', 'AWS', 'Django', 'MySQL', 'Python', 'Linux']",4,2,2,5,1,7,8,0.8390000000000001,9,0.7454739084132055,1.0,0
+STU0510,Information Science,3,7.16,8,"['MySQL', 'C++', 'Machine Learning', 'HTML', 'React', 'CSS', 'Node.js', 'Linux']",1,5,2,0,1,8,11,0.716,4,0.9803921568627451,1.2222222222222223,4
+STU0511,Mechanical,4,5.96,5,"['Linux', 'JavaScript', 'MySQL', 'Python', 'CSS']",3,3,2,5,1,5,9,0.596,9,0.7183908045977011,1.5,5
+STU0512,Mechanical,4,7.22,10,"['AWS', 'MySQL', 'NLP', 'Django', 'Linux', 'JavaScript', 'SQL', 'C++', 'Deep Learning', 'Git']",1,4,4,9,1,10,9,0.722,17,1.2165450121654502,0.8181818181818182,5
+STU0513,Civil,3,8.06,11,"['Node.js', 'MySQL', 'Git', 'Python', 'AWS', 'Machine Learning', 'JavaScript', 'React', 'Java', 'Docker', 'Django']",7,5,3,8,1,11,17,0.806,14,1.2141280353200883,1.4166666666666667,0
+STU0514,Computer Science,4,5.34,8,"['Django', 'Python', 'Linux', 'Deep Learning', 'MySQL', 'React', 'CSS', 'Git']",0,0,4,8,0,8,0,0.534,16,1.2618296529968454,0.0,1
+STU0515,Mechanical,4,7.02,11,"['Linux', 'NLP', 'AWS', 'Machine Learning', 'Node.js', 'Python', 'MongoDB', 'Django', 'C++', 'Docker', 'SQL']",2,1,3,4,1,11,4,0.702,10,1.371571072319202,0.3333333333333333,5
+STU0516,Electrical,4,8.66,3,"['Deep Learning', 'CSS', 'React']",7,1,4,8,0,3,9,0.866,16,0.3105590062111801,2.25,2
+STU0517,Information Science,4,6.25,11,"['CSS', 'Machine Learning', 'Django', 'AWS', 'JavaScript', 'MongoDB', 'Deep Learning', 'Linux', 'NLP', 'Git', 'Java']",7,5,1,7,0,11,17,0.625,9,1.5172413793103448,1.4166666666666667,4
+STU0518,Civil,3,5.06,9,"['React', 'Deep Learning', 'Django', 'Python', 'Node.js', 'JavaScript', 'Java', 'Docker', 'Git']",6,3,0,4,1,9,12,0.506,4,1.4851485148514851,1.2,0
+STU0519,Civil,3,9.67,3,"['AWS', 'MongoDB', 'CSS']",4,3,4,1,1,3,10,0.967,9,0.28116213683223995,2.5,0
+STU0520,Computer Science,4,8.42,7,"['MongoDB', 'Linux', 'Java', 'Git', 'C++', 'NLP', 'Docker']",5,5,1,6,1,7,15,0.842,8,0.743099787685775,1.875,1
+STU0521,Civil,4,8.45,3,"['Deep Learning', 'Python', 'Docker']",7,3,4,9,1,3,13,0.845,17,0.3174603174603175,3.25,0
+STU0522,Electrical,3,6.78,11,"['Deep Learning', 'React', 'JavaScript', 'Django', 'MongoDB', 'Python', 'Java', 'Linux', 'CSS', 'MySQL', 'Machine Learning']",6,0,2,8,0,11,6,0.678,12,1.4138817480719794,0.5,2
+STU0523,Electrical,4,8.95,3,"['JavaScript', 'CSS', 'Machine Learning']",0,1,3,6,0,3,2,0.8949999999999999,12,0.30150753768844224,0.5,2
+STU0524,Mechanical,4,7.73,9,"['Django', 'C++', 'Machine Learning', 'CSS', 'Java', 'Node.js', 'HTML', 'JavaScript', 'Deep Learning']",5,1,2,9,1,9,7,0.773,13,1.0309278350515463,0.7,5
+STU0525,Electronics,4,5.53,10,"['Docker', 'Linux', 'MySQL', 'Django', 'JavaScript', 'Git', 'MongoDB', 'React', 'NLP', 'CSS']",4,5,4,1,0,10,14,0.553,9,1.5313935681470137,1.2727272727272727,3
+STU0526,Information Science,4,6.06,9,"['NLP', 'Deep Learning', 'AWS', 'Django', 'Python', 'Machine Learning', 'React', 'Linux', 'Docker']",6,5,0,2,0,9,16,0.606,2,1.274787535410765,1.6,4
+STU0527,Computer Science,4,7.29,8,"['C++', 'Python', 'CSS', 'AWS', 'NLP', 'MongoDB', 'SQL', 'Deep Learning']",6,5,0,5,1,8,16,0.729,5,0.9650180940892643,1.7777777777777777,1
+STU0528,Mechanical,4,5.85,6,"['Django', 'C++', 'MySQL', 'NLP', 'JavaScript', 'HTML']",7,3,1,8,0,6,13,0.585,10,0.8759124087591241,1.8571428571428572,5
+STU0529,Mechanical,4,6.44,8,"['MongoDB', 'Django', 'React', 'Node.js', 'JavaScript', 'Docker', 'CSS', 'SQL']",6,2,2,7,0,8,10,0.644,11,1.075268817204301,1.1111111111111112,5
+STU0530,Mechanical,4,5.58,11,"['NLP', 'Django', 'MongoDB', 'Node.js', 'Git', 'Python', 'C++', 'Deep Learning', 'CSS', 'Machine Learning', 'Java']",1,2,4,5,1,11,5,0.558,13,1.6717325227963526,0.4166666666666667,5
+STU0531,Electrical,3,7.82,9,"['React', 'Node.js', 'Python', 'MySQL', 'NLP', 'Deep Learning', 'Java', 'MongoDB', 'Linux']",0,3,0,1,0,9,6,0.782,1,1.0204081632653061,0.6,2
+STU0532,Mechanical,4,9.71,10,"['Django', 'HTML', 'CSS', 'C++', 'React', 'Java', 'MySQL', 'Git', 'MongoDB', 'Linux']",0,5,3,5,1,10,10,0.9710000000000001,11,0.9337068160597571,0.9090909090909091,5
+STU0533,Electrical,4,5.05,5,"['HTML', 'CSS', 'React', 'SQL', 'Linux']",1,0,2,7,1,5,1,0.505,11,0.8264462809917356,0.16666666666666666,2
+STU0534,Computer Science,4,6.91,9,"['Machine Learning', 'Python', 'C++', 'CSS', 'HTML', 'Java', 'Docker', 'JavaScript', 'Deep Learning']",4,3,3,1,0,9,10,0.6910000000000001,7,1.1378002528445006,1.0,1
+STU0535,Computer Science,4,8.97,7,"['Java', 'Deep Learning', 'Machine Learning', 'Docker', 'Node.js', 'Django', 'NLP']",2,5,2,7,1,7,12,0.897,11,0.7021063189568706,1.5,1
+STU0536,Mechanical,3,6.86,3,"['Python', 'Machine Learning', 'SQL']",6,5,3,2,1,3,16,0.686,8,0.38167938931297707,4.0,5
+STU0537,Civil,4,7.5,11,"['MySQL', 'Docker', 'Machine Learning', 'JavaScript', 'CSS', 'C++', 'MongoDB', 'Django', 'Deep Learning', 'NLP', 'HTML']",2,3,2,9,1,11,8,0.75,13,1.2941176470588236,0.6666666666666666,0
+STU0538,Information Science,4,7.99,10,"['NLP', 'Machine Learning', 'C++', 'Node.js', 'Docker', 'Java', 'MongoDB', 'Django', 'CSS', 'Python']",4,3,0,1,1,10,10,0.799,1,1.1123470522803114,0.9090909090909091,4
+STU0539,Mechanical,3,8.71,10,"['MongoDB', 'Machine Learning', 'NLP', 'Django', 'CSS', 'JavaScript', 'C++', 'Linux', 'HTML', 'Docker']",1,0,0,6,1,10,1,0.8710000000000001,6,1.0298661174047372,0.09090909090909091,5
+STU0540,Mechanical,4,6.13,6,"['C++', 'MongoDB', 'React', 'JavaScript', 'Git', 'Linux']",5,5,2,6,0,6,15,0.613,10,0.8415147265077139,2.142857142857143,5
+STU0541,Information Science,4,7.99,3,"['Git', 'Linux', 'JavaScript']",1,4,0,5,0,3,9,0.799,5,0.3337041156840934,2.25,4
+STU0542,Electrical,3,6.7,9,"['Deep Learning', 'Java', 'Docker', 'Django', 'Git', 'Machine Learning', 'Linux', 'C++', 'NLP']",4,2,3,0,0,9,8,0.67,6,1.1688311688311688,0.8,2
+STU0543,Civil,4,7.29,10,"['MongoDB', 'Deep Learning', 'NLP', 'SQL', 'JavaScript', 'React', 'HTML', 'Python', 'Git', 'Linux']",3,4,0,6,1,10,11,0.729,6,1.2062726176115803,1.0,0
+STU0544,Computer Science,3,7.78,3,"['AWS', 'C++', 'Git']",7,5,1,2,0,3,17,0.778,4,0.3416856492027334,4.25,1
+STU0545,Electrical,4,5.51,8,"['HTML', 'Git', 'C++', 'Django', 'AWS', 'Deep Learning', 'JavaScript', 'MongoDB']",7,0,3,8,0,8,7,0.5509999999999999,14,1.228878648233487,0.7777777777777778,2
+STU0546,Electrical,4,7.89,10,"['MySQL', 'Machine Learning', 'HTML', 'Deep Learning', 'Java', 'MongoDB', 'Node.js', 'Python', 'AWS', 'NLP']",3,4,3,0,1,10,11,0.7889999999999999,6,1.124859392575928,1.0,2
+STU0547,Civil,4,5.93,5,"['JavaScript', 'Linux', 'HTML', 'React', 'Node.js']",5,4,4,4,1,5,13,0.593,12,0.7215007215007215,2.1666666666666665,0
+STU0548,Electronics,4,8.1,7,"['Git', 'HTML', 'AWS', 'JavaScript', 'Linux', 'CSS', 'Python']",2,1,3,5,1,7,4,0.8099999999999999,11,0.7692307692307693,0.5,3
+STU0549,Electrical,4,7.15,11,"['CSS', 'Django', 'HTML', 'MongoDB', 'C++', 'NLP', 'Node.js', 'Machine Learning', 'Java', 'Deep Learning', 'Linux']",3,1,4,8,1,11,5,0.7150000000000001,16,1.3496932515337423,0.4166666666666667,2
+STU0550,Electrical,4,8.33,6,"['React', 'Python', 'Linux', 'Docker', 'MongoDB', 'Machine Learning']",5,2,1,7,1,6,9,0.833,9,0.6430868167202572,1.2857142857142858,2
+STU0551,Computer Science,3,6.78,11,"['Deep Learning', 'SQL', 'Python', 'HTML', 'Machine Learning', 'React', 'MySQL', 'Django', 'Linux', 'AWS', 'C++']",0,4,0,4,0,11,8,0.678,4,1.4138817480719794,0.6666666666666666,1
+STU0552,Civil,4,5.24,10,"['HTML', 'SQL', 'Linux', 'NLP', 'MongoDB', 'Deep Learning', 'Machine Learning', 'CSS', 'Docker', 'Node.js']",2,3,0,2,1,10,8,0.524,2,1.6025641025641024,0.7272727272727273,0
+STU0553,Electronics,4,5.8,7,"['CSS', 'JavaScript', 'MongoDB', 'Node.js', 'HTML', 'Django', 'Python']",7,1,4,5,0,7,9,0.58,13,1.0294117647058825,1.125,3
+STU0554,Computer Science,4,7.12,6,"['Machine Learning', 'SQL', 'C++', 'CSS', 'Java', 'Python']",6,0,0,4,1,6,6,0.712,4,0.7389162561576353,0.8571428571428571,1
+STU0555,Information Science,4,8.82,10,"['Django', 'JavaScript', 'Python', 'React', 'AWS', 'Linux', 'Node.js', 'MySQL', 'Machine Learning', 'Docker']",4,0,0,2,1,10,4,0.882,2,1.0183299389002036,0.36363636363636365,4
+STU0556,Mechanical,4,6.83,7,"['AWS', 'Django', 'MongoDB', 'Java', 'MySQL', 'HTML', 'React']",5,3,2,6,0,7,11,0.683,10,0.8939974457215837,1.375,5
+STU0557,Mechanical,4,6.42,4,"['Linux', 'MySQL', 'Docker', 'NLP']",7,3,4,7,1,4,13,0.642,15,0.5390835579514824,2.6,5
+STU0558,Computer Science,4,8.73,8,"['Git', 'Docker', 'Linux', 'MySQL', 'MongoDB', 'C++', 'CSS', 'Deep Learning']",2,4,2,9,1,8,10,0.873,13,0.8221993833504625,1.1111111111111112,1
+STU0559,Mechanical,4,5.67,8,"['NLP', 'Deep Learning', 'MySQL', 'Linux', 'JavaScript', 'CSS', 'HTML', 'C++']",4,4,2,3,0,8,12,0.567,7,1.199400299850075,1.3333333333333333,5
+STU0560,Mechanical,4,8.56,4,"['Django', 'Node.js', 'HTML', 'Java']",4,4,1,3,1,4,12,0.8560000000000001,5,0.41841004184100417,2.4,5
+STU0561,Computer Science,4,9.72,8,"['HTML', 'Linux', 'JavaScript', 'C++', 'MongoDB', 'NLP', 'Machine Learning', 'Docker']",2,1,2,9,1,8,4,0.9720000000000001,13,0.7462686567164178,0.4444444444444444,1
+STU0562,Computer Science,3,5.02,7,"['JavaScript', 'SQL', 'Node.js', 'C++', 'Linux', 'Java', 'CSS']",7,5,0,5,0,7,17,0.502,5,1.1627906976744187,2.125,1
+STU0563,Computer Science,4,8.51,3,"['AWS', 'Java', 'HTML']",0,5,1,7,1,3,10,0.851,9,0.31545741324921134,2.5,1
+STU0564,Electrical,4,9.71,10,"['NLP', 'CSS', 'Python', 'C++', 'Django', 'Linux', 'MySQL', 'SQL', 'Node.js', 'Git']",7,5,4,2,1,10,17,0.9710000000000001,10,0.9337068160597571,1.5454545454545454,2
+STU0565,Information Science,3,6.16,3,"['MySQL', 'HTML', 'C++']",5,1,0,9,0,3,7,0.616,9,0.41899441340782123,1.75,4
+STU0566,Civil,3,8.76,10,"['Docker', 'NLP', 'Deep Learning', 'MongoDB', 'CSS', 'Linux', 'Machine Learning', 'C++', 'AWS', 'Django']",3,2,0,4,1,10,7,0.876,4,1.0245901639344261,0.6363636363636364,0
+STU0567,Computer Science,3,5.74,6,"['Git', 'SQL', 'Docker', 'MongoDB', 'Deep Learning', 'Java']",5,1,4,2,0,6,7,0.5740000000000001,10,0.8902077151335311,1.0,1
+STU0568,Civil,4,8.35,7,"['Machine Learning', 'MongoDB', 'Deep Learning', 'SQL', 'Git', 'MySQL', 'Java']",4,3,2,5,1,7,10,0.835,9,0.7486631016042781,1.25,0
+STU0569,Mechanical,4,5.63,4,"['Django', 'React', 'NLP', 'JavaScript']",4,1,0,9,0,4,6,0.563,9,0.6033182503770739,1.2,5
+STU0570,Civil,3,6.23,3,"['AWS', 'MongoDB', 'Python']",4,5,2,2,0,3,14,0.623,6,0.41493775933609955,3.5,0
+STU0571,Civil,4,7.52,6,"['HTML', 'Linux', 'JavaScript', 'Deep Learning', 'Git', 'React']",5,4,2,4,1,6,13,0.752,8,0.7042253521126761,1.8571428571428572,0
+STU0572,Electrical,4,9.27,11,"['NLP', 'Node.js', 'Deep Learning', 'MongoDB', 'MySQL', 'Linux', 'Django', 'C++', 'Machine Learning', 'Python', 'AWS']",1,5,1,8,1,11,11,0.9269999999999999,10,1.071080817916261,0.9166666666666666,2
+STU0573,Computer Science,4,5.94,10,"['MySQL', 'NLP', 'AWS', 'Machine Learning', 'MongoDB', 'JavaScript', 'Node.js', 'Docker', 'Linux', 'React']",1,4,1,9,1,10,9,0.5940000000000001,11,1.440922190201729,0.8181818181818182,1
+STU0574,Civil,3,8.63,4,"['Python', 'Node.js', 'JavaScript', 'React']",7,3,0,1,1,4,13,0.8630000000000001,1,0.41536863966770504,2.6,0
+STU0575,Electrical,4,6.98,4,"['CSS', 'SQL', 'HTML', 'React']",3,4,4,6,0,4,11,0.6980000000000001,14,0.5012531328320802,2.2,2
+STU0576,Electronics,4,9.19,11,"['CSS', 'Node.js', 'HTML', 'React', 'Docker', 'C++', 'Git', 'Python', 'SQL', 'Deep Learning', 'AWS']",4,3,2,7,1,11,10,0.9189999999999999,11,1.0794896957801767,0.8333333333333334,3
+STU0577,Mechanical,3,9.46,9,"['Git', 'Docker', 'MongoDB', 'NLP', 'React', 'Deep Learning', 'Python', 'C++', 'Django']",6,2,2,8,1,9,10,0.9460000000000001,12,0.8604206500956022,1.0,5
+STU0578,Electronics,3,8.16,5,"['Django', 'CSS', 'React', 'Node.js', 'JavaScript']",1,5,0,5,1,5,11,0.8160000000000001,5,0.5458515283842794,1.8333333333333333,3
+STU0579,Computer Science,4,8.85,10,"['Git', 'Linux', 'JavaScript', 'Python', 'Java', 'C++', 'AWS', 'Deep Learning', 'React', 'HTML']",2,2,0,3,1,10,6,0.885,3,1.015228426395939,0.5454545454545454,1
+STU0580,Information Science,4,8.24,10,"['MySQL', 'Machine Learning', 'SQL', 'Docker', 'Java', 'AWS', 'React', 'MongoDB', 'NLP', 'Python']",1,0,2,3,1,10,1,0.8240000000000001,7,1.0822510822510822,0.09090909090909091,4
+STU0581,Electronics,4,5.16,4,"['NLP', 'Linux', 'C++', 'CSS']",3,0,0,0,1,4,3,0.516,0,0.6493506493506493,0.6,3
+STU0582,Computer Science,4,6.49,3,"['Node.js', 'Machine Learning', 'C++']",4,0,0,1,1,3,4,0.649,1,0.40053404539385845,1.0,1
+STU0583,Mechanical,4,7.44,6,"['Machine Learning', 'C++', 'SQL', 'Node.js', 'NLP', 'Git']",2,0,4,3,1,6,2,0.744,11,0.7109004739336492,0.2857142857142857,5
+STU0584,Civil,4,5.51,4,"['Machine Learning', 'MySQL', 'NLP', 'Python']",6,0,4,6,1,4,6,0.5509999999999999,14,0.6144393241167435,1.2,0
+STU0585,Electronics,3,8.04,5,"['Java', 'NLP', 'Deep Learning', 'Linux', 'Django']",3,1,1,0,1,5,5,0.8039999999999999,2,0.5530973451327434,0.8333333333333334,3
+STU0586,Mechanical,4,9.27,6,"['Java', 'CSS', 'JavaScript', 'Python', 'Django', 'Deep Learning']",4,5,0,0,1,6,14,0.9269999999999999,0,0.5842259006815969,2.0,5
+STU0587,Computer Science,4,9.52,8,"['Django', 'MySQL', 'Git', 'Linux', 'NLP', 'React', 'JavaScript', 'Node.js']",0,5,4,6,1,8,10,0.952,14,0.7604562737642586,1.1111111111111112,1
+STU0588,Information Science,4,6.68,5,"['React', 'Git', 'Machine Learning', 'Docker', 'Django']",5,0,4,2,0,5,5,0.6679999999999999,10,0.6510416666666667,0.8333333333333334,4
+STU0589,Computer Science,4,8.22,10,"['React', 'Django', 'Java', 'Git', 'HTML', 'MySQL', 'Python', 'JavaScript', 'C++', 'Node.js']",7,2,1,5,1,10,11,0.8220000000000001,7,1.0845986984815617,1.0,1
+STU0590,Electronics,3,8.65,6,"['C++', 'Node.js', 'Linux', 'MySQL', 'Git', 'Docker']",1,5,4,5,1,6,11,0.865,13,0.6217616580310881,1.5714285714285714,3
+STU0591,Electronics,3,8.67,8,"['SQL', 'Docker', 'React', 'Node.js', 'Machine Learning', 'C++', 'CSS', 'MySQL']",5,3,1,7,1,8,11,0.867,9,0.827300930713547,1.2222222222222223,3
+STU0592,Civil,4,5.82,9,"['SQL', 'MongoDB', 'Linux', 'React', 'Django', 'Node.js', 'Docker', 'Java', 'CSS']",2,3,2,5,0,9,8,0.5820000000000001,9,1.3196480938416422,0.8,0
+STU0593,Mechanical,4,6.31,8,"['Django', 'Java', 'Linux', 'SQL', 'Machine Learning', 'C++', 'NLP', 'AWS']",0,2,3,6,0,8,4,0.631,12,1.094391244870041,0.4444444444444444,5
+STU0594,Information Science,3,8.33,7,"['CSS', 'Python', 'React', 'HTML', 'Java', 'Node.js', 'SQL']",7,5,4,7,1,7,17,0.833,15,0.7502679528403001,2.125,4
+STU0595,Mechanical,3,9.0,6,"['AWS', 'Python', 'JavaScript', 'Linux', 'Node.js', 'Machine Learning']",6,0,0,1,1,6,6,0.9,1,0.6,0.8571428571428571,5
+STU0596,Information Science,4,8.51,6,"['Git', 'CSS', 'AWS', 'Linux', 'C++', 'Django']",3,4,2,0,1,6,11,0.851,4,0.6309148264984227,1.5714285714285714,4
+STU0597,Electronics,4,7.41,7,"['Linux', 'MongoDB', 'Docker', 'React', 'SQL', 'HTML', 'Machine Learning']",1,1,2,1,1,7,3,0.741,5,0.8323424494649228,0.375,3
+STU0598,Electrical,3,6.31,10,"['MySQL', 'Git', 'JavaScript', 'Java', 'AWS', 'React', 'CSS', 'Machine Learning', 'HTML', 'Node.js']",2,2,3,6,0,10,6,0.631,12,1.3679890560875514,0.5454545454545454,2
+STU0599,Information Science,4,5.65,4,"['Docker', 'Django', 'Node.js', 'Machine Learning']",3,0,2,3,1,4,3,0.5650000000000001,7,0.6015037593984962,0.6,4
+STU0600,Civil,4,6.22,3,"['Django', 'MySQL', 'Linux']",6,1,2,6,0,3,8,0.622,10,0.41551246537396125,2.0,0
+STU0601,Electronics,4,5.48,9,"['Django', 'C++', 'Linux', 'Git', 'Java', 'Docker', 'Python', 'NLP', 'MySQL']",5,0,0,0,0,9,5,0.548,0,1.3888888888888888,0.5,3
+STU0602,Civil,4,7.16,5,"['MySQL', 'AWS', 'Node.js', 'MongoDB', 'Django']",3,3,0,6,1,5,9,0.716,6,0.6127450980392157,1.5,0
+STU0603,Computer Science,4,7.0,11,"['MongoDB', 'Node.js', 'NLP', 'React', 'Django', 'Machine Learning', 'JavaScript', 'MySQL', 'AWS', 'C++', 'Docker']",7,2,4,1,0,11,11,0.7,9,1.375,0.9166666666666666,1
+STU0604,Electronics,3,8.1,10,"['Deep Learning', 'React', 'CSS', 'C++', 'HTML', 'MySQL', 'Git', 'Linux', 'Machine Learning', 'Node.js']",5,2,1,3,1,10,9,0.8099999999999999,5,1.098901098901099,0.8181818181818182,3
+STU0605,Civil,4,6.93,11,"['MySQL', 'Java', 'Django', 'C++', 'HTML', 'Deep Learning', 'NLP', 'Node.js', 'Linux', 'Docker', 'CSS']",3,2,1,3,0,11,7,0.693,5,1.3871374527112232,0.5833333333333334,0
+STU0606,Computer Science,4,9.22,11,"['JavaScript', 'Django', 'SQL', 'Docker', 'Git', 'MySQL', 'HTML', 'React', 'CSS', 'Java', 'Python']",5,1,0,9,1,11,7,0.922,9,1.0763209393346378,0.5833333333333334,1
+STU0607,Information Science,4,7.43,9,"['React', 'Linux', 'Django', 'MySQL', 'Python', 'Node.js', 'HTML', 'NLP', 'Machine Learning']",6,1,1,0,1,9,8,0.743,2,1.0676156583629894,0.8,4
+STU0608,Information Science,3,7.85,10,"['JavaScript', 'MongoDB', 'AWS', 'Docker', 'Node.js', 'Django', 'C++', 'HTML', 'Java', 'React']",7,1,0,3,1,10,9,0.7849999999999999,3,1.1299435028248588,0.8181818181818182,4
+STU0609,Civil,4,7.71,3,"['Docker', 'AWS', 'Django']",1,4,3,7,0,3,9,0.771,13,0.3444316877152698,2.25,0
+STU0610,Electrical,4,8.11,5,"['React', 'Django', 'Git', 'Java', 'Node.js']",1,5,3,5,1,5,11,0.8109999999999999,11,0.5488474204171241,1.8333333333333333,2
+STU0611,Electronics,4,5.73,9,"['NLP', 'Linux', 'MySQL', 'CSS', 'Python', 'Django', 'Node.js', 'MongoDB', 'Machine Learning']",5,5,4,7,0,9,15,0.5730000000000001,15,1.337295690936107,1.5,3
+STU0612,Information Science,3,7.65,6,"['Deep Learning', 'Python', 'JavaScript', 'SQL', 'Java', 'AWS']",6,0,3,7,1,6,6,0.765,13,0.6936416184971098,0.8571428571428571,4
+STU0613,Information Science,4,7.31,9,"['Deep Learning', 'C++', 'Git', 'Node.js', 'MySQL', 'Linux', 'HTML', 'AWS', 'Django']",0,0,2,7,0,9,0,0.731,11,1.0830324909747293,0.0,4
+STU0614,Electrical,4,8.02,4,"['Node.js', 'Deep Learning', 'React', 'C++']",0,5,4,9,1,4,10,0.8019999999999999,17,0.4434589800443459,2.0,2
+STU0615,Electrical,3,6.75,6,"['SQL', 'React', 'HTML', 'Machine Learning', 'MongoDB', 'JavaScript']",4,1,1,9,0,6,6,0.675,11,0.7741935483870968,0.8571428571428571,2
+STU0616,Electrical,4,5.86,11,"['Django', 'Git', 'Linux', 'C++', 'AWS', 'Python', 'SQL', 'Java', 'React', 'Deep Learning', 'HTML']",2,5,4,2,0,11,12,0.5860000000000001,10,1.6034985422740524,1.0,2
+STU0617,Civil,3,6.84,9,"['CSS', 'Linux', 'HTML', 'Node.js', 'MySQL', 'Deep Learning', 'C++', 'Django', 'Machine Learning']",4,0,0,6,0,9,4,0.6839999999999999,6,1.1479591836734695,0.4,0
+STU0618,Mechanical,4,7.28,6,"['React', 'Django', 'Node.js', 'JavaScript', 'Linux', 'Git']",4,2,3,1,1,6,8,0.728,7,0.7246376811594202,1.1428571428571428,5
+STU0619,Electrical,4,8.54,10,"['Git', 'NLP', 'Node.js', 'Machine Learning', 'Docker', 'Deep Learning', 'Java', 'JavaScript', 'Linux', 'HTML']",0,0,0,0,1,10,0,0.8539999999999999,0,1.0482180293501049,0.0,2
+STU0620,Electronics,4,9.59,8,"['HTML', 'Docker', 'MongoDB', 'MySQL', 'Django', 'Machine Learning', 'NLP', 'Python']",2,4,1,1,1,8,10,0.959,3,0.7554296506137866,1.1111111111111112,3
+STU0621,Electronics,4,7.03,7,"['JavaScript', 'C++', 'Java', 'Machine Learning', 'CSS', 'Deep Learning', 'Git']",0,0,3,2,0,7,0,0.7030000000000001,8,0.87173100871731,0.0,3
+STU0622,Civil,4,6.44,4,"['AWS', 'Python', 'Java', 'Machine Learning']",5,3,3,7,1,4,11,0.644,13,0.5376344086021505,2.2,0
+STU0623,Civil,4,8.7,7,"['Python', 'C++', 'AWS', 'Node.js', 'React', 'Git', 'Java']",5,1,1,6,1,7,7,0.8699999999999999,8,0.7216494845360826,0.875,0
+STU0624,Computer Science,4,5.58,4,"['JavaScript', 'Linux', 'Django', 'Java']",7,5,3,5,0,4,17,0.558,11,0.60790273556231,3.4,1
+STU0625,Computer Science,4,6.59,11,"['Machine Learning', 'MySQL', 'C++', 'MongoDB', 'NLP', 'Node.js', 'CSS', 'HTML', 'Django', 'JavaScript', 'Docker']",7,3,0,6,1,11,13,0.659,6,1.4492753623188406,1.0833333333333333,1
+STU0626,Civil,3,6.91,3,"['HTML', 'C++', 'Django']",4,2,0,6,1,3,8,0.6910000000000001,6,0.37926675094816686,2.0,0
+STU0627,Electrical,4,9.78,5,"['Git', 'Python', 'CSS', 'C++', 'Java']",3,5,4,7,1,5,13,0.978,15,0.463821892393321,2.1666666666666665,2
+STU0628,Information Science,4,5.49,7,"['SQL', 'C++', 'React', 'Python', 'Node.js', 'Git', 'CSS']",4,1,0,7,1,7,6,0.549,7,1.078582434514638,0.75,4
+STU0629,Information Science,4,6.6,3,"['Java', 'Node.js', 'C++']",4,5,3,7,1,3,14,0.6599999999999999,13,0.39473684210526316,3.5,4
+STU0630,Computer Science,3,7.62,5,"['Node.js', 'NLP', 'Linux', 'React', 'AWS']",3,0,4,9,1,5,3,0.762,17,0.5800464037122969,0.5,1
+STU0631,Mechanical,4,7.06,4,"['JavaScript', 'Python', 'Git', 'Docker']",6,5,2,4,0,4,16,0.706,8,0.4962779156327544,3.2,5
+STU0632,Information Science,4,6.16,7,"['HTML', 'Machine Learning', 'C++', 'Node.js', 'SQL', 'Python', 'Django']",6,1,2,7,1,7,8,0.616,11,0.9776536312849162,1.0,4
+STU0633,Mechanical,3,6.58,7,"['MongoDB', 'Git', 'SQL', 'NLP', 'HTML', 'C++', 'JavaScript']",6,1,4,5,0,7,8,0.658,13,0.9234828496042217,1.0,5
+STU0634,Computer Science,4,9.05,8,"['AWS', 'Node.js', 'Linux', 'SQL', 'Git', 'Java', 'JavaScript', 'Machine Learning']",2,5,2,3,1,8,12,0.905,7,0.7960199004975124,1.3333333333333333,1
+STU0635,Mechanical,4,7.78,11,"['MySQL', 'CSS', 'Deep Learning', 'HTML', 'AWS', 'MongoDB', 'Linux', 'NLP', 'Python', 'Docker', 'Node.js']",0,2,2,0,0,11,4,0.778,4,1.2528473804100226,0.3333333333333333,5
+STU0636,Computer Science,3,7.12,10,"['MySQL', 'React', 'Git', 'HTML', 'Docker', 'SQL', 'Deep Learning', 'Machine Learning', 'Node.js', 'NLP']",4,5,1,0,1,10,14,0.712,2,1.231527093596059,1.2727272727272727,1
+STU0637,Civil,3,5.85,4,"['React', 'SQL', 'Docker', 'MySQL']",1,0,3,9,0,4,1,0.585,15,0.5839416058394161,0.2,0
+STU0638,Electronics,4,9.3,4,"['Node.js', 'JavaScript', 'MySQL', 'Machine Learning']",1,4,1,7,1,4,9,0.93,9,0.3883495145631068,1.8,3
+STU0639,Information Science,4,5.55,6,"['Docker', 'Node.js', 'Git', 'MySQL', 'Django', 'AWS']",2,5,2,9,1,6,12,0.5549999999999999,13,0.916030534351145,1.7142857142857142,4
+STU0640,Computer Science,4,7.03,7,"['Deep Learning', 'Git', 'React', 'SQL', 'CSS', 'JavaScript', 'MySQL']",6,5,2,7,1,7,16,0.7030000000000001,11,0.87173100871731,2.0,1
+STU0641,Computer Science,3,6.67,4,"['AWS', 'React', 'NLP', 'Node.js']",7,0,1,2,0,4,7,0.667,4,0.5215123859191656,1.4,1
+STU0642,Civil,3,5.26,6,"['Git', 'CSS', 'Node.js', 'Java', 'React', 'MongoDB']",4,3,3,7,1,6,10,0.526,13,0.9584664536741214,1.4285714285714286,0
+STU0643,Information Science,4,6.27,10,"['CSS', 'Docker', 'Node.js', 'SQL', 'C++', 'Java', 'Deep Learning', 'Linux', 'Machine Learning', 'JavaScript']",1,2,2,2,1,10,5,0.627,6,1.375515818431912,0.45454545454545453,4
+STU0644,Electrical,3,6.3,4,"['NLP', 'Linux', 'HTML', 'AWS']",3,4,0,2,0,4,11,0.63,2,0.547945205479452,2.2,2
+STU0645,Electronics,4,7.45,6,"['MongoDB', 'C++', 'HTML', 'Node.js', 'Deep Learning', 'Git']",0,0,2,7,1,6,0,0.745,11,0.7100591715976332,0.0,3
+STU0646,Electrical,3,5.33,9,"['Django', 'Git', 'Machine Learning', 'React', 'C++', 'Java', 'Deep Learning', 'HTML', 'MongoDB']",1,1,1,0,0,9,3,0.533,2,1.4218009478672986,0.3,2
+STU0647,Computer Science,4,6.4,11,"['Linux', 'MongoDB', 'NLP', 'HTML', 'SQL', 'AWS', 'Machine Learning', 'Java', 'C++', 'Git', 'MySQL']",3,1,0,5,0,11,5,0.64,5,1.4864864864864864,0.4166666666666667,1
+STU0648,Electrical,4,6.32,7,"['Docker', 'SQL', 'Node.js', 'NLP', 'JavaScript', 'CSS', 'Git']",3,0,3,4,1,7,3,0.632,10,0.9562841530054644,0.375,2
+STU0649,Civil,3,5.33,8,"['React', 'SQL', 'Django', 'CSS', 'Node.js', 'Deep Learning', 'NLP', 'Python']",7,5,2,6,1,8,17,0.533,10,1.263823064770932,1.8888888888888888,0
+STU0650,Electronics,4,6.64,3,"['Node.js', 'Deep Learning', 'CSS']",0,2,1,7,0,3,4,0.6639999999999999,9,0.39267015706806285,1.0,3
+STU0651,Mechanical,3,7.07,11,"['AWS', 'Django', 'HTML', 'Linux', 'React', 'Docker', 'Git', 'MySQL', 'SQL', 'JavaScript', 'Java']",3,3,3,8,1,11,9,0.7070000000000001,14,1.3630731102850062,0.75,5
+STU0652,Mechanical,3,7.53,10,"['CSS', 'Docker', 'Machine Learning', 'MySQL', 'Java', 'JavaScript', 'Django', 'SQL', 'Linux', 'C++']",7,1,1,8,1,10,9,0.753,10,1.1723329425556857,0.8181818181818182,5
+STU0653,Computer Science,4,7.88,4,"['CSS', 'JavaScript', 'HTML', 'Deep Learning']",0,4,1,0,0,4,8,0.788,2,0.4504504504504505,1.6,1
+STU0654,Computer Science,4,5.54,4,"['React', 'NLP', 'MySQL', 'Python']",7,0,0,1,0,4,7,0.554,1,0.6116207951070336,1.4,1
+STU0655,Mechanical,4,6.21,7,"['C++', 'Django', 'Node.js', 'Docker', 'SQL', 'Linux', 'Java']",7,3,1,5,0,7,13,0.621,7,0.970873786407767,1.625,5
+STU0656,Electrical,3,7.72,9,"['Django', 'Deep Learning', 'CSS', 'C++', 'Git', 'MongoDB', 'SQL', 'Java', 'React']",1,2,3,3,1,9,5,0.772,9,1.0321100917431194,0.5,2
+STU0657,Electrical,4,8.63,4,"['MySQL', 'Node.js', 'SQL', 'Django']",6,0,2,1,0,4,6,0.8630000000000001,5,0.41536863966770504,1.2,2
+STU0658,Information Science,3,7.79,11,"['Node.js', 'Python', 'HTML', 'Docker', 'Deep Learning', 'AWS', 'C++', 'MongoDB', 'Machine Learning', 'SQL', 'NLP']",1,2,3,1,1,11,5,0.779,7,1.2514220705346986,0.4166666666666667,4
+STU0659,Electronics,4,5.38,9,"['Django', 'SQL', 'Machine Learning', 'Python', 'C++', 'Node.js', 'AWS', 'React', 'CSS']",1,2,4,8,0,9,5,0.538,16,1.4106583072100314,0.5,3
+STU0660,Electrical,3,6.59,7,"['React', 'Django', 'Node.js', 'Docker', 'NLP', 'Git', 'JavaScript']",4,0,4,9,0,7,4,0.659,17,0.922266139657444,0.5,2
+STU0661,Civil,4,6.47,7,"['Machine Learning', 'C++', 'NLP', 'Python', 'Java', 'MongoDB', 'Docker']",4,3,3,8,0,7,10,0.647,14,0.9370816599732262,1.25,0
+STU0662,Electrical,4,9.32,8,"['Linux', 'React', 'Git', 'SQL', 'Django', 'NLP', 'Python', 'MySQL']",5,4,0,5,1,8,13,0.932,5,0.7751937984496123,1.4444444444444444,2
+STU0663,Civil,4,5.35,3,"['NLP', 'CSS', 'Java']",4,5,2,7,0,3,14,0.5349999999999999,11,0.4724409448818898,3.5,0
+STU0664,Electronics,3,7.55,4,"['Node.js', 'HTML', 'AWS', 'Java']",0,0,3,5,1,4,0,0.755,11,0.4678362573099415,0.0,3
+STU0665,Electrical,3,6.15,10,"['NLP', 'AWS', 'Deep Learning', 'Django', 'C++', 'Docker', 'Git', 'Java', 'Linux', 'Node.js']",0,5,0,4,0,10,10,0.615,4,1.3986013986013985,0.9090909090909091,2
+STU0666,Information Science,4,6.66,6,"['C++', 'Git', 'MySQL', 'Django', 'CSS', 'MongoDB']",6,4,1,1,0,6,14,0.666,3,0.783289817232376,2.0,4
+STU0667,Civil,4,5.52,11,"['Deep Learning', 'JavaScript', 'Linux', 'Django', 'React', 'HTML', 'CSS', 'Docker', 'Git', 'Java', 'SQL']",2,0,4,9,0,11,2,0.5519999999999999,17,1.687116564417178,0.16666666666666666,0
+STU0668,Electrical,4,7.97,8,"['Docker', 'Node.js', 'MySQL', 'MongoDB', 'Python', 'Machine Learning', 'JavaScript', 'Linux']",2,5,3,2,1,8,12,0.7969999999999999,8,0.8918617614269789,1.3333333333333333,2
+STU0669,Electronics,4,5.97,8,"['CSS', 'HTML', 'JavaScript', 'NLP', 'MongoDB', 'Deep Learning', 'Python', 'Linux']",2,5,2,1,0,8,12,0.597,5,1.1477761836441893,1.3333333333333333,3
+STU0670,Information Science,4,5.83,8,"['NLP', 'MongoDB', 'HTML', 'Node.js', 'React', 'Java', 'MySQL', 'SQL']",3,0,0,2,1,8,3,0.583,2,1.171303074670571,0.3333333333333333,4
+STU0671,Electrical,3,7.7,4,"['Python', 'Django', 'JavaScript', 'SQL']",0,1,0,0,0,4,2,0.77,0,0.4597701149425288,0.4,2
+STU0672,Electronics,3,8.2,9,"['Django', 'Deep Learning', 'Java', 'Machine Learning', 'React', 'AWS', 'NLP', 'Docker', 'HTML']",1,0,4,3,1,9,1,0.82,11,0.9782608695652175,0.1,3
+STU0673,Civil,3,8.52,7,"['AWS', 'MongoDB', 'SQL', 'Docker', 'HTML', 'Machine Learning', 'React']",5,4,1,5,1,7,13,0.852,7,0.7352941176470589,1.625,0
+STU0674,Information Science,4,6.99,6,"['SQL', 'NLP', 'JavaScript', 'Machine Learning', 'React', 'Node.js']",2,5,0,6,0,6,12,0.6990000000000001,6,0.7509386733416771,1.7142857142857142,4
+STU0675,Civil,4,5.48,10,"['NLP', 'Java', 'Python', 'SQL', 'Linux', 'Git', 'Node.js', 'C++', 'MongoDB', 'Django']",3,0,4,4,1,10,3,0.548,12,1.5432098765432098,0.2727272727272727,0
+STU0676,Electronics,3,9.54,6,"['HTML', 'Docker', 'React', 'C++', 'Git', 'Deep Learning']",2,5,4,3,1,6,12,0.954,11,0.5692599620493359,1.7142857142857142,3
+STU0677,Electronics,4,8.85,4,"['NLP', 'Deep Learning', 'CSS', 'AWS']",6,3,0,2,1,4,12,0.885,2,0.40609137055837563,2.4,3
+STU0678,Computer Science,3,5.86,8,"['Machine Learning', 'Django', 'Linux', 'Node.js', 'SQL', 'AWS', 'C++', 'NLP']",2,2,2,8,0,8,6,0.5860000000000001,12,1.1661807580174925,0.6666666666666666,1
+STU0679,Information Science,4,9.58,7,"['AWS', 'HTML', 'C++', 'JavaScript', 'CSS', 'MongoDB', 'Django']",2,0,2,0,1,7,2,0.958,4,0.6616257088846881,0.25,4
+STU0680,Mechanical,3,7.79,8,"['Git', 'CSS', 'Java', 'AWS', 'Node.js', 'Deep Learning', 'Docker', 'MySQL']",7,5,3,8,1,8,17,0.779,14,0.9101251422070535,1.8888888888888888,5
+STU0681,Electrical,4,7.49,11,"['Python', 'Machine Learning', 'Django', 'Node.js', 'React', 'SQL', 'JavaScript', 'NLP', 'Java', 'MongoDB', 'HTML']",2,3,0,8,1,11,8,0.749,8,1.2956419316843344,0.6666666666666666,2
+STU0682,Civil,4,6.04,4,"['MySQL', 'Java', 'Django', 'C++']",4,2,4,3,0,4,8,0.604,11,0.5681818181818182,1.6,0
+STU0683,Civil,4,7.73,3,"['Python', 'NLP', 'MongoDB']",5,4,0,0,0,3,13,0.773,0,0.3436426116838488,3.25,0
+STU0684,Electronics,4,9.54,7,"['Git', 'Linux', 'Deep Learning', 'React', 'NLP', 'Machine Learning', 'MongoDB']",0,0,3,2,1,7,0,0.954,8,0.6641366223908919,0.0,3
+STU0685,Computer Science,4,5.05,5,"['MongoDB', 'CSS', 'Deep Learning', 'HTML', 'NLP']",1,5,2,8,0,5,11,0.505,12,0.8264462809917356,1.8333333333333333,1
+STU0686,Information Science,3,8.24,7,"['MySQL', 'Python', 'Linux', 'Deep Learning', 'Java', 'Machine Learning', 'Git']",1,2,2,1,1,7,5,0.8240000000000001,5,0.7575757575757576,0.625,4
+STU0687,Computer Science,4,9.68,3,"['MySQL', 'React', 'Django']",5,4,3,0,1,3,13,0.968,6,0.2808988764044944,3.25,1
+STU0688,Computer Science,4,6.12,7,"['MongoDB', 'AWS', 'Python', 'Django', 'Docker', 'Machine Learning', 'Java']",6,5,2,7,0,7,16,0.612,11,0.9831460674157303,2.0,1
+STU0689,Electrical,4,5.48,3,"['Docker', 'Python', 'NLP']",3,5,0,6,0,3,13,0.548,6,0.4629629629629629,3.25,2
+STU0690,Civil,3,9.01,5,"['NLP', 'MySQL', 'JavaScript', 'Docker', 'Python']",5,2,2,6,1,5,9,0.901,10,0.4995004995004995,1.5,0
+STU0691,Mechanical,3,7.41,3,"['MySQL', 'Git', 'HTML']",5,3,1,1,0,3,11,0.741,3,0.356718192627824,2.75,5
+STU0692,Computer Science,4,9.53,10,"['NLP', 'AWS', 'MongoDB', 'Node.js', 'Machine Learning', 'Linux', 'MySQL', 'Deep Learning', 'React', 'C++']",0,0,2,3,0,10,0,0.953,7,0.9496676163342831,0.0,1
+STU0693,Electrical,4,6.9,8,"['Deep Learning', 'NLP', 'AWS', 'HTML', 'Python', 'Java', 'C++', 'JavaScript']",6,1,3,9,0,8,8,0.6900000000000001,15,1.0126582278481011,0.8888888888888888,2
+STU0694,Electrical,3,7.02,5,"['SQL', 'MongoDB', 'Deep Learning', 'Machine Learning', 'Git']",3,5,2,8,1,5,13,0.702,12,0.6234413965087282,2.1666666666666665,2
+STU0695,Information Science,3,8.01,8,"['NLP', 'Machine Learning', 'React', 'AWS', 'MongoDB', 'Node.js', 'CSS', 'SQL']",5,2,4,3,1,8,9,0.8009999999999999,11,0.8879023307436182,1.0,4
+STU0696,Mechanical,4,9.18,11,"['HTML', 'MongoDB', 'JavaScript', 'React', 'MySQL', 'Python', 'AWS', 'Git', 'C++', 'Django', 'SQL']",0,3,2,0,1,11,6,0.9179999999999999,4,1.0805500982318272,0.5,5
+STU0697,Electronics,4,6.13,4,"['Django', 'JavaScript', 'C++', 'AWS']",2,5,0,1,1,4,12,0.613,1,0.5610098176718092,2.4,3
+STU0698,Electronics,3,5.93,3,"['C++', 'HTML', 'Node.js']",1,0,3,5,1,3,1,0.593,11,0.4329004329004329,0.25,3
+STU0699,Information Science,4,8.45,4,"['MySQL', 'MongoDB', 'Python', 'React']",4,2,0,5,1,4,8,0.845,5,0.4232804232804233,1.6,4
+STU0700,Civil,4,8.04,10,"['SQL', 'Deep Learning', 'Django', 'MySQL', 'CSS', 'NLP', 'MongoDB', 'Java', 'HTML', 'Machine Learning']",3,5,1,3,1,10,13,0.8039999999999999,5,1.106194690265487,1.1818181818181819,0
+STU0701,Electrical,4,9.45,7,"['Django', 'MongoDB', 'AWS', 'CSS', 'Git', 'MySQL', 'NLP']",1,3,1,2,1,7,7,0.945,4,0.6698564593301436,0.875,2
+STU0702,Computer Science,4,6.89,11,"['Linux', 'NLP', 'SQL', 'Deep Learning', 'Java', 'Docker', 'HTML', 'Node.js', 'Python', 'Machine Learning', 'Git']",4,1,2,8,0,11,6,0.689,12,1.394169835234474,0.5,1
+STU0703,Civil,4,9.19,10,"['Machine Learning', 'NLP', 'Django', 'CSS', 'Node.js', 'React', 'JavaScript', 'Git', 'Docker', 'HTML']",7,1,2,9,1,10,9,0.9189999999999999,13,0.9813542688910697,0.8181818181818182,0
+STU0704,Information Science,3,8.87,4,"['C++', 'Node.js', 'HTML', 'Docker']",6,1,4,4,0,4,8,0.8869999999999999,12,0.4052684903748734,1.6,4
+STU0705,Mechanical,4,7.63,8,"['Docker', 'Git', 'C++', 'React', 'Linux', 'Python', 'CSS', 'Node.js']",1,0,1,3,1,8,1,0.763,5,0.9269988412514485,0.1111111111111111,5
+STU0706,Computer Science,4,8.49,11,"['AWS', 'Node.js', 'MongoDB', 'Django', 'React', 'Linux', 'Docker', 'Deep Learning', 'SQL', 'Machine Learning', 'HTML']",2,2,4,9,1,11,6,0.849,17,1.1591148577449948,0.5,1
+STU0707,Information Science,4,9.61,7,"['MongoDB', 'C++', 'Docker', 'Git', 'Deep Learning', 'HTML', 'JavaScript']",2,1,0,2,1,7,4,0.961,2,0.6597549481621112,0.5,4
+STU0708,Computer Science,3,7.86,11,"['Node.js', 'Django', 'Python', 'SQL', 'MongoDB', 'Git', 'Deep Learning', 'C++', 'NLP', 'MySQL', 'Linux']",2,4,2,4,1,11,10,0.786,8,1.2415349887133185,0.8333333333333334,1
+STU0709,Computer Science,4,5.92,6,"['CSS', 'C++', 'Django', 'MongoDB', 'SQL', 'Linux']",5,2,1,5,0,6,9,0.592,7,0.8670520231213873,1.2857142857142858,1
+STU0710,Information Science,4,8.4,5,"['NLP', 'C++', 'Deep Learning', 'CSS', 'Linux']",1,0,2,3,1,5,1,0.8400000000000001,7,0.5319148936170213,0.16666666666666666,4
+STU0711,Information Science,4,6.24,4,"['Machine Learning', 'Node.js', 'React', 'MySQL']",7,3,2,9,0,4,13,0.624,13,0.5524861878453039,2.6,4
+STU0712,Information Science,3,9.0,9,"['MySQL', 'React', 'Git', 'C++', 'Java', 'Python', 'Deep Learning', 'CSS', 'JavaScript']",1,1,0,5,1,9,3,0.9,5,0.9,0.3,4
+STU0713,Information Science,3,5.25,5,"['Git', 'Node.js', 'CSS', 'NLP', 'Machine Learning']",4,3,4,2,0,5,10,0.525,10,0.8,1.6666666666666667,4
+STU0714,Electronics,4,7.53,7,"['Node.js', 'Django', 'MongoDB', 'HTML', 'MySQL', 'AWS', 'Machine Learning']",6,3,2,7,1,7,12,0.753,11,0.8206330597889799,1.5,3
+STU0715,Mechanical,4,8.94,8,"['JavaScript', 'Machine Learning', 'Node.js', 'HTML', 'CSS', 'C++', 'React', 'Deep Learning']",3,5,0,8,1,8,13,0.8939999999999999,8,0.8048289738430584,1.4444444444444444,5
+STU0716,Civil,4,7.03,5,"['NLP', 'AWS', 'Django', 'Java', 'MongoDB']",7,4,2,1,1,5,15,0.7030000000000001,5,0.62266500622665,2.5,0
+STU0717,Civil,4,5.58,3,"['HTML', 'Git', 'Django']",4,3,3,9,0,3,10,0.558,15,0.45592705167173253,2.5,0
+STU0718,Electronics,4,7.84,8,"['MySQL', 'React', 'JavaScript', 'Node.js', 'Machine Learning', 'HTML', 'Django', 'CSS']",3,4,3,9,1,8,11,0.784,15,0.9049773755656109,1.2222222222222223,3
+STU0719,Electrical,3,9.32,9,"['Django', 'React', 'C++', 'NLP', 'CSS', 'Node.js', 'HTML', 'Python', 'JavaScript']",5,0,1,5,1,9,5,0.932,7,0.872093023255814,0.5,2
+STU0720,Electrical,3,9.77,11,"['Docker', 'CSS', 'SQL', 'Node.js', 'Linux', 'React', 'MySQL', 'Machine Learning', 'AWS', 'NLP', 'HTML']",5,1,1,5,1,11,7,0.977,7,1.021355617455896,0.5833333333333334,2
+STU0721,Electrical,4,5.01,7,"['Linux', 'SQL', 'Node.js', 'C++', 'Docker', 'MongoDB', 'Java']",6,3,4,8,0,7,12,0.501,16,1.1647254575707155,1.5,2
+STU0722,Civil,4,7.68,6,"['Java', 'C++', 'Node.js', 'Deep Learning', 'Python', 'JavaScript']",5,2,0,9,1,6,9,0.768,9,0.6912442396313364,1.2857142857142858,0
+STU0723,Information Science,4,7.77,10,"['NLP', 'MySQL', 'C++', 'Node.js', 'Machine Learning', 'Docker', 'React', 'SQL', 'CSS', 'MongoDB']",1,2,0,1,1,10,5,0.7769999999999999,1,1.1402508551881414,0.45454545454545453,4
+STU0724,Information Science,4,8.4,3,"['C++', 'React', 'MongoDB']",4,4,0,3,1,3,12,0.8400000000000001,3,0.3191489361702127,3.0,4
+STU0725,Computer Science,3,7.05,3,"['NLP', 'Node.js', 'Docker']",0,0,4,0,1,3,0,0.705,8,0.37267080745341613,0.0,1
+STU0726,Electronics,4,7.27,11,"['JavaScript', 'Deep Learning', 'React', 'MySQL', 'Python', 'HTML', 'C++', 'Node.js', 'Machine Learning', 'Docker', 'CSS']",5,0,1,4,1,11,5,0.727,6,1.3301088270858525,0.4166666666666667,3
+STU0727,Mechanical,4,6.91,10,"['AWS', 'JavaScript', 'React', 'Python', 'Deep Learning', 'NLP', 'MySQL', 'HTML', 'Git', 'SQL']",7,1,3,2,0,10,9,0.6910000000000001,8,1.2642225031605563,0.8181818181818182,5
+STU0728,Electronics,3,6.82,3,"['Java', 'NLP', 'HTML']",6,2,4,9,0,3,10,0.682,17,0.3836317135549872,2.5,3
+STU0729,Civil,4,8.61,9,"['CSS', 'NLP', 'Git', 'Docker', 'MySQL', 'Java', 'C++', 'React', 'AWS']",4,1,2,6,1,9,6,0.861,10,0.9365244536940688,0.6,0
+STU0730,Mechanical,4,8.19,8,"['Machine Learning', 'NLP', 'Java', 'Node.js', 'JavaScript', 'MySQL', 'C++', 'Docker']",7,4,1,5,1,8,15,0.819,7,0.8705114254624592,1.6666666666666667,5
+STU0731,Civil,4,5.77,11,"['CSS', 'NLP', 'HTML', 'Git', 'Linux', 'React', 'JavaScript', 'C++', 'MySQL', 'Java', 'SQL']",4,2,1,4,1,11,8,0.577,6,1.6248153618906944,0.6666666666666666,0
+STU0732,Computer Science,4,9.44,10,"['MySQL', 'NLP', 'Linux', 'AWS', 'Machine Learning', 'HTML', 'Node.js', 'Git', 'Docker', 'SQL']",7,5,2,1,1,10,17,0.944,5,0.9578544061302683,1.5454545454545454,1
+STU0733,Electronics,4,8.66,8,"['AWS', 'React', 'MongoDB', 'SQL', 'C++', 'Deep Learning', 'Python', 'Docker']",7,0,1,4,1,8,7,0.866,6,0.8281573498964803,0.7777777777777778,3
+STU0734,Civil,4,8.39,3,"['NLP', 'Linux', 'CSS']",0,2,4,8,1,3,4,0.8390000000000001,16,0.3194888178913738,1.0,0
+STU0735,Information Science,4,8.57,10,"['Docker', 'AWS', 'JavaScript', 'MySQL', 'Django', 'Git', 'Java', 'Node.js', 'HTML', 'CSS']",1,0,2,9,1,10,1,0.857,13,1.044932079414838,0.09090909090909091,4
+STU0736,Mechanical,4,5.15,3,"['NLP', 'AWS', 'SQL']",5,2,3,4,1,3,9,0.515,10,0.4878048780487805,2.25,5
+STU0737,Computer Science,3,8.99,11,"['SQL', 'Node.js', 'MySQL', 'Git', 'HTML', 'Python', 'Docker', 'MongoDB', 'JavaScript', 'Java', 'AWS']",6,1,0,5,1,11,8,0.899,5,1.1011011011011012,0.6666666666666666,1
+STU0738,Civil,4,5.79,11,"['Linux', 'MySQL', 'Django', 'Python', 'AWS', 'SQL', 'NLP', 'Node.js', 'C++', 'MongoDB', 'HTML']",5,2,3,0,0,11,9,0.579,6,1.6200294550810015,0.75,0
+STU0739,Mechanical,4,8.85,11,"['C++', 'SQL', 'MySQL', 'React', 'JavaScript', 'Git', 'AWS', 'Django', 'MongoDB', 'Docker', 'Java']",2,3,4,5,1,11,8,0.885,13,1.116751269035533,0.6666666666666666,5
+STU0740,Civil,4,9.64,7,"['Linux', 'SQL', 'Node.js', 'C++', 'Java', 'NLP', 'Django']",4,2,3,6,1,7,8,0.9640000000000001,12,0.6578947368421052,1.0,0
+STU0741,Electronics,3,6.56,10,"['Django', 'MongoDB', 'C++', 'Machine Learning', 'Linux', 'SQL', 'JavaScript', 'MySQL', 'AWS', 'Git']",3,5,0,7,0,10,13,0.6559999999999999,7,1.3227513227513228,1.1818181818181819,3
+STU0742,Mechanical,3,9.66,8,"['Deep Learning', 'Node.js', 'Machine Learning', 'MySQL', 'C++', 'CSS', 'MongoDB', 'JavaScript']",0,3,1,1,1,8,6,0.966,3,0.7504690431519699,0.6666666666666666,5
+STU0743,Electronics,3,6.69,5,"['Node.js', 'Docker', 'NLP', 'Linux', 'Python']",4,2,4,5,0,5,8,0.669,13,0.6501950585175552,1.3333333333333333,3
+STU0744,Electrical,4,6.99,5,"['C++', 'CSS', 'Deep Learning', 'Java', 'Docker']",5,0,1,9,0,5,5,0.6990000000000001,11,0.6257822277847309,0.8333333333333334,2
+STU0745,Computer Science,4,5.75,8,"['Python', 'Linux', 'Git', 'React', 'NLP', 'JavaScript', 'MongoDB', 'AWS']",6,2,0,2,0,8,10,0.575,2,1.1851851851851851,1.1111111111111112,1
+STU0746,Mechanical,4,6.49,11,"['NLP', 'Linux', 'Deep Learning', 'CSS', 'JavaScript', 'Node.js', 'AWS', 'Docker', 'MySQL', 'HTML', 'React']",1,4,4,7,1,11,9,0.649,15,1.4686248331108145,0.75,5
+STU0747,Civil,4,6.67,8,"['MySQL', 'Python', 'Java', 'CSS', 'C++', 'Deep Learning', 'SQL', 'Linux']",5,3,2,7,1,8,11,0.667,11,1.0430247718383312,1.2222222222222223,0
+STU0748,Mechanical,3,8.9,9,"['React', 'AWS', 'Java', 'Machine Learning', 'Node.js', 'JavaScript', 'HTML', 'CSS', 'Linux']",1,5,3,1,1,9,11,0.89,7,0.9090909090909091,1.1,5
+STU0749,Computer Science,4,9.73,5,"['Java', 'HTML', 'JavaScript', 'Machine Learning', 'React']",0,2,2,6,1,5,4,0.9730000000000001,10,0.4659832246039142,0.6666666666666666,1
+STU0750,Electronics,3,7.45,4,"['AWS', 'Linux', 'NLP', 'SQL']",4,3,3,5,0,4,10,0.745,11,0.4733727810650888,2.0,3
+STU0751,Electronics,3,5.39,6,"['Python', 'Deep Learning', 'HTML', 'Java', 'CSS', 'Git']",6,2,1,3,1,6,10,0.5389999999999999,5,0.9389671361502347,1.4285714285714286,3
+STU0752,Electronics,3,8.31,9,"['Node.js', 'CSS', 'C++', 'HTML', 'Deep Learning', 'Machine Learning', 'Git', 'Java', 'React']",4,1,1,7,1,9,6,0.8310000000000001,9,0.9667024704618689,0.6,3
+STU0753,Computer Science,3,8.72,3,"['React', 'SQL', 'Machine Learning']",4,2,2,5,1,3,8,0.8720000000000001,9,0.30864197530864196,2.0,1
+STU0754,Mechanical,4,8.48,4,"['MySQL', 'C++', 'Java', 'NLP']",6,2,3,2,1,4,10,0.8480000000000001,8,0.42194092827004215,2.0,5
+STU0755,Electrical,4,5.55,10,"['HTML', 'Git', 'NLP', 'Node.js', 'Linux', 'MySQL', 'Machine Learning', 'MongoDB', 'CSS', 'Deep Learning']",0,0,2,5,1,10,0,0.5549999999999999,9,1.5267175572519085,0.0,2
+STU0756,Computer Science,3,6.75,8,"['CSS', 'Machine Learning', 'NLP', 'HTML', 'MySQL', 'Node.js', 'Java', 'AWS']",6,1,2,2,0,8,8,0.675,6,1.032258064516129,0.8888888888888888,1
+STU0757,Electronics,4,5.83,4,"['Git', 'Java', 'Linux', 'React']",5,5,1,1,1,4,15,0.583,3,0.5856515373352855,3.0,3
+STU0758,Civil,4,8.03,11,"['Deep Learning', 'Java', 'Git', 'SQL', 'AWS', 'C++', 'Docker', 'Django', 'Python', 'NLP', 'Linux']",0,4,2,7,1,11,8,0.8029999999999999,11,1.2181616832779625,0.6666666666666666,0
+STU0759,Civil,4,7.13,9,"['Node.js', 'C++', 'Deep Learning', 'JavaScript', 'MongoDB', 'Django', 'Git', 'React', 'AWS']",4,2,0,9,1,9,8,0.713,9,1.1070110701107012,0.8,0
+STU0760,Electronics,4,9.41,9,"['Python', 'Django', 'Deep Learning', 'Linux', 'React', 'Java', 'NLP', 'SQL', 'CSS']",1,2,2,1,1,9,5,0.9410000000000001,5,0.8645533141210374,0.5,3
+STU0761,Computer Science,4,5.82,4,"['NLP', 'Java', 'MySQL', 'Deep Learning']",6,3,4,3,0,4,12,0.5820000000000001,11,0.5865102639296187,2.4,1
+STU0762,Electronics,4,9.27,4,"['Python', 'CSS', 'SQL', 'Git']",2,1,3,5,0,4,4,0.9269999999999999,11,0.3894839337877313,0.8,3
+STU0763,Electronics,4,5.51,4,"['Deep Learning', 'CSS', 'Machine Learning', 'Node.js']",4,4,3,5,0,4,12,0.5509999999999999,11,0.6144393241167435,2.4,3
+STU0764,Mechanical,4,9.48,7,"['Docker', 'MongoDB', 'AWS', 'Git', 'Machine Learning', 'CSS', 'Deep Learning']",2,5,0,1,1,7,12,0.9480000000000001,1,0.6679389312977099,1.5,5
+STU0765,Computer Science,3,7.23,4,"['Java', 'Node.js', 'MySQL', 'Linux']",2,2,4,3,0,4,6,0.7230000000000001,11,0.48602673147023084,1.2,1
+STU0766,Mechanical,3,5.83,3,"['MySQL', 'NLP', 'Machine Learning']",2,3,0,1,1,3,8,0.583,1,0.43923865300146414,2.0,5
+STU0767,Mechanical,4,6.26,4,"['AWS', 'Python', 'C++', 'SQL']",0,5,0,3,0,4,10,0.626,3,0.5509641873278237,2.0,5
+STU0768,Mechanical,4,5.43,10,"['Node.js', 'Machine Learning', 'React', 'NLP', 'MySQL', 'C++', 'Django', 'SQL', 'Linux', 'HTML']",3,2,4,7,1,10,7,0.5429999999999999,15,1.5552099533437014,0.6363636363636364,5
+STU0769,Civil,4,6.21,10,"['Docker', 'HTML', 'Deep Learning', 'MySQL', 'Linux', 'Java', 'Machine Learning', 'NLP', 'CSS', 'JavaScript']",3,4,4,2,0,10,11,0.621,10,1.3869625520110958,1.0,0
+STU0770,Civil,4,9.15,4,"['Java', 'C++', 'NLP', 'Machine Learning']",5,2,3,0,1,4,9,0.915,6,0.3940886699507389,1.8,0
+STU0771,Electronics,4,5.11,4,"['Git', 'C++', 'Java', 'Python']",6,3,3,9,0,4,12,0.511,15,0.6546644844517184,2.4,3
+STU0772,Computer Science,4,5.82,9,"['React', 'Git', 'HTML', 'Docker', 'NLP', 'JavaScript', 'AWS', 'Node.js', 'MySQL']",7,4,1,1,1,9,15,0.5820000000000001,3,1.3196480938416422,1.5,1
+STU0773,Information Science,4,8.16,3,"['Python', 'AWS', 'HTML']",6,4,4,3,1,3,14,0.8160000000000001,11,0.32751091703056767,3.5,4
+STU0774,Information Science,4,8.05,10,"['React', 'AWS', 'Git', 'JavaScript', 'MongoDB', 'Java', 'C++', 'Deep Learning', 'SQL', 'Linux']",4,2,4,9,1,10,8,0.805,17,1.1049723756906076,0.7272727272727273,4
+STU0775,Information Science,3,9.65,3,"['JavaScript', 'NLP', 'Django']",7,4,4,8,1,3,15,0.9650000000000001,16,0.28169014084507044,3.75,4
+STU0776,Electrical,4,9.42,9,"['Machine Learning', 'Git', 'C++', 'SQL', 'NLP', 'Deep Learning', 'MySQL', 'MongoDB', 'Node.js']",5,2,2,8,1,9,9,0.942,12,0.8637236084452975,0.9,2
+STU0777,Electrical,3,9.69,10,"['Deep Learning', 'React', 'Java', 'MySQL', 'C++', 'MongoDB', 'Linux', 'Django', 'Python', 'JavaScript']",2,4,4,1,1,10,10,0.969,9,0.9354536950420954,0.9090909090909091,2
+STU0778,Civil,4,6.85,7,"['CSS', 'React', 'MySQL', 'Linux', 'C++', 'Deep Learning', 'HTML']",7,2,1,0,1,7,11,0.6849999999999999,2,0.89171974522293,1.375,0
+STU0779,Civil,3,7.72,7,"['Git', 'Java', 'CSS', 'React', 'C++', 'Docker', 'Python']",7,4,0,9,1,7,15,0.772,9,0.8027522935779817,1.875,0
+STU0780,Information Science,4,8.95,8,"['Machine Learning', 'Node.js', 'HTML', 'Python', 'CSS', 'MySQL', 'SQL', 'Django']",5,3,1,7,1,8,11,0.8949999999999999,9,0.8040201005025126,1.2222222222222223,4
+STU0781,Electronics,4,6.9,11,"['Docker', 'NLP', 'CSS', 'Machine Learning', 'Python', 'React', 'Git', 'Node.js', 'C++', 'Deep Learning', 'SQL']",0,5,4,4,0,11,10,0.6900000000000001,12,1.3924050632911391,0.8333333333333334,3
+STU0782,Information Science,4,5.59,11,"['Machine Learning', 'AWS', 'Java', 'MySQL', 'Docker', 'Linux', 'SQL', 'Deep Learning', 'JavaScript', 'NLP', 'Python']",4,1,1,2,0,11,6,0.5589999999999999,4,1.6691957511380882,0.5,4
+STU0783,Mechanical,4,7.02,5,"['Java', 'Docker', 'CSS', 'Deep Learning', 'HTML']",6,1,3,6,1,5,8,0.702,12,0.6234413965087282,1.3333333333333333,5
+STU0784,Electrical,4,5.91,11,"['HTML', 'Git', 'MongoDB', 'Linux', 'Node.js', 'JavaScript', 'SQL', 'CSS', 'React', 'Deep Learning', 'Java']",6,1,1,0,0,11,8,0.591,2,1.5918958031837915,0.6666666666666666,2
+STU0785,Civil,4,7.77,6,"['C++', 'Docker', 'Django', 'CSS', 'Node.js', 'Machine Learning']",6,5,3,4,1,6,16,0.7769999999999999,10,0.6841505131128849,2.2857142857142856,0
+STU0786,Electrical,4,5.97,8,"['MongoDB', 'Python', 'Machine Learning', 'JavaScript', 'Node.js', 'NLP', 'React', 'HTML']",0,5,3,0,0,8,10,0.597,6,1.1477761836441893,1.1111111111111112,2
+STU0787,Computer Science,3,7.57,9,"['Python', 'Machine Learning', 'Git', 'Java', 'Linux', 'C++', 'Deep Learning', 'Django', 'React']",7,2,3,7,1,9,11,0.757,13,1.0501750291715286,1.1,1
+STU0788,Electrical,4,9.09,8,"['Django', 'Git', 'Docker', 'Linux', 'AWS', 'Java', 'CSS', 'Node.js']",4,5,0,6,1,8,14,0.909,6,0.7928642220019821,1.5555555555555556,2
+STU0789,Mechanical,4,8.64,6,"['Docker', 'CSS', 'Java', 'MongoDB', 'MySQL', 'SQL']",2,5,2,9,1,6,12,0.8640000000000001,13,0.6224066390041494,1.7142857142857142,5
+STU0790,Computer Science,4,9.76,4,"['Java', 'Git', 'Machine Learning', 'Node.js']",5,3,3,7,1,4,11,0.976,13,0.3717472118959108,2.2,1
+STU0791,Electronics,4,9.4,3,"['C++', 'Git', 'JavaScript']",4,4,2,2,1,3,12,0.9400000000000001,6,0.28846153846153844,3.0,3
+STU0792,Mechanical,4,8.44,9,"['SQL', 'MongoDB', 'HTML', 'NLP', 'AWS', 'Git', 'Machine Learning', 'Docker', 'Java']",4,0,1,0,1,9,4,0.844,2,0.9533898305084746,0.4,5
+STU0793,Computer Science,4,5.93,8,"['Machine Learning', 'AWS', 'CSS', 'HTML', 'NLP', 'Git', 'Node.js', 'Python']",7,1,4,0,0,8,9,0.593,8,1.1544011544011545,1.0,1
+STU0794,Mechanical,4,9.16,9,"['MongoDB', 'Node.js', 'CSS', 'C++', 'AWS', 'HTML', 'Python', 'MySQL', 'Deep Learning']",3,5,3,1,1,9,13,0.916,7,0.8858267716535433,1.3,5
+STU0795,Electronics,4,9.05,8,"['Machine Learning', 'MySQL', 'Python', 'Docker', 'SQL', 'NLP', 'AWS', 'Node.js']",5,2,4,8,1,8,9,0.905,16,0.7960199004975124,1.0,3
+STU0796,Mechanical,4,5.27,5,"['React', 'Machine Learning', 'Node.js', 'Git', 'JavaScript']",5,4,4,9,0,5,13,0.5269999999999999,17,0.7974481658692185,2.1666666666666665,5
+STU0797,Mechanical,3,6.31,3,"['SQL', 'NLP', 'Deep Learning']",1,5,2,1,1,3,11,0.631,5,0.4103967168262654,2.75,5
+STU0798,Civil,4,7.35,11,"['Git', 'SQL', 'C++', 'MongoDB', 'Deep Learning', 'Python', 'AWS', 'JavaScript', 'Node.js', 'Docker', 'Django']",5,0,0,0,1,11,5,0.735,0,1.3173652694610778,0.4166666666666667,0
+STU0799,Mechanical,4,7.32,10,"['Machine Learning', 'React', 'HTML', 'JavaScript', 'Node.js', 'CSS', 'Python', 'Git', 'Deep Learning', 'SQL']",6,1,1,4,1,10,8,0.732,6,1.2019230769230769,0.7272727272727273,5
+STU0800,Mechanical,4,8.95,11,"['Git', 'CSS', 'React', 'Deep Learning', 'SQL', 'HTML', 'C++', 'Linux', 'Docker', 'MySQL', 'Django']",0,0,2,7,1,11,0,0.8949999999999999,11,1.105527638190955,0.0,5
+STU0801,Civil,4,7.57,10,"['Java', 'CSS', 'NLP', 'React', 'Python', 'Machine Learning', 'C++', 'HTML', 'MySQL', 'Docker']",2,0,4,9,1,10,2,0.757,17,1.1668611435239207,0.18181818181818182,0
+STU0802,Information Science,4,5.9,10,"['Java', 'Python', 'C++', 'CSS', 'HTML', 'Linux', 'Deep Learning', 'Git', 'React', 'JavaScript']",7,4,3,2,1,10,15,0.5900000000000001,8,1.4492753623188406,1.3636363636363635,4
+STU0803,Civil,4,6.3,11,"['Deep Learning', 'Docker', 'React', 'NLP', 'Machine Learning', 'SQL', 'MongoDB', 'Node.js', 'JavaScript', 'Python', 'Django']",7,2,4,6,0,11,11,0.63,14,1.5068493150684932,0.9166666666666666,0
+STU0804,Electrical,4,6.96,4,"['Linux', 'JavaScript', 'Django', 'React']",3,2,2,5,0,4,7,0.696,9,0.5025125628140703,1.4,2
+STU0805,Mechanical,4,9.0,4,"['Docker', 'C++', 'React', 'Django']",3,0,2,9,0,4,3,0.9,13,0.4,0.6,5
+STU0806,Electrical,3,9.08,6,"['CSS', 'C++', 'Java', 'React', 'JavaScript', 'Linux']",1,4,0,2,1,6,9,0.908,2,0.5952380952380952,1.2857142857142858,2
+STU0807,Information Science,4,9.71,3,"['CSS', 'Machine Learning', 'HTML']",3,5,0,8,1,3,13,0.9710000000000001,8,0.2801120448179272,3.25,4
+STU0808,Information Science,3,5.73,4,"['AWS', 'MongoDB', 'Deep Learning', 'Machine Learning']",1,5,4,7,0,4,11,0.5730000000000001,15,0.5943536404160475,2.2,4
+STU0809,Computer Science,4,7.29,4,"['HTML', 'JavaScript', 'C++', 'Node.js']",3,0,0,7,1,4,3,0.729,7,0.48250904704463216,0.6,1
+STU0810,Electronics,4,8.4,8,"['CSS', 'Machine Learning', 'SQL', 'JavaScript', 'NLP', 'Deep Learning', 'MongoDB', 'Git']",7,0,0,5,1,8,7,0.8400000000000001,5,0.851063829787234,0.7777777777777778,3
+STU0811,Electronics,3,8.77,8,"['Docker', 'CSS', 'Deep Learning', 'Node.js', 'C++', 'NLP', 'SQL', 'JavaScript']",2,5,2,6,1,8,12,0.877,10,0.8188331627430911,1.3333333333333333,3
+STU0812,Computer Science,3,6.92,9,"['React', 'Node.js', 'SQL', 'Linux', 'C++', 'NLP', 'HTML', 'Java', 'Django']",0,1,1,1,1,9,2,0.692,3,1.1363636363636365,0.2,1
+STU0813,Computer Science,4,5.29,9,"['Node.js', 'Linux', 'AWS', 'Git', 'Machine Learning', 'HTML', 'JavaScript', 'CSS', 'C++']",7,2,3,2,1,9,11,0.529,8,1.4308426073131955,1.1,1
+STU0814,Civil,4,9.29,8,"['React', 'Docker', 'Git', 'HTML', 'JavaScript', 'Python', 'MySQL', 'NLP']",1,0,0,9,1,8,1,0.9289999999999999,9,0.7774538386783285,0.1111111111111111,0
+STU0815,Electronics,4,7.95,10,"['CSS', 'C++', 'Deep Learning', 'Git', 'SQL', 'HTML', 'MySQL', 'MongoDB', 'Docker', 'Django']",6,1,0,1,1,10,8,0.795,1,1.11731843575419,0.7272727272727273,3
+STU0816,Computer Science,4,9.41,11,"['C++', 'Deep Learning', 'Django', 'HTML', 'SQL', 'Python', 'AWS', 'Machine Learning', 'MySQL', 'Git', 'CSS']",2,0,4,8,1,11,2,0.9410000000000001,16,1.0566762728146013,0.16666666666666666,1
+STU0817,Electrical,3,8.68,9,"['MongoDB', 'Docker', 'SQL', 'NLP', 'Java', 'JavaScript', 'Machine Learning', 'Deep Learning', 'C++']",0,5,2,8,1,9,10,0.868,12,0.9297520661157025,1.0,2
+STU0818,Mechanical,4,9.07,11,"['JavaScript', 'Linux', 'Docker', 'AWS', 'Django', 'C++', 'Java', 'HTML', 'SQL', 'MongoDB', 'Machine Learning']",2,0,3,4,1,11,2,0.907,10,1.0923535253227408,0.16666666666666666,5
+STU0819,Information Science,3,5.23,5,"['C++', 'MongoDB', 'Python', 'React', 'Linux']",3,2,0,8,0,5,7,0.523,8,0.8025682182985553,1.1666666666666667,4
+STU0820,Mechanical,3,8.83,8,"['CSS', 'C++', 'Java', 'MySQL', 'React', 'Node.js', 'JavaScript', 'HTML']",5,0,3,9,1,8,5,0.883,15,0.8138351983723296,0.5555555555555556,5
+STU0821,Civil,3,9.37,9,"['JavaScript', 'MySQL', 'NLP', 'Node.js', 'MongoDB', 'SQL', 'Machine Learning', 'AWS', 'Deep Learning']",0,4,1,8,1,9,8,0.9369999999999999,10,0.8678881388621023,0.8,0
+STU0822,Information Science,3,6.42,6,"['CSS', 'React', 'MySQL', 'Git', 'AWS', 'Linux']",1,2,1,9,0,6,5,0.642,11,0.8086253369272237,0.7142857142857143,4
+STU0823,Information Science,3,7.58,4,"['C++', 'Git', 'SQL', 'Machine Learning']",2,4,1,9,0,4,10,0.758,11,0.4662004662004662,2.0,4
+STU0824,Mechanical,3,8.25,4,"['NLP', 'Docker', 'Node.js', 'Java']",5,3,3,3,1,4,11,0.825,9,0.43243243243243246,2.2,5
+STU0825,Mechanical,4,6.14,3,"['Machine Learning', 'React', 'Deep Learning']",7,2,1,8,0,3,11,0.614,10,0.42016806722689076,2.75,5
+STU0826,Electronics,4,5.95,3,"['HTML', 'Docker', 'Machine Learning']",0,0,0,4,1,3,0,0.595,4,0.4316546762589928,0.0,3
+STU0827,Electrical,4,7.55,4,"['SQL', 'Java', 'NLP', 'HTML']",5,1,2,7,0,4,7,0.755,11,0.4678362573099415,1.4,2
+STU0828,Mechanical,3,9.53,11,"['SQL', 'AWS', 'Linux', 'HTML', 'JavaScript', 'Deep Learning', 'Node.js', 'NLP', 'Docker', 'MySQL', 'React']",4,3,3,7,1,11,10,0.953,13,1.0446343779677114,0.8333333333333334,5
+STU0829,Civil,3,6.95,4,"['CSS', 'React', 'MySQL', 'HTML']",1,1,2,9,0,4,3,0.6950000000000001,13,0.5031446540880503,0.6,0
+STU0830,Mechanical,4,8.19,4,"['JavaScript', 'NLP', 'MongoDB', 'Linux']",2,5,0,2,1,4,12,0.819,2,0.4352557127312296,2.4,5
+STU0831,Computer Science,3,8.7,6,"['Node.js', 'MongoDB', 'Java', 'AWS', 'HTML', 'NLP']",1,0,0,7,1,6,1,0.8699999999999999,7,0.6185567010309279,0.14285714285714285,1
+STU0832,Electronics,4,7.63,6,"['SQL', 'CSS', 'HTML', 'Python', 'React', 'Git']",0,3,1,8,0,6,6,0.763,10,0.6952491309385864,0.8571428571428571,3
+STU0833,Computer Science,4,6.13,4,"['MongoDB', 'NLP', 'Docker', 'C++']",3,4,1,3,1,4,11,0.613,5,0.5610098176718092,2.2,1
+STU0834,Civil,3,5.87,4,"['NLP', 'MySQL', 'MongoDB', 'AWS']",3,4,3,9,0,4,11,0.587,15,0.5822416302765647,2.2,0
+STU0835,Information Science,4,8.71,7,"['Docker', 'CSS', 'Java', 'Node.js', 'NLP', 'Python', 'MongoDB']",0,3,1,0,1,7,6,0.8710000000000001,2,0.7209062821833161,0.75,4
+STU0836,Electronics,4,8.84,11,"['MySQL', 'Deep Learning', 'Git', 'JavaScript', 'Python', 'CSS', 'Django', 'MongoDB', 'Docker', 'Machine Learning', 'Linux']",6,4,1,5,1,11,14,0.884,7,1.1178861788617886,1.1666666666666667,3
+STU0837,Electronics,4,5.98,8,"['CSS', 'Java', 'HTML', 'Django', 'AWS', 'Deep Learning', 'JavaScript', 'Docker']",4,1,2,0,1,8,6,0.5980000000000001,4,1.146131805157593,0.6666666666666666,3
+STU0838,Mechanical,4,5.98,7,"['C++', 'AWS', 'JavaScript', 'Python', 'CSS', 'Django', 'MySQL']",0,1,3,6,1,7,2,0.5980000000000001,12,1.002865329512894,0.25,5
+STU0839,Computer Science,4,5.07,8,"['Machine Learning', 'Deep Learning', 'Java', 'Git', 'NLP', 'Django', 'Node.js', 'HTML']",4,4,0,9,0,8,12,0.507,9,1.3179571663920921,1.3333333333333333,1
+STU0840,Electrical,4,6.62,6,"['React', 'JavaScript', 'CSS', 'Deep Learning', 'Django', 'MongoDB']",2,1,1,5,0,6,4,0.662,7,0.7874015748031495,0.5714285714285714,2
+STU0841,Mechanical,4,8.44,7,"['Machine Learning', 'MySQL', 'MongoDB', 'Django', 'SQL', 'React', 'CSS']",1,1,1,4,1,7,3,0.844,6,0.7415254237288136,0.375,5
+STU0842,Computer Science,4,5.76,9,"['Django', 'C++', 'NLP', 'Docker', 'AWS', 'Node.js', 'MySQL', 'React', 'HTML']",5,0,4,6,1,9,5,0.576,14,1.3313609467455623,0.5,1
+STU0843,Civil,3,9.63,8,"['NLP', 'SQL', 'MongoDB', 'AWS', 'MySQL', 'React', 'Python', 'Git']",2,3,1,4,1,8,8,0.9630000000000001,6,0.7525870178739417,0.8888888888888888,0
+STU0844,Electrical,4,5.51,8,"['SQL', 'React', 'Java', 'C++', 'MySQL', 'HTML', 'NLP', 'Deep Learning']",7,1,0,2,0,8,9,0.5509999999999999,2,1.228878648233487,1.0,2
+STU0845,Electronics,4,5.72,5,"['Deep Learning', 'MongoDB', 'C++', 'Node.js', 'Docker']",4,3,4,8,0,5,10,0.572,16,0.7440476190476191,1.6666666666666667,3
+STU0846,Information Science,4,6.73,6,"['Git', 'AWS', 'Deep Learning', 'MySQL', 'Django', 'JavaScript']",3,0,0,7,0,6,3,0.673,7,0.7761966364812418,0.42857142857142855,4
+STU0847,Computer Science,3,6.27,11,"['HTML', 'Docker', 'AWS', 'Python', 'SQL', 'Machine Learning', 'Node.js', 'React', 'MySQL', 'Deep Learning', 'MongoDB']",5,0,2,4,0,11,5,0.627,8,1.5130674002751032,0.4166666666666667,1
+STU0848,Mechanical,4,7.11,7,"['JavaScript', 'Django', 'Machine Learning', 'Deep Learning', 'C++', 'Node.js', 'SQL']",2,2,3,2,1,7,6,0.7110000000000001,8,0.8631319358816277,0.75,5
+STU0849,Computer Science,3,9.5,10,"['NLP', 'Java', 'HTML', 'CSS', 'MongoDB', 'Node.js', 'Git', 'Linux', 'JavaScript', 'SQL']",4,0,0,8,1,10,4,0.95,8,0.9523809523809523,0.36363636363636365,1
+STU0850,Civil,4,7.29,5,"['MongoDB', 'MySQL', 'Django', 'NLP', 'Linux']",1,1,0,2,1,5,3,0.729,2,0.6031363088057902,0.5,0
+STU0851,Electrical,4,7.81,7,"['SQL', 'Docker', 'HTML', 'MySQL', 'JavaScript', 'Django', 'NLP']",2,2,2,4,1,7,6,0.7809999999999999,8,0.7945516458569808,0.75,2
+STU0852,Computer Science,3,9.52,10,"['C++', 'JavaScript', 'MongoDB', 'Python', 'MySQL', 'HTML', 'React', 'Django', 'CSS', 'Java']",0,3,3,9,1,10,6,0.952,15,0.9505703422053232,0.5454545454545454,1
+STU0853,Civil,4,6.32,8,"['Linux', 'Docker', 'MySQL', 'Deep Learning', 'Git', 'Python', 'JavaScript', 'Machine Learning']",2,0,3,1,0,8,2,0.632,7,1.0928961748633879,0.2222222222222222,0
+STU0854,Mechanical,3,7.85,3,"['MongoDB', 'Python', 'MySQL']",3,0,2,7,0,3,3,0.7849999999999999,11,0.33898305084745767,0.75,5
+STU0855,Mechanical,3,5.18,8,"['Deep Learning', 'NLP', 'MongoDB', 'JavaScript', 'AWS', 'Docker', 'SQL', 'Machine Learning']",0,5,3,5,0,8,10,0.518,11,1.2944983818770228,1.1111111111111112,5
+STU0856,Computer Science,3,7.87,6,"['Java', 'NLP', 'JavaScript', 'Deep Learning', 'C++', 'Docker']",2,5,4,9,1,6,12,0.787,17,0.6764374295377676,1.7142857142857142,1
+STU0857,Computer Science,4,7.71,3,"['CSS', 'Git', 'Docker']",2,4,1,9,0,3,10,0.771,11,0.3444316877152698,2.5,1
+STU0858,Information Science,3,7.99,8,"['Git', 'SQL', 'Python', 'Node.js', 'NLP', 'MongoDB', 'Django', 'Machine Learning']",3,2,0,5,1,8,7,0.799,5,0.8898776418242491,0.7777777777777778,4
+STU0859,Civil,4,5.78,7,"['Django', 'Docker', 'React', 'Linux', 'HTML', 'Git', 'CSS']",4,2,1,6,0,7,8,0.5780000000000001,8,1.0324483775811208,1.0,0
+STU0860,Electronics,3,5.92,9,"['CSS', 'Python', 'AWS', 'NLP', 'SQL', 'Deep Learning', 'JavaScript', 'Java', 'Node.js']",3,0,1,6,1,9,3,0.592,8,1.300578034682081,0.3,3
+STU0861,Mechanical,4,9.73,7,"['AWS', 'Machine Learning', 'Deep Learning', 'JavaScript', 'MySQL', 'C++', 'Git']",6,1,4,3,1,7,8,0.9730000000000001,11,0.65237651444548,1.0,5
+STU0862,Electronics,3,6.72,3,"['HTML', 'MongoDB', 'Node.js']",1,5,2,1,0,3,11,0.6719999999999999,5,0.38860103626943004,2.75,3
+STU0863,Information Science,4,7.88,8,"['MySQL', 'SQL', 'CSS', 'Linux', 'JavaScript', 'Java', 'Node.js', 'NLP']",5,4,2,7,1,8,13,0.788,11,0.900900900900901,1.4444444444444444,4
+STU0864,Electrical,4,7.2,6,"['JavaScript', 'C++', 'Java', 'MySQL', 'React', 'Git']",4,3,1,5,1,6,10,0.72,7,0.7317073170731708,1.4285714285714286,2
+STU0865,Computer Science,4,6.79,6,"['Linux', 'JavaScript', 'SQL', 'Machine Learning', 'NLP', 'HTML']",1,4,0,6,0,6,9,0.679,6,0.7702182284980744,1.2857142857142858,1
+STU0866,Civil,4,7.56,8,"['Git', 'CSS', 'Django', 'JavaScript', 'React', 'Java', 'HTML', 'Machine Learning']",1,1,3,5,1,8,3,0.756,11,0.9345794392523366,0.3333333333333333,0
+STU0867,Electronics,3,9.42,6,"['Node.js', 'React', 'MongoDB', 'Deep Learning', 'HTML', 'Docker']",3,1,3,2,1,6,5,0.942,8,0.5758157389635317,0.7142857142857143,3
+STU0868,Information Science,4,5.08,5,"['Python', 'Machine Learning', 'MySQL', 'SQL', 'Java']",6,2,0,5,1,5,10,0.508,5,0.8223684210526315,1.6666666666666667,4
+STU0869,Electrical,4,5.47,5,"['Django', 'Node.js', 'C++', 'NLP', 'Python']",4,3,2,4,0,5,10,0.5469999999999999,8,0.7727975270479135,1.6666666666666667,2
+STU0870,Civil,4,7.35,4,"['C++', 'Linux', 'MongoDB', 'JavaScript']",2,5,0,9,0,4,12,0.735,9,0.47904191616766467,2.4,0
+STU0871,Civil,4,5.08,6,"['Git', 'Node.js', 'Django', 'React', 'Java', 'Docker']",6,1,2,6,0,6,8,0.508,10,0.9868421052631579,1.1428571428571428,0
+STU0872,Electronics,4,8.91,11,"['React', 'CSS', 'Python', 'SQL', 'Java', 'C++', 'NLP', 'AWS', 'Git', 'MongoDB', 'Django']",5,1,2,9,1,11,7,0.891,13,1.1099899091826437,0.5833333333333334,3
+STU0873,Information Science,3,9.08,3,"['SQL', 'Node.js', 'HTML']",0,5,2,5,1,3,10,0.908,9,0.2976190476190476,2.5,4
+STU0874,Computer Science,4,6.84,3,"['NLP', 'MongoDB', 'AWS']",4,2,4,8,0,3,8,0.6839999999999999,16,0.3826530612244898,2.0,1
+STU0875,Electronics,4,6.7,8,"['SQL', 'Java', 'MongoDB', 'HTML', 'Docker', 'AWS', 'CSS', 'React']",7,4,3,8,0,8,15,0.67,14,1.0389610389610389,1.6666666666666667,3
+STU0876,Mechanical,4,7.91,7,"['HTML', 'Java', 'Deep Learning', 'Machine Learning', 'Linux', 'JavaScript', 'SQL']",6,1,2,3,1,7,8,0.791,7,0.7856341189674523,1.0,5
+STU0877,Information Science,4,6.56,3,"['Java', 'Docker', 'Linux']",6,4,4,7,1,3,14,0.6559999999999999,15,0.39682539682539686,3.5,4
+STU0878,Information Science,4,8.45,9,"['Python', 'HTML', 'Git', 'React', 'JavaScript', 'AWS', 'Linux', 'CSS', 'NLP']",5,3,2,0,1,9,11,0.845,4,0.9523809523809524,1.1,4
+STU0879,Information Science,4,9.03,9,"['Docker', 'Node.js', 'Django', 'C++', 'HTML', 'NLP', 'Machine Learning', 'Git', 'AWS']",2,5,0,1,1,9,12,0.9029999999999999,1,0.897308075772682,1.2,4
+STU0880,Mechanical,4,9.67,5,"['Deep Learning', 'JavaScript', 'NLP', 'MongoDB', 'Django']",1,5,4,1,1,5,11,0.967,9,0.46860356138706655,1.8333333333333333,5
+STU0881,Mechanical,4,8.85,11,"['React', 'NLP', 'Docker', 'Git', 'AWS', 'HTML', 'Machine Learning', 'Node.js', 'Django', 'Java', 'MySQL']",5,0,3,1,1,11,5,0.885,7,1.116751269035533,0.4166666666666667,5
+STU0882,Civil,4,6.05,6,"['Python', 'Node.js', 'CSS', 'Git', 'React', 'Linux']",2,1,1,8,1,6,4,0.605,10,0.851063829787234,0.5714285714285714,0
+STU0883,Information Science,4,6.03,5,"['SQL', 'MySQL', 'Django', 'NLP', 'Python']",3,4,1,9,1,5,11,0.603,11,0.7112375533428165,1.8333333333333333,4
+STU0884,Civil,4,8.38,6,"['Docker', 'HTML', 'AWS', 'Git', 'Python', 'MySQL']",1,2,1,5,1,6,5,0.8380000000000001,7,0.6396588486140724,0.7142857142857143,0
+STU0885,Civil,4,8.36,5,"['C++', 'HTML', 'Docker', 'CSS', 'Python']",0,3,3,8,1,5,6,0.836,14,0.5341880341880342,1.0,0
+STU0886,Mechanical,3,6.97,3,"['NLP', 'Java', 'JavaScript']",7,4,3,7,0,3,15,0.697,13,0.3764115432873275,3.75,5
+STU0887,Mechanical,4,8.56,10,"['NLP', 'Java', 'Python', 'React', 'HTML', 'AWS', 'JavaScript', 'C++', 'MySQL', 'Node.js']",4,3,4,9,1,10,10,0.8560000000000001,17,1.0460251046025104,0.9090909090909091,5
+STU0888,Computer Science,4,8.3,9,"['NLP', 'SQL', 'HTML', 'CSS', 'Java', 'JavaScript', 'Machine Learning', 'Node.js', 'MongoDB']",0,0,2,9,0,9,0,0.8300000000000001,13,0.9677419354838709,0.0,1
+STU0889,Civil,4,8.21,4,"['Linux', 'CSS', 'React', 'Machine Learning']",6,3,2,3,1,4,12,0.8210000000000001,7,0.4343105320304017,2.4,0
+STU0890,Civil,4,6.74,5,"['React', 'MySQL', 'Deep Learning', 'Node.js', 'C++']",5,4,3,7,0,5,13,0.674,13,0.6459948320413437,2.1666666666666665,0
+STU0891,Information Science,4,8.81,11,"['Python', 'Deep Learning', 'CSS', 'Node.js', 'Django', 'Docker', 'NLP', 'Machine Learning', 'Java', 'Linux', 'SQL']",6,1,0,9,1,11,8,0.881,9,1.1213047910295617,0.6666666666666666,4
+STU0892,Mechanical,3,8.0,5,"['Docker', 'Deep Learning', 'HTML', 'Linux', 'Machine Learning']",4,5,3,1,1,5,14,0.8,7,0.5555555555555556,2.3333333333333335,5
+STU0893,Electrical,4,9.1,3,"['CSS', 'Python', 'MySQL']",2,5,2,4,1,3,12,0.9099999999999999,8,0.297029702970297,3.0,2
+STU0894,Mechanical,4,5.19,9,"['MongoDB', 'Linux', 'Python', 'SQL', 'Git', 'Deep Learning', 'Node.js', 'HTML', 'MySQL']",0,4,2,9,0,9,8,0.519,13,1.4539579967689822,0.8,5
+STU0895,Electrical,3,6.61,11,"['Machine Learning', 'MySQL', 'React', 'Node.js', 'Deep Learning', 'HTML', 'NLP', 'MongoDB', 'SQL', 'C++', 'Git']",1,2,1,5,1,11,5,0.661,7,1.445466491458607,0.4166666666666667,2
+STU0896,Electrical,3,8.59,6,"['Git', 'React', 'HTML', 'AWS', 'MySQL', 'CSS']",6,3,2,5,1,6,12,0.859,9,0.6256517205422315,1.7142857142857142,2
+STU0897,Civil,4,7.32,4,"['Node.js', 'Deep Learning', 'C++', 'Django']",5,5,1,7,1,4,15,0.732,9,0.4807692307692307,3.0,0
+STU0898,Electrical,3,7.72,7,"['MongoDB', 'Django', 'HTML', 'Deep Learning', 'Machine Learning', 'NLP', 'Java']",4,0,1,7,1,7,4,0.772,9,0.8027522935779817,0.5,2
+STU0899,Mechanical,4,6.14,3,"['Docker', 'JavaScript', 'HTML']",4,3,4,2,1,3,10,0.614,10,0.42016806722689076,2.5,5
+STU0900,Computer Science,3,6.39,11,"['JavaScript', 'Java', 'CSS', 'Deep Learning', 'React', 'C++', 'MongoDB', 'NLP', 'HTML', 'Python', 'Git']",1,1,0,6,0,11,3,0.639,6,1.4884979702300407,0.25,1
+STU0901,Electrical,3,9.33,4,"['Python', 'HTML', 'React', 'Django']",0,2,3,9,1,4,4,0.933,15,0.3872216844143272,0.8,2
+STU0902,Electrical,4,6.07,5,"['Deep Learning', 'Git', 'HTML', 'Node.js', 'NLP']",5,0,4,0,0,5,5,0.607,8,0.7072135785007072,0.8333333333333334,2
+STU0903,Electronics,4,7.93,7,"['Java', 'Git', 'SQL', 'JavaScript', 'Node.js', 'AWS', 'Machine Learning']",6,2,4,5,1,7,10,0.7929999999999999,13,0.7838745800671892,1.25,3
+STU0904,Electronics,4,7.08,9,"['Deep Learning', 'Python', 'SQL', 'AWS', 'MongoDB', 'JavaScript', 'Linux', 'NLP', 'CSS']",2,5,4,1,1,9,12,0.708,9,1.113861386138614,1.2,3
+STU0905,Civil,3,7.28,5,"['HTML', 'AWS', 'React', 'NLP', 'MySQL']",7,4,0,3,1,5,15,0.728,3,0.6038647342995168,2.5,0
+STU0906,Electronics,3,8.6,8,"['Deep Learning', 'SQL', 'Git', 'React', 'Node.js', 'HTML', 'Machine Learning', 'Django']",6,0,3,6,1,8,6,0.86,12,0.8333333333333334,0.6666666666666666,3
+STU0907,Electronics,3,5.44,4,"['AWS', 'Linux', 'Django', 'Node.js']",7,4,2,0,1,4,15,0.544,4,0.6211180124223602,3.0,3
+STU0908,Information Science,4,6.12,9,"['React', 'Git', 'Linux', 'NLP', 'Django', 'HTML', 'MongoDB', 'CSS', 'Java']",1,5,1,4,0,9,11,0.612,6,1.2640449438202248,1.1,4
+STU0909,Information Science,4,7.51,4,"['React', 'MongoDB', 'HTML', 'Docker']",1,1,2,6,0,4,3,0.751,10,0.4700352526439483,0.6,4
+STU0910,Computer Science,4,5.18,8,"['CSS', 'AWS', 'Python', 'C++', 'MySQL', 'HTML', 'SQL', 'Node.js']",1,0,4,0,0,8,1,0.518,8,1.2944983818770228,0.1111111111111111,1
+STU0911,Information Science,4,8.35,5,"['Docker', 'React', 'C++', 'SQL', 'Django']",4,1,4,4,1,5,6,0.835,12,0.5347593582887701,1.0,4
+STU0912,Computer Science,4,5.08,10,"['NLP', 'Docker', 'C++', 'MySQL', 'Node.js', 'Django', 'Git', 'AWS', 'HTML', 'JavaScript']",5,0,4,2,0,10,5,0.508,10,1.644736842105263,0.45454545454545453,1
+STU0913,Electrical,4,8.93,7,"['Docker', 'MongoDB', 'Java', 'React', 'MySQL', 'Git', 'Linux']",7,2,0,4,1,7,11,0.893,4,0.7049345417925479,1.375,2
+STU0914,Electrical,4,5.55,3,"['CSS', 'Node.js', 'MongoDB']",5,5,1,1,0,3,15,0.5549999999999999,3,0.4580152671755725,3.75,2
+STU0915,Civil,4,9.15,8,"['AWS', 'NLP', 'MySQL', 'React', 'Git', 'Deep Learning', 'Docker', 'Django']",4,3,3,2,1,8,10,0.915,8,0.7881773399014778,1.1111111111111112,0
+STU0916,Information Science,4,9.24,3,"['Deep Learning', 'Git', 'Docker']",3,1,3,7,0,3,5,0.924,13,0.29296875,1.25,4
+STU0917,Electronics,3,5.34,9,"['Docker', 'Git', 'AWS', 'MySQL', 'Django', 'Python', 'Linux', 'Deep Learning', 'Machine Learning']",2,1,0,9,0,9,4,0.534,9,1.4195583596214512,0.4,3
+STU0918,Computer Science,4,8.82,8,"['Machine Learning', 'AWS', 'C++', 'Docker', 'MongoDB', 'Linux', 'HTML', 'Python']",7,1,0,4,1,8,9,0.882,4,0.8146639511201629,1.0,1
+STU0919,Mechanical,4,7.28,5,"['Python', 'MongoDB', 'Java', 'MySQL', 'NLP']",4,2,0,2,1,5,8,0.728,2,0.6038647342995168,1.3333333333333333,5
+STU0920,Computer Science,4,6.86,7,"['React', 'JavaScript', 'AWS', 'HTML', 'Machine Learning', 'Django', 'Deep Learning']",1,3,3,2,0,7,7,0.686,8,0.8905852417302799,0.875,1
+STU0921,Computer Science,3,9.52,5,"['C++', 'Python', 'Django', 'SQL', 'Deep Learning']",4,2,4,2,1,5,8,0.952,10,0.4752851711026616,1.3333333333333333,1
+STU0922,Computer Science,4,9.35,4,"['Node.js', 'MySQL', 'CSS', 'MongoDB']",7,3,0,7,1,4,13,0.9349999999999999,7,0.3864734299516908,2.6,1
+STU0923,Electronics,4,6.98,11,"['Java', 'Docker', 'JavaScript', 'C++', 'NLP', 'Node.js', 'React', 'Django', 'Python', 'SQL', 'Machine Learning']",1,5,1,9,0,11,11,0.6980000000000001,11,1.3784461152882206,0.9166666666666666,3
+STU0924,Computer Science,3,9.34,4,"['MongoDB', 'Java', 'CSS', 'Docker']",7,3,0,0,1,4,13,0.9339999999999999,0,0.3868471953578337,2.6,1
+STU0925,Computer Science,4,5.78,5,"['SQL', 'Node.js', 'Deep Learning', 'JavaScript', 'CSS']",6,2,0,5,1,5,10,0.5780000000000001,5,0.7374631268436578,1.6666666666666667,1
+STU0926,Computer Science,4,7.43,11,"['React', 'Node.js', 'Git', 'Docker', 'MySQL', 'C++', 'MongoDB', 'Java', 'Deep Learning', 'AWS', 'CSS']",1,0,3,8,1,11,1,0.743,14,1.3048635824436536,0.08333333333333333,1
+STU0927,Mechanical,4,9.75,5,"['NLP', 'Git', 'Linux', 'Docker', 'JavaScript']",6,2,0,6,1,5,10,0.975,6,0.46511627906976744,1.6666666666666667,5
+STU0928,Electronics,4,9.1,8,"['SQL', 'React', 'Deep Learning', 'Python', 'JavaScript', 'Django', 'MongoDB', 'CSS']",2,3,3,6,1,8,8,0.9099999999999999,12,0.7920792079207921,0.8888888888888888,3
+STU0929,Computer Science,4,5.61,11,"['Deep Learning', 'HTML', 'React', 'Git', 'JavaScript', 'Linux', 'NLP', 'Docker', 'C++', 'Java', 'SQL']",3,0,0,8,0,11,3,0.561,8,1.664145234493192,0.25,1
+STU0930,Computer Science,4,9.25,3,"['SQL', 'Machine Learning', 'React']",6,3,3,3,1,3,12,0.925,9,0.2926829268292683,3.0,1
+STU0931,Electrical,4,8.72,11,"['NLP', 'C++', 'Node.js', 'MongoDB', 'Java', 'Linux', 'AWS', 'React', 'HTML', 'Python', 'Deep Learning']",6,2,2,7,1,11,10,0.8720000000000001,11,1.1316872427983538,0.8333333333333334,2
+STU0932,Civil,4,9.32,8,"['CSS', 'MySQL', 'Java', 'Docker', 'React', 'Python', 'HTML', 'AWS']",0,3,1,1,1,8,6,0.932,3,0.7751937984496123,0.6666666666666666,0
+STU0933,Electrical,4,5.11,9,"['MySQL', 'Git', 'Java', 'JavaScript', 'React', 'SQL', 'Linux', 'Django', 'Node.js']",5,5,2,0,1,9,15,0.511,4,1.4729950900163666,1.5,2
+STU0934,Information Science,4,5.57,3,"['SQL', 'Django', 'Java']",7,3,1,2,0,3,13,0.557,4,0.45662100456621,3.25,4
+STU0935,Civil,4,9.0,10,"['MySQL', 'MongoDB', 'Machine Learning', 'Python', 'AWS', 'Linux', 'Git', 'Java', 'C++', 'Node.js']",0,2,1,4,1,10,4,0.9,6,1.0,0.36363636363636365,0
+STU0936,Information Science,4,7.81,3,"['Git', 'Java', 'Node.js']",2,1,2,9,1,3,4,0.7809999999999999,13,0.34052213393870606,1.0,4
+STU0937,Computer Science,4,5.14,4,"['SQL', 'Java', 'JavaScript', 'Node.js']",0,3,3,8,0,4,6,0.514,14,0.6514657980456027,1.2,1
+STU0938,Computer Science,4,9.42,6,"['Docker', 'Machine Learning', 'NLP', 'Node.js', 'AWS', 'Git']",2,5,0,5,1,6,12,0.942,5,0.5758157389635317,1.7142857142857142,1
+STU0939,Information Science,3,7.22,4,"['Django', 'Linux', 'HTML', 'Git']",3,5,0,5,0,4,13,0.722,5,0.4866180048661801,2.6,4
+STU0940,Electrical,4,7.19,5,"['Python', 'Docker', 'React', 'Git', 'MySQL']",3,4,2,4,1,5,11,0.7190000000000001,8,0.6105006105006104,1.8333333333333333,2
+STU0941,Mechanical,4,5.5,3,"['SQL', 'HTML', 'MySQL']",1,1,3,9,0,3,3,0.55,15,0.46153846153846156,0.75,5
+STU0942,Computer Science,4,5.51,10,"['MongoDB', 'Django', 'C++', 'SQL', 'JavaScript', 'React', 'Docker', 'Git', 'NLP', 'MySQL']",3,0,1,3,1,10,3,0.5509999999999999,5,1.5360983102918588,0.2727272727272727,1
+STU0943,Electronics,4,5.28,11,"['Deep Learning', 'SQL', 'NLP', 'MongoDB', 'CSS', 'Django', 'HTML', 'AWS', 'React', 'Machine Learning', 'Linux']",7,0,3,7,1,11,7,0.528,13,1.751592356687898,0.5833333333333334,3
+STU0944,Mechanical,3,6.77,7,"['MongoDB', 'Git', 'React', 'NLP', 'Machine Learning', 'HTML', 'MySQL']",0,0,0,4,0,7,0,0.6769999999999999,4,0.9009009009009009,0.0,5
+STU0945,Computer Science,3,5.17,5,"['C++', 'HTML', 'Machine Learning', 'React', 'Deep Learning']",6,5,0,6,0,5,16,0.517,6,0.8103727714748784,2.6666666666666665,1
+STU0946,Civil,4,8.56,11,"['NLP', 'Java', 'Docker', 'Machine Learning', 'MySQL', 'Linux', 'Django', 'C++', 'Python', 'HTML', 'Git']",4,0,4,7,1,11,4,0.8560000000000001,15,1.1506276150627615,0.3333333333333333,0
+STU0947,Electrical,4,6.0,4,"['Docker', 'Java', 'SQL', 'MySQL']",0,4,1,6,1,4,8,0.6,8,0.5714285714285714,1.6,2
+STU0948,Information Science,3,6.21,11,"['AWS', 'Django', 'Python', 'Docker', 'SQL', 'Node.js', 'React', 'Git', 'MySQL', 'CSS', 'Machine Learning']",3,3,3,7,1,11,9,0.621,13,1.5256588072122053,0.75,4
+STU0949,Computer Science,3,6.01,10,"['C++', 'Machine Learning', 'Python', 'Node.js', 'Linux', 'Java', 'MySQL', 'MongoDB', 'JavaScript', 'Git']",7,4,1,4,0,10,15,0.601,6,1.4265335235378032,1.3636363636363635,1
+STU0950,Civil,4,7.92,4,"['Git', 'Django', 'Java', 'JavaScript']",4,1,2,0,0,4,6,0.792,4,0.4484304932735426,1.2,0
+STU0951,Computer Science,4,7.08,11,"['Django', 'Java', 'Git', 'Linux', 'JavaScript', 'Machine Learning', 'Docker', 'Node.js', 'MySQL', 'AWS', 'NLP']",4,4,0,2,1,11,12,0.708,2,1.3613861386138615,1.0,1
+STU0952,Electrical,4,5.41,10,"['Machine Learning', 'CSS', 'React', 'JavaScript', 'Node.js', 'C++', 'Python', 'Deep Learning', 'Docker', 'HTML']",2,5,1,1,0,10,12,0.541,3,1.5600624024960998,1.0909090909090908,2
+STU0953,Computer Science,4,8.78,8,"['Python', 'C++', 'AWS', 'MongoDB', 'Machine Learning', 'Deep Learning', 'HTML', 'Git']",2,5,0,4,1,8,12,0.8779999999999999,4,0.8179959100204499,1.3333333333333333,1
+STU0954,Electrical,4,5.08,10,"['MySQL', 'AWS', 'JavaScript', 'Linux', 'NLP', 'Python', 'Git', 'Machine Learning', 'Node.js', 'Deep Learning']",7,4,4,6,0,10,15,0.508,14,1.644736842105263,1.3636363636363635,2
+STU0955,Mechanical,4,9.64,10,"['React', 'Node.js', 'Linux', 'Python', 'SQL', 'Java', 'Deep Learning', 'Git', 'JavaScript', 'HTML']",4,3,2,7,1,10,10,0.9640000000000001,11,0.9398496240601504,0.9090909090909091,5
+STU0956,Electronics,4,9.41,3,"['HTML', 'Deep Learning', 'Python']",2,0,2,4,0,3,2,0.9410000000000001,8,0.2881844380403458,0.5,3
+STU0957,Civil,4,8.16,9,"['MySQL', 'AWS', 'Docker', 'Django', 'NLP', 'SQL', 'Java', 'Machine Learning', 'CSS']",2,0,0,2,1,9,2,0.8160000000000001,2,0.982532751091703,0.2,0
+STU0958,Civil,3,7.78,5,"['AWS', 'Python', 'Deep Learning', 'Git', 'HTML']",7,0,3,4,1,5,7,0.778,10,0.5694760820045557,1.1666666666666667,0
+STU0959,Information Science,3,6.51,4,"['Node.js', 'Java', 'AWS', 'MySQL']",7,4,0,6,1,4,15,0.651,6,0.5326231691078562,3.0,4
+STU0960,Computer Science,4,6.47,9,"['Machine Learning', 'AWS', 'MySQL', 'HTML', 'CSS', 'Java', 'Django', 'C++', 'Python']",0,2,4,9,0,9,4,0.647,17,1.2048192771084338,0.4,1
+STU0961,Electronics,3,8.29,7,"['C++', 'Python', 'Docker', 'NLP', 'MySQL', 'Django', 'Node.js']",7,2,0,2,1,7,11,0.829,2,0.7534983853606029,1.375,3
+STU0962,Civil,4,6.07,4,"['Django', 'NLP', 'Node.js', 'MySQL']",5,0,4,4,0,4,5,0.607,12,0.5657708628005658,1.0,0
+STU0963,Mechanical,4,6.38,9,"['AWS', 'NLP', 'HTML', 'Python', 'Machine Learning', 'MongoDB', 'Linux', 'Git', 'Django']",6,1,0,4,0,9,8,0.638,4,1.2195121951219512,0.8,5
+STU0964,Information Science,4,8.57,10,"['Node.js', 'JavaScript', 'Linux', 'Git', 'Machine Learning', 'AWS', 'Deep Learning', 'SQL', 'Java', 'MySQL']",0,2,0,6,1,10,4,0.857,6,1.044932079414838,0.36363636363636365,4
+STU0965,Civil,4,7.21,8,"['Machine Learning', 'SQL', 'HTML', 'Django', 'JavaScript', 'Java', 'Docker', 'Python']",2,5,3,2,1,8,12,0.721,8,0.9744214372716199,1.3333333333333333,0
+STU0966,Electronics,4,8.05,11,"['Docker', 'MySQL', 'Machine Learning', 'C++', 'Django', 'CSS', 'Java', 'JavaScript', 'Deep Learning', 'Linux', 'NLP']",6,3,3,8,1,11,12,0.805,14,1.2154696132596685,1.0,3
+STU0967,Mechanical,3,7.4,3,"['React', 'AWS', 'Machine Learning']",5,1,0,4,0,3,7,0.74,4,0.35714285714285715,1.75,5
+STU0968,Mechanical,4,9.11,3,"['MySQL', 'MongoDB', 'Git']",1,3,2,8,1,3,7,0.9109999999999999,12,0.2967359050445104,1.75,5
+STU0969,Mechanical,4,6.8,3,"['JavaScript', 'Git', 'Java']",0,4,1,1,0,3,8,0.6799999999999999,3,0.38461538461538464,2.0,5
+STU0970,Information Science,3,5.69,4,"['C++', 'HTML', 'MySQL', 'SQL']",2,4,4,4,1,4,10,0.5690000000000001,12,0.5979073243647234,2.0,4
+STU0971,Computer Science,4,6.27,6,"['Deep Learning', 'AWS', 'Python', 'Machine Learning', 'MySQL', 'SQL']",7,2,4,1,1,6,11,0.627,9,0.8253094910591472,1.5714285714285714,1
+STU0972,Electrical,4,9.76,11,"['NLP', 'HTML', 'MySQL', 'Python', 'Linux', 'Machine Learning', 'React', 'C++', 'Git', 'Docker', 'JavaScript']",2,1,4,2,1,11,4,0.976,10,1.0223048327137547,0.3333333333333333,2
+STU0973,Mechanical,4,5.62,4,"['Python', 'C++', 'Machine Learning', 'Node.js']",7,2,4,3,1,4,11,0.562,11,0.6042296072507553,2.2,5
+STU0974,Mechanical,4,5.72,3,"['CSS', 'JavaScript', 'Deep Learning']",4,0,0,0,0,3,4,0.572,0,0.44642857142857145,1.0,5
+STU0975,Information Science,4,5.77,3,"['AWS', 'Java', 'Node.js']",7,2,1,6,1,3,11,0.577,8,0.4431314623338257,2.75,4
+STU0976,Electronics,3,5.53,3,"['Deep Learning', 'NLP', 'SQL']",1,0,2,7,1,3,1,0.553,11,0.4594180704441041,0.25,3
+STU0977,Information Science,4,8.37,7,"['Machine Learning', 'Deep Learning', 'NLP', 'C++', 'Django', 'Git', 'CSS']",0,2,0,8,1,7,4,0.837,8,0.7470651013874067,0.5,4
+STU0978,Electrical,4,6.34,4,"['Node.js', 'CSS', 'Java', 'Django']",6,4,1,6,0,4,14,0.634,8,0.5449591280653951,2.8,2
+STU0979,Mechanical,4,6.81,7,"['Node.js', 'Linux', 'AWS', 'SQL', 'MongoDB', 'React', 'CSS']",7,1,3,6,0,7,9,0.6809999999999999,12,0.8962868117797695,1.125,5
+STU0980,Information Science,3,5.32,11,"['AWS', 'Python', 'NLP', 'Django', 'MySQL', 'HTML', 'Java', 'SQL', 'Docker', 'C++', 'Linux']",2,1,1,3,1,11,4,0.532,5,1.740506329113924,0.3333333333333333,4
+STU0981,Information Science,4,7.6,5,"['MySQL', 'Java', 'Django', 'Node.js', 'Linux']",2,5,1,3,1,5,12,0.76,5,0.5813953488372093,2.0,4
+STU0982,Computer Science,4,9.64,3,"['JavaScript', 'MongoDB', 'React']",5,2,4,4,1,3,9,0.9640000000000001,12,0.2819548872180451,2.25,1
+STU0983,Information Science,4,7.23,5,"['Django', 'Java', 'Linux', 'CSS', 'AWS']",0,4,3,6,0,5,8,0.7230000000000001,12,0.6075334143377885,1.3333333333333333,4
+STU0984,Civil,4,9.72,8,"['HTML', 'MySQL', 'SQL', 'Git', 'React', 'Linux', 'Java', 'Machine Learning']",3,4,4,9,1,8,11,0.9720000000000001,17,0.7462686567164178,1.2222222222222223,0
+STU0985,Mechanical,4,7.99,10,"['Django', 'SQL', 'MySQL', 'Machine Learning', 'MongoDB', 'Linux', 'NLP', 'HTML', 'Git', 'Node.js']",1,3,0,3,1,10,7,0.799,3,1.1123470522803114,0.6363636363636364,5
+STU0986,Electronics,4,8.64,8,"['CSS', 'React', 'Machine Learning', 'Git', 'MySQL', 'JavaScript', 'C++', 'Deep Learning']",7,3,0,1,1,8,13,0.8640000000000001,1,0.8298755186721991,1.4444444444444444,3
+STU0987,Computer Science,4,9.56,6,"['SQL', 'Machine Learning', 'Linux', 'Docker', 'Django', 'Python']",4,0,4,0,1,6,4,0.9560000000000001,8,0.5681818181818181,0.5714285714285714,1
+STU0988,Electronics,3,5.14,9,"['CSS', 'Machine Learning', 'Python', 'C++', 'Node.js', 'Java', 'MySQL', 'JavaScript', 'MongoDB']",2,1,2,7,1,9,4,0.514,11,1.4657980456026058,0.4,3
+STU0989,Information Science,4,8.1,6,"['Python', 'C++', 'CSS', 'MongoDB', 'JavaScript', 'Git']",2,5,1,7,1,6,12,0.8099999999999999,9,0.6593406593406593,1.7142857142857142,4
+STU0990,Civil,4,5.68,10,"['AWS', 'MySQL', 'Python', 'React', 'Docker', 'Machine Learning', 'Django', 'Linux', 'Node.js', 'CSS']",0,0,3,2,0,10,0,0.568,8,1.4970059880239521,0.0,0
+STU0991,Civil,4,5.32,11,"['JavaScript', 'Deep Learning', 'Docker', 'AWS', 'Java', 'Django', 'React', 'Linux', 'CSS', 'HTML', 'MongoDB']",6,4,2,8,0,11,14,0.532,12,1.740506329113924,1.1666666666666667,0
+STU0992,Mechanical,4,6.94,7,"['Node.js', 'MySQL', 'AWS', 'CSS', 'NLP', 'Django', 'Java']",1,5,0,7,0,7,11,0.6940000000000001,7,0.8816120906801007,1.375,5
+STU0993,Electrical,4,5.02,3,"['MongoDB', 'Docker', 'Machine Learning']",6,5,4,1,0,3,16,0.502,9,0.49833887043189373,4.0,2
+STU0994,Electronics,4,9.42,8,"['HTML', 'MongoDB', 'NLP', 'Linux', 'React', 'MySQL', 'Docker', 'Deep Learning']",4,0,0,9,1,8,4,0.942,9,0.7677543186180422,0.4444444444444444,3
+STU0995,Electronics,4,7.38,6,"['SQL', 'Node.js', 'NLP', 'Django', 'Docker', 'React']",2,2,1,6,1,6,6,0.738,8,0.7159904534606206,0.8571428571428571,3
+STU0996,Mechanical,4,8.65,8,"['CSS', 'Docker', 'Django', 'NLP', 'SQL', 'Linux', 'React', 'HTML']",5,5,1,2,1,8,15,0.865,4,0.8290155440414507,1.6666666666666667,5
+STU0997,Information Science,4,5.9,5,"['Python', 'React', 'Django', 'HTML', 'Java']",4,3,1,3,0,5,10,0.5900000000000001,5,0.7246376811594203,1.6666666666666667,4
+STU0998,Information Science,3,9.23,7,"['Git', 'Java', 'MySQL', 'Machine Learning', 'JavaScript', 'Node.js', 'C++']",7,2,3,5,1,7,11,0.923,11,0.6842619745845552,1.375,4
+STU0999,Electrical,4,5.29,9,"['CSS', 'C++', 'Linux', 'MySQL', 'Machine Learning', 'MongoDB', 'Docker', 'React', 'Python']",4,3,4,3,1,9,10,0.529,11,1.4308426073131955,1.0,2
+STU1000,Information Science,4,8.09,4,"['Node.js', 'Java', 'Python', 'CSS']",5,4,1,7,1,4,13,0.8089999999999999,9,0.44004400440044006,2.6,4

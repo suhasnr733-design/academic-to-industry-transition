@@ -10,7 +10,7 @@ class TestEndToEnd:
     
     @pytest.fixture
     def client(self):
-        app = create_app('testing')
+        app = create_app('app.config.TestingConfig')
         with app.test_client() as client:
             with app.app_context():
                 db.create_all()
