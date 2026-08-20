@@ -18,8 +18,9 @@ class DataCollector:
         self.job_scraper = JobScraper({})
         self.course_scraper = CourseScraper({})
         
-    def collect_jobs(self, keywords: List[str], location: str = 'Bangalore') -> pd.DataFrame:
+    def collect_jobs(self, keywords: List[str], location: str = 'Bangalore', **kwargs) -> pd.DataFrame:
         """Collect job listings"""
+
         self.logger.info(f"Starting job collection for keywords: {keywords}")
         
         jobs = self.job_scraper.scrape(

@@ -5,9 +5,11 @@ venv-data/
 
 # Environment Variables & Secrets (Keep .env.example)
 .env
+.env.data
 *.env
 !.env.example
 !*.env.example
+
 
 # Python cache & bytecode
 __pycache__/
@@ -29,6 +31,9 @@ instance/
 # Uploads & Temp scratch files
 uploads/
 scratch/
+data/raw/*.csv
+data/partitions/
+
 
 # Node & Frontend Build Artifacts
 node_modules/

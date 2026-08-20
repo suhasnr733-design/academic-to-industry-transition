@@ -52,12 +52,16 @@ class DataQualityFramework:
             total_obj_cells = len(obj_cols) * total_rows
             for col in obj_cols:
                 for val in df[col]:
-                    if pd.isnull(val):
+                    if isinstance(val, (list, tuple)):
+                        if len(val) == 0:
+                            invalid_accuracy_count += 1
+                    elif pd.isnull(val):
                         invalid_accuracy_count += 1
                     elif isinstance(val, str):
                         s_val = val.strip()
                         if s_val == "" or s_val.lower() == "unknown":
                             invalid_accuracy_count += 1
+
             accuracy = float((total_obj_cells - invalid_accuracy_count) / total_obj_cells) if total_obj_cells > 0 else 1.0
         else:
             accuracy = 1.0

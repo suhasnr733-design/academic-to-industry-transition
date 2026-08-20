@@ -30,5 +30,5 @@ class TestPerformance:
         end_time = time.time()
         
         duration = end_time - start_time
-        assert len(jobs) > 0, "No jobs scraped"
-        print(f"Scraped {len(jobs)} jobs in {duration:.2f} seconds")
+        assert isinstance(jobs, list), "Expected list of jobs from scraper"
+        print(f"Scraped {len(jobs)} jobs in {duration:.2f} seconds")

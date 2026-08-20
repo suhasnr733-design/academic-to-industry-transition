@@ -1,8 +1,7 @@
-# tests/integration/test_data_pipeline.py
+# data_pipeline/tests/integration/test_pipeline_integration.py
 
 import pytest
 import pandas as pd
-import os
 from data_pipeline.pipeline_orchestrator import PipelineOrchestrator
 
 class TestDataPipelineIntegration:
@@ -36,11 +35,10 @@ class TestDataPipelineIntegration:
     
     def test_full_pipeline(self):
         """Test the full pipeline execution"""
-        # Skip if internet not available
         try:
             import requests
             requests.get('https://www.google.com', timeout=5)
-        except:
+        except Exception:
             pytest.skip("No internet connection")
         
         # Run pipeline with limited data
