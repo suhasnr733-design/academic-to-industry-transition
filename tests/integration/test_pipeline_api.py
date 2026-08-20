@@ -117,3 +117,21 @@ class TestPipelineAPIEndpoints:
         res1 = client.get('/api/v1/pipeline/backup/list')
         assert res1.status_code == 200
         assert res1.get_json()['status'] == 'success'
+
+    def test_production_and_health_apis(self, client):
+        # /optimize API
+        payload = {'records': [{'col1': 1, 'col2': 'A'}, {'col1': 2, 'col2': 'B'}]}
+        res_opt = client.post('/api/v1/pipeline/optimize', json=payload)
+        assert res_opt.status_code == 200
+        assert res_opt.get_json()['status'] == 'success'
+
+        # /health API
+        res_health = client.get('/api/v1/pipeline/health')
+        assert res_health.status_code == 200
+        assert res_health.get_json()['status'] == 'success'
+
+        # /cleanup/run API
+        res_cleanup = client.post('/api/v1/pipeline/cleanup/run')
+        assert res_cleanup.status_code == 200
+        assert res_cleanup.get_json()['status'] == 'success'
+

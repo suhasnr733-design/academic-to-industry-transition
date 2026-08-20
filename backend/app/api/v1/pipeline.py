@@ -16,6 +16,10 @@ from data_pipeline.quality.automated_quality import automated_quality
 from data_pipeline.quality.anomaly_detection import anomaly_detector
 from data_pipeline.resilience.fault_tolerance import fault_tolerance
 from data_pipeline.resilience.data_recovery import data_recovery
+from data_pipeline.production.final_optimizer import final_optimizer
+from data_pipeline.production.health_checks import health_check
+from scripts.cleanup_pipeline import pipeline_cleanup
+
 
 logger = logging.getLogger(__name__)
 
@@ -280,3 +284,44 @@ def list_backups_api():
     except Exception as e:
         logger.error(f"Error listing backups API: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+# ==========================================
+# Weeks 29-32 New Production & Health APIs
+# ==========================================
+
+@pipeline_bp.route('/optimize', methods=['POST'])
+def optimize_dataframe_api():
+    """Optimize DataFrame memory usage via REST API."""
+    try:
+        data = request.get_json(silent=True) or {}
+        records = data.get('records', [])
+        df = pd.DataFrame(records) if records else pd.DataFrame()
+        report = final_optimizer.get_optimization_report(df)
+        return jsonify({'status': 'success', 'report': report}), 200
+    except Exception as e:
+        logger.error(f"Error optimizing DataFrame API: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@pipeline_bp.route('/health', methods=['GET'])
+def get_pipeline_health_api():
+    """Get complete pipeline, database, Redis, and resource health check report."""
+    try:
+        report = health_check.get_full_health_report()
+        return jsonify({'status': 'success', 'health': report}), 200
+    except Exception as e:
+        logger.error(f"Error fetching pipeline health API: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@pipeline_bp.route('/cleanup/run', methods=['POST'])
+def run_pipeline_cleanup_api():
+    """Trigger log, temp file, and data organization cleanup."""
+    try:
+        report = pipeline_cleanup.run_cleanup()
+        return jsonify({'status': 'success', 'report': report}), 200
+    except Exception as e:
+        logger.error(f"Error running pipeline cleanup API: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
