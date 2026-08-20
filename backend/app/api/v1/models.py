@@ -13,7 +13,7 @@ models_bp = Blueprint('models', __name__)
 def tune_models():
     """Hyperparameter tuning endpoint"""
     try:
-        data = request.get_json() or {}
+        data = request.get_json(silent=True) or {}
         model_name = data.get('model_name', 'random_forest')
         
         # Sample synthetic training data if none provided
@@ -55,7 +55,7 @@ def feature_importance():
 def explain_prediction():
     """Explain model prediction using SHAP"""
     try:
-        data = request.get_json() or {}
+        data = request.get_json(silent=True) or {}
         features = list(data.values()) if data else [8.5, 10, 8, 6, 4, 3, 5, 14, 0.85, 11, 1.18, 1.4, 0]
         X = np.array(features).reshape(1, -1)
         res = model_explainer.explain_prediction(X)
@@ -67,7 +67,7 @@ def explain_prediction():
 def skill_gap():
     """Skill gap analysis with explanation"""
     try:
-        data = request.get_json() or {}
+        data = request.get_json(silent=True) or {}
         skills = data.get('skills', ['Python', 'Java', 'SQL'])
         res = model_explainer.analyze_skill_gap(skills)
         return jsonify(res), 200
@@ -96,7 +96,7 @@ def get_drift_report():
 def retrain_model():
     """Trigger automated model retraining"""
     try:
-        data = request.get_json() or {}
+        data = request.get_json(silent=True) or {}
         reason = data.get('reason', 'manual_trigger')
         return jsonify({
             'status': 'initiated',
