@@ -2,6 +2,7 @@
 
 from flask import Blueprint, jsonify, request
 import logging
+import pandas as pd
 
 from data_pipeline.monitoring.pipeline_monitor import pipeline_monitor
 from data_pipeline.monitoring.quality_dashboard import quality_dashboard
@@ -10,6 +11,11 @@ from data_pipeline.etl.automated_etl import etl_automation
 from data_pipeline.validators.auto_validator import auto_validator
 from data_pipeline.optimization.performance_optimizer import performance_optimizer
 from data_pipeline.optimization.cache_manager import cache_manager
+from data_pipeline.optimization.query_optimizer import query_optimizer
+from data_pipeline.quality.automated_quality import automated_quality
+from data_pipeline.quality.anomaly_detection import anomaly_detector
+from data_pipeline.resilience.fault_tolerance import fault_tolerance
+from data_pipeline.resilience.data_recovery import data_recovery
 
 logger = logging.getLogger(__name__)
 
@@ -143,4 +149,134 @@ def get_cache_stats():
         }), 200
     except Exception as e:
         logger.error(f"Error fetching cache stats: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+# ==========================================
+# Weeks 25-28 New Pipeline API Endpoints
+# ==========================================
+
+@pipeline_bp.route('/query/analysis', methods=['GET'])
+def analyze_queries():
+    """Analyze slow database queries."""
+    try:
+        analysis = query_optimizer.analyze_slow_queries()
+        return jsonify({'status': 'success', 'analysis': analysis}), 200
+    except Exception as e:
+        logger.error(f"Error analyzing queries: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@pipeline_bp.route('/query/stats', methods=['GET'])
+def get_query_stats():
+    """Get database tables and row count statistics."""
+    try:
+        stats = query_optimizer.get_query_stats()
+        return jsonify({'status': 'success', 'stats': stats}), 200
+    except Exception as e:
+        logger.error(f"Error getting query stats: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@pipeline_bp.route('/quality/run', methods=['POST'])
+def run_automated_quality():
+    """Run automated quality validation against JSON dataset payload."""
+    try:
+        data = request.get_json(silent=True) or {}
+        records = data.get('records', [])
+        df = pd.DataFrame(records) if records else pd.DataFrame()
+        result = automated_quality.validate_dataframe(df)
+        return jsonify({'status': 'success', 'result': result}), 200
+    except Exception as e:
+        logger.error(f"Error running quality validation: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@pipeline_bp.route('/quality/summary', methods=['GET'])
+def get_quality_summary_api():
+    """Get automated quality validation summary over past hours."""
+    try:
+        hours = request.args.get('hours', default=24, type=int)
+        summary = automated_quality.get_quality_summary(hours=hours)
+        return jsonify({'status': 'success', 'summary': summary}), 200
+    except Exception as e:
+        logger.error(f"Error fetching quality summary: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@pipeline_bp.route('/anomalies', methods=['POST'])
+def detect_dataset_anomalies():
+    """Detect multivariate anomalies and univariate outliers in JSON dataset payload."""
+    try:
+        data = request.get_json(silent=True) or {}
+        records = data.get('records', [])
+        columns = data.get('columns', None)
+        df = pd.DataFrame(records) if records else pd.DataFrame()
+        anomalies = anomaly_detector.detect_anomalies(df, columns=columns)
+        return jsonify({'status': 'success', 'anomalies': anomalies}), 200
+    except Exception as e:
+        logger.error(f"Error detecting anomalies: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@pipeline_bp.route('/test/retry', methods=['GET'])
+def test_retry_route():
+    """Endpoint testing fault tolerance retry mechanism."""
+    try:
+        attempts = 0
+
+        @fault_tolerance.retry(max_retries=2, delay=0.001)
+        def _flaky():
+            nonlocal attempts
+            attempts += 1
+            if attempts == 1:
+                raise ValueError("Transient retry test error")
+            return "recovered"
+
+        res = _flaky()
+        return jsonify({'status': 'success', 'result': res, 'attempts': attempts}), 200
+    except Exception as e:
+        logger.error(f"Error testing retry route: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@pipeline_bp.route('/test/circuit', methods=['GET'])
+def test_circuit_route():
+    """Endpoint testing fault tolerance circuit breaker status."""
+    try:
+        cb = fault_tolerance.circuit_breaker(failure_threshold=3, timeout=10.0)
+        return jsonify({
+            'status': 'success',
+            'circuit_state': cb.state,
+            'failure_count': cb.failure_count
+        }), 200
+    except Exception as e:
+        logger.error(f"Error testing circuit route: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@pipeline_bp.route('/backup/create', methods=['POST'])
+def create_backup_api():
+    """Create a backup copy of a specified data file."""
+    try:
+        data = request.get_json(silent=True) or {}
+        file_path = data.get('path', 'data/processed/industry_data.db')
+        backup_path = data_recovery.create_backup(file_path)
+        if backup_path:
+            return jsonify({'status': 'success', 'backup_path': backup_path}), 200
+        return jsonify({'status': 'error', 'message': f"Failed to create backup for '{file_path}'"}), 400
+    except Exception as e:
+        logger.error(f"Error creating backup API: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@pipeline_bp.route('/backup/list', methods=['GET'])
+def list_backups_api():
+    """List recent data backups."""
+    try:
+        days = request.args.get('days', default=7, type=int)
+        backups = data_recovery.list_backups(days=days)
+        return jsonify({'status': 'success', 'backups': backups, 'total_backups': len(backups)}), 200
+    except Exception as e:
+        logger.error(f"Error listing backups API: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
