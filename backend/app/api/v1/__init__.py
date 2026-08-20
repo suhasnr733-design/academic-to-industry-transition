@@ -16,6 +16,7 @@ from app.api.v1.jobs import jobs_bp
 from app.api.v1.prediction import prediction_bp
 from app.api.v1.notifications import notifications_bp
 from app.api.v1.analytics import analytics_bp
+from app.api.v1.models import models_bp
 from app.api.v1.admin import admin_bp
 
 api_v1_bp.register_blueprint(auth_bp, url_prefix='/auth')
@@ -24,6 +25,7 @@ api_v1_bp.register_blueprint(jobs_bp, url_prefix='/jobs')
 api_v1_bp.register_blueprint(prediction_bp, url_prefix='/prediction')
 api_v1_bp.register_blueprint(notifications_bp, url_prefix='/notifications')
 api_v1_bp.register_blueprint(analytics_bp, url_prefix='/analytics')
+api_v1_bp.register_blueprint(models_bp, url_prefix='/models')
 api_v1_bp.register_blueprint(admin_bp, url_prefix='/admin')
 
 @api_v1_bp.route('/info', methods=['GET'])

@@ -27,6 +27,13 @@ def create_app(config_class='app.config.DevelopmentConfig'):
     app = Flask(__name__)
     
     # Load configuration
+    if config_class == 'testing':
+        config_class = 'app.config.TestingConfig'
+    elif config_class == 'development':
+        config_class = 'app.config.DevelopmentConfig'
+    elif config_class == 'production':
+        config_class = 'app.config.ProductionConfig'
+
     if isinstance(config_class, str):
         app.config.from_object(config_class)
     else:
