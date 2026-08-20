@@ -1,6 +1,12 @@
 # backend/app/api/v1/__init__.py
 
 from flask import Blueprint, jsonify
+from datetime import datetime
+from app.services.service_mesh import ServiceMesh
+from app.gateway.rate_limiter import rate_limiter
+from app.services.multilevel_cache import cache
+from app.services.db_performance import DBPerformanceOptimizer
+from app.extensions import db, redis_client
 
 api_v1_bp = Blueprint('api_v1', __name__)
 

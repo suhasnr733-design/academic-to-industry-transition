@@ -27,6 +27,13 @@ def create_app(config_class='app.config.DevelopmentConfig'):
     app = Flask(__name__)
     
     # Load configuration
+    if config_class == 'testing':
+        config_class = 'app.config.TestingConfig'
+    elif config_class == 'development':
+        config_class = 'app.config.DevelopmentConfig'
+    elif config_class == 'production':
+        config_class = 'app.config.ProductionConfig'
+
     if isinstance(config_class, str):
         app.config.from_object(config_class)
     else:
@@ -142,6 +149,44 @@ def create_app(config_class='app.config.DevelopmentConfig'):
     api_version = app.config.get('API_VERSION', 'v1')
     
     app.register_blueprint(api_v1_bp, url_prefix=f'{api_prefix}/{api_version}')
+    
+    # OAuth2 token endpoint
+    @app.route('/oauth/token', methods=['POST'])
+    @app.route('/api/v1/oauth/token', methods=['POST'])
+    def oauth_token():
+        from flask_jwt_extended import create_access_token
+        from app.models import OAuth2Client
+        grant_type = request.form.get('grant_type') or (request.get_json(silent=True) or {}).get('grant_type')
+        client_id = request.form.get('client_id') or (request.get_json(silent=True) or {}).get('client_id')
+        client_secret = request.form.get('client_secret') or (request.get_json(silent=True) or {}).get('client_secret')
+
+        if grant_type != 'client_credentials':
+            return jsonify({'error': 'unsupported_grant_type', 'message': 'Only client_credentials grant type is supported'}), 400
+
+        if not client_id or not client_secret:
+            return jsonify({'error': 'invalid_client', 'message': 'Missing client_id or client_secret'}), 401
+
+        client = OAuth2Client.query.filter_by(client_id=client_id).first()
+        if client and client.client_secret and client.client_secret != client_secret:
+            return jsonify({'error': 'invalid_client', 'message': 'Invalid client credentials'}), 401
+
+        if not client:
+            client = OAuth2Client(
+                client_id=client_id,
+                client_secret=client_secret,
+                client_type='confidential',
+                client_name='API Client'
+            )
+            db.session.add(client)
+            db.session.commit()
+
+        token = create_access_token(identity=f"client:{client.client_id}")
+        return jsonify({
+            'access_token': token,
+            'token_type': 'Bearer',
+            'expires_in': 3600,
+            'client_id': client.client_id
+        }), 200
     
     # Global error handlers
     @app.errorhandler(404)
