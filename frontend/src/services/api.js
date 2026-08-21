@@ -1,11 +1,47 @@
-// frontend/src/services/api.js (Updated with RTK Query)
+// frontend/src/services/api.js
 
+import axios from 'axios'
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
-export const api = createApi({
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'
+
+// 1. Create standard Axios instance for direct REST calls across the application
+const axiosInstance = axios.create({
+  baseURL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
+
+// Request interceptor to automatically attach JWT token
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('access_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
+// Response interceptor for session expiration handling
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+    }
+    return Promise.reject(error)
+  }
+)
+
+// 2. RTK Query API slice for Redux Toolkit integration
+export const rtkApi = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_API_URL || 'https://academic-to-industry-transition.onrender.com/api/v1',
+    baseUrl: baseURL,
     prepareHeaders: (headers) => {
       const token = localStorage.getItem('access_token')
       if (token) {
@@ -149,7 +185,16 @@ export const api = createApi({
   }),
 })
 
-// Export hooks
+// Attach RTK Query properties to the Axios instance so Redux store and thunks work seamlessly together
+Object.assign(axiosInstance, {
+  reducerPath: rtkApi.reducerPath,
+  reducer: rtkApi.reducer,
+  middleware: rtkApi.middleware,
+  endpoints: rtkApi.endpoints,
+  util: rtkApi.util,
+})
+
+// Export hooks for components using RTK Query
 export const {
   useLoginMutation,
   useRegisterMutation,
@@ -170,6 +215,8 @@ export const {
   useGetNotificationsQuery,
   useMarkNotificationReadMutation,
   useMarkAllNotificationsReadMutation,
-} = api
+} = rtkApi
 
-export default api
+// Export api both as named export and default export
+export const api = axiosInstance
+export default axiosInstance
