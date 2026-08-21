@@ -13,10 +13,10 @@ import {
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
-    total_users: 124,
-    total_jobs: 45,
-    total_resumes: 89,
-    active_users: 98
+    total_users: 0,
+    total_jobs: 0,
+    total_resumes: 0,
+    active_users: 0
   })
   const [loading, setLoading] = useState(false)
 
@@ -32,7 +32,7 @@ export default function AdminDashboard() {
         setStats(res.data)
       }
     } catch (err) {
-      console.log('Using default admin stats')
+      console.error('Error fetching admin stats:', err)
     } finally {
       setLoading(false)
     }

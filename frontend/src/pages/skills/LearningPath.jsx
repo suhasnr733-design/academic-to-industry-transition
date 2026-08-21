@@ -48,28 +48,34 @@ export const LearningPath = () => {
                 <div className="flex-1">
                   <div className="flex items-center space-x-3">
                     <span className="flex items-center justify-center w-8 h-8 bg-primary-500 text-white rounded-full text-sm font-bold">
-                      {step.step}
+                      {step.step || idx + 1}
                     </span>
-                    <h4 className="font-semibold text-gray-900">{step.skill}</h4>
-                    <span className={`px-2 py-0.5 text-xs rounded-full ${
-                      step.priority === 'High' ? 'bg-red-100 text-red-800' :
-                      step.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-blue-100 text-blue-800'
-                    }`}>
-                      {step.priority}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-gray-600">
-                    <ClockIcon className="h-4 w-4 inline mr-1" />
-                    {step.estimated_time}
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {step.courses?.map((course, ci) => (
-                      <span key={ci} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                        {course}
+                    <h4 className="font-semibold text-gray-900">{step.skill || step.title || step.name || 'Core Skill'}</h4>
+                    {(step.priority || step.status) && (
+                      <span className={`px-2 py-0.5 text-xs rounded-full ${
+                        (step.priority === 'High' || step.status === 'urgent') ? 'bg-red-100 text-red-800' :
+                        (step.priority === 'Medium' || step.status === 'in-progress') ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {step.priority || step.status}
                       </span>
-                    ))}
+                    )}
                   </div>
+                  {(step.estimated_time || step.duration) && (
+                    <p className="mt-2 text-sm text-gray-600">
+                      <ClockIcon className="h-4 w-4 inline mr-1" />
+                      {step.estimated_time || step.duration}
+                    </p>
+                  )}
+                  {step.courses && step.courses.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {step.courses.map((course, ci) => (
+                        <span key={ci} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+                          {typeof course === 'object' ? (course.title || course.name) : course}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <Button variant="ghost" size="sm">
                   <CheckCircleIcon className="h-5 w-5 text-gray-400 hover:text-green-500" />

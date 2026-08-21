@@ -61,38 +61,38 @@ export const Register = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl">
-        <div>
-          <div className="flex justify-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center">
-              <span className="text-white text-2xl font-bold">AI</span>
-            </div>
+    <div className="w-full max-w-lg mx-auto my-auto bg-white p-6 sm:p-8 rounded-2xl shadow-lg border border-gray-100/80">
+      <div>
+        <div className="flex justify-center">
+          <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center shadow-md shadow-primary-500/20">
+            <span className="text-white text-xl font-bold">AI</span>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-            Create Account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Join us to accelerate your career journey
-          </p>
         </div>
+        <h2 className="mt-4 text-center text-2xl font-bold text-gray-900 tracking-tight">
+          Create Account
+        </h2>
+        <p className="mt-1 text-center text-xs sm:text-sm text-gray-500">
+          Join us to accelerate your career journey
+        </p>
+      </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-4">
-            <Input
-              label="Full Name"
-              placeholder="Enter your full name"
-              {...register('full_name')}
-              error={errors.full_name?.message}
-            />
-            
-            <Input
-              label="Username"
-              placeholder="Choose a username"
-              {...register('username')}
-              error={errors.username?.message}
-            />
-            
+      <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <Input
+            label="Full Name"
+            placeholder="Enter your full name"
+            {...register('full_name')}
+            error={errors.full_name?.message}
+          />
+          
+          <Input
+            label="Username"
+            placeholder="Choose a username"
+            {...register('username')}
+            error={errors.username?.message}
+          />
+          
+          <div className="sm:col-span-2">
             <Input
               label="Email Address"
               type="email"
@@ -100,55 +100,55 @@ export const Register = () => {
               {...register('email')}
               error={errors.email?.message}
             />
-            
-            <Input
-              label="Department"
-              placeholder="Your department"
-              {...register('department')}
-              error={errors.department?.message}
-            />
-            
-            <Input
-              label="Year of Study"
-              type="number"
-              placeholder="1-4"
-              {...register('year_of_study')}
-              error={errors.year_of_study?.message}
-            />
-            
-            <Input
-              label="Password"
-              type="password"
-              placeholder="Create a strong password"
-              {...register('password')}
-              error={errors.password?.message}
-            />
-            
-            <Input
-              label="Confirm Password"
-              type="password"
-              placeholder="Confirm your password"
-              {...register('confirmPassword')}
-              error={errors.confirmPassword?.message}
-            />
           </div>
+          
+          <Input
+            label="Department"
+            placeholder="e.g. Computer Science"
+            {...register('department')}
+            error={errors.department?.message}
+          />
+          
+          <Input
+            label="Year of Study"
+            type="number"
+            placeholder="1-4"
+            {...register('year_of_study')}
+            error={errors.year_of_study?.message}
+          />
+          
+          <Input
+            label="Password"
+            type="password"
+            placeholder="Create password"
+            {...register('password')}
+            error={errors.password?.message}
+          />
+          
+          <Input
+            label="Confirm Password"
+            type="password"
+            placeholder="Confirm password"
+            {...register('confirmPassword')}
+            error={errors.confirmPassword?.message}
+          />
+        </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            isLoading={isLoading}
-          >
-            Create Account
-          </Button>
+        <Button
+          type="submit"
+          className="w-full py-2.5 mt-2"
+          isLoading={isLoading}
+        >
+          Create Account
+        </Button>
 
-          <p className="text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link to="/login" className="text-primary-600 hover:text-primary-500 font-medium">
-              Sign in
-            </Link>
-          </p>
-        </form>
-      </div>
+        <p className="text-center text-xs sm:text-sm text-gray-600">
+          Already have an account?{' '}
+          <Link to="/login" className="text-primary-600 hover:text-primary-500 font-semibold">
+            Sign in
+          </Link>
+        </p>
+      </form>
     </div>
   )
 }
