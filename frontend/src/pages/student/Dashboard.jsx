@@ -137,6 +137,20 @@ export const Dashboard = () => {
     }
   }
 
+  const latestResume = resumes && resumes.length > 0 ? resumes[0] : null
+  const scoreDisplay = latestResume?.employability_score
+    ? `${Math.round(latestResume.employability_score)}%`
+    : (resumes?.length > 0 ? 'Pending' : '--')
+  const totalSkills = latestResume?.skills ? latestResume.skills.length : 0
+  const resumeCount = resumes ? resumes.length : 0
+
+  const stats = [
+    { name: 'Employability Score', value: scoreDisplay, icon: ChartBarIcon, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { name: 'Resumes Uploaded', value: `${resumeCount}`, icon: DocumentIcon, color: 'text-green-600', bg: 'bg-green-50' },
+    { name: 'Extracted Skills', value: `${totalSkills}`, icon: AcademicCapIcon, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { name: 'Profile Status', value: user?.department ? 'Active' : 'Incomplete', icon: BriefcaseIcon, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+  ]
+
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
