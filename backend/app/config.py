@@ -35,8 +35,16 @@ class Config:
     API_PREFIX = '/api'
     API_VERSION = 'v1'
 
-    # OAuth Configurations
-    FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://academic-to-industry-transition.vercel.app')
+    # Mail / SMTP Configuration
+    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp-relay.brevo.com')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'True').lower() in ('true', '1', 't')
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', os.environ.get('MAIL_USERNAME'))
+
+    # OAuth & Frontend URL Configurations
+    FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
     
     GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
     GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
@@ -48,16 +56,19 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
     # Safe absolute path away from OneDrive
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(tempfile.gettempdir(), 'dev.db')
 
 class TestingConfig(Config):
     TESTING = True
+    FRONTEND_URL = 'http://localhost:5173'
     # Safe absolute path away from OneDrive
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(tempfile.gettempdir(), 'test.db')
 
 class ProductionConfig(Config):
     DEBUG = False
+    FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://academic-to-industry-transition.vercel.app')
     TESTING = False
     
     # Handle postgres:// legacy URLs from platforms like Heroku/Render
