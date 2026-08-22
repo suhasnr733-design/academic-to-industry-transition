@@ -339,42 +339,35 @@ def forgot_password():
             }), 400
         
         user = User.query.filter_by(email=email).first()
-        if not user:
-            return jsonify({
-                'error': 'Email not registered',
-                'message': 'No account found with that email address. Please check your email or sign up.'
-            }), 404
-        
-        from datetime import timedelta
-        reset_token = create_access_token(
-            identity=str(user.id),
-            expires_delta=timedelta(minutes=15),
-            additional_claims={'type': 'password_reset'}
-        )
-        
-        reset_link = f"http://localhost:5173/reset-password?token={reset_token}"
-
-        # Send Real Email via Flask-Mail
-        email_sent = False
-        try:
-            from app import mail
-            from flask_mail import Message
-            
-            msg = Message(
-                subject="Password Reset Request - TransitionalAI",
-                recipients=[user.email],
-                body=f"Hello {user.username},\n\nWe received a request to reset your password. Click the link below to reset your password:\n\n{reset_link}\n\nThis link will expire in 15 minutes.\n\nBest regards,\nTransitionalAI Team"
+        if user and user.is_active:
+            from datetime import timedelta
+            reset_token = create_access_token(
+                identity=str(user.id),
+                expires_delta=timedelta(minutes=15),
+                additional_claims={'type': 'password_reset'}
             )
-            mail.send(msg)
-            email_sent = True
-            logger.info(f"Password reset email sent to: {user.email}")
-        except Exception as mail_err:
-            logger.warning(f"SMTP send notice: {mail_err}")
+            
+            from flask import current_app
+            frontend_url = current_app.config.get('FRONTEND_URL', 'http://localhost:3000')
+            reset_link = f"{frontend_url}/reset-password?token={reset_token}"
 
+            try:
+                from app import mail
+                from flask_mail import Message
+                
+                msg = Message(
+                    subject="Password Reset Request - TransitionalAI",
+                    recipients=[user.email],
+                    body=f"Hello {user.username},\n\nWe received a request to reset your password. Click the link below to reset your password:\n\n{reset_link}\n\nThis link will expire in 15 minutes.\n\nBest regards,\nTransitionalAI Team"
+                )
+                mail.send(msg)
+                logger.info(f"Password reset email sent to: {user.email}")
+            except Exception as mail_err:
+                logger.warning(f"SMTP send notice: {mail_err}")
+
+        # Return generic success response to prevent user enumeration
         return jsonify({
-            'message': 'Password reset link sent to your email inbox.' if email_sent else 'Password reset token generated successfully.',
-            'reset_token': reset_token,
-            'reset_url': f"/reset-password?token={reset_token}"
+            'message': 'If an account exists for that email address, a password reset link has been sent to your inbox.'
         }), 200
         
     except Exception as e:

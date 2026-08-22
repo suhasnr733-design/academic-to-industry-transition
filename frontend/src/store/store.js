@@ -18,7 +18,6 @@ import jobReducer from './slices/jobSlice'
 import notificationReducer from './slices/notificationSlice'
 import uiReducer from './slices/uiSlice'
 import analyticsReducer from './slices/analyticsSlice'
-import { api } from '../services/api'
 
 // 1. Combine reducers into a single root reducer
 const rootReducer = combineReducers({
@@ -28,7 +27,6 @@ const rootReducer = combineReducers({
   notification: notificationReducer,
   ui: uiReducer,
   analytics: analyticsReducer,
-  [api.reducerPath]: api.reducer,
 })
 
 const persistConfig = {
@@ -44,10 +42,10 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        // 2. Ignore all Redux Persist internal action types
+        // Ignore all Redux Persist internal action types
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(api.middleware),
+    }),
   devTools: import.meta.env.NODE_ENV !== 'production',
 })
 

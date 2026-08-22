@@ -16,7 +16,7 @@ const schema = yup.object({
 
 export const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false)
-  const [resetInfo, setResetInfo] = useState(null)
+  const [isSubmitted, setIsSubmitted] = useState(false)
   const navigate = useNavigate()
 
   const { register, handleSubmit, formState: { errors } } = useForm({
@@ -28,10 +28,7 @@ export const ForgotPassword = () => {
       setIsLoading(true)
       const response = await api.post('/auth/forgot-password', { email: data.email })
       toast.success(response.data.message || 'Password reset link sent!')
-      
-      if (response.data.reset_url) {
-        setResetInfo(response.data)
-      }
+      setIsSubmitted(true)
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to request password reset')
     } finally {
@@ -54,20 +51,21 @@ export const ForgotPassword = () => {
           </p>
         </div>
 
-        {resetInfo ? (
+        {isSubmitted ? (
           <div className="space-y-4 text-center">
-            <div className="p-4 bg-green-50 text-green-700 rounded-lg text-sm border border-green-200">
-              <p className="font-semibold mb-1">📧 Check Your Email Inbox!</p>
-              <p className="text-xs mb-3 text-green-800">
-                A password reset link has been sent to your email address. You can also click below to open the reset page directly:
+            <div className="p-6 bg-green-50 text-green-800 rounded-xl text-sm border border-green-200 space-y-3">
+              <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+                📧
+              </div>
+              <h3 className="text-base font-bold text-green-900">Check Your Email Inbox</h3>
+              <p className="text-xs text-green-700 leading-relaxed">
+                If an account is associated with your email address, a password reset link has been sent to your inbox. Please check your email to continue.
               </p>
-              <Button
-                type="button"
-                className="w-full text-sm py-2"
-                onClick={() => navigate(resetInfo.reset_url)}
-              >
-                Open Password Reset Form
-              </Button>
+            </div>
+            <div className="pt-2">
+              <Link to="/login" className="text-sm font-medium text-primary-600 hover:text-primary-500">
+                ← Back to Sign In
+              </Link>
             </div>
           </div>
         ) : (

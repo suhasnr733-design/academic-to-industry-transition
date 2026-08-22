@@ -40,118 +40,67 @@ function App() {
     <Provider store={store}>
       <PersistGate loading={<LoadingFallback />} persistor={persistor}>
         <HelmetProvider>
-<<<<<<< HEAD
-  <ThemeProvider>
-    <AuthProvider>
-      <BrowserRouter>
-        <Layout>
-          <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-
-              <Route element={<ProtectedRoute />}>
-                <Route path="/" element={<Navigate to="/dashboard" />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/dashboard/advanced" element={<AdvancedDashboard />} />
-                <Route path="/advanced-dashboard" element={<AdvancedDashboard />} />
-                <Route path="/resume" element={<ResumeList />} />
-                <Route path="/resume/upload" element={<ResumeUpload />} />
-                <Route path="/resume/:id" element={<ResumeDetail />} />
-                <Route path="/jobs" element={<JobList />} />
-                <Route path="/jobs/:id" element={<JobDetail />} />
-                <Route path="/skills" element={<SkillGapAnalysis />} />
-                <Route path="/skills/:resumeId" element={<SkillGapAnalysis />} />
-                <Route path="/learning" element={<LearningPath />} />
-                <Route path="/assessment" element={<Assessment />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/notifications" element={<Notifications />} />
-              </Route>
-
-              <Route element={<FacultyRoute />}>
-                <Route path="/faculty" element={<FacultyDashboard />} />
-              </Route>
-
-              <Route element={<AdminRoute />}>
-                <Route path="/admin" element={<AdminDashboard />} />
-              </Route>
-
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </Suspense>
-        </Layout>
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#363636',
-              color: '#fff',
-            },
-          }}
-        />
-      </BrowserRouter>
-    </AuthProvider>
-  </ThemeProvider>
-=======
-          <AuthProvider>
-            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-              <Layout>
-                <Suspense fallback={<LoadingFallback />}>
-                  <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/auth/callback" element={<AuthCallback />} />
-                    
-                    <Route element={<ProtectedRoute />}>
-                      <Route path="/" element={<Navigate to="/dashboard" />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/resume" element={<ResumeList />} />
-                      <Route path="/resume/upload" element={<ResumeUpload />} />
-                      <Route path="/resume/:id" element={<ResumeDetail />} />
-                      <Route path="/jobs" element={<JobList />} />
-                      <Route path="/jobs/:id" element={<JobDetail />} />
-                      <Route path="/skills" element={<SkillGapAnalysis />} />
-                      <Route path="/skills/:resumeId" element={<SkillGapAnalysis />} />
-                      <Route path="/learning" element={<LearningPath />} />
-                      <Route path="/assessment" element={<Assessment />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/notifications" element={<Notifications />} />
-                    </Route>
-                    
-                    <Route element={<FacultyRoute />}>
-                      <Route path="/faculty" element={<FacultyDashboard />} />
-                    </Route>
-                    
-                    <Route element={<AdminRoute />}>
-                      <Route path="/admin" element={<AdminDashboard />} />
-                    </Route>
-                    
-                    <Route path="*" element={<Navigate to="/" />} />
-                  </Routes>
-                </Suspense>
-              </Layout>
-              <Toaster 
-                position="top-right"
-                toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: '#363636',
-                    color: '#fff',
-                  },
-                }}
-              />
-            </BrowserRouter>
-          </AuthProvider>
->>>>>>> abf03ed (Add password reset email feature and update favicon)
-        </HelmetProvider >
-      </PersistGate >
-    </Provider >
+          <ThemeProvider>
+            <AuthProvider>
+              <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <Layout>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Routes>
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/register" element={<Register />} />
+                      <Route path="/forgot-password" element={<ForgotPassword />} />
+                      <Route path="/forgot_password" element={<ForgotPassword />} />
+                      <Route path="/reset-password" element={<ResetPassword />} />
+                      <Route path="/reset_password" element={<ResetPassword />} />
+                      <Route path="/auth/callback" element={<AuthCallback />} />
+                      
+                      <Route element={<ProtectedRoute />}>
+                        <Route path="/" element={<Navigate to="/dashboard" />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/dashboard/advanced" element={<AdvancedDashboard />} />
+                        <Route path="/advanced-dashboard" element={<AdvancedDashboard />} />
+                        <Route path="/resume" element={<ResumeList />} />
+                        <Route path="/resume/upload" element={<ResumeUpload />} />
+                        <Route path="/resume/:id" element={<ResumeDetail />} />
+                        <Route path="/jobs" element={<JobList />} />
+                        <Route path="/jobs/:id" element={<JobDetail />} />
+                        <Route path="/skills" element={<SkillGapAnalysis />} />
+                        <Route path="/skills/:resumeId" element={<SkillGapAnalysis />} />
+                        <Route path="/learning" element={<LearningPath />} />
+                        <Route path="/assessment" element={<Assessment />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/settings" element={<Settings />} />
+                        <Route path="/notifications" element={<Notifications />} />
+                      </Route>
+                      
+                      <Route element={<FacultyRoute />}>
+                        <Route path="/faculty" element={<FacultyDashboard />} />
+                      </Route>
+                      
+                      <Route element={<AdminRoute />}>
+                        <Route path="/admin" element={<AdminDashboard />} />
+                      </Route>
+                      
+                      <Route path="*" element={<Navigate to="/" />} />
+                    </Routes>
+                  </Suspense>
+                </Layout>
+                <Toaster 
+                  position="top-right"
+                  toastOptions={{
+                    duration: 4000,
+                    style: {
+                      background: '#363636',
+                      color: '#fff',
+                    },
+                  }}
+                />
+              </BrowserRouter>
+            </AuthProvider>
+          </ThemeProvider>
+        </HelmetProvider>
+      </PersistGate>
+    </Provider>
   )
 }
 

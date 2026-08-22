@@ -5,6 +5,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
+import { FiEye, FiEyeOff } from 'react-icons/fi'
 import { Button } from '../../components/common/Button'
 import { Input } from '../../components/common/Input'
 import api from '../../services/api'
@@ -19,6 +20,9 @@ const schema = yup.object({
 
 export const ResetPassword = () => {
   const [isLoading, setIsLoading] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token')
   const navigate = useNavigate()
@@ -74,20 +78,43 @@ export const ResetPassword = () => {
         ) : (
           <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div className="rounded-md shadow-sm space-y-4">
-              <Input
-                label="New Password"
-                type="password"
-                placeholder="••••••••"
-                error={errors.new_password?.message}
-                {...register('new_password')}
-              />
-              <Input
-                label="Confirm New Password"
-                type="password"
-                placeholder="••••••••"
-                error={errors.confirm_password?.message}
-                {...register('confirm_password')}
-              />
+              <div className="relative">
+                <Input
+                  label="New Password"
+                  type={showNewPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  className="pr-10"
+                  error={errors.new_password?.message}
+                  {...register('new_password')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-[36px] text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                  aria-label={showNewPassword ? "Hide password" : "Show password"}
+                >
+                  {showNewPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                </button>
+              </div>
+
+              <div className="relative">
+                <Input
+                  label="Confirm New Password"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  className="pr-10"
+                  error={errors.confirm_password?.message}
+                  {...register('confirm_password')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-[36px] text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                >
+                  {showConfirmPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             <Button
