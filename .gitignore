@@ -53,3 +53,9 @@ build/
 .idea/
 .DS_Store
 Thumbs.db
+
+# ML Models & Generated Artifacts (keep folder structure, ignore binary files)
+data/models/*.pkl
+data/models/**/*.pkl
+!data/models/.gitkeep
+
