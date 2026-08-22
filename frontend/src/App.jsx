@@ -16,6 +16,8 @@ import { LoadingFallback } from './components/common/LoadingFallback'
 // Lazy loaded page components
 const Login = lazy(() => import('./pages/auth/Login').then(m => ({ default: m.default || m.Login })))
 const Register = lazy(() => import('./pages/auth/Register').then(m => ({ default: m.default || m.Register })))
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword').then(m => ({ default: m.default || m.ForgotPassword })))
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword').then(m => ({ default: m.default || m.ResetPassword })))
 const AuthCallback = lazy(() => import('./pages/auth/AuthCallback').then(m => ({ default: m.default || m.AuthCallback })))
 const Dashboard = lazy(() => import('./pages/student/Dashboard').then(m => ({ default: m.default || m.Dashboard })))
 const AdvancedDashboard = lazy(() => import('./pages/dashboard/AdvancedDashboard').then(m => ({ default: m.default || m.AdvancedDashboard })))
@@ -40,17 +42,16 @@ function App() {
         <HelmetProvider>
           <ThemeProvider>
             <AuthProvider>
-              <BrowserRouter
-                future={{
-                  v7_startTransition: true,
-                  v7_relativeSplatPath: true,
-                }}
-              >
+              <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <Layout>
                   <Suspense fallback={<LoadingFallback />}>
                     <Routes>
                       <Route path="/login" element={<Login />} />
                       <Route path="/register" element={<Register />} />
+                      <Route path="/forgot-password" element={<ForgotPassword />} />
+                      <Route path="/forgot_password" element={<ForgotPassword />} />
+                      <Route path="/reset-password" element={<ResetPassword />} />
+                      <Route path="/reset_password" element={<ResetPassword />} />
                       <Route path="/auth/callback" element={<AuthCallback />} />
                       
                       <Route element={<ProtectedRoute />}>

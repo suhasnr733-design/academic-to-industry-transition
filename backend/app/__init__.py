@@ -10,6 +10,7 @@ from flask_jwt_extended import JWTManager
 from flask_bcrypt import Bcrypt
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_mail import Mail, Message
 
 import re
 
@@ -20,6 +21,7 @@ jwt = JWTManager()
 bcrypt = Bcrypt()
 cors = CORS()
 limiter = Limiter(key_func=get_remote_address, default_limits=["100 per hour"])
+mail = Mail()
 socketio = None
 
 def create_app(config_class='app.config.DevelopmentConfig'):
@@ -57,6 +59,15 @@ def create_app(config_class='app.config.DevelopmentConfig'):
     migrate.init_app(app, db)
     jwt.init_app(app)
     bcrypt.init_app(app)
+    
+    # Configure mail
+    app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+    app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+    app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True').lower() in ('true', '1', 't')
+    app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', os.environ.get('MAIL_USERNAME'))
+    mail.init_app(app)
     
     # Configure production-safe CORS origins
     allowed_exact_origins = [

@@ -322,6 +322,125 @@ def change_password():
         }), 500
 
 # ============================================
+# FORGOT PASSWORD ENDPOINT
+# ============================================
+@auth_bp.route('/forgot-password', methods=['POST'])
+@limiter.limit('5 per minute')
+def forgot_password():
+    """Generate password reset token and send/return instructions"""
+    try:
+        data = request.get_json() or {}
+        email = data.get('email', '').strip()
+        
+        if not email:
+            return jsonify({
+                'error': 'Email required',
+                'message': 'Please provide your email address'
+            }), 400
+        
+        user = User.query.filter_by(email=email).first()
+        if user and user.is_active:
+            from datetime import timedelta
+            reset_token = create_access_token(
+                identity=str(user.id),
+                expires_delta=timedelta(minutes=15),
+                additional_claims={'type': 'password_reset'}
+            )
+            
+            from flask import current_app
+            frontend_url = current_app.config.get('FRONTEND_URL', 'http://localhost:3000')
+            reset_link = f"{frontend_url}/reset-password?token={reset_token}"
+
+            try:
+                from app import mail
+                from flask_mail import Message
+                
+                msg = Message(
+                    subject="Password Reset Request - TransitionalAI",
+                    recipients=[user.email],
+                    body=f"Hello {user.username},\n\nWe received a request to reset your password. Click the link below to reset your password:\n\n{reset_link}\n\nThis link will expire in 15 minutes.\n\nBest regards,\nTransitionalAI Team"
+                )
+                mail.send(msg)
+                logger.info(f"Password reset email sent to: {user.email}")
+            except Exception as mail_err:
+                logger.warning(f"SMTP send notice: {mail_err}")
+
+        # Return generic success response to prevent user enumeration
+        return jsonify({
+            'message': 'If an account exists for that email address, a password reset link has been sent to your inbox.'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Forgot password error: {e}")
+        return jsonify({
+            'error': 'Failed to process forgot password request',
+            'message': str(e)
+        }), 500
+
+# ============================================
+# RESET PASSWORD ENDPOINT
+# ============================================
+@auth_bp.route('/reset-password', methods=['POST'])
+@limiter.limit('5 per minute')
+def reset_password():
+    """Reset user password using token"""
+    try:
+        data = request.get_json() or {}
+        token = data.get('token')
+        new_password = data.get('new_password')
+        
+        if not token or not new_password:
+            return jsonify({
+                'error': 'Missing required fields',
+                'message': 'Reset token and new password are required'
+            }), 400
+        
+        if len(new_password) < 6:
+            return jsonify({
+                'error': 'Password too short',
+                'message': 'Password must be at least 6 characters'
+            }), 400
+        
+        try:
+            from flask_jwt_extended import decode_token
+            decoded = decode_token(token)
+            if decoded.get('type') != 'password_reset':
+                return jsonify({
+                    'error': 'Invalid token type',
+                    'message': 'Token provided is not a valid password reset token'
+                }), 400
+            user_id = int(decoded.get('sub'))
+        except Exception:
+            return jsonify({
+                'error': 'Invalid or expired token',
+                'message': 'The reset token is invalid or has expired. Please request a new one.'
+            }), 400
+        
+        user = db.session.get(User, user_id)
+        if not user or not user.is_active:
+            return jsonify({
+                'error': 'User not found',
+                'message': 'User no longer exists or is inactive'
+            }), 404
+        
+        user.set_password(new_password)
+        db.session.commit()
+        
+        logger.info(f"Password successfully reset for user: {user.username}")
+        
+        return jsonify({
+            'message': 'Password reset successful. You can now log in with your new password.'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Reset password error: {e}")
+        db.session.rollback()
+        return jsonify({
+            'error': 'Failed to reset password',
+            'message': str(e)
+        }), 500
+
+# ============================================
 # LOGOUT ENDPOINT
 # ============================================
 @auth_bp.route('/logout', methods=['POST'])
