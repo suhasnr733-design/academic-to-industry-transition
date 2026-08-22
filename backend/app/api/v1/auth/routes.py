@@ -348,22 +348,40 @@ def forgot_password():
             )
             
             from flask import current_app
-            frontend_url = current_app.config.get('FRONTEND_URL', 'http://localhost:3000')
+            frontend_url = current_app.config.get('FRONTEND_URL', 'http://localhost:5173')
             reset_link = f"{frontend_url}/reset-password?token={reset_token}"
+            
+            # Print to dev console for easy testing (ASCII-safe for Windows terminals)
+            logger.info(f"Password reset link generated for {user.email}: {reset_link}")
+            print(f"\n[PASSWORD RESET LINK for {user.email}]: {reset_link}\n", flush=True)
 
             try:
                 from app import mail
                 from flask_mail import Message
                 
+                sender_email = (
+                    current_app.config.get('MAIL_DEFAULT_SENDER') or 
+                    current_app.config.get('MAIL_USERNAME') or 
+                    'noreply@transitionalai.com'
+                )
+                
                 msg = Message(
                     subject="Password Reset Request - TransitionalAI",
+                    sender=sender_email,
                     recipients=[user.email],
-                    body=f"Hello {user.username},\n\nWe received a request to reset your password. Click the link below to reset your password:\n\n{reset_link}\n\nThis link will expire in 15 minutes.\n\nBest regards,\nTransitionalAI Team"
+                    body=(
+                        f"Hello {user.username},\n\n"
+                        f"We received a request to reset your password. Click the link below to reset your password:\n\n"
+                        f"{reset_link}\n\n"
+                        f"This link will expire in 15 minutes.\n\n"
+                        f"If you did not request this, please ignore this email.\n\n"
+                        f"Best regards,\nTransitionalAI Team"
+                    )
                 )
                 mail.send(msg)
                 logger.info(f"Password reset email sent to: {user.email}")
             except Exception as mail_err:
-                logger.warning(f"SMTP send notice: {mail_err}")
+                logger.warning(f"SMTP send notice (Brevo/Mail configuration): {mail_err}")
 
         # Return generic success response to prevent user enumeration
         return jsonify({
