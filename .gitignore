@@ -13,12 +13,16 @@ venv-data/
 
 # Python cache & bytecode
 __pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
 *.pyc
 *.pyo
 *.pyd
 .pytest_cache/
 .coverage
 htmlcov/
+.cache/
 
 # Logs & Databases
 *.log

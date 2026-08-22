@@ -28,30 +28,29 @@ export const useSkills = () => {
     }
   }, [])
 
-  const learningPath = useCallback(async () => {
-    return [
-      {
-        id: 1,
-        title: 'Python Core & Advanced Concepts',
-        status: 'completed',
-        duration: '2 weeks',
-        courses: ['Master Python Programming']
-      },
-      {
-        id: 2,
-        title: 'Database & SQL Engineering',
-        status: 'in-progress',
-        duration: '3 weeks',
-        courses: ['Relational Databases & SQL']
-      },
-      {
-        id: 3,
-        title: 'Machine Learning & Model Stacking',
-        status: 'pending',
-        duration: '4 weeks',
-        courses: ['Ensemble Methods in Machine Learning']
+  const learningPath = useCallback(async (resumeId) => {
+    try {
+      setIsLoading(true)
+      if (!resumeId) {
+        const resumesRes = await api.get('/resume')
+        const resumesList = resumesRes.data?.resumes || resumesRes.data || []
+        if (resumesList.length > 0) {
+          resumeId = resumesList[0].id
+        }
       }
-    ]
+      if (!resumeId) return []
+      
+      const res = await api.get(`/prediction/skill-gap/${resumeId}`)
+      if (res.data && res.data.learning_path && res.data.learning_path.length > 0) {
+        return res.data.learning_path
+      }
+      return []
+    } catch (err) {
+      console.log('No learning path found:', err)
+      return []
+    } finally {
+      setIsLoading(false)
+    }
   }, [])
 
   return {
