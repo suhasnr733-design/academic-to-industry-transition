@@ -9,6 +9,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../../components/common/Button'
 import { Input } from '../../components/common/Input'
 import toast from 'react-hot-toast'
+import { getApiBaseUrl } from '../../config/apiConfig'
 
 const loginSchema = yup.object({
   username: yup.string().required('Username is required'),
@@ -38,13 +39,11 @@ export const Login = () => {
   }
 
   const handleGoogleLogin = () => {
-    const apiBase = import.meta.env.VITE_API_URL || 'https://academic-to-industry-transition.onrender.com/api/v1'
-    window.location.href = `${apiBase}/auth/google`
+    window.location.href = `${getApiBaseUrl()}/auth/google`
   }
 
   const handleLinkedInLogin = () => {
-    const apiBase = import.meta.env.VITE_API_URL || 'https://academic-to-industry-transition.onrender.com/api/v1'
-    window.location.href = `${apiBase}/auth/linkedin`
+    window.location.href = `${getApiBaseUrl()}/auth/linkedin`
   }
 
   return (
