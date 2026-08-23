@@ -20,7 +20,11 @@ migrate = Migrate()
 jwt = JWTManager()
 bcrypt = Bcrypt()
 cors = CORS()
-limiter = Limiter(key_func=get_remote_address, default_limits=["100 per hour"])
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["100 per hour"],
+    storage_uri=os.environ.get('RATELIMIT_STORAGE_URI', 'memory://')
+)
 mail = Mail()
 socketio = None
 
