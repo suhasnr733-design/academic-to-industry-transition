@@ -66,12 +66,14 @@ def upload_resume():
             logger.warning(f"Could not start async processing immediately: {proc_err}")
         
         return jsonify({
-            'message': 'Resume uploaded successfully',
+            'message': 'Resume uploaded successfully, processing initiated',
             'resume_id': resume.id,
             'filename': resume.filename,
             'file_size': resume.file_size,
             'file_type': resume.file_type,
             'status': resume.status,
+            'skills': resume.skills or [],
+            'employability_score': resume.employability_score,
             'created_at': resume.created_at.isoformat()
         }), 201
         
@@ -116,6 +118,16 @@ def get_resume(resume_id):
         resume = Resume.query.filter_by(id=resume_id, user_id=current_user_id).first()
         if not resume:
             return jsonify({'error': 'Resume not found'}), 404
+        
+        # On-demand processing if resume is still pending or has no skills yet
+        if resume.status == 'pending' or (not resume.skills and resume.file_path and os.path.exists(resume.file_path)):
+            try:
+                processor = ResumeProcessor()
+                processor.process_resume(resume.id)
+                db.session.refresh(resume)
+            except Exception as proc_err:
+                logger.error(f"On-demand processing error for resume {resume.id}: {proc_err}")
+                
         return jsonify(resume.to_dict()), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500

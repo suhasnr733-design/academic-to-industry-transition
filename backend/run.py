@@ -13,6 +13,8 @@ from app import create_app
 
 from app import create_app
 
+from app import create_app
+
 config_name = os.environ.get(
     'FLASK_CONFIG',
     'app.config.ProductionConfig' if (os.environ.get('RENDER') or os.environ.get('PORT')) else 'app.config.DevelopmentConfig'
