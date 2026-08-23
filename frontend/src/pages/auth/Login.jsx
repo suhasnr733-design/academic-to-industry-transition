@@ -28,6 +28,7 @@ export const Login = () => {
     try {
       setIsLoading(true)
       await login(data)
+      sessionStorage.setItem('just_logged_in', 'true')
       toast.success('Login successful!')
       navigate('/dashboard')
     } catch (error) {

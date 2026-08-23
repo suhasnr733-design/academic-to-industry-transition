@@ -88,14 +88,19 @@ export const ResumeDetail = () => {
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Skills */}
-            <div className="border rounded-xl p-4">
-              <h4 className="font-semibold text-gray-900 mb-3">Skills</h4>
-              <div className="flex flex-wrap gap-2">
+            <div className="border rounded-xl p-5 bg-gray-50/50">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-gray-900">Extracted Skills</h4>
+                <span className="text-xs font-semibold px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full">
+                  {resume.skills?.length || 0} Skills
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto pr-1">
                 {resume.skills?.map((skill, idx) => (
-                  <span key={idx} className="px-3 py-1 bg-primary-50 text-primary-700 rounded-full text-sm">
+                  <span key={idx} className="px-3 py-1 bg-primary-50 text-primary-700 border border-primary-100 rounded-full text-xs font-medium">
                     {skill}
                   </span>
                 ))}
@@ -106,22 +111,70 @@ export const ResumeDetail = () => {
             </div>
 
             {/* Score */}
-            <div className="border rounded-xl p-4">
-              <h4 className="font-semibold text-gray-900 mb-3">Employability Score</h4>
-              <div className="flex items-center">
-                <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full transition-all duration-500"
-                    style={{ width: `${resume.employability_score || 0}%` }}
-                  />
+            <div className="border rounded-xl p-5 bg-gray-50/50 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-gray-900">Employability Score</h4>
+                  <span className="text-xs font-semibold px-2 py-0.5 bg-green-100 text-green-700 rounded-full">
+                    {resume.employability_score >= 70 ? 'High Readiness' : 'Moderate Readiness'}
+                  </span>
                 </div>
-                <span className="ml-4 text-2xl font-bold text-gray-900">
-                  {resume.employability_score || 0}%
-                </span>
+                <div className="flex items-center my-4">
+                  <div className="flex-1 h-3.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-primary-500 to-indigo-600 rounded-full transition-all duration-500"
+                      style={{ width: `${resume.employability_score || 0}%` }}
+                    />
+                  </div>
+                  <span className="ml-4 text-2xl font-black text-gray-900">
+                    {Math.round(resume.employability_score || 0)}%
+                  </span>
+                </div>
               </div>
-              <p className="text-sm text-gray-500 mt-2">
-                Based on your skills and job market requirements
+              <p className="text-xs text-gray-500">
+                Calculated dynamically based on extracted core competencies, technical proficiency, and job market trends.
               </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Education */}
+            <div className="border rounded-xl p-5 bg-gray-50/50">
+              <h4 className="font-semibold text-gray-900 mb-3">Education & Academics</h4>
+              {resume.education && resume.education.length > 0 ? (
+                <div className="space-y-3">
+                  {resume.education.map((edu, idx) => (
+                    <div key={idx} className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm text-sm">
+                      <div className="font-semibold text-gray-800">{edu.degree || 'Degree'}</div>
+                      <div className="text-gray-600 whitespace-pre-line">{edu.institution || 'Academic Institute'}</div>
+                      {edu.gpa && (
+                        <div className="text-xs text-primary-600 font-medium mt-1">GPA / Score: {edu.gpa}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-sm">No structured education entries parsed</p>
+              )}
+            </div>
+
+            {/* Recommended Roles */}
+            <div className="border rounded-xl p-5 bg-gray-50/50">
+              <h4 className="font-semibold text-gray-900 mb-3">Recommended Career Paths</h4>
+              {resume.recommended_roles && resume.recommended_roles.length > 0 ? (
+                <div className="space-y-2">
+                  {resume.recommended_roles.map((role, idx) => (
+                    <div key={idx} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100 shadow-sm text-sm">
+                      <span className="font-medium text-gray-800">{role}</span>
+                      <span className="text-xs font-semibold px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded">
+                        High Match
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-sm">No specific role recommendations generated</p>
+              )}
             </div>
           </div>
         </div>

@@ -1,11 +1,22 @@
-# backend/ml_models/explainability.py
+import os
+import sys
 
-import shap
+try:
+    import shap
+except ImportError:
+    shap = None
+
 import numpy as np
 import pandas as pd
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+
+try:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+except ImportError:
+    matplotlib = None
+    plt = None
+
 import joblib
 import base64
 from io import BytesIO
@@ -20,19 +31,36 @@ class ModelExplainer:
         self.explainer = None
         self.load_model()
     
+    def _find_model_file(self, filename):
+        candidates = [
+            os.path.join('data', 'models', filename),
+            os.path.join('..', 'data', 'models', filename),
+            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data', 'models', filename),
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'models', filename),
+        ]
+        for p in candidates:
+            if os.path.exists(p):
+                return p
+        return os.path.join('data', 'models', filename)
+
     def load_model(self):
         try:
-            self.model = joblib.load('data/models/ensemble_model.pkl')
-            self.features = joblib.load('data/models/feature_columns.pkl')
-            logger.info("✅ Model loaded for explainability")
+            model_path = self._find_model_file('ensemble_model.pkl')
+            features_path = self._find_model_file('feature_columns.pkl')
+            if os.path.exists(model_path) and os.path.exists(features_path):
+                self.model = joblib.load(model_path)
+                self.features = joblib.load(features_path)
+                logger.info("✅ Model loaded for explainability from %s", model_path)
+            else:
+                raise FileNotFoundError(f"Model files not found at {model_path}")
         except Exception as e:
             logger.error(f"Error loading model: {e}")
             self.features = ['cgpa', 'skill_count', 'skill_diversity', 'internship_months', 'projects', 'certifications', 'workshops', 'total_experience', 'cgpa_normalized', 'certification_score', 'skill_cgpa_ratio', 'exp_skill_ratio', 'department_encoded']
     
     def create_explainer(self, X_sample):
         """Create SHAP explainer"""
-        if self.model is None:
-            return {'error': 'Model not loaded'}
+        if self.model is None or shap is None:
+            return {'error': 'Model not loaded or SHAP not installed'}
         
         try:
             self.explainer = shap.TreeExplainer(self.model)
@@ -121,8 +149,8 @@ class ModelExplainer:
     
     def generate_force_plot(self, X):
         """Generate SHAP force plot"""
-        if self.model is None or self.explainer is None:
-            return {'error': 'Explainer not initialized'}
+        if self.model is None or self.explainer is None or shap is None or plt is None:
+            return {'error': 'Explainer or plotting dependencies not initialized'}
         
         shap_values = self.explainer.shap_values(X)
         

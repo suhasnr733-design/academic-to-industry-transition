@@ -8,6 +8,7 @@ import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/integration/react'
 import { store, persistor } from './store/store'
 import { AuthProvider } from './context/AuthContext'
+import { ResumeProvider } from './context/ResumeContext'
 import { Layout } from './components/layout/Layout'
 import { ProtectedRoute, AdminRoute, FacultyRoute } from './components/common/ProtectedRoute'
 import { LoadingFallback } from './components/common/LoadingFallback'
@@ -38,52 +39,54 @@ function App() {
         <HelmetProvider>
           <AuthProvider>
             <BrowserRouter>
-              <Layout>
-                <Suspense fallback={<LoadingFallback />}>
-                  <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/auth/callback" element={<AuthCallback />} />
-                    
-                    <Route element={<ProtectedRoute />}>
-                      <Route path="/" element={<Navigate to="/dashboard" />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/resume" element={<ResumeList />} />
-                      <Route path="/resume/upload" element={<ResumeUpload />} />
-                      <Route path="/resume/:id" element={<ResumeDetail />} />
-                      <Route path="/jobs" element={<JobList />} />
-                      <Route path="/jobs/:id" element={<JobDetail />} />
-                      <Route path="/skills" element={<SkillGapAnalysis />} />
-                      <Route path="/skills/:resumeId" element={<SkillGapAnalysis />} />
-                      <Route path="/learning" element={<LearningPath />} />
-                      <Route path="/assessment" element={<Assessment />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/notifications" element={<Notifications />} />
-                    </Route>
-                    
-                    <Route element={<FacultyRoute />}>
-                      <Route path="/faculty" element={<FacultyDashboard />} />
-                    </Route>
-                    
-                    <Route element={<AdminRoute />}>
-                      <Route path="/admin" element={<AdminDashboard />} />
-                    </Route>
-                    
-                    <Route path="*" element={<Navigate to="/" />} />
-                  </Routes>
-                </Suspense>
-              </Layout>
-              <Toaster 
-                position="top-right"
-                toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: '#363636',
-                    color: '#fff',
-                  },
-                }}
-              />
+              <ResumeProvider>
+                <Layout>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Routes>
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/register" element={<Register />} />
+                      <Route path="/auth/callback" element={<AuthCallback />} />
+                      
+                      <Route element={<ProtectedRoute />}>
+                        <Route path="/" element={<Navigate to="/dashboard" />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/resume" element={<ResumeList />} />
+                        <Route path="/resume/upload" element={<ResumeUpload />} />
+                        <Route path="/resume/:id" element={<ResumeDetail />} />
+                        <Route path="/jobs" element={<JobList />} />
+                        <Route path="/jobs/:id" element={<JobDetail />} />
+                        <Route path="/skills" element={<SkillGapAnalysis />} />
+                        <Route path="/skills/:resumeId" element={<SkillGapAnalysis />} />
+                        <Route path="/learning" element={<LearningPath />} />
+                        <Route path="/assessment" element={<Assessment />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/settings" element={<Settings />} />
+                        <Route path="/notifications" element={<Notifications />} />
+                      </Route>
+                      
+                      <Route element={<FacultyRoute />}>
+                        <Route path="/faculty" element={<FacultyDashboard />} />
+                      </Route>
+                      
+                      <Route element={<AdminRoute />}>
+                        <Route path="/admin" element={<AdminDashboard />} />
+                      </Route>
+                      
+                      <Route path="*" element={<Navigate to="/" />} />
+                    </Routes>
+                  </Suspense>
+                </Layout>
+                <Toaster 
+                  position="top-right"
+                  toastOptions={{
+                    duration: 4000,
+                    style: {
+                      background: '#363636',
+                      color: '#fff',
+                    },
+                  }}
+                />
+              </ResumeProvider>
             </BrowserRouter>
           </AuthProvider>
         </HelmetProvider>

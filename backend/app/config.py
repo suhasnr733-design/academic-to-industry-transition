@@ -1,27 +1,40 @@
 import os
-import tempfile  # <-- Add this import at the top
 from dotenv import load_dotenv
 
 load_dotenv()
 
 basedir = os.path.abspath(os.path.dirname(__file__))
+# Store database in user home directory to avoid OneDrive file locking issues on Windows
+data_dir = os.path.join(os.path.expanduser('~'), '.transition_ai')
+os.makedirs(data_dir, exist_ok=True)
+default_db_path = 'sqlite:///' + os.path.join(data_dir, 'app.db').replace('\\', '/')
+
+def resolve_db_uri(raw_uri):
+    if not raw_uri:
+        return default_db_path
+    if raw_uri.startswith('postgres://'):
+        return raw_uri.replace('postgres://', 'postgresql://', 1)
+    if raw_uri.startswith('sqlite:///'):
+        path_part = raw_uri[10:]
+        if not os.path.isabs(path_part):
+            # Resolve relative path safely in data_dir
+            abs_path = os.path.join(data_dir, os.path.basename(path_part))
+            return 'sqlite:///' + abs_path.replace('\\', '/')
+    return raw_uri
 
 class Config:
     """Base configuration"""
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     DEBUG = os.environ.get('DEBUG', 'False') == 'True'
     
-    # Database default
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        'DATABASE_URL',
-        'sqlite:///' + os.path.join(tempfile.gettempdir(), 'site.db')
-    )
+    # Database default (safe from OneDrive file locks and permanent)
+    SQLALCHEMY_DATABASE_URI = resolve_db_uri(os.environ.get('DATABASE_URL'))
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # JWT
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'jwt-secret-key'
-    JWT_ACCESS_TOKEN_EXPIRES = 3600  # 1 hour
-    JWT_REFRESH_TOKEN_EXPIRES = 86400  # 24 hours
+    JWT_ACCESS_TOKEN_EXPIRES = 86400  # 24 hours
+    JWT_REFRESH_TOKEN_EXPIRES = 604800  # 7 days
     
     # Upload
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'uploads')
@@ -48,21 +61,13 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    # Safe absolute path away from OneDrive
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(tempfile.gettempdir(), 'dev.db')
+    SQLALCHEMY_DATABASE_URI = resolve_db_uri(os.environ.get('DATABASE_URL'))
 
 class TestingConfig(Config):
     TESTING = True
-    # Safe absolute path away from OneDrive
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(tempfile.gettempdir(), 'test.db')
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(data_dir, 'test.db').replace('\\', '/')
 
 class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
-    
-    # Handle postgres:// legacy URLs from platforms like Heroku/Render
-    _db_url = os.environ.get('DATABASE_URL')
-    if _db_url and _db_url.startswith('postgres://'):
-        _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
-    
-    SQLALCHEMY_DATABASE_URI = _db_url or ('sqlite:///' + os.path.join(tempfile.gettempdir(), 'prod.db'))
+    SQLALCHEMY_DATABASE_URI = resolve_db_uri(os.environ.get('DATABASE_URL'))

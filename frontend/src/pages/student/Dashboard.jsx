@@ -4,20 +4,25 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useResume } from '../../hooks/useResume'
-import { Heading } from '../../components/common/Typography'
+import { useJobs } from '../../hooks/useJobs'
 import { Button } from '../../components/common/Button'
+import { WelcomeActionsModal } from '../../components/dashboard/WelcomeActionsModal'
 import {
   DocumentIcon,
   BriefcaseIcon,
   ChartBarIcon,
   AcademicCapIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  LocationMarkerIcon,
+  OfficeBuildingIcon,
+  SparklesIcon
 } from '@heroicons/react/outline'
 
 export const Dashboard = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { resumes } = useResume()
+  const { jobs, isLoading: jobsLoading } = useJobs()
 
   const latestResume = resumes && resumes.length > 0 ? resumes[0] : null
   const scoreDisplay = latestResume?.employability_score
@@ -35,20 +40,44 @@ export const Dashboard = () => {
 
   return (
     <div className="space-y-8">
+      {/* Login Welcome Modal Popup */}
+      <WelcomeActionsModal />
+
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-2xl p-8 text-white">
-        <h1 className="text-3xl font-bold">
-          Welcome back, {user?.full_name} 👋
-        </h1>
-        <p className="mt-2 text-white/80">
-          Track your progress and get personalized recommendations
-        </p>
+      <div className="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-2xl p-8 text-white shadow-md">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">
+              Welcome back, {user?.full_name} 👋
+            </h1>
+            <p className="mt-2 text-white/85 text-sm sm:text-base">
+              Track your employability insights, resume updates, and top industry job matches.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="bg-white/15 hover:bg-white/25 text-white border-white/20 backdrop-blur-sm"
+              onClick={() => navigate('/resume/upload')}
+            >
+              Upload Resume
+            </Button>
+            <Button
+              size="sm"
+              className="bg-white text-primary-700 hover:bg-gray-100 shadow-sm"
+              onClick={() => navigate('/jobs')}
+            >
+              Explore Jobs
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
-          <div key={stat.name} className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+          <div key={stat.name} className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow border border-gray-100/80">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">{stat.name}</p>
@@ -62,84 +91,132 @@ export const Dashboard = () => {
         ))}
       </div>
 
-      {/* Recent Activity */}
+      {/* Main Grid: Recent Resumes + Matched Jobs */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Recent Resumes</h3>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/resume')}>View All</Button>
-          </div>
-          {resumes?.length > 0 ? (
-            <div className="space-y-3">
-              {resumes.slice(0, 3).map((resume) => (
-                <div 
-                  key={resume.id} 
-                  onClick={() => navigate(`/resume/${resume.id}`)}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-                >
-                  <div className="flex items-center space-x-3">
-                    <DocumentIcon className="h-5 w-5 text-gray-400" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{resume.filename}</p>
-                      <p className="text-xs text-gray-500">
-                        Uploaded {resume.created_at ? new Date(resume.created_at).toLocaleDateString() : 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    resume.status === 'completed' ? 'bg-green-100 text-green-800' :
-                    resume.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {resume.status}
-                  </span>
-                </div>
-              ))}
+        {/* Recent Resumes */}
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100/80 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <DocumentIcon className="w-5 h-5 text-primary-600" />
+                Recent Resumes
+              </h3>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/resume')}>View All</Button>
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <DocumentIcon className="h-12 w-12 text-gray-300 mx-auto" />
-              <p className="mt-2 text-gray-500">No resumes uploaded yet</p>
-              <Button className="mt-4" onClick={() => navigate('/resume/upload')}>Upload Resume</Button>
+            {resumes?.length > 0 ? (
+              <div className="space-y-3">
+                {resumes.slice(0, 3).map((resume) => (
+                  <div 
+                    key={resume.id} 
+                    onClick={() => navigate(`/resume/${resume.id}`)}
+                    className="flex items-center justify-between p-3.5 bg-gray-50/80 hover:bg-primary-50/40 rounded-xl cursor-pointer border border-gray-100 transition-all"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-lg bg-white shadow-xs">
+                        <DocumentIcon className="h-5 w-5 text-primary-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">{resume.filename}</p>
+                        <p className="text-xs text-gray-500">
+                          Uploaded {resume.created_at ? new Date(resume.created_at).toLocaleDateString() : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
+                      resume.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      resume.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {resume.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <DocumentIcon className="h-12 w-12 text-gray-300 mx-auto" />
+                <p className="mt-2 text-gray-500 text-sm">No resumes uploaded yet</p>
+                <Button className="mt-4" size="sm" onClick={() => navigate('/resume/upload')}>Upload Resume</Button>
+              </div>
+            )}
+          </div>
+          {resumes?.length > 0 && (
+            <div className="mt-4 pt-3 border-t border-gray-100 text-right">
+              <button 
+                onClick={() => navigate('/resume/upload')} 
+                className="text-xs font-semibold text-primary-600 hover:text-primary-700 inline-flex items-center gap-1"
+              >
+                + Upload another resume
+              </button>
             </div>
           )}
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Recommended Actions</h3>
+        {/* Top Matched Jobs */}
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100/80 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <BriefcaseIcon className="w-5 h-5 text-primary-600" />
+                Top Matched Jobs
+              </h3>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/jobs')}>View All</Button>
+            </div>
+
+            {jobs && jobs.length > 0 ? (
+              <div className="space-y-3">
+                {jobs.slice(0, 3).map((job) => (
+                  <div
+                    key={job.id}
+                    onClick={() => navigate(`/jobs/${job.id}`)}
+                    className="flex items-center justify-between p-3.5 bg-gray-50/80 hover:bg-primary-50/40 rounded-xl cursor-pointer border border-gray-100 transition-all"
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="p-2 rounded-lg bg-white shadow-xs mt-0.5">
+                        <BriefcaseIcon className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">{job.title}</p>
+                        <p className="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
+                          <span>{job.company || 'Industry Partner'}</span>
+                          {job.location && (
+                            <>
+                              <span>•</span>
+                              <span>{job.location}</span>
+                            </>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0 ml-3">
+                      <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                        {job.job_type || 'Full Time'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-6 text-center border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/50">
+                <BriefcaseIcon className="h-10 w-10 text-gray-300 mx-auto" />
+                <p className="mt-2 text-sm font-medium text-gray-800">Explore career opportunities</p>
+                <p className="text-xs text-gray-500 mt-0.5">Discover roles matching your extracted skill profile.</p>
+                <Button className="mt-4" size="sm" onClick={() => navigate('/jobs')}>
+                  Browse Job Portal
+                </Button>
+              </div>
+            )}
           </div>
-          <div className="space-y-4">
-            <div 
-              onClick={() => navigate('/profile')}
-              className="flex items-center justify-between p-3 border border-blue-100 rounded-lg bg-blue-50 cursor-pointer hover:bg-blue-100 transition-colors"
+
+          <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+            <span className="text-xs text-gray-500">Tailored to your skills</span>
+            <button
+              onClick={() => navigate('/skills')}
+              className="text-xs font-semibold text-primary-600 hover:text-primary-700 inline-flex items-center gap-1"
             >
-              <div>
-                <p className="text-sm font-medium text-blue-900">Complete your profile</p>
-                <p className="text-xs text-blue-700">80% complete</p>
-              </div>
-              <ArrowRightIcon className="h-5 w-5 text-blue-600" />
-            </div>
-            <div 
-              onClick={() => navigate('/resume/upload')}
-              className="flex items-center justify-between p-3 border border-yellow-100 rounded-lg bg-yellow-50 cursor-pointer hover:bg-yellow-100 transition-colors"
-            >
-              <div>
-                <p className="text-sm font-medium text-yellow-900">Upload your resume</p>
-                <p className="text-xs text-yellow-700">Get personalized job matches</p>
-              </div>
-              <ArrowRightIcon className="h-5 w-5 text-yellow-600" />
-            </div>
-            <div 
-              onClick={() => navigate('/assessment')}
-              className="flex items-center justify-between p-3 border border-green-100 rounded-lg bg-green-50 cursor-pointer hover:bg-green-100 transition-colors"
-            >
-              <div>
-                <p className="text-sm font-medium text-green-900">Take a skill assessment</p>
-                <p className="text-xs text-green-700">Identify skill gaps</p>
-              </div>
-              <ArrowRightIcon className="h-5 w-5 text-green-600" />
-            </div>
+              Analyze Skill Gaps &rarr;
+            </button>
           </div>
         </div>
       </div>

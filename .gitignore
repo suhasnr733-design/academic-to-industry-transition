@@ -1,6 +1,7 @@
 # Environments & Virtual Environments
 venv/
 .venv/
+env/
 venv-data/
 
 # Environment Variables & Secrets (Keep .env.example)
@@ -11,12 +12,19 @@ venv-data/
 
 # Python cache & bytecode
 __pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
 *.pyc
 *.pyo
 *.pyd
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Machine Learning Models
+*.pkl
+data/models/*.pkl
 
 # Logs & Databases
 *.log
