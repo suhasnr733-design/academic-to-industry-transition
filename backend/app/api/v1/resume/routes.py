@@ -58,16 +58,15 @@ def upload_resume():
         db.session.add(resume)
         db.session.commit()
         
-        # Auto-process the uploaded resume immediately
+        # Trigger background processing immediately
         try:
             processor = ResumeProcessor()
-            processor.process_resume(resume.id)
-            db.session.refresh(resume)
+            processor.process_resume_async(resume.id)
         except Exception as proc_err:
-            logger.error(f"Auto-processing error for resume {resume.id}: {proc_err}")
+            logger.warning(f"Could not start async processing immediately: {proc_err}")
         
         return jsonify({
-            'message': 'Resume uploaded and processed successfully',
+            'message': 'Resume uploaded successfully, processing initiated',
             'resume_id': resume.id,
             'filename': resume.filename,
             'file_size': resume.file_size,

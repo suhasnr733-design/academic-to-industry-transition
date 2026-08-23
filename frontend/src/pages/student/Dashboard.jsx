@@ -1,10 +1,11 @@
 // src/pages/student/Dashboard.jsx
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useResume } from '../../hooks/useResume'
 import { useJobs } from '../../hooks/useJobs'
+import { api } from '../../services/api'
 import { Button } from '../../components/common/Button'
 import { WelcomeActionsModal } from '../../components/dashboard/WelcomeActionsModal'
 import {
@@ -15,28 +16,132 @@ import {
   ArrowRightIcon,
   LocationMarkerIcon,
   OfficeBuildingIcon,
-  SparklesIcon
+  SparklesIcon,
+  RefreshIcon
 } from '@heroicons/react/outline'
 
 export const Dashboard = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { resumes } = useResume()
+  const { resumes, fetchResumes } = useResume()
   const { jobs, isLoading: jobsLoading } = useJobs()
 
-  const latestResume = resumes && resumes.length > 0 ? resumes[0] : null
-  const scoreDisplay = latestResume?.employability_score
-    ? `${Math.round(latestResume.employability_score)}%`
-    : (resumes?.length > 0 ? 'Pending' : '--')
-  const totalSkills = latestResume?.skills ? latestResume.skills.length : 0
-  const resumeCount = resumes ? resumes.length : 0
+  const [jobCount, setJobCount] = useState(0)
+  const [skillGapCount, setSkillGapCount] = useState(0)
+  const [isProcessing, setIsProcessing] = useState(false)
+
+  // 1. Compute dynamic profile completeness
+  const profileFields = ['full_name', 'email', 'department', 'year_of_study']
+  const filledFields = profileFields.filter((f) => Boolean(user?.[f]))
+  const profilePercentage = Math.round((filledFields.length / profileFields.length) * 100)
+
+  // 2. Determine active resume
+  const latestResume = resumes?.[0]
+  const completedResume = resumes?.find((r) => r.status === 'completed') || latestResume
+
+  // 3. Automatically trigger processing for pending resumes & poll status
+  useEffect(() => {
+    if (!latestResume) return
+
+    if (latestResume.status === 'pending') {
+      api.post(`/resume/${latestResume.id}/process`)
+        .catch(() => {})
+        .finally(() => {
+          setIsProcessing(true)
+        })
+    }
+
+    if (latestResume.status === 'processing' || latestResume.status === 'pending') {
+      setIsProcessing(true)
+      const timer = setInterval(() => {
+        if (fetchResumes) fetchResumes()
+      }, 3000)
+      return () => clearInterval(timer)
+    } else {
+      setIsProcessing(false)
+    }
+  }, [latestResume?.status, latestResume?.id])
+
+  // 4. Fetch jobs & skill gaps dynamically
+  useEffect(() => {
+    const fetchDashboardMetrics = async () => {
+      try {
+        const jobsRes = await api.get('/jobs')
+        const jobsList = jobsRes.data?.jobs || []
+        setJobCount(jobsList.length)
+
+        if (completedResume && completedResume.status === 'completed') {
+          if (completedResume.skills && completedResume.skills.length > 0) {
+            const missing = Math.max(1, 8 - completedResume.skills.length)
+            setSkillGapCount(completedResume.skill_gaps?.length || missing)
+          } else {
+            setSkillGapCount(0)
+          }
+        } else {
+          setSkillGapCount(0)
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard metrics:', err)
+      }
+    }
+
+    fetchDashboardMetrics()
+  }, [completedResume?.id, completedResume?.status])
+
+  // 5. Dynamic Stats Calculation
+  const resumeScoreValue = completedResume
+    ? completedResume.status === 'completed' && completedResume.employability_score != null
+      ? `${Math.round(completedResume.employability_score)}%`
+      : completedResume.status === 'processing'
+      ? 'Processing...'
+      : 'Pending'
+    : '0%'
 
   const stats = [
-    { name: 'Employability Score', value: scoreDisplay, icon: ChartBarIcon, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { name: 'Resumes Uploaded', value: `${resumeCount}`, icon: DocumentIcon, color: 'text-green-600', bg: 'bg-green-50' },
-    { name: 'Extracted Skills', value: `${totalSkills}`, icon: AcademicCapIcon, color: 'text-purple-600', bg: 'bg-purple-50' },
-    { name: 'Profile Status', value: user?.department ? 'Active' : 'Incomplete', icon: BriefcaseIcon, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+    {
+      name: 'Resume Score',
+      value: resumeScoreValue,
+      icon: DocumentIcon,
+      color: 'text-blue-600',
+      bg: 'bg-blue-50',
+      description: completedResume?.status === 'completed' ? 'Calculated from AI parsing' : 'Upload or process resume'
+    },
+    {
+      name: 'Available Jobs',
+      value: `${jobCount}`,
+      icon: BriefcaseIcon,
+      color: 'text-green-600',
+      bg: 'bg-green-50',
+      description: 'Active matching openings'
+    },
+    {
+      name: 'Skills Extracted',
+      value: `${completedResume?.skills?.length || 0}`,
+      icon: ChartBarIcon,
+      color: 'text-yellow-600',
+      bg: 'bg-yellow-50',
+      description: completedResume?.skills?.length ? 'Extracted from your resume' : 'No skills extracted yet'
+    },
+    {
+      name: 'Resumes Uploaded',
+      value: `${resumes?.length || 0}`,
+      icon: AcademicCapIcon,
+      color: 'text-purple-600',
+      bg: 'bg-purple-50',
+      description: 'Total active versions'
+    },
   ]
+
+  const handleProcessResume = async (e, resumeId) => {
+    e.stopPropagation()
+    try {
+      setIsProcessing(true)
+      await api.post(`/resume/${resumeId}/process`)
+      if (fetchResumes) fetchResumes()
+    } catch (err) {
+      console.error('Process resume error:', err)
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -48,13 +153,24 @@ export const Dashboard = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold">
-              Welcome back, {user?.full_name} 👋
+              Welcome back, {user?.full_name || 'Student'} 👋
             </h1>
             <p className="mt-2 text-white/85 text-sm sm:text-base">
               Track your employability insights, resume updates, and top industry job matches.
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {resumes?.length > 0 && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="bg-white/15 hover:bg-white/25 text-white border-white/20 backdrop-blur-sm"
+                onClick={() => fetchResumes && fetchResumes()}
+              >
+                <RefreshIcon className={`h-4 w-4 mr-2 ${isProcessing ? 'animate-spin' : ''}`} />
+                Refresh Data
+              </Button>
+            )}
             <Button
               variant="secondary"
               size="sm"
@@ -74,14 +190,15 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* Dynamic Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
           <div key={stat.name} className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow border border-gray-100/80">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">{stat.name}</p>
+                <p className="text-sm text-gray-500 font-medium">{stat.name}</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
+                <p className="text-xs text-gray-400 mt-1">{stat.description}</p>
               </div>
               <div className={`p-3 rounded-lg ${stat.bg}`}>
                 <stat.icon className={`h-6 w-6 ${stat.color}`} />
@@ -119,16 +236,28 @@ export const Dashboard = () => {
                         <p className="text-sm font-semibold text-gray-900">{resume.filename}</p>
                         <p className="text-xs text-gray-500">
                           Uploaded {resume.created_at ? new Date(resume.created_at).toLocaleDateString() : 'N/A'}
+                          {resume.skills?.length ? ` • ${resume.skills.length} skills found` : ''}
                         </p>
                       </div>
                     </div>
-                    <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
-                      resume.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      resume.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {resume.status}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
+                        resume.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        resume.status === 'processing' ? 'bg-yellow-100 text-yellow-800 animate-pulse' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {resume.status}
+                      </span>
+                      {resume.status === 'pending' && (
+                        <Button
+                          size="xs"
+                          variant="primary"
+                          onClick={(e) => handleProcessResume(e, resume.id)}
+                        >
+                          Process
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

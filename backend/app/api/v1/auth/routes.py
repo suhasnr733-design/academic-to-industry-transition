@@ -322,6 +322,203 @@ def change_password():
         }), 500
 
 # ============================================
+# FORGOT PASSWORD ENDPOINT
+# ============================================
+@auth_bp.route('/forgot-password', methods=['POST'])
+@limiter.limit('5 per minute')
+def forgot_password():
+    """Generate password reset token and send/return instructions"""
+    try:
+        data = request.get_json() or {}
+        email = data.get('email', '').strip()
+        
+        if not email:
+            return jsonify({
+                'error': 'Email required',
+                'message': 'Please provide your email address'
+            }), 400
+        
+        user = User.query.filter_by(email=email).first()
+        if user and user.is_active:
+            from datetime import timedelta
+            reset_token = create_access_token(
+                identity=str(user.id),
+                expires_delta=timedelta(minutes=5),
+                additional_claims={'type': 'password_reset'}
+            )
+            
+            from flask import current_app
+            raw_origin = request.headers.get('Origin') or request.headers.get('Referer', '')
+            # Clean up referer if it has path like /forgot-password
+            if raw_origin:
+                from urllib.parse import urlparse
+                parsed = urlparse(raw_origin)
+                if parsed.scheme and parsed.netloc:
+                    caller_origin = f"{parsed.scheme}://{parsed.netloc}"
+                else:
+                    caller_origin = raw_origin.rstrip('/')
+            else:
+                caller_origin = None
+
+            frontend_url = caller_origin or current_app.config.get('FRONTEND_URL') or 'http://localhost:5173'
+            reset_link = f"{frontend_url}/reset-password?token={reset_token}"
+            
+            # Print to dev console for easy testing (ASCII-safe for Windows terminals)
+            logger.info(f"Password reset link generated for {user.email}: {reset_link}")
+            print(f"\n[PASSWORD RESET LINK for {user.email}]: {reset_link}\n", flush=True)
+
+            try:
+                from app import mail
+                from flask_mail import Message
+                
+                sender_email = (
+                    current_app.config.get('MAIL_DEFAULT_SENDER') or 
+                    current_app.config.get('MAIL_USERNAME') or 
+                    'noreply@transitionalai.com'
+                )
+                
+                msg = Message(
+                    subject="Password Reset Request - TransitionalAI",
+                    sender=sender_email,
+                    recipients=[user.email],
+                    body=(
+                        f"Hello {user.username},\n\n"
+                        f"We received a request to reset your password. Click the link below to reset your password:\n\n"
+                        f"{reset_link}\n\n"
+                        f"This link will expire in 5 minutes.\n\n"
+                        f"If you did not request this, please ignore this email.\n\n"
+                        f"Best regards,\nTransitionalAI Team"
+                    ),
+                    html=f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #1e293b;">
+    <div style="max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 32px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="display: inline-block; width: 48px; height: 48px; line-height: 48px; border-radius: 12px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: #ffffff; font-weight: bold; font-size: 20px;">
+                AI
+            </div>
+            <h2 style="margin: 16px 0 4px; font-size: 22px; font-weight: 700; color: #0f172a;">Reset Your Password</h2>
+            <p style="margin: 0; color: #64748b; font-size: 14px;">Academic to Industry Transition Platform</p>
+        </div>
+        
+        <p style="font-size: 15px; line-height: 24px; color: #334155; margin-bottom: 16px;">
+            Hello <strong>{user.username}</strong>,
+        </p>
+        <p style="font-size: 15px; line-height: 24px; color: #334155; margin-bottom: 24px;">
+            We received a request to reset your password. Click the button below to set a new password:
+        </p>
+        
+        <div style="text-align: center; margin: 32px 0;">
+            <a href="{reset_link}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);">
+                Reset Password
+            </a>
+        </div>
+        
+        <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 6px; margin-bottom: 24px;">
+            <p style="margin: 0; font-size: 13px; color: #92400e; font-weight: 500;">
+                ⚠️ <strong>Security Notice:</strong> This link will expire in <strong>5 minutes</strong>.
+            </p>
+        </div>
+        
+        <p style="font-size: 13px; line-height: 20px; color: #64748b; margin-bottom: 24px;">
+            If you did not request this password reset, no action is needed. Your account remains secure.
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
+        
+        <p style="margin: 0; font-size: 12px; color: #94a3b8; text-align: center;">
+            Best regards,<br>
+            <strong>TransitionalAI Team</strong>
+        </p>
+    </div>
+</body>
+</html>"""
+                )
+                mail.send(msg)
+                logger.info(f"Password reset email sent to: {user.email}")
+            except Exception as mail_err:
+                logger.warning(f"SMTP send notice (Brevo/Mail configuration): {mail_err}")
+
+        # Return generic success response to prevent user enumeration
+        return jsonify({
+            'message': 'If an account exists for that email address, a password reset link has been sent to your inbox.'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Forgot password error: {e}")
+        return jsonify({
+            'error': 'Failed to process forgot password request',
+            'message': str(e)
+        }), 500
+
+# ============================================
+# RESET PASSWORD ENDPOINT
+# ============================================
+@auth_bp.route('/reset-password', methods=['POST'])
+@limiter.limit('5 per minute')
+def reset_password():
+    """Reset user password using token"""
+    try:
+        data = request.get_json() or {}
+        token = data.get('token')
+        new_password = data.get('new_password')
+        
+        if not token or not new_password:
+            return jsonify({
+                'error': 'Missing required fields',
+                'message': 'Reset token and new password are required'
+            }), 400
+        
+        if len(new_password) < 6:
+            return jsonify({
+                'error': 'Password too short',
+                'message': 'Password must be at least 6 characters'
+            }), 400
+        
+        try:
+            from flask_jwt_extended import decode_token
+            decoded = decode_token(token)
+            if decoded.get('type') != 'password_reset':
+                return jsonify({
+                    'error': 'Invalid token type',
+                    'message': 'Token provided is not a valid password reset token'
+                }), 400
+            user_id = int(decoded.get('sub'))
+        except Exception:
+            return jsonify({
+                'error': 'Invalid or expired token',
+                'message': 'The reset token is invalid or has expired. Please request a new one.'
+            }), 400
+        
+        user = db.session.get(User, user_id)
+        if not user or not user.is_active:
+            return jsonify({
+                'error': 'User not found',
+                'message': 'User no longer exists or is inactive'
+            }), 404
+        
+        user.set_password(new_password)
+        db.session.commit()
+        
+        logger.info(f"Password successfully reset for user: {user.username}")
+        
+        return jsonify({
+            'message': 'Password reset successful. You can now log in with your new password.'
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Reset password error: {e}")
+        db.session.rollback()
+        return jsonify({
+            'error': 'Failed to reset password',
+            'message': str(e)
+        }), 500
+
+# ============================================
 # LOGOUT ENDPOINT
 # ============================================
 @auth_bp.route('/logout', methods=['POST'])

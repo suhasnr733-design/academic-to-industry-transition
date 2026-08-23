@@ -54,7 +54,7 @@ export const Register = () => {
       toast.success('Registration successful! Please login.')
       navigate('/login')
     } catch (error) {
-      toast.error(error.message || 'Registration failed')
+      toast.error(error.response?.data?.error || error.response?.data?.message || error.message || 'Registration failed')
     } finally {
       setIsLoading(false)
     }

@@ -1,6 +1,12 @@
 # backend/app/api/v1/__init__.py
 
 from flask import Blueprint, jsonify
+from datetime import datetime
+from app.services.service_mesh import ServiceMesh
+from app.gateway.rate_limiter import rate_limiter
+from app.services.multilevel_cache import cache
+from app.services.db_performance import DBPerformanceOptimizer
+from app.extensions import db, redis_client
 
 api_v1_bp = Blueprint('api_v1', __name__)
 
@@ -10,6 +16,7 @@ from app.api.v1.jobs import jobs_bp
 from app.api.v1.prediction import prediction_bp
 from app.api.v1.notifications import notifications_bp
 from app.api.v1.analytics import analytics_bp
+from app.api.v1.pipeline import pipeline_bp
 from app.api.v1.models import models_bp
 from app.api.v1.assessment import assessment_bp
 
@@ -19,6 +26,7 @@ api_v1_bp.register_blueprint(jobs_bp, url_prefix='/jobs')
 api_v1_bp.register_blueprint(prediction_bp, url_prefix='/prediction')
 api_v1_bp.register_blueprint(notifications_bp, url_prefix='/notifications')
 api_v1_bp.register_blueprint(analytics_bp, url_prefix='/analytics')
+api_v1_bp.register_blueprint(pipeline_bp, url_prefix='/pipeline')
 api_v1_bp.register_blueprint(models_bp, url_prefix='/models')
 api_v1_bp.register_blueprint(assessment_bp, url_prefix='/assessment')
 
@@ -33,7 +41,10 @@ def get_api_info():
             '/jobs/*',
             '/prediction/*',
             '/notifications/*',
-            '/analytics/*'
+            '/analytics/*',
+            '/pipeline/*',
+            '/models/*',
+            '/assessment/*'
         ],
         'status': 'healthy'
     })

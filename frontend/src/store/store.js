@@ -19,7 +19,7 @@ import notificationReducer from './slices/notificationSlice'
 import uiReducer from './slices/uiSlice'
 import analyticsReducer from './slices/analyticsSlice'
 
-// 1. Combine your reducers into a single reducer function
+// 1. Combine reducers into a single root reducer
 const rootReducer = combineReducers({
   auth: authReducer,
   resume: resumeReducer,
@@ -42,7 +42,7 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        // 2. Ignore all Redux Persist internal action types
+        // Ignore all Redux Persist internal action types
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
     }),
@@ -50,4 +50,4 @@ export const store = configureStore({
 })
 
 export const persistor = persistStore(store)
-
+export default store

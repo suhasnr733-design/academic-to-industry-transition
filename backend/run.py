@@ -3,8 +3,15 @@
 import sys
 import os
 
-# Add the backend directory to Python path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add backend and project root directory to Python path
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(backend_dir)
+sys.path.insert(0, backend_dir)
+sys.path.insert(0, root_dir)
+
+from app import create_app
+
+from app import create_app
 
 from app import create_app
 

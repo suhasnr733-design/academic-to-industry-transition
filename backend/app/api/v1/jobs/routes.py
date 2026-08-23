@@ -4,8 +4,10 @@ from flask import request, jsonify
 from app import db
 from app.models import Job
 from app.api.v1.jobs import jobs_bp
+from app.services.multilevel_cache import cache
 
 @jobs_bp.route('', methods=['GET'])
+@cache.cache(ttl=300, key_prefix='jobs_list')
 def get_jobs():
     """Get list of active jobs with pagination and filtering"""
     page = request.args.get('page', 1, type=int)

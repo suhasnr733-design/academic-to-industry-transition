@@ -48,26 +48,37 @@ class Config:
     API_PREFIX = '/api'
     API_VERSION = 'v1'
 
-    # OAuth Configurations
-    FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://academic-to-industry-transition.vercel.app')
+    # Mail / SMTP Configuration
+    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp-relay.brevo.com')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'True').lower() in ('true', '1', 't')
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', os.environ.get('MAIL_USERNAME'))
+
+    # OAuth & Frontend URL Configurations
+    FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
     
     GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
     GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
-    GOOGLE_REDIRECT_URI = os.environ.get('GOOGLE_REDIRECT_URI', 'https://academic-to-industry-transition.onrender.com/api/v1/auth/google/callback')
+    GOOGLE_REDIRECT_URI = os.environ.get('GOOGLE_REDIRECT_URI', 'http://localhost:5000/api/v1/auth/google/callback')
     
     LINKEDIN_CLIENT_ID = os.environ.get('LINKEDIN_CLIENT_ID')
     LINKEDIN_CLIENT_SECRET = os.environ.get('LINKEDIN_CLIENT_SECRET')
-    LINKEDIN_REDIRECT_URI = os.environ.get('LINKEDIN_REDIRECT_URI', 'https://academic-to-industry-transition.onrender.com/api/v1/auth/linkedin/callback')
+    LINKEDIN_REDIRECT_URI = os.environ.get('LINKEDIN_REDIRECT_URI', 'http://localhost:5000/api/v1/auth/linkedin/callback')
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
     SQLALCHEMY_DATABASE_URI = resolve_db_uri(os.environ.get('DATABASE_URL'))
 
 class TestingConfig(Config):
     TESTING = True
+    FRONTEND_URL = 'http://localhost:5173'
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(data_dir, 'test.db').replace('\\', '/')
 
 class ProductionConfig(Config):
     DEBUG = False
+    FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://academic-to-industry-transition.vercel.app')
     TESTING = False
     SQLALCHEMY_DATABASE_URI = resolve_db_uri(os.environ.get('DATABASE_URL'))
