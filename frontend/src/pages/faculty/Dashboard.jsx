@@ -19,7 +19,12 @@ import {
   SparklesIcon,
   CheckCircleIcon,
   BriefcaseIcon,
-  BadgeCheckIcon
+  BadgeCheckIcon,
+  InboxInIcon,
+  CheckIcon,
+  BanIcon,
+  ClockIcon,
+  UserAddIcon
 } from '@heroicons/react/outline'
 
 export const FacultyDashboard = () => {
@@ -31,7 +36,8 @@ export const FacultyDashboard = () => {
     placedStudents: 0,
     resumesProcessed: 0,
     placementRate: '0%',
-    activeJobs: 0
+    activeJobs: 0,
+    hasAssignedMentees: false
   })
   const [cohortSkills, setCohortSkills] = useState([])
   const [advisorInsight, setAdvisorInsight] = useState({
@@ -42,12 +48,16 @@ export const FacultyDashboard = () => {
     action_label: 'Inspect Cohort'
   })
   const [students, setStudents] = useState([])
+  const [incomingRequests, setIncomingRequests] = useState([])
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
+  const [directoryScope, setDirectoryScope] = useState('mentees') // 'mentees' or 'all'
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedDept, setSelectedDept] = useState('all')
   const [selectedYear, setSelectedYear] = useState('all')
   const [selectedStudent, setSelectedStudent] = useState(null)
   const [isUpdatingPlacement, setIsUpdatingPlacement] = useState(false)
+  const [isProcessingAction, setIsProcessingAction] = useState(null)
   const [placementForm, setPlacementForm] = useState({
     placement_status: 'seeking',
     placed_company: '',
@@ -56,7 +66,8 @@ export const FacultyDashboard = () => {
 
   useEffect(() => {
     fetchFacultyData()
-  }, [])
+    fetchIncomingRequests()
+  }, [directoryScope])
 
   const fetchFacultyData = async () => {
     try {
@@ -65,7 +76,7 @@ export const FacultyDashboard = () => {
         api.get('/analytics/faculty/stats'),
         api.get('/analytics/cohort-skills'),
         api.get('/analytics/advisor-recommendations'),
-        api.get('/analytics/faculty/students')
+        api.get(`/analytics/faculty/students?filter_type=${directoryScope}`)
       ])
 
       let studentsList = []
@@ -78,7 +89,6 @@ export const FacultyDashboard = () => {
       if (statsRes.status === 'fulfilled' && statsRes.value.data) {
         setStats(statsRes.value.data)
       } else {
-        // Fallback calculation from studentsList
         const total = studentsList.length
         const placed = studentsList.filter(s => s.placement_status === 'placed').length
         setStats({
@@ -86,7 +96,8 @@ export const FacultyDashboard = () => {
           placedStudents: placed,
           resumesProcessed: 0,
           placementRate: total > 0 ? `${Math.round((placed / total) * 100)}%` : '0%',
-          activeJobs: 0
+          activeJobs: 0,
+          hasAssignedMentees: false
         })
       }
 
@@ -104,6 +115,31 @@ export const FacultyDashboard = () => {
       toast.error('Failed to sync live faculty metrics')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchIncomingRequests = async () => {
+    try {
+      const res = await api.get('/mentorship/incoming-requests')
+      setIncomingRequests(res.data?.requests || [])
+      setPendingRequestsCount(res.data?.pending_count || 0)
+    } catch (err) {
+      console.error('Error fetching mentorship requests:', err)
+    }
+  }
+
+  // Accept or Decline mentorship request
+  const handleRequestAction = async (requestId, action) => {
+    try {
+      setIsProcessingAction(requestId)
+      await api.put(`/mentorship/requests/${requestId}/action`, { action })
+      toast.success(`Mentorship request ${action === 'accept' ? 'accepted' : 'declined'}!`)
+      fetchIncomingRequests()
+      fetchFacultyData()
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.message || 'Failed to process request')
+    } finally {
+      setIsProcessingAction(null)
     }
   }
 
@@ -154,12 +190,9 @@ export const FacultyDashboard = () => {
       const res = await api.put(`/analytics/student/${selectedStudent.id}/placement`, payload)
       toast.success('Placement status updated successfully!')
       
-      // Update local student record
       const updated = res.data.student
       setStudents(prev => prev.map(s => s.id === selectedStudent.id ? { ...s, ...updated } : s))
       setSelectedStudent(prev => ({ ...prev, ...updated }))
-      
-      // Refresh global metrics
       fetchFacultyData()
     } catch (err) {
       toast.error(err.response?.data?.error || err.message || 'Failed to update placement')
@@ -189,7 +222,7 @@ export const FacultyDashboard = () => {
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement('a')
     link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `student_cohort_${new Date().toISOString().slice(0,10)}.csv`)
+    link.setAttribute('download', `cohort_${directoryScope}_${new Date().toISOString().slice(0,10)}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -197,10 +230,10 @@ export const FacultyDashboard = () => {
   }
 
   const facultyStatCards = [
-    { name: 'Total Cohort Students', value: `${stats.totalStudents}`, icon: UserGroupIcon, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { name: directoryScope === 'mentees' ? 'My Assigned Mentees' : 'Total Department Students', value: `${stats.totalStudents}`, icon: UserGroupIcon, color: 'text-blue-600', bg: 'bg-blue-50' },
     { name: 'Verified Resumes', value: `${stats.resumesProcessed}`, icon: DocumentTextIcon, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { name: 'Estimated Placed', value: `${stats.placedStudents}`, icon: AcademicCapIcon, color: 'text-green-600', bg: 'bg-green-50' },
-    { name: 'Placement Readiness', value: stats.placementRate, icon: ChartBarIcon, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { name: 'Placed Students', value: `${stats.placedStudents}`, icon: AcademicCapIcon, color: 'text-green-600', bg: 'bg-green-50' },
+    { name: 'Cohort Placement Rate', value: stats.placementRate, icon: ChartBarIcon, color: 'text-purple-600', bg: 'bg-purple-50' },
   ]
 
   return (
@@ -212,19 +245,24 @@ export const FacultyDashboard = () => {
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200 uppercase tracking-wide">
               Faculty Command Center
             </span>
+            {pendingRequestsCount > 0 && (
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200 animate-pulse">
+                {pendingRequestsCount} Pending Requests
+              </span>
+            )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1.5">
             Department & Cohort Management
           </h1>
           <p className="text-gray-500 text-sm mt-0.5">
-            Real-time tracking of student competencies, resume validations, and placement outcomes.
+            Real-time tracking of assigned mentees, resume evaluations, and placement outcomes.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchFacultyData}
+            onClick={() => { fetchFacultyData(); fetchIncomingRequests(); }}
             isLoading={loading}
             className="flex items-center"
           >
@@ -255,6 +293,24 @@ export const FacultyDashboard = () => {
           <ChartBarIcon className="h-4 w-4" />
           Overview & Metrics
         </button>
+
+        <button
+          onClick={() => setSearchParams({ tab: 'requests' })}
+          className={`pb-3 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 ${
+            activeTab === 'requests'
+              ? 'border-purple-600 text-purple-600 font-semibold'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <InboxInIcon className="h-4 w-4" />
+          Mentorship Requests
+          {pendingRequestsCount > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-purple-600 text-white font-bold">
+              {pendingRequestsCount}
+            </span>
+          )}
+        </button>
+
         <button
           onClick={() => setSearchParams({ tab: 'students' })}
           className={`pb-3 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 ${
@@ -266,6 +322,7 @@ export const FacultyDashboard = () => {
           <UserGroupIcon className="h-4 w-4" />
           Student Directory ({students.length})
         </button>
+
         <button
           onClick={() => setSearchParams({ tab: 'analytics' })}
           className={`pb-3 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 ${
@@ -361,10 +418,139 @@ export const FacultyDashboard = () => {
         </div>
       )}
 
-      {/* Tab 2: Student Directory */}
+      {/* Tab 2: Incoming Mentorship Requests */}
+      {activeTab === 'requests' && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Incoming Mentorship Requests</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Students requesting your mentorship for career advising, resume reviews, and placement guidance.
+              </p>
+            </div>
+            <span className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg border border-purple-200">
+              {incomingRequests.length} Total Requests
+            </span>
+          </div>
+
+          <div className="p-6">
+            {incomingRequests.length > 0 ? (
+              <div className="space-y-4">
+                {incomingRequests.map((req) => (
+                  <div
+                    key={req.id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-gray-50/70 hover:bg-purple-50/40 rounded-xl border border-gray-100 transition-colors gap-4"
+                  >
+                    <div className="flex items-start space-x-3.5">
+                      <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-primary-500 to-indigo-500 text-white font-bold flex items-center justify-center shadow-sm shrink-0">
+                        {req.student?.full_name?.[0] || req.student?.username?.[0] || 'S'}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-gray-900 text-base">{req.student?.full_name || req.student?.username}</p>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-medium">
+                            {req.student?.department || 'General'}
+                          </span>
+                          {req.student?.year_of_study && (
+                            <span className="text-xs text-gray-500 font-medium">
+                              Year {req.student.year_of_study}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5">{req.student?.email}</p>
+                        
+                        {req.message && (
+                          <div className="mt-2.5 p-3 bg-white rounded-lg border border-gray-200 text-xs text-gray-700 max-w-xl">
+                            <span className="font-semibold text-gray-900 block mb-0.5">Student Note:</span>
+                            "{req.message}"
+                          </div>
+                        )}
+                        <p className="text-[11px] text-gray-400 mt-2">
+                          Requested on {new Date(req.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 self-end sm:self-center shrink-0">
+                      {req.status === 'pending' ? (
+                        <>
+                          <Button
+                            size="sm"
+                            isLoading={isProcessingAction === req.id}
+                            onClick={() => handleRequestAction(req.id, 'accept')}
+                            className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold flex items-center"
+                          >
+                            <CheckIcon className="h-4 w-4 mr-1" />
+                            Accept Mentee
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            isLoading={isProcessingAction === req.id}
+                            onClick={() => handleRequestAction(req.id, 'reject')}
+                            className="text-red-600 border-red-200 hover:bg-red-50 text-xs font-semibold flex items-center"
+                          >
+                            <BanIcon className="h-4 w-4 mr-1" />
+                            Decline
+                          </Button>
+                        </>
+                      ) : (
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          req.status === 'accepted' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {req.status === 'accepted' ? 'Accepted Mentee' : 'Declined'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16 text-gray-500 text-sm">
+                <InboxInIcon className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                No incoming mentorship requests at the moment.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Tab 3: Student Directory */}
       {activeTab === 'students' && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          {/* Controls Bar */}
+          {/* Scope Selector Bar */}
+          <div className="px-6 pt-5 pb-3 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-bold text-gray-900">Student Cohort Directory</h3>
+              <p className="text-xs text-gray-500">Filter between your personal assigned mentees and the department-wide roster.</p>
+            </div>
+
+            {/* Mentees vs All Toggle */}
+            <div className="inline-flex rounded-xl bg-gray-100 p-1 self-start sm:self-auto border border-gray-200">
+              <button
+                onClick={() => setDirectoryScope('mentees')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  directoryScope === 'mentees'
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                My Assigned Mentees
+              </button>
+              <button
+                onClick={() => setDirectoryScope('all')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  directoryScope === 'all'
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                All Department Students
+              </button>
+            </div>
+          </div>
+
+          {/* Search Controls Bar */}
           <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-col sm:flex-row gap-3 items-center justify-between bg-gray-50/50">
             <div className="relative w-full sm:w-80">
               <SearchIcon className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
@@ -478,13 +664,31 @@ export const FacultyDashboard = () => {
             </div>
           ) : (
             <div className="text-center py-16 text-gray-500 text-sm">
-              No matching students found for the current search filter.
+              {directoryScope === 'mentees' ? (
+                <div className="space-y-3">
+                  <UserAddIcon className="h-12 w-12 text-gray-300 mx-auto" />
+                  <p className="font-semibold text-gray-700">No assigned mentees found yet.</p>
+                  <p className="text-xs text-gray-400 max-w-md mx-auto">
+                    Students can request you as their advisor from their dashboard, or you can switch to "All Department Students" to view all registered students.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDirectoryScope('all')}
+                    className="mt-2 text-xs"
+                  >
+                    View All Department Students
+                  </Button>
+                </div>
+              ) : (
+                'No matching students found for the current search filter.'
+              )}
             </div>
           )}
         </div>
       )}
 
-      {/* Tab 3: Cohort Skill Analytics */}
+      {/* Tab 4: Cohort Skill Analytics */}
       {activeTab === 'analytics' && (
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">

@@ -21,17 +21,24 @@ def get_dashboard_stats():
 @faculty_or_admin_required
 def get_faculty_stats():
     """Get real-time placement statistics for faculty dashboard"""
+    current_user_id = int(get_jwt_identity())
     department = request.args.get('department')
-    stats = analytics_service.get_faculty_placement_stats(department=department)
+    stats = analytics_service.get_faculty_placement_stats(faculty_id=current_user_id, department=department)
     return jsonify(stats), 200
 
 @analytics_bp.route('/faculty/students', methods=['GET'])
 @jwt_required()
 @faculty_or_admin_required
 def get_faculty_students():
-    """Get student directory for faculty portal"""
+    """Get student directory for faculty portal (mentees vs all)"""
+    current_user_id = int(get_jwt_identity())
     department = request.args.get('department')
-    students = analytics_service.get_faculty_students(department=department)
+    filter_type = request.args.get('filter_type', 'mentees')
+    students = analytics_service.get_faculty_students(
+        faculty_id=current_user_id,
+        filter_type=filter_type,
+        department=department
+    )
     return jsonify({'students': students}), 200
 
 @analytics_bp.route('/cohort-skills', methods=['GET'])

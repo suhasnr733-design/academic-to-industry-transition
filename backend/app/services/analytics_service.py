@@ -36,18 +36,27 @@ class AnalyticsService:
             }
         }
 
-    def get_faculty_placement_stats(self, department=None):
+    def get_faculty_placement_stats(self, faculty_id=None, department=None):
         """Get detailed placement statistics for faculty dashboard"""
-        student_query = User.query.filter_by(role='student')
+        from app.models import MentorshipRequest
+
+        mentee_records = MentorshipRequest.query.filter_by(
+            faculty_id=faculty_id, 
+            status='accepted'
+        ).all() if faculty_id else []
+        mentee_ids = [m.student_id for m in mentee_records]
+
+        if mentee_ids:
+            student_query = User.query.filter(User.id.in_(mentee_ids))
+        else:
+            student_query = User.query.filter_by(role='student')
+
         if department and department.lower() != 'all':
             student_query = student_query.filter(User.department.ilike(f"%{department}%"))
         
         total_students = student_query.count()
-        
-        # Placed count
         placed_students = student_query.filter(User.placement_status == 'placed').count()
         
-        # Resumes processed for these students
         student_ids = [s.id for s in student_query.all()]
         if student_ids:
             resumes_processed = Resume.query.filter(
@@ -65,14 +74,29 @@ class AnalyticsService:
             'placedStudents': placed_students,
             'resumesProcessed': resumes_processed,
             'placementRate': placement_rate,
-            'activeJobs': active_jobs
+            'activeJobs': active_jobs,
+            'hasAssignedMentees': len(mentee_ids) > 0
         }
 
-    def get_faculty_students(self, department=None):
-        """Get all students list for faculty directory"""
-        query = User.query.filter_by(role='student')
+    def get_faculty_students(self, faculty_id=None, filter_type='mentees', department=None):
+        """Get student list for faculty directory (mentees vs all department students)"""
+        from app.models import MentorshipRequest
+        
+        if filter_type == 'mentees' and faculty_id:
+            mentee_records = MentorshipRequest.query.filter_by(
+                faculty_id=faculty_id, 
+                status='accepted'
+            ).all()
+            mentee_ids = [m.student_id for m in mentee_records]
+            if not mentee_ids:
+                return []
+            query = User.query.filter(User.id.in_(mentee_ids))
+        else:
+            query = User.query.filter_by(role='student')
+
         if department and department.lower() != 'all':
             query = query.filter(User.department.ilike(f"%{department}%"))
+
         students = query.order_by(User.id.desc()).all()
         return [s.to_dict() for s in students]
 
