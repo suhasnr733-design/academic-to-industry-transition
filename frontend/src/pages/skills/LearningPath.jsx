@@ -6,32 +6,10 @@ import { Button } from '../../components/common/Button'
 import { Heading } from '../../components/common/Typography'
 import { 
   AcademicCapIcon, 
-  CheckCircleIcon, 
-  ClockIcon, 
-  BookOpenIcon,
-  ExternalLinkIcon
+  CheckCircleIcon,
+  ClockIcon,
+  BookOpenIcon
 } from '@heroicons/react/outline'
-
-const getPlatformUrl = (platform, skillOrCourse) => {
-  const query = encodeURIComponent(skillOrCourse || '')
-  const p = (platform || '').toLowerCase()
-  if (p.includes('coursera')) {
-    return `https://www.coursera.org/search?query=${query}`
-  } else if (p.includes('udemy')) {
-    return `https://www.udemy.com/courses/search/?q=${query}`
-  } else if (p.includes('nptel') || p.includes('swayam')) {
-    return `https://swayam.gov.in/explorer?searchText=${query}`
-  } else if (p.includes('edx')) {
-    return `https://www.edx.org/search?q=${query}`
-  } else if (p.includes('youtube')) {
-    return `https://www.youtube.com/results?search_query=${query}+course`
-  }
-  return `https://www.google.com/search?q=${query}+${encodeURIComponent(platform)}+course`
-}
-
-const getCourseSearchUrl = (course, skill) => {
-  return `https://www.coursera.org/search?query=${encodeURIComponent(course || skill || '')}`
-}
 
 export const LearningPath = () => {
   const { learningPath, isLoading } = useSkills()
@@ -56,89 +34,55 @@ export const LearningPath = () => {
           <Heading level={2}>Your Learning Path</Heading>
           <p className="text-gray-500 mt-1">Personalized roadmap to achieve your career goals</p>
         </div>
-        <Button 
-          variant="outline"
-          onClick={() => window.open('https://www.coursera.org/search?query=computer+science', '_blank')}
-        >
+        <Button variant="outline">
           <BookOpenIcon className="h-5 w-5 mr-2" />
-          Browse Online Courses
+          View All Courses
         </Button>
       </div>
 
       {path.length > 0 ? (
         <div className="space-y-6">
-          {path.map((step, idx) => {
-            const skillName = step.skill || step.title || step.name || 'Core Skill'
-            return (
-              <div key={idx} className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-primary-500">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3">
-                      <span className="flex items-center justify-center w-8 h-8 bg-primary-500 text-white rounded-full text-sm font-bold">
-                        {step.step || idx + 1}
+          {path.map((step, idx) => (
+            <div key={idx} className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-primary-500">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3">
+                    <span className="flex items-center justify-center w-8 h-8 bg-primary-500 text-white rounded-full text-sm font-bold">
+                      {step.step || idx + 1}
+                    </span>
+                    <h4 className="font-semibold text-gray-900">{step.skill || step.title || step.name || 'Core Skill'}</h4>
+                    {(step.priority || step.status) && (
+                      <span className={`px-2 py-0.5 text-xs rounded-full ${
+                        (step.priority === 'High' || step.status === 'urgent') ? 'bg-red-100 text-red-800' :
+                        (step.priority === 'Medium' || step.status === 'in-progress') ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {step.priority || step.status}
                       </span>
-                      <h4 className="font-semibold text-gray-900">{skillName}</h4>
-                      {(step.priority || step.status) && (
-                        <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full ${
-                          (step.priority === 'High' || step.status === 'urgent') ? 'bg-red-100 text-red-800' :
-                          (step.priority === 'Medium' || step.status === 'in-progress') ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-blue-100 text-blue-800'
-                        }`}>
-                          {step.priority || step.status} Priority
+                    )}
+                  </div>
+                  {(step.estimated_time || step.duration) && (
+                    <p className="mt-2 text-sm text-gray-600">
+                      <ClockIcon className="h-4 w-4 inline mr-1" />
+                      {step.estimated_time || step.duration}
+                    </p>
+                  )}
+                  {step.courses && step.courses.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {step.courses.map((course, ci) => (
+                        <span key={ci} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+                          {typeof course === 'object' ? (course.title || course.name) : course}
                         </span>
-                      )}
-                    </div>
-                    {(step.estimated_time || step.duration) && (
-                      <p className="mt-2 text-sm text-gray-600">
-                        <ClockIcon className="h-4 w-4 inline mr-1" />
-                        {step.estimated_time || step.duration}
-                      </p>
-                    )}
-                    {step.courses && step.courses.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {step.courses.map((course, ci) => {
-                          const courseTitle = typeof course === 'object' ? (course.title || course.name) : course
-                          return (
-                            <a
-                              key={ci}
-                              href={getCourseSearchUrl(courseTitle, skillName)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title={`Find "${courseTitle}" online`}
-                              className="inline-flex items-center px-3 py-1 bg-gray-50 hover:bg-primary-50 text-gray-700 hover:text-primary-700 border border-gray-200 hover:border-primary-300 rounded-full text-xs font-medium transition-colors"
-                            >
-                              <span>📚 {courseTitle}</span>
-                              <ExternalLinkIcon className="h-3 w-3 ml-1.5 opacity-60" />
-                            </a>
-                          )
-                        })}
-                      </div>
-                    )}
-                    {/* Platform links */}
-                    <div className="mt-3.5 flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
-                      <span className="text-xs text-gray-500 font-medium">Explore on:</span>
-                      {['Coursera', 'Udemy', 'NPTEL'].map((plat, pi) => (
-                        <a
-                          key={pi}
-                          href={getPlatformUrl(plat, skillName)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title={`Search ${skillName} on ${plat}`}
-                          className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-900 transition-colors"
-                        >
-                          <span>{plat}</span>
-                          <ExternalLinkIcon className="h-3 w-3 ml-1 opacity-70" />
-                        </a>
                       ))}
                     </div>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => window.open(getPlatformUrl('Coursera', skillName), '_blank')}>
-                    <CheckCircleIcon className="h-5 w-5 text-gray-400 hover:text-green-500" />
-                  </Button>
+                  )}
                 </div>
+                <Button variant="ghost" size="sm">
+                  <CheckCircleIcon className="h-5 w-5 text-gray-400 hover:text-green-500" />
+                </Button>
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
       ) : (
         <div className="text-center py-12 bg-white rounded-xl shadow-sm">
