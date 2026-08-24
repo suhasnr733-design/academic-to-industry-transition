@@ -249,12 +249,27 @@ def update_profile():
         updated_fields = []
         for field in allowed_fields:
             if field in data:
-                if field == 'year_of_study' and data[field] is not None:
-                    if not 1 <= int(data[field]) <= 6:
+                if field == 'year_of_study':
+                    val = data.get('year_of_study')
+                    if val is None or str(val).strip() == '':
+                        setattr(user, field, None)
+                        updated_fields.append(field)
+                        continue
+                    try:
+                        int_val = int(val)
+                        if not 1 <= int_val <= 6:
+                            return jsonify({
+                                'error': 'Invalid year of study',
+                                'message': 'Year of study must be between 1 and 6'
+                            }), 400
+                        setattr(user, field, int_val)
+                        updated_fields.append(field)
+                    except (ValueError, TypeError):
                         return jsonify({
                             'error': 'Invalid year of study',
-                            'message': 'Year of study must be between 1 and 6'
+                            'message': 'Year of study must be a valid number'
                         }), 400
+                    continue
                 setattr(user, field, data[field])
                 updated_fields.append(field)
         

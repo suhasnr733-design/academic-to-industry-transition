@@ -180,6 +180,16 @@ def update_profile():
     
     for field in allowed_fields:
         if field in data:
+            if field == 'year_of_study':
+                val = data.get('year_of_study')
+                if val is None or str(val).strip() == '':
+                    setattr(user, field, None)
+                    continue
+                try:
+                    setattr(user, field, int(val))
+                except (ValueError, TypeError):
+                    pass
+                continue
             setattr(user, field, data[field])
     
     db.session.commit()
