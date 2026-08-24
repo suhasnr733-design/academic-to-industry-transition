@@ -16,6 +16,53 @@ def get_dashboard_stats():
     stats = analytics_service.get_dashboard_stats()
     return jsonify(stats), 200
 
+@analytics_bp.route('/faculty/stats', methods=['GET'])
+@jwt_required()
+@faculty_or_admin_required
+def get_faculty_stats():
+    """Get real-time placement statistics for faculty dashboard"""
+    department = request.args.get('department')
+    stats = analytics_service.get_faculty_placement_stats(department=department)
+    return jsonify(stats), 200
+
+@analytics_bp.route('/faculty/students', methods=['GET'])
+@jwt_required()
+@faculty_or_admin_required
+def get_faculty_students():
+    """Get student directory for faculty portal"""
+    department = request.args.get('department')
+    students = analytics_service.get_faculty_students(department=department)
+    return jsonify({'students': students}), 200
+
+@analytics_bp.route('/cohort-skills', methods=['GET'])
+@jwt_required()
+@faculty_or_admin_required
+def get_cohort_skills():
+    """Get live cohort skill readiness and gap percentages"""
+    department = request.args.get('department')
+    skills = analytics_service.get_cohort_skill_readiness(department=department)
+    return jsonify({'skills': skills}), 200
+
+@analytics_bp.route('/advisor-recommendations', methods=['GET'])
+@jwt_required()
+@faculty_or_admin_required
+def get_advisor_recommendations():
+    """Get live dynamic advisor recommendation based on highest cohort deficit"""
+    department = request.args.get('department')
+    recommendation = analytics_service.get_advisor_recommendations(department=department)
+    return jsonify(recommendation), 200
+
+@analytics_bp.route('/student/<int:student_id>/placement', methods=['PUT'])
+@jwt_required()
+@faculty_or_admin_required
+def update_student_placement(student_id):
+    """Update student placement status and company info"""
+    data = request.get_json() or {}
+    updated = analytics_service.update_student_placement(student_id, data)
+    if not updated:
+        return jsonify({'error': 'Student not found'}), 404
+    return jsonify({'message': 'Placement status updated successfully', 'student': updated}), 200
+
 @analytics_bp.route('/placement-trends', methods=['GET'])
 @jwt_required()
 @faculty_or_admin_required
