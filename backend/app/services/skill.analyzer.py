@@ -173,7 +173,8 @@ class SkillAnalyzer:
                 'courses': rec['courses'],
                 'resources': [
                     f'https://www.coursera.org/search?query={rec["skill"]}',
-                    f'https://www.udemy.com/courses/search/?q={rec["skill"]}'
+                    f'https://www.udemy.com/courses/search/?q={rec["skill"]}',
+                    f'https://nptel.ac.in/courses'
                 ]
             })
         

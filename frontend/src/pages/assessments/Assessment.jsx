@@ -18,53 +18,64 @@ import {
   ArrowRightIcon,
   ChevronRightIcon,
   BadgeCheckIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  DocumentTextIcon,
+  LockClosedIcon,
+  UploadIcon
 } from '@heroicons/react/outline'
 import { CheckCircleIcon as CheckCircleSolid } from '@heroicons/react/solid'
 import toast from 'react-hot-toast'
 
 export const Assessment = () => {
   const navigate = useNavigate()
-  const { startAssessment, submitAssessment, getLatestAssessment, isLoading: apiLoading } = useAssessments()
-  const { resumes } = useResume()
+  const { startAssessment, submitAssessment } = useAssessments()
+  const { resumes, isLoading: resumesLoading, uploadResume } = useResume()
 
   const [session, setSession] = useState(null)
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0)
   const [answers, setAnswers] = useState({})
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUploadingResume, setIsUploadingResume] = useState(false)
+  const [isDragActive, setIsDragActive] = useState(false)
   const [result, setResult] = useState(null)
-  const [viewMode, setViewMode] = useState('loading') // 'intro', 'quiz', 'results'
+  const [viewMode, setViewMode] = useState('loading') // 'loading', 'no_resume', 'quiz', 'results'
   const [secondsElapsed, setSecondsElapsed] = useState(0)
+  
   const timerRef = useRef(null)
+  const fileInputRef = useRef(null)
 
-  // Load either the active assessment or latest result
+  // Initialize fresh assessment for the user's uploaded resume
   useEffect(() => {
     const init = async () => {
       setIsLoading(true)
       try {
-        const latestData = await getLatestAssessment()
-        if (latestData?.has_assessment && latestData?.result) {
-          setResult(latestData.result.details || latestData.result)
-          setViewMode('results')
-        } else {
-          await handleStartNewAssessment()
+        // If resumes list is definitely loaded and has 0 resumes, show guard immediately
+        if (Array.isArray(resumes) && resumes.length === 0 && !resumesLoading) {
+          setViewMode('no_resume')
+          setIsLoading(false)
+          return
         }
+
+        await handleStartNewAssessment()
       } catch (err) {
         console.error('Assessment initialization error:', err)
-        await handleStartNewAssessment()
+        setViewMode('no_resume')
       } finally {
         setIsLoading(false)
       }
     }
-    init()
+
+    if (!resumesLoading) {
+      init()
+    }
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [getLatestAssessment])
+  }, [resumes, resumesLoading])
 
-  // Timer runner
+  // Timer runner during active quiz
   useEffect(() => {
     if (viewMode === 'quiz') {
       timerRef.current = setInterval(() => {
@@ -82,6 +93,18 @@ export const Assessment = () => {
     setIsLoading(true)
     try {
       const newSession = await startAssessment()
+      
+      // Check if backend rejected due to missing resume
+      if (newSession?.requires_resume || (Array.isArray(resumes) && resumes.length === 0)) {
+        setViewMode('no_resume')
+        return
+      }
+
+      if (!newSession?.questions || newSession.questions.length === 0) {
+        setViewMode('no_resume')
+        return
+      }
+
       setSession(newSession)
       setCurrentQuestionIdx(0)
       setAnswers({})
@@ -90,8 +113,69 @@ export const Assessment = () => {
       setViewMode('quiz')
     } catch (err) {
       toast.error('Could not initialize questions. Please try again.')
+      setViewMode('no_resume')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // Handle in-place direct resume upload
+  const handleDirectResumeUpload = async (file) => {
+    if (!file) return
+
+    const validExtensions = ['.pdf', '.docx', '.doc', '.txt']
+    const fileExt = '.' + file.name.split('.').pop().toLowerCase()
+    if (!validExtensions.includes(fileExt)) {
+      toast.error('Please upload a valid resume file (PDF, DOCX, TXT)')
+      return
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size must be under 10MB')
+      return
+    }
+
+    setIsUploadingResume(true)
+    const toastId = toast.loading('Uploading & analyzing resume skills...')
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      await uploadResume(formData)
+      toast.success('Resume analyzed! Starting your skill assessment...', { id: toastId })
+      
+      // Clear legacy flags and generate fresh assessment immediately
+      localStorage.removeItem('assessment_completed')
+      localStorage.removeItem('latest_assessment_score')
+      window.dispatchEvent(new Event('storage'))
+
+      await handleStartNewAssessment()
+    } catch (err) {
+      toast.error(err.message || 'Failed to upload resume', { id: toastId })
+    } finally {
+      setIsUploadingResume(false)
+    }
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragActive(true)
+  }
+
+  const handleDragLeave = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragActive(false)
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragActive(false)
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleDirectResumeUpload(e.dataTransfer.files[0])
     }
   }
 
@@ -115,9 +199,15 @@ export const Assessment = () => {
       const evaluation = await submitAssessment(answers, secondsElapsed)
       setResult(evaluation)
       
-      // Update local storage and notify components
+      const activeResume = resumes && resumes.length > 0 ? resumes[0] : null
+      const resumeId = activeResume?.id || 'default'
+      const scoreVal = Math.round(evaluation?.score || 85)
+
+      // Save per-resume local storage and notify components
+      localStorage.setItem(`assessment_completed_for_resume_${resumeId}`, 'true')
+      localStorage.setItem(`assessment_score_for_resume_${resumeId}`, String(scoreVal))
       localStorage.setItem('assessment_completed', 'true')
-      localStorage.setItem('latest_assessment_score', String(evaluation?.score || 85))
+      localStorage.setItem('latest_assessment_score', String(scoreVal))
       window.dispatchEvent(new Event('storage'))
 
       toast.success('Skill assessment completed successfully!')
@@ -140,19 +230,127 @@ export const Assessment = () => {
   const testedSkills = session?.tested_skills || []
 
   // ----------------------------------------------------
-  // LOADING STATE
+  // 1. LOADING STATE
   // ----------------------------------------------------
-  if (isLoading || (viewMode === 'loading')) {
+  if (isLoading || viewMode === 'loading' || resumesLoading) {
     return (
-      <div className="max-w-3xl mx-auto py-12 text-center">
+      <div className="max-w-3xl mx-auto py-16 text-center">
         <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent mb-4"></div>
-        <p className="text-gray-600 font-medium">Generating assessment from your resume skills...</p>
+        <p className="text-gray-600 font-medium text-base">Preparing your skill-customized assessment...</p>
       </div>
     )
   }
 
   // ----------------------------------------------------
-  // RESULTS VIEW
+  // 2. RESUME REQUIRED GUARD VIEW (With In-Place Dropzone)
+  // ----------------------------------------------------
+  if (viewMode === 'no_resume') {
+    return (
+      <div className="max-w-3xl mx-auto py-8 px-4 animate-in fade-in duration-300">
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 sm:p-10 text-center relative overflow-hidden">
+          {/* Top accent badge */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold uppercase tracking-wider mb-4">
+            <LockClosedIcon className="w-4 h-4 text-amber-600" />
+            <span>Resume Required for Assessment</span>
+          </div>
+
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+            Upload Your Resume to Begin
+          </h2>
+
+          <p className="mt-2 text-gray-600 text-sm max-w-lg mx-auto leading-relaxed">
+            TransitionAI generates tailored questions from your extracted resume skills. Upload your resume directly below to start immediately.
+          </p>
+
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.docx,.doc,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+            onChange={(e) => {
+              if (e.target.files && e.target.files[0]) {
+                handleDirectResumeUpload(e.target.files[0])
+              }
+            }}
+            style={{ display: 'none' }}
+          />
+
+          {/* In-Place Interactive Dropzone */}
+          <div
+            onClick={() => !isUploadingResume && fileInputRef.current?.click()}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`mt-6 border-2 border-dashed rounded-2xl p-8 sm:p-10 text-center cursor-pointer transition-all duration-200 ${
+              isDragActive
+                ? 'border-primary-500 bg-primary-50 ring-4 ring-primary-100'
+                : 'border-gray-300 hover:border-primary-400 hover:bg-gray-50'
+            }`}
+          >
+            {isUploadingResume ? (
+              <div className="py-4 space-y-3">
+                <div className="inline-block animate-spin rounded-full h-10 w-10 border-3 border-primary-600 border-t-transparent"></div>
+                <p className="text-sm font-bold text-primary-700">Analyzing resume & extracting skills...</p>
+                <p className="text-xs text-gray-500">Your tailored assessment will start automatically.</p>
+              </div>
+            ) : (
+              <>
+                <div className="w-14 h-14 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <UploadIcon className="w-7 h-7" />
+                </div>
+                <p className="text-base font-semibold text-gray-800">
+                  {isDragActive ? 'Drop your resume here' : 'Drag & drop your resume here, or browse'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Supported formats: PDF, DOCX, TXT (Max 10MB)
+                </p>
+                <div className="mt-4">
+                  <span className="inline-flex items-center px-4 py-2 rounded-xl bg-primary-600 text-white text-xs font-bold shadow-md hover:bg-primary-700 transition-colors">
+                    Browse File & Start Test
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* 3 Steps Overview */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-6 text-left">
+            <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-100">
+              <span className="w-5 h-5 rounded-full bg-primary-600 text-white text-[11px] font-bold flex items-center justify-center mb-1.5">1</span>
+              <h4 className="text-xs font-bold text-gray-900">Upload Here</h4>
+              <p className="text-[11px] text-gray-500 mt-0.5">Drop your resume file directly above.</p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-100">
+              <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[11px] font-bold flex items-center justify-center mb-1.5">2</span>
+              <h4 className="text-xs font-bold text-gray-900">AI Skill Extraction</h4>
+              <p className="text-[11px] text-gray-500 mt-0.5">Identifies your core technical skills.</p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-100">
+              <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[11px] font-bold flex items-center justify-center mb-1.5">3</span>
+              <h4 className="text-xs font-bold text-gray-900">Instant Test</h4>
+              <p className="text-[11px] text-gray-500 mt-0.5">Assessment begins automatically.</p>
+            </div>
+          </div>
+
+          {/* Back button */}
+          <div className="pt-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/dashboard')}
+              className="text-xs px-5 py-2"
+            >
+              Back to Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ----------------------------------------------------
+  // 3. RESULTS VIEW
   // ----------------------------------------------------
   if (viewMode === 'results' && result) {
     const score = Math.round(result.score || result.percentage || 0)
@@ -187,7 +385,7 @@ export const Assessment = () => {
                 </p>
               </div>
 
-              {/* Circular / Badge Score */}
+              {/* Score Badge */}
               <div className="flex flex-col items-center justify-center p-6 bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 min-w-[170px] shadow-lg">
                 <span className="text-5xl font-black">{score}%</span>
                 <span className="text-xs font-medium text-white/90 mt-1 uppercase tracking-wide">
@@ -306,7 +504,7 @@ export const Assessment = () => {
                         )}
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="text-xs font-semibold text-gray-500 uppercase">
                             Question {idx + 1}
                           </span>
@@ -314,7 +512,7 @@ export const Assessment = () => {
                             {rev.skill}
                           </span>
                         </div>
-                        <p className="text-sm font-semibold text-gray-900 mt-1">
+                        <p className="text-sm font-semibold text-gray-900 mt-1.5">
                           {rev.question}
                         </p>
                       </div>
@@ -364,7 +562,7 @@ export const Assessment = () => {
   }
 
   // ----------------------------------------------------
-  // ACTIVE QUIZ VIEW
+  // 4. ACTIVE QUIZ VIEW (Clean, without difficulty badges)
   // ----------------------------------------------------
   return (
     <div className="max-w-3xl mx-auto pb-12 animate-in fade-in duration-200">
@@ -374,12 +572,12 @@ export const Assessment = () => {
           <div className="p-2 rounded-xl bg-blue-600 text-white shrink-0">
             <SparklesIcon className="w-5 h-5" />
           </div>
-          <div>
+          <div className="flex-1">
             <h3 className="text-sm font-bold text-blue-950">
               Personalized Skill Assessment
             </h3>
             <p className="text-xs text-blue-800/80 mt-0.5">
-              Questions are dynamically customized based on skills extracted from your resume.
+              Questions are customized based on skills extracted from your resume.
             </p>
             {testedSkills.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
@@ -400,9 +598,9 @@ export const Assessment = () => {
       {/* Main Quiz Card */}
       <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 sm:p-8">
         {/* Top Quiz Header */}
-        <div className="flex items-center justify-between pb-6 border-b border-gray-100">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-5 border-b border-gray-100">
           <div>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Heading level={3}>Skill Evaluation</Heading>
               {currentQ?.skill && (
                 <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-primary-50 text-primary-700 border border-primary-100">
@@ -422,27 +620,29 @@ export const Assessment = () => {
               <span>{formatTime(secondsElapsed)}</span>
             </div>
 
-            {/* Question dots */}
-            <div className="hidden sm:flex items-center space-x-1.5">
+            {/* 30-Question Jump Bar */}
+            <div className="flex items-center gap-1 overflow-x-auto max-w-[180px] sm:max-w-[260px] md:max-w-[320px] py-1 px-1">
               {questions.map((q, idx) => (
                 <button
                   key={q.id || idx}
                   onClick={() => setCurrentQuestionIdx(idx)}
-                  className={`w-3 h-3 rounded-full transition-all ${
+                  className={`w-6 h-6 shrink-0 rounded-md text-[10px] font-bold flex items-center justify-center transition-all ${
                     idx === currentQuestionIdx
-                      ? 'bg-primary-600 ring-2 ring-primary-300'
+                      ? 'bg-primary-600 text-white shadow-xs ring-2 ring-primary-200'
                       : answers[q.id]
-                      ? 'bg-emerald-500'
-                      : 'bg-gray-200'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                   }`}
                   title={`Question ${idx + 1}`}
-                />
+                >
+                  {idx + 1}
+                </button>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Progress Bar */}
+        {/* Clean Single Progress Bar */}
         <div className="w-full bg-gray-100 rounded-full h-1.5 my-6 overflow-hidden">
           <div
             className="bg-primary-600 h-full rounded-full transition-all duration-300"

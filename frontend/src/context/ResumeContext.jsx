@@ -111,7 +111,21 @@ export const ResumeProvider = ({ children }) => {
     try {
       await api.delete(`/resume/${id}`)
       toast.success('Resume deleted')
-      setResumes(prev => prev.filter(r => r.id !== id))
+      
+      const updatedResumes = resumes.filter(r => r.id !== id)
+      setResumes(updatedResumes)
+
+      // Invalidate assessment flags
+      localStorage.removeItem(`assessment_completed_for_resume_${id}`)
+      localStorage.removeItem(`assessment_score_for_resume_${id}`)
+      
+      if (updatedResumes.length === 0) {
+        localStorage.removeItem('assessment_completed')
+        localStorage.removeItem('latest_assessment_score')
+      }
+      
+      window.dispatchEvent(new Event('storage'))
+      await fetchResumes()
     } catch (err) {
       toast.error(err.response?.data?.error || 'Deletion failed')
       throw err

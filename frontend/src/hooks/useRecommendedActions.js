@@ -12,44 +12,62 @@ export const useRecommendedActions = () => {
   const [assessmentScore, setAssessmentScore] = useState(null)
 
   useEffect(() => {
-    // Check assessment status from localStorage, user state, or backend API
+    // Check assessment status strictly scoped to active resumes
     const checkAssessment = async () => {
-      const storedCompleted = localStorage.getItem('assessment_completed') === 'true'
-      const storedScore = localStorage.getItem('latest_assessment_score')
-      if (storedCompleted) {
-        setAssessmentCompleted(true)
-        setAssessmentScore(storedScore || 85)
+      // If no resumes uploaded, assessment cannot be completed
+      if (!resumes || resumes.length === 0) {
+        setAssessmentCompleted(false)
+        setAssessmentScore(null)
         return
       }
 
-      if (user?.has_assessment || user?.assessment_score) {
+      const activeResume = resumes[0]
+      const resumeId = activeResume?.id || 'default'
+      const resumeCreatedAt = activeResume?.created_at ? new Date(activeResume.created_at).getTime() : 0
+
+      // Check per-resume completion flag in localStorage
+      const storedCompletedForResume = localStorage.getItem(`assessment_completed_for_resume_${resumeId}`) === 'true'
+      const storedScore = localStorage.getItem(`assessment_score_for_resume_${resumeId}`)
+      
+      if (storedCompletedForResume && storedScore) {
         setAssessmentCompleted(true)
-        setAssessmentScore(user?.assessment_score || 85)
+        setAssessmentScore(Number(storedScore))
         return
       }
 
+      // Check backend latest assessment
       const token = localStorage.getItem('access_token')
       if (token) {
         try {
           const res = await api.get('/assessment/latest')
           if (res.data?.has_assessment && res.data?.result) {
-            const scoreVal = Math.round(res.data.result.score || 85)
-            setAssessmentCompleted(true)
-            setAssessmentScore(scoreVal)
-            localStorage.setItem('assessment_completed', 'true')
-            localStorage.setItem('latest_assessment_score', String(scoreVal))
+            const assessCreatedAt = res.data.result.created_at ? new Date(res.data.result.created_at).getTime() : 0
+            
+            // Only consider assessment completed if it was taken at or after the active resume was uploaded
+            if (assessCreatedAt > 0 && resumeCreatedAt > 0 && assessCreatedAt >= resumeCreatedAt - 120000) {
+              const scoreVal = Math.round(res.data.result.score || 85)
+              setAssessmentCompleted(true)
+              setAssessmentScore(scoreVal)
+              localStorage.setItem(`assessment_completed_for_resume_${resumeId}`, 'true')
+              localStorage.setItem(`assessment_score_for_resume_${resumeId}`, String(scoreVal))
+              return
+            }
           }
         } catch (e) {
           // fallback gracefully
         }
       }
+
+      // Default: Fresh state for newly uploaded resume
+      setAssessmentCompleted(false)
+      setAssessmentScore(null)
     }
 
     checkAssessment()
     // Listen for storage updates
     window.addEventListener('storage', checkAssessment)
     return () => window.removeEventListener('storage', checkAssessment)
-  }, [user])
+  }, [user, resumes])
 
   // Profile completion calculation
   const profileDetails = useMemo(() => {
@@ -110,13 +128,15 @@ export const useRecommendedActions = () => {
       {
         id: 'assessment',
         title: 'Take a skill assessment',
-        description: assessmentCompleted 
-          ? `Assessment complete (Score: ${assessmentScore}%)` 
-          : 'Identify skill gaps and test domain knowledge',
-        isCompleted: assessmentCompleted,
-        link: '/assessment',
-        badge: assessmentCompleted ? 'Verified' : 'Recommended',
-        actionLabel: assessmentCompleted ? 'Retake Test' : 'Start Assessment',
+        description: !resumeDetails.isComplete
+          ? 'Requires resume upload first to personalize questions'
+          : assessmentCompleted 
+            ? `Assessment complete (Score: ${assessmentScore}%)` 
+            : 'Personalized evaluation (Easy → Medium → Hard)',
+        isCompleted: Boolean(resumeDetails.isComplete && assessmentCompleted),
+        link: !resumeDetails.isComplete ? '/resume/upload' : '/assessment',
+        badge: !resumeDetails.isComplete ? 'Resume Required' : assessmentCompleted ? 'Verified' : 'Recommended',
+        actionLabel: !resumeDetails.isComplete ? 'Upload Resume First' : assessmentCompleted ? 'Retake Test' : 'Start Assessment',
         category: 'onboarding'
       }
     ]
@@ -158,8 +178,10 @@ export const useRecommendedActions = () => {
   const pendingCount = Math.max(0, totalCount - completedCount)
 
   const markAssessmentDone = (score = 85) => {
-    localStorage.setItem('assessment_completed', 'true')
-    localStorage.setItem('latest_assessment_score', String(score))
+    const activeResume = resumes && resumes.length > 0 ? resumes[0] : null
+    const resumeId = activeResume?.id || 'default'
+    localStorage.setItem(`assessment_completed_for_resume_${resumeId}`, 'true')
+    localStorage.setItem(`assessment_score_for_resume_${resumeId}`, String(score))
     setAssessmentCompleted(true)
     setAssessmentScore(score)
   }
