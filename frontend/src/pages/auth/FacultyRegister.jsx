@@ -1,6 +1,6 @@
-// src/pages/auth/Register.jsx
+// frontend/src/pages/auth/FacultyRegister.jsx
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
@@ -8,20 +8,25 @@ import * as yup from 'yup'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../../components/common/Button'
 import { Input } from '../../components/common/Input'
+import { AcademicCapIcon } from '@heroicons/react/outline'
 import toast from 'react-hot-toast'
 import { getApiBaseUrl } from '../../config/apiConfig'
 
-const registerSchema = yup.object({
+const facultyRegisterSchema = yup.object({
+  full_name: yup.string()
+    .required('Full Name / Title is required')
+    .min(2, 'Name must be at least 2 characters'),
   username: yup.string()
-    .required('Username is required')
+    .required('Faculty ID / Username is required')
     .min(3, 'Username must be at least 3 characters')
     .matches(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
   email: yup.string()
-    .required('Email is required')
+    .required('Institutional / Faculty Email is required')
     .email('Invalid email address'),
-  full_name: yup.string()
-    .required('Full name is required')
-    .min(2, 'Full name must be at least 2 characters'),
+  department: yup.string()
+    .required('Academic Department is required'),
+  college: yup.string()
+    .required('College / University Name is required'),
   password: yup.string()
     .required('Password is required')
     .min(8, 'Password must be at least 8 characters')
@@ -32,113 +37,112 @@ const registerSchema = yup.object({
   confirmPassword: yup.string()
     .oneOf([yup.ref('password'), null], 'Passwords must match')
     .required('Confirm password is required'),
-  department: yup.string().required('Department is required'),
-  year_of_study: yup.number()
-    .typeError('Year of study must be a number')
-    .required('Year of study is required')
-    .min(1, 'Year must be between 1 and 4')
-    .max(4, 'Year must be between 1 and 4'),
 })
 
-export const Register = () => {
+export const FacultyRegister = () => {
   const navigate = useNavigate()
   const { register: registerUser } = useAuth()
-  const [isLoading, setIsLoading] = React.useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: yupResolver(registerSchema),
+    resolver: yupResolver(facultyRegisterSchema),
   })
 
   const onSubmit = async (data) => {
     try {
       setIsLoading(true)
-      await registerUser({ ...data, role: 'student' })
-      toast.success('Registration successful! Please login.')
-      navigate('/login')
+      const payload = {
+        full_name: data.full_name,
+        username: data.username,
+        email: data.email,
+        department: data.department,
+        college: data.college,
+        password: data.password,
+        role: 'faculty'
+      }
+
+      await registerUser(payload)
+      toast.success('Faculty account created successfully! Please sign in.')
+      navigate('/faculty/login')
     } catch (error) {
-      toast.error(error.response?.data?.error || error.response?.data?.message || error.message || 'Registration failed')
+      toast.error(error.response?.data?.error || error.response?.data?.message || error.message || 'Faculty registration failed')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleGoogleStudentAuth = () => {
-    window.location.href = `${getApiBaseUrl()}/auth/google?role=student`
+  const handleGoogleFacultyAuth = () => {
+    window.location.href = `${getApiBaseUrl()}/auth/google?role=faculty`
   }
 
-  const handleLinkedInStudentAuth = () => {
-    window.location.href = `${getApiBaseUrl()}/auth/linkedin?role=student`
+  const handleLinkedInFacultyAuth = () => {
+    window.location.href = `${getApiBaseUrl()}/auth/linkedin?role=faculty`
   }
 
   return (
-    <div className="w-full max-w-lg mx-auto my-auto bg-white p-6 sm:p-8 rounded-2xl shadow-lg border border-gray-100/80">
-      <div>
-        <div className="flex justify-center">
-          <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center shadow-md shadow-primary-500/20">
-            <span className="text-white text-xl font-bold">AI</span>
-          </div>
+    <div className="w-full max-w-lg mx-auto my-auto bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-indigo-100">
+      <div className="text-center">
+        <div className="w-14 h-14 mx-auto bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
+          <AcademicCapIcon className="h-8 w-8 text-white" />
         </div>
-        <h2 className="mt-4 text-center text-2xl font-bold text-gray-900 tracking-tight">
-          Create Student Account
-        </h2>
-        <p className="mt-1 text-center text-xs sm:text-sm text-gray-500">
-          Join us to accelerate your transition from academia to industry
+        <h2 className="mt-4 text-2xl font-extrabold text-gray-900">Faculty Registration</h2>
+        <p className="mt-1 text-sm text-gray-500">
+          Create an educator account to manage placements, student resumes & analytics
         </p>
       </div>
 
       <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="sm:col-span-2">
+            <Input
+              label="Full Name / Title"
+              placeholder="e.g. Dr. Jane Smith, Prof. Robert Miller"
+              {...register('full_name')}
+              error={errors.full_name?.message}
+            />
+          </div>
+
           <Input
-            label="Full Name"
-            placeholder="Enter your full name"
-            {...register('full_name')}
-            error={errors.full_name?.message}
-          />
-          
-          <Input
-            label="Username"
-            placeholder="Choose a username"
+            label="Faculty ID / Username"
+            placeholder="e.g. jsmith_faculty"
             {...register('username')}
             error={errors.username?.message}
           />
-          
-          <div className="sm:col-span-2">
-            <Input
-              label="Email Address"
-              type="email"
-              placeholder="Enter your email"
-              {...register('email')}
-              error={errors.email?.message}
-            />
-          </div>
-          
+
+          <Input
+            label="Institutional Email"
+            type="email"
+            placeholder="faculty@university.edu"
+            {...register('email')}
+            error={errors.email?.message}
+          />
+
           <Input
             label="Department"
-            placeholder="e.g. Computer Science"
+            placeholder="e.g. Computer Science & Eng"
             {...register('department')}
             error={errors.department?.message}
           />
-          
+
           <Input
-            label="Year of Study"
-            type="number"
-            placeholder="1-4"
-            {...register('year_of_study')}
-            error={errors.year_of_study?.message}
+            label="College / University"
+            placeholder="e.g. MIT, State University"
+            {...register('college')}
+            error={errors.college?.message}
           />
-          
+
           <Input
             label="Password"
             type="password"
-            placeholder="Create password"
+            placeholder="Create strong password"
             {...register('password')}
             error={errors.password?.message}
           />
-          
+
           <Input
             label="Confirm Password"
             type="password"
-            placeholder="Confirm password"
+            placeholder="Repeat password"
             {...register('confirmPassword')}
             error={errors.confirmPassword?.message}
           />
@@ -146,42 +150,45 @@ export const Register = () => {
 
         <Button
           type="submit"
-          className="w-full py-2.5 mt-2"
+          className="w-full py-2.5 mt-2 bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-500/20"
           isLoading={isLoading}
         >
-          Create Student Account
+          Create Faculty Account
         </Button>
 
         <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-gray-600 gap-2 pt-2 border-t border-gray-100">
           <div>
-            Already have an account?{' '}
-            <Link to="/login" className="text-primary-600 hover:text-primary-500 font-semibold">
-              Sign in
+            Already registered?{' '}
+            <Link to="/faculty/login" className="text-indigo-600 font-semibold hover:underline">
+              Faculty Sign In
             </Link>
           </div>
           <div>
-            <Link to="/faculty/register" className="text-indigo-600 hover:text-indigo-800 font-semibold">
-              🎓 Faculty Sign Up →
+            Are you a student?{' '}
+            <Link to="/register" className="text-primary-600 font-semibold hover:underline">
+              Student Sign Up
             </Link>
           </div>
         </div>
       </form>
 
-      {/* Social login for students */}
+      {/* Social Registration */}
       <div className="mt-5">
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-200" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            <span className="px-2.5 bg-white text-gray-400 uppercase tracking-wider font-medium">
+              Or register with institutional SSO
+            </span>
           </div>
         </div>
 
         <div className="mt-3.5 grid grid-cols-2 gap-3">
           <button
             type="button"
-            onClick={handleGoogleStudentAuth}
+            onClick={handleGoogleFacultyAuth}
             className="w-full inline-flex justify-center items-center py-2 px-3 border border-gray-200 rounded-lg shadow-sm bg-white text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition"
           >
             <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
@@ -194,7 +201,7 @@ export const Register = () => {
           </button>
           <button
             type="button"
-            onClick={handleLinkedInStudentAuth}
+            onClick={handleLinkedInFacultyAuth}
             className="w-full inline-flex justify-center items-center py-2 px-3 border border-gray-200 rounded-lg shadow-sm bg-white text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition"
           >
             <svg className="w-4 h-4 mr-2" fill="#0A66C2" viewBox="0 0 24 24">
@@ -208,4 +215,4 @@ export const Register = () => {
   )
 }
 
-export default Register
+export default FacultyRegister

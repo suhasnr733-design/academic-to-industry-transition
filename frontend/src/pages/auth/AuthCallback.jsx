@@ -35,9 +35,13 @@ export const AuthCallback = () => {
 
       if (token) {
         try {
-          await handleOAuthLogin(token, refreshToken)
+          const user = await handleOAuthLogin(token, refreshToken)
           toast.success('Successfully authenticated!')
-          navigate('/dashboard', { replace: true })
+          if (user?.role === 'faculty' || user?.role === 'admin') {
+            navigate('/faculty', { replace: true })
+          } else {
+            navigate('/dashboard', { replace: true })
+          }
         } catch (err) {
           console.error('OAuth token processing error:', err)
           setErrorMsg('Failed to process authentication tokens.')

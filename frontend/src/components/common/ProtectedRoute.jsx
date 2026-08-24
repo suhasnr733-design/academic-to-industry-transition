@@ -44,6 +44,15 @@ export const FacultyRoute = () => {
     )
   }
 
-  const isFaculty = user?.role === 'faculty' || user?.role === 'admin' || true
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />
-}
+  const isFaculty = user?.role === 'faculty' || user?.role === 'admin'
+
+  if (!isAuthenticated) {
+    return <Navigate to="/faculty/login" replace />
+  }
+
+  if (!isFaculty) {
+    return <Navigate to="/dashboard" replace />
+  }
+
+  return <Outlet />
+}
