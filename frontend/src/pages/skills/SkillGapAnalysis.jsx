@@ -8,7 +8,29 @@ import { Heading } from '../../components/common/Typography'
 import { 
   CheckCircleIcon, 
   XCircleIcon,
+  ExternalLinkIcon
 } from '@heroicons/react/outline'
+
+const getPlatformUrl = (platform, skillOrCourse) => {
+  const query = encodeURIComponent(skillOrCourse || '')
+  const p = (platform || '').toLowerCase()
+  if (p.includes('coursera')) {
+    return `https://www.coursera.org/search?query=${query}`
+  } else if (p.includes('udemy')) {
+    return `https://www.udemy.com/courses/search/?q=${query}`
+  } else if (p.includes('nptel') || p.includes('swayam')) {
+    return `https://swayam.gov.in/explorer?searchText=${query}`
+  } else if (p.includes('edx')) {
+    return `https://www.edx.org/search?q=${query}`
+  } else if (p.includes('youtube')) {
+    return `https://www.youtube.com/results?search_query=${query}+course`
+  }
+  return `https://www.google.com/search?q=${query}+${encodeURIComponent(platform)}+course`
+}
+
+const getCourseSearchUrl = (course, skill) => {
+  return `https://www.coursera.org/search?query=${encodeURIComponent(course || skill || '')}`
+}
 
 export const SkillGapAnalysis = () => {
   const { resumeId } = useParams()
@@ -151,20 +173,38 @@ export const SkillGapAnalysis = () => {
                     )}
                   </div>
                   {rec.courses && rec.courses.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
+                    <div className="mt-3 flex flex-wrap gap-2">
                       {rec.courses.map((course, ci) => (
-                        <span key={ci} className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-medium shadow-xs">
-                          📚 {course}
-                        </span>
+                        <a
+                          key={ci}
+                          href={getCourseSearchUrl(course, rec.skill)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={`Find "${course}" on Coursera`}
+                          className="inline-flex items-center px-3 py-1.5 bg-white hover:bg-primary-50 border border-gray-200 hover:border-primary-300 text-gray-700 hover:text-primary-700 rounded-lg text-xs font-medium shadow-xs transition-all duration-200 group"
+                        >
+                          <span className="mr-1.5">📚</span>
+                          <span>{course}</span>
+                          <ExternalLinkIcon className="h-3 w-3 ml-1.5 text-gray-400 group-hover:text-primary-600 opacity-70 group-hover:opacity-100 transition-opacity" />
+                        </a>
                       ))}
                     </div>
                   )}
                   {rec.platforms && rec.platforms.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
+                    <div className="mt-3 pt-2.5 border-t border-gray-100 flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-gray-500 font-medium">Explore on:</span>
                       {rec.platforms.map((platform, pi) => (
-                        <span key={pi} className="text-xs text-primary-600 font-semibold">
-                          Platform: {platform}
-                        </span>
+                        <a
+                          key={pi}
+                          href={getPlatformUrl(platform, rec.skill)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={`Search ${rec.skill} courses on ${platform}`}
+                          className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-900 transition-colors"
+                        >
+                          <span>{platform}</span>
+                          <ExternalLinkIcon className="h-3 w-3 ml-1 opacity-70" />
+                        </a>
                       ))}
                     </div>
                   )}
@@ -194,12 +234,39 @@ export const SkillGapAnalysis = () => {
                       <p className="text-xs text-gray-500 mt-0.5">Estimated Duration: {step.estimated_time}</p>
                     )}
                     {step.courses && step.courses.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
+                      <div className="mt-2 flex flex-wrap gap-1.5">
                         {step.courses.map((course, ci) => (
-                          <span key={ci} className="px-2.5 py-0.5 bg-primary-50 text-primary-700 rounded-full text-xs font-medium">
-                            {course}
-                          </span>
+                          <a
+                            key={ci}
+                            href={getCourseSearchUrl(course, step.skill)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-2.5 py-0.5 bg-primary-50 hover:bg-primary-100 text-primary-700 hover:text-primary-800 rounded-full text-xs font-medium transition-colors"
+                          >
+                            <span>{course}</span>
+                            <ExternalLinkIcon className="h-3 w-3 ml-1 opacity-70" />
+                          </a>
                         ))}
+                      </div>
+                    )}
+                    {step.resources && step.resources.length > 0 && (
+                      <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                        <span className="text-xs text-gray-400 font-medium">Platforms:</span>
+                        {step.resources.map((url, ri) => {
+                          const name = url.includes('coursera') ? 'Coursera' : url.includes('udemy') ? 'Udemy' : 'Platform'
+                          return (
+                            <a
+                              key={ri}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+                            >
+                              {name}
+                              <ExternalLinkIcon className="h-3 w-3 ml-1 opacity-70" />
+                            </a>
+                          )
+                        })}
                       </div>
                     )}
                   </div>
