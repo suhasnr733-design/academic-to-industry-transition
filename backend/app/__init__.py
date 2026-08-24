@@ -279,6 +279,21 @@ def create_app(config_class='app.config.DevelopmentConfig'):
                 db.session.commit()
                 print("ADMIN USER: Created initial admin user from secure configuration.")
         
+        # Seed faculty demo user safely
+        if not User.query.filter_by(username='faculty').first():
+            faculty_user = User(
+                username='faculty',
+                email='faculty@university.edu',
+                full_name='Dr. Smith (Faculty)',
+                role='faculty',
+                is_active=True,
+                is_email_verified=True
+            )
+            faculty_user.set_password('Faculty@123')
+            db.session.add(faculty_user)
+            db.session.commit()
+            print("FACULTY USER: Created initial faculty user (faculty / Faculty@123).")
+        
         # Seed sample jobs if empty
         if Job.query.count() == 0:
             sample_jobs = [

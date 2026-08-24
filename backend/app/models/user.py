@@ -18,6 +18,10 @@ class User(db.Model):
     college = db.Column(db.String(150), nullable=True)
     phone = db.Column(db.String(20), nullable=True)
     bio = db.Column(db.Text, nullable=True)
+    placement_status = db.Column(db.String(20), default='seeking', nullable=False)  # seeking, placed, higher_studies, opted_out
+    placed_company = db.Column(db.String(100), nullable=True)
+    package_lpa = db.Column(db.Float, nullable=True)
+
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     is_email_verified = db.Column(db.Boolean, default=False, nullable=False)
     oauth_provider = db.Column(db.String(30), nullable=True)
@@ -47,6 +51,9 @@ class User(db.Model):
             'college': self.college,
             'phone': self.phone,
             'bio': self.bio,
+            'placement_status': self.placement_status or 'seeking',
+            'placed_company': self.placed_company,
+            'package_lpa': self.package_lpa,
             'is_active': self.is_active,
             'is_email_verified': self.is_email_verified,
             'oauth_provider': self.oauth_provider,

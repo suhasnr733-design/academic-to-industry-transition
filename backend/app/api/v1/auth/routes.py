@@ -67,6 +67,9 @@ def register():
                 'message': f'Email "{data["email"]}" is already registered'
             }), 409
         
+        requested_role = data.get('role', 'student')
+        role = requested_role if requested_role in ['student', 'faculty'] else 'student'
+
         user = User(
             username=data['username'],
             email=data['email'],
@@ -74,7 +77,9 @@ def register():
             department=data.get('department'),
             year_of_study=data.get('year_of_study'),
             college=data.get('college'),
-            role='student'
+            role=role,
+            is_active=True,
+            is_email_verified=True
         )
         user.set_password(data['password'])
         
@@ -566,14 +571,18 @@ import urllib.parse
 import requests
 from flask import current_app, redirect
 
-def find_or_create_oauth_user(provider, provider_id, email, full_name, picture=None):
-    """Find existing user by OAuth ID or email, or create a new student account."""
+def find_or_create_oauth_user(provider, provider_id, email, full_name, picture=None, requested_role='student'):
+    """Find existing user by OAuth ID or email, or create a new user with requested role."""
     if not email:
         raise ValueError("OAuth provider did not return a valid email address.")
+
+    target_role = requested_role if requested_role in ['student', 'faculty', 'admin'] else 'student'
 
     # 1. Check existing user by provider & provider_id
     user = User.query.filter_by(oauth_provider=provider, oauth_provider_id=str(provider_id)).first()
     if user:
+        if target_role == 'faculty' and user.role == 'student':
+            user.role = 'faculty'
         user.last_login = datetime.utcnow()
         if picture and not user.profile_picture:
             user.profile_picture = picture
@@ -583,6 +592,8 @@ def find_or_create_oauth_user(provider, provider_id, email, full_name, picture=N
     # 2. Check existing user by email -> safely link account
     user = User.query.filter_by(email=email).first()
     if user:
+        if target_role == 'faculty' and user.role == 'student':
+            user.role = 'faculty'
         user.oauth_provider = provider
         user.oauth_provider_id = str(provider_id)
         user.is_email_verified = True
@@ -606,7 +617,7 @@ def find_or_create_oauth_user(provider, provider_id, email, full_name, picture=N
         username=username,
         email=email,
         full_name=full_name or username,
-        role='student',
+        role=target_role,
         is_active=True,
         is_email_verified=True,
         oauth_provider=provider,
@@ -624,7 +635,7 @@ def find_or_create_oauth_user(provider, provider_id, email, full_name, picture=N
 # ============================================
 @auth_bp.route('/google', methods=['GET'])
 def google_auth():
-    """Initiate Google OAuth authentication flow"""
+    """Initiate Google OAuth authentication flow with role context"""
     client_id = current_app.config.get('GOOGLE_CLIENT_ID')
     redirect_uri = current_app.config.get('GOOGLE_REDIRECT_URI')
     frontend_url = current_app.config.get('FRONTEND_URL')
@@ -633,7 +644,8 @@ def google_auth():
         logger.warning("Google OAuth credentials missing in configuration.")
         return redirect(f"{frontend_url}/auth/callback?error=google_oauth_not_configured")
 
-    state = secrets.token_urlsafe(16)
+    role = request.args.get('role', 'student')
+    state = f"{secrets.token_urlsafe(16)}--{role}"
     params = {
         'client_id': client_id,
         'redirect_uri': redirect_uri,
@@ -651,6 +663,13 @@ def google_callback():
     frontend_url = current_app.config.get('FRONTEND_URL')
     error = request.args.get('error')
     code = request.args.get('code')
+    state = request.args.get('state', '')
+
+    requested_role = 'student'
+    if '--' in state:
+        parts = state.split('--')
+        if len(parts) > 1 and parts[1] in ['student', 'faculty']:
+            requested_role = parts[1]
 
     if error or not code:
         logger.error(f"Google OAuth error: {error}")
@@ -695,7 +714,7 @@ def google_callback():
         name = user_info.get('name')
         picture = user_info.get('picture')
 
-        user = find_or_create_oauth_user('google', sub, email, name, picture)
+        user = find_or_create_oauth_user('google', sub, email, name, picture, requested_role=requested_role)
 
         access_token = create_access_token(identity=str(user.id))
         refresh_token = create_refresh_token(identity=str(user.id))
@@ -715,7 +734,7 @@ def google_callback():
 # ============================================
 @auth_bp.route('/linkedin', methods=['GET'])
 def linkedin_auth():
-    """Initiate LinkedIn OAuth OpenID Connect flow"""
+    """Initiate LinkedIn OAuth OpenID Connect flow with role context"""
     client_id = current_app.config.get('LINKEDIN_CLIENT_ID')
     redirect_uri = current_app.config.get('LINKEDIN_REDIRECT_URI')
     frontend_url = current_app.config.get('FRONTEND_URL')
@@ -724,7 +743,8 @@ def linkedin_auth():
         logger.warning("LinkedIn OAuth credentials missing in configuration.")
         return redirect(f"{frontend_url}/auth/callback?error=linkedin_oauth_not_configured")
 
-    state = secrets.token_urlsafe(16)
+    role = request.args.get('role', 'student')
+    state = f"{secrets.token_urlsafe(16)}--{role}"
     params = {
         'client_id': client_id,
         'redirect_uri': redirect_uri,
@@ -741,6 +761,13 @@ def linkedin_callback():
     frontend_url = current_app.config.get('FRONTEND_URL')
     error = request.args.get('error')
     code = request.args.get('code')
+    state = request.args.get('state', '')
+
+    requested_role = 'student'
+    if '--' in state:
+        parts = state.split('--')
+        if len(parts) > 1 and parts[1] in ['student', 'faculty']:
+            requested_role = parts[1]
 
     if error or not code:
         logger.error(f"LinkedIn OAuth error: {error}")
@@ -785,7 +812,7 @@ def linkedin_callback():
         name = user_info.get('name') or f"{user_info.get('given_name', '')} {user_info.get('family_name', '')}".strip()
         picture = user_info.get('picture')
 
-        user = find_or_create_oauth_user('linkedin', sub, email, name, picture)
+        user = find_or_create_oauth_user('linkedin', sub, email, name, picture, requested_role=requested_role)
 
         access_token = create_access_token(identity=str(user.id))
         refresh_token = create_refresh_token(identity=str(user.id))

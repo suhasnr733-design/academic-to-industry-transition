@@ -8,14 +8,26 @@ import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/integration/react'
 import { store, persistor } from './store/store'
 import { AuthProvider } from './context/AuthContext'
+import { useAuth } from './hooks/useAuth'
 import { ThemeProvider } from './context/ThemeContext'
 import { ResumeProvider } from './context/ResumeContext'
 import { Layout } from './components/layout/Layout'
 import { ProtectedRoute, AdminRoute, FacultyRoute } from './components/common/ProtectedRoute'
 import { LoadingFallback } from './components/common/LoadingFallback'
 
+// Smart role-based home redirect component
+const RoleHomeRedirect = () => {
+  const { user, isAuthenticated } = useAuth()
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (user?.role === 'faculty') return <Navigate to="/faculty" replace />
+  if (user?.role === 'admin') return <Navigate to="/admin" replace />
+  return <Navigate to="/dashboard" replace />
+}
+
 // Lazy loaded page components
 const Login = lazy(() => import('./pages/auth/Login').then(m => ({ default: m.default || m.Login })))
+const FacultyLogin = lazy(() => import('./pages/auth/FacultyLogin').then(m => ({ default: m.default || m.FacultyLogin })))
+const FacultyRegister = lazy(() => import('./pages/auth/FacultyRegister').then(m => ({ default: m.default || m.FacultyRegister })))
 const Register = lazy(() => import('./pages/auth/Register').then(m => ({ default: m.default || m.Register })))
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword').then(m => ({ default: m.default || m.ForgotPassword })))
 const ResetPassword = lazy(() => import('./pages/auth/ResetPassword').then(m => ({ default: m.default || m.ResetPassword })))
@@ -49,15 +61,18 @@ function App() {
                     <Suspense fallback={<LoadingFallback />}>
                       <Routes>
                         <Route path="/login" element={<Login />} />
+                        <Route path="/faculty/login" element={<FacultyLogin />} />
+                        <Route path="/faculty/register" element={<FacultyRegister />} />
                         <Route path="/register" element={<Register />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/forgot_password" element={<ForgotPassword />} />
                         <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/reset_password" element={<ResetPassword />} />
                         <Route path="/auth/callback" element={<AuthCallback />} />
-                        
+
+                        <Route path="/" element={<RoleHomeRedirect />} />
+
                         <Route element={<ProtectedRoute />}>
-                          <Route path="/" element={<Navigate to="/dashboard" />} />
                           <Route path="/dashboard" element={<Dashboard />} />
                           <Route path="/dashboard/advanced" element={<AdvancedDashboard />} />
                           <Route path="/advanced-dashboard" element={<AdvancedDashboard />} />
@@ -74,20 +89,20 @@ function App() {
                           <Route path="/settings" element={<Settings />} />
                           <Route path="/notifications" element={<Notifications />} />
                         </Route>
-                        
+
                         <Route element={<FacultyRoute />}>
                           <Route path="/faculty" element={<FacultyDashboard />} />
                         </Route>
-                        
+
                         <Route element={<AdminRoute />}>
                           <Route path="/admin" element={<AdminDashboard />} />
                         </Route>
-                        
-                        <Route path="*" element={<Navigate to="/" />} />
+
+                        <Route path="*" element={<RoleHomeRedirect />} />
                       </Routes>
                     </Suspense>
                   </Layout>
-                  <Toaster 
+                  <Toaster
                     position="top-right"
                     toastOptions={{
                       duration: 4000,

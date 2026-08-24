@@ -28,10 +28,16 @@ export const Login = () => {
   const onSubmit = async (data) => {
     try {
       setIsLoading(true)
-      await login(data)
+      const user = await login(data)
       sessionStorage.setItem('just_logged_in', 'true')
-      toast.success('Login successful!')
-      navigate('/dashboard')
+      toast.success(`Welcome back, ${user?.full_name || user?.username || 'User'}!`)
+      if (user?.role === 'faculty') {
+        navigate('/faculty')
+      } else if (user?.role === 'admin') {
+        navigate('/admin')
+      } else {
+        navigate('/dashboard')
+      }
     } catch (error) {
       toast.error(error.response?.data?.error || error.response?.data?.message || error.message || 'Login failed')
     } finally {
@@ -113,6 +119,12 @@ export const Login = () => {
             Sign up
           </Link>
         </p>
+
+        <div className="pt-2 border-t border-gray-100 text-center">
+          <Link to="/faculty/login" className="inline-flex items-center text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">
+            🎓 Faculty Member? Sign in to Faculty Portal →
+          </Link>
+        </div>
       </form>
 
       {/* Social login */}
