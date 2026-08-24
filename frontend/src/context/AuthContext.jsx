@@ -26,10 +26,12 @@ export const AuthProvider = ({ children }) => {
       const response = await api.get('/auth/profile')
       setUser(response.data)
       setIsAuthenticated(true)
+      return response.data
     } catch (error) {
       localStorage.removeItem('access_token')
       localStorage.removeItem('refresh_token')
       delete api.defaults.headers.common['Authorization']
+      return null
     } finally {
       setIsLoading(false)
     }
@@ -59,7 +61,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('refresh_token', refreshToken)
     }
     api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
-    await fetchUser()
+    const userProfile = await fetchUser()
+    return userProfile
   }
 
   const logout = () => {
