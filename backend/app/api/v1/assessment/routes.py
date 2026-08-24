@@ -12,30 +12,37 @@ from app.services.assessment_service import AssessmentService
 @jwt_required()
 def start_assessment():
     """
-    Generate a dynamic skill assessment based on skills extracted from the user's uploaded resumes.
+    Generate a dynamic progressive skill assessment based strictly on skills extracted from the user's uploaded resumes.
     """
     try:
         user_id = int(get_jwt_identity())
         
-        # Aggregate all unique skills across the user's active resumes
-        user_resumes = Resume.query.filter_by(user_id=user_id).order_by(Resume.created_at.desc()).all()
-        extracted_skills = []
-        for r in user_resumes:
-            if r.skills:
-                for s in r.skills:
-                    if s and s not in extracted_skills:
-                        extracted_skills.append(s)
+        # Strictly fetch the single most recently uploaded resume for the user
+        latest_resume = Resume.query.filter_by(user_id=user_id).order_by(Resume.created_at.desc()).first()
+        
+        if not latest_resume or not latest_resume.skills or len(latest_resume.skills) == 0:
+            return jsonify({
+                'success': False,
+                'requires_resume': True,
+                'error': 'No resume with extracted skills found. Please upload and analyze your resume first before taking the skill assessment.'
+            }), 400
 
-        assessment_session = AssessmentService.generate_assessment(extracted_skills, total_questions=6)
+        extracted_skills = [s for s in latest_resume.skills if s and isinstance(s, str)]
+
+        assessment_session = AssessmentService.generate_assessment(extracted_skills)
+        if not assessment_session.get('success'):
+            return jsonify(assessment_session), 400
         
         return jsonify({
             'success': True,
+            'requires_resume': False,
             'session': assessment_session
         }), 200
 
     except Exception as e:
         return jsonify({
             'success': False,
+            'requires_resume': False,
             'error': str(e)
         }), 500
 

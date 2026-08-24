@@ -13,38 +13,25 @@ export const useAssessments = () => {
       setIsLoading(true)
       setError(null)
       const res = await api.get('/assessment/start')
+      if (res.data?.requires_resume) {
+        return {
+          requires_resume: true,
+          error: res.data?.error || 'Please upload a resume first.'
+        }
+      }
       const session = res.data?.session || {}
       return session
     } catch (err) {
       console.error('Failed to start assessment:', err)
+      const isRequiresResume = err.response?.data?.requires_resume || false
       const message = err.response?.data?.error || 'Failed to start assessment'
       setError(message)
-      toast.error(message)
-      // Fallback foundational questions in case of network issue
+      if (!isRequiresResume) {
+        toast.error(message)
+      }
       return {
-        session_id: 'offline_session',
-        tested_skills: ['General Problem Solving', 'Web & Data'],
-        source: 'foundational',
-        questions: [
-          {
-            id: 'core_1',
-            skill: 'Data Structures & Algorithms',
-            question: 'What is the average time complexity of searching an element in a Hash Map / Hash Table?',
-            options: ['O(1)', 'O(log n)', 'O(n)', 'O(n^2)']
-          },
-          {
-            id: 'sql_1',
-            skill: 'SQL',
-            question: 'Which SQL clause is used to filter groups after an aggregation using GROUP BY?',
-            options: ['WHERE', 'HAVING', 'ORDER BY', 'LIMIT']
-          },
-          {
-            id: 'react_1',
-            skill: 'React',
-            question: 'Which React hook should you use to perform side effects (such as data fetching or subscriptions)?',
-            options: ['useState', 'useContext', 'useEffect', 'useMemo']
-          }
-        ]
+        requires_resume: isRequiresResume,
+        error: message
       }
     } finally {
       setIsLoading(false)
