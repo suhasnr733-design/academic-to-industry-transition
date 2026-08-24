@@ -10,8 +10,18 @@ import { useAuth } from '../../hooks/useAuth'
 export const Layout = ({ children }) => {
   const { isAuthenticated } = useAuth()
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
-  const location = useLocation()
-  const isAuthPage = ['/login', '/register', '/auth/callback', '/forgot-password'].includes(location.pathname)
+  const authPaths = [
+    '/login',
+    '/register',
+    '/faculty/login',
+    '/faculty/register',
+    '/auth/callback',
+    '/forgot-password',
+    '/forgot_password',
+    '/reset-password',
+    '/reset_password'
+  ]
+  const isAuthPage = authPaths.includes(location.pathname) || location.pathname.startsWith('/reset-password/')
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
 
