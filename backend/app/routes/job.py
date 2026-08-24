@@ -38,10 +38,36 @@ def get_jobs():
         'pages': pagination.pages
     }), 200
 
+@job_bp.route('/live', methods=['GET'])
+def get_live_jobs():
+    """Get live jobs from external APIs"""
+    search = request.args.get('search', 'Software Engineer')
+    location = request.args.get('location')
+    limit = request.args.get('limit', 30, type=int)
+
+    from app.services.job_aggregator import JobAggregatorService
+    agg = JobAggregatorService()
+    jobs = agg.search_all_jobs(query=search, location=location, total_limit=limit)
+    return jsonify({'status': 'success', 'jobs': jobs, 'count': len(jobs), 'is_live': True}), 200
+
+@job_bp.route('/live/match', methods=['GET', 'POST'])
+def match_live_jobs():
+    """Match live jobs with student profile"""
+    data = request.get_json(silent=True) or {}
+    skills = data.get('skills') or request.args.getlist('skill') or []
+    domain = request.args.get('domain') or data.get('domain')
+    location = request.args.get('location') or data.get('location')
+    limit = request.args.get('limit', 15, type=int)
+
+    from app.services.job_aggregator import JobAggregatorService
+    agg = JobAggregatorService()
+    matches = agg.match_live_jobs_with_student(student_skills=skills, domain=domain, location=location, limit=limit)
+    return jsonify({'status': 'success', 'matches': matches, 'count': len(matches), 'is_live': True}), 200
+
 @job_bp.route('/<int:job_id>', methods=['GET'])
 def get_job(job_id):
     """Get job details"""
-    job = Job.query.get(job_id)
+    job = db.session.get(Job, job_id)
     if not job:
         return jsonify({'error': 'Job not found'}), 404
     return jsonify(job.to_dict()), 200
