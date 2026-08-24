@@ -119,13 +119,24 @@ export const Register = () => {
             error={errors.department?.message}
           />
           
-          <Input
-            label="Year of Study"
-            type="number"
-            placeholder="1-4"
-            {...register('year_of_study')}
-            error={errors.year_of_study?.message}
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Year of Study</label>
+            <select
+              {...register('year_of_study')}
+              className={`w-full px-3.5 py-2.5 bg-white border ${
+                errors.year_of_study ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'
+              } rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm transition-all`}
+            >
+              <option value="">Select Year of Study</option>
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3">3rd Year</option>
+              <option value="4">4th Year</option>
+            </select>
+            {errors.year_of_study && (
+              <p className="mt-1 text-xs text-red-500">{errors.year_of_study.message}</p>
+            )}
+          </div>
           
           <Input
             label="Password"
