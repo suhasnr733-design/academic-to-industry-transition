@@ -80,7 +80,7 @@ export const FacultyLogin = () => {
         />
 
         <div className="flex items-center justify-end text-xs sm:text-sm">
-          <Link to="/forgot-password" className="text-indigo-600 hover:text-indigo-500 font-medium">
+          <Link to="/forgot-password?role=faculty" className="text-indigo-600 hover:text-indigo-500 font-medium">
             Forgot password?
           </Link>
         </div>
