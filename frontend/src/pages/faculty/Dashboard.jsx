@@ -24,6 +24,109 @@ import {
   CheckIcon,
   BanIcon,
   ClockIcon,
+  UserAddIcon,
+  UserRemoveIcon
+} from '@heroicons/react/outline'
+
+export const FacultyDashboard = () => {
+  const [searchParams] = useSearchParams()
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState({
+    total_students: 0,
+    total_resumes: 0,
+    avg_employability_score: 0,
+    placed_count: 0,
+    seeking_count: 0,
+    higher_studies_count: 0,
+    opted_out_count: 0
+  })
+  const [cohortSkills, setCohortSkills] = useState([])
+  const [advisorAdvice, setAdvisorAdvice] = useState('')
+  const [students, setStudents] = useState([])
+  const [incomingRequests, setIncomingRequests] = useState([])
+  const [loadingRequests, setLoadingRequests] = useState(false)
+  const [directoryScope, setDirectoryScope] = useState(searchParams.get('scope') === 'mentees' ? 'mentees' : 'all')
+
+  // Search and Filter State
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedDept, setSelectedDept] = useState('all')
+  const [selectedYear, setSelectedYear] = useState('all')
+
+  // Selected Student Modal & Placement Form
+  const [selectedStudent, setSelectedStudent] = useState(null)
+  const [isUpdatingPlacement, setIsUpdatingPlacement] = useState(false)
+  const [isProcessingAction, setIsProcessingAction] = useState(null)
+  const [isReleasingMentee, setIsReleasingMentee] = useState(null)
+  const [placementForm, setPlacementForm] = useState({
+    placement_status: 'seeking',
+    placed_company: '',
+    package_lpa: ''
+  })
+
+  // Fetch all faculty analytics
+  const fetchFacultyData = async () => {
+    try {
+      setLoading(true)
+      const [statsRes, skillsRes, adviceRes, usersRes] = await Promise.allSettled([
+        api.get(`/analytics/faculty/stats?filter_type=${directoryScope}`),
+        api.get('/analytics/cohort-skills'),
+        api.get('/analytics/advisor-recommendations'),
+        api.get(`/analytics/faculty/students?filter_type=${directoryScope}`)
+      ])
+
+      if (statsRes.status === 'fulfilled' && statsRes.value?.data?.stats) {
+        setStats(statsRes.value.data.stats)
+      }
+      if (skillsRes.status === 'fulfilled' && skillsRes.value?.data?.top_skills) {
+        setCohortSkills(skillsRes.value.data.top_skills)
+      }
+      if (adviceRes.status === 'fulfilled' && adviceRes.value?.data?.advisor_advice) {
+        setAdvisorAdvice(adviceRes.value.data.advisor_advice)
+      }
+      if (usersRes.status === 'fulfilled' && usersRes.value?.data?.students) {
+        setStudents(usersRes.value.data.students)
+      }
+    } catch (err) {
+      console.error('Error loading faculty dashboard:', err)
+      toast.error('Failed to load faculty analytics')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Fetch incoming mentorship requests
+  const fetchIncomingRequests = async () => {
+    try {
+      setLoadingRequests(true)
+      const res = await api.get('/mentorship/requests')
+      setIncomingRequests(res.data.requests || [])
+    } catch (err) {
+      console.error('Error loading mentorship requests:', err)
+    } finally {
+      setLoadingRequests(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchFacultyData()
+    fetchIncomingRequests()
+  }, [directoryScope])
+
+  // Handle Accept / Reject mentorship request
+  const handleRequestAction = async (requestId, action) => {
+    try {
+      setIsProcessingAction(requestId)
+      await api.put(`/mentorship/requests/${requestId}`, { status: action })
+      toast.success(`Mentorship request ${action}ed successfully`)
+      fetchIncomingRequests()
+      fetchFacultyData()
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.message || `Failed to ${action} request`)
+    } finally {
+      setIsProcessingAction(null)
+    }
+  }
+
   // Remove/Release an assigned mentee
   const handleRemoveMentee = async (student) => {
     if (!student) return

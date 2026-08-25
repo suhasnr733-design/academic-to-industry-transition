@@ -242,14 +242,6 @@ def create_app(config_class='app.config.DevelopmentConfig'):
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN oauth_provider_id VARCHAR(100)"))
                     if 'profile_picture' not in columns:
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255)"))
-if 'users' in inspector.get_table_names():
-                    columns = [c['name'] for c in inspector.get_columns('users')]
-                    if 'oauth_provider' not in columns:
-                        conn.execute(db.text("ALTER TABLE users ADD COLUMN oauth_provider VARCHAR(30)"))
-                    if 'oauth_provider_id' not in columns:
-                        conn.execute(db.text("ALTER TABLE users ADD COLUMN oauth_provider_id VARCHAR(100)"))
-                    if 'profile_picture' not in columns:
-                        conn.execute(db.text("ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255)"))
                     if 'placement_status' not in columns:
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN placement_status VARCHAR(20) DEFAULT 'seeking'"))
                     if 'placed_company' not in columns:
