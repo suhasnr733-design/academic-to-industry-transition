@@ -100,7 +100,7 @@ export const Login = () => {
             </label>
           </div>
 
-          <Link to="/forgot-password" className="text-primary-600 hover:text-primary-500 font-medium">
+          <Link to="/forgot-password?role=student" className="text-primary-600 hover:text-primary-500 font-medium">
             Forgot password?
           </Link>
         </div>
