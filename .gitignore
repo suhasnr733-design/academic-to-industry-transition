@@ -1,7 +1,6 @@
 # Environments & Virtual Environments
 venv/
 .venv/
-env/
 venv-data/
 
 # Environment Variables & Secrets (Keep .env.example)
@@ -24,10 +23,6 @@ __pycache__/
 .coverage
 htmlcov/
 .cache/
-
-# Machine Learning Models
-*.pkl
-data/models/*.pkl
 
 # Logs & Databases
 *.log
@@ -58,9 +53,3 @@ build/
 .idea/
 .DS_Store
 Thumbs.db
-
-# ML Models & Generated Artifacts (keep folder structure, ignore binary files)
-data/models/*.pkl
-data/models/**/*.pkl
-!data/models/.gitkeep
-

@@ -11,6 +11,7 @@ sys.path.insert(0, root_dir)
 
 from app import create_app
 
+from app import create_app
 
 config_name = os.environ.get(
     'FLASK_CONFIG',

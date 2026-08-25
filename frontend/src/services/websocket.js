@@ -9,7 +9,6 @@ import {
 } from '../store/slices/notificationSlice'
 import { updateResumeStatus, setUploadProgress } from '../store/slices/resumeSlice'
 import toast from 'react-hot-toast'
-import { getWebSocketUrl } from '../config/apiConfig'
 
 class WebSocketService {
   constructor() {
@@ -25,7 +24,7 @@ class WebSocketService {
       return
     }
 
-    const baseURL = getWebSocketUrl()
+    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
     this.socket = io(baseURL, {
       query: { token },
       transports: ['websocket'],

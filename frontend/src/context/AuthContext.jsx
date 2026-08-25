@@ -26,12 +26,10 @@ export const AuthProvider = ({ children }) => {
       const response = await api.get('/auth/profile')
       setUser(response.data)
       setIsAuthenticated(true)
-      return response.data
     } catch (error) {
       localStorage.removeItem('access_token')
       localStorage.removeItem('refresh_token')
       delete api.defaults.headers.common['Authorization']
-      return null
     } finally {
       setIsLoading(false)
     }
@@ -61,8 +59,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('refresh_token', refreshToken)
     }
     api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
-    const userProfile = await fetchUser()
-    return userProfile
+    await fetchUser()
   }
 
   const logout = () => {
@@ -98,16 +95,7 @@ export const AuthProvider = ({ children }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) {
-    return {
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      login: async () => {},
-      register: async () => {},
-      logout: () => {},
-      handleOAuthLogin: async () => {},
-      updateProfile: async () => {}
-    }
+    throw new Error('useAuth must be used within AuthProvider')
   }
   return context
 }

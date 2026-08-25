@@ -134,18 +134,7 @@ export const JobDetail = () => {
         {/* Actions */}
         <div className="p-6 border-t border-gray-200 bg-gray-50">
           <div className="flex flex-col sm:flex-row gap-3">
-            {job.apply_url ? (
-              <a
-                href={job.apply_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 inline-flex items-center justify-center px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg shadow-sm transition-colors text-center"
-              >
-                Apply on Official Site / LinkedIn ↗
-              </a>
-            ) : (
-              <Button className="flex-1">Apply Now</Button>
-            )}
+            <Button className="flex-1">Apply Now</Button>
             <Button variant="outline" className="flex-1">Save Job</Button>
           </div>
         </div>

@@ -6,7 +6,6 @@ from datetime import datetime
 from typing import Dict, List, Any
 from data_pipeline.scrapers.job_scraper import JobScraper
 from data_pipeline.scrapers.course_scraper import CourseScraper
-from data_pipeline.scrapers.feed_collector import FeedCollector
 from data_pipeline.config import DataConfig
 import logging
 
@@ -18,36 +17,19 @@ class DataCollector:
         self.logger = logging.getLogger(__name__)
         self.job_scraper = JobScraper({})
         self.course_scraper = CourseScraper({})
-        self.feed_collector = FeedCollector()
         
-    def collect_jobs(self, keywords: List[str], location: str = 'Bangalore', include_feeds: bool = True, **kwargs) -> pd.DataFrame:
-        """Collect job listings from scrapers and open feeds"""
+    def collect_jobs(self, keywords: List[str], location: str = 'Bangalore', **kwargs) -> pd.DataFrame:
+        """Collect job listings"""
 
         self.logger.info(f"Starting job collection for keywords: {keywords}")
-        all_jobs = []
         
-        # 1. Scraped Jobs
-        try:
-            scraped_jobs = self.job_scraper.scrape(
-                keywords=keywords,
-                location=location
-            )
-            if scraped_jobs:
-                all_jobs.extend(scraped_jobs)
-        except Exception as e:
-            self.logger.warning(f"Scraper collection warning: {e}")
-
-        # 2. Feed Jobs (WeWorkRemotely / RemoteOK)
-        if include_feeds:
-            for kw in (keywords or ['Software']):
-                try:
-                    feed_jobs = self.feed_collector.collect_all(query=kw, limit_per_feed=10)
-                    all_jobs.extend(feed_jobs)
-                except Exception as e:
-                    self.logger.warning(f"Feed collection warning: {e}")
+        jobs = self.job_scraper.scrape(
+            keywords=keywords,
+            location=location
+        )
         
-        if all_jobs:
-            df = pd.DataFrame(all_jobs)
+        if jobs:
+            df = pd.DataFrame(jobs)
             df['collected_date'] = datetime.now()
             df['source'] = df.get('source', 'unknown')
             self._save_data(df, 'jobs', keywords[0] if keywords else 'all')

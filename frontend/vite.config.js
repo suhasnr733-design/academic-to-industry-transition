@@ -92,22 +92,20 @@ export default defineConfig({
     assetsInlineLimit: 4096,
   },
   server: {
-    host: true,
-    port: 5173,
+    port: 3000,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:5000',
+        target: 'https://academic-to-industry-transition.onrender.com',
         changeOrigin: true,
       },
       '/ws': {
-        target: 'ws://127.0.0.1:5000',
+        target: 'ws://academic-to-industry-transition.onrender.com',
         ws: true,
       },
     },
   },
   preview: {
-    host: true,
-    port: 5173,
+    port: 3000,
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom', '@reduxjs/toolkit', 'react-redux'],

@@ -9,7 +9,6 @@ import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../../components/common/Button'
 import { Input } from '../../components/common/Input'
 import toast from 'react-hot-toast'
-import { getApiBaseUrl } from '../../config/apiConfig'
 
 const loginSchema = yup.object({
   username: yup.string().required('Username is required'),
@@ -28,16 +27,9 @@ export const Login = () => {
   const onSubmit = async (data) => {
     try {
       setIsLoading(true)
-      const user = await login(data)
-      sessionStorage.setItem('just_logged_in', 'true')
-      toast.success(`Welcome back, ${user?.full_name || user?.username || 'User'}!`)
-      if (user?.role === 'faculty') {
-        navigate('/faculty')
-      } else if (user?.role === 'admin') {
-        navigate('/admin')
-      } else {
-        navigate('/dashboard')
-      }
+      await login(data)
+      toast.success('Login successful!')
+      navigate('/dashboard')
     } catch (error) {
       toast.error(error.response?.data?.error || error.response?.data?.message || error.message || 'Login failed')
     } finally {
@@ -46,11 +38,13 @@ export const Login = () => {
   }
 
   const handleGoogleLogin = () => {
-    window.location.href = `${getApiBaseUrl()}/auth/google`
+    const apiBase = import.meta.env.VITE_API_URL || 'https://academic-to-industry-transition.onrender.com/api/v1'
+    window.location.href = `${apiBase}/auth/google`
   }
 
   const handleLinkedInLogin = () => {
-    window.location.href = `${getApiBaseUrl()}/auth/linkedin`
+    const apiBase = import.meta.env.VITE_API_URL || 'https://academic-to-industry-transition.onrender.com/api/v1'
+    window.location.href = `${apiBase}/auth/linkedin`
   }
 
   return (
@@ -119,12 +113,6 @@ export const Login = () => {
             Sign up
           </Link>
         </p>
-
-        <div className="pt-2 border-t border-gray-100 text-center">
-          <Link to="/faculty/login" className="inline-flex items-center text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">
-            🎓 Faculty Member? Sign in to Faculty Portal →
-          </Link>
-        </div>
       </form>
 
       {/* Social login */}

@@ -1,6 +1,4 @@
 # backend/ml_service/main.py
-import os
-import sys
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -23,27 +21,12 @@ class PredictionService:
         self.features = None
         self.load_model()
     
-    def _find_model_file(self, filename):
-        candidates = [
-            os.path.join('data', 'models', filename),
-            os.path.join('..', 'data', 'models', filename),
-            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data', 'models', filename),
-            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'models', filename),
-        ]
-        for p in candidates:
-            if os.path.exists(p):
-                return p
-        return os.path.join('data', 'models', filename)
-
     def load_model(self):
         try:
-            model_p = self._find_model_file('ensemble_model.pkl')
-            scaler_p = self._find_model_file('scaler.pkl')
-            feat_p = self._find_model_file('feature_columns.pkl')
-            self.model = joblib.load(model_p)
-            self.scaler = joblib.load(scaler_p)
-            self.features = joblib.load(feat_p)
-            logger.info("✅ Model loaded successfully from %s", model_p)
+            self.model = joblib.load('data/models/ensemble_model.pkl')
+            self.scaler = joblib.load('data/models/scaler.pkl')
+            self.features = joblib.load('data/models/feature_columns.pkl')
+            logger.info("✅ Model loaded successfully")
         except Exception as e:
             logger.error(f"Failed to load model: {e}")
     

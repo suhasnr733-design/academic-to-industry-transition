@@ -3,7 +3,6 @@
 import { create } from 'zustand'
 import { io } from 'socket.io-client'
 import { useNotifications } from '../../hooks/useNotifications'
-import { getWebSocketUrl } from '../../config/apiConfig'
 
 export const useWebSocketStore = create((set, get) => ({
   socket: null,
@@ -15,7 +14,7 @@ export const useWebSocketStore = create((set, get) => ({
   connect: (token) => {
     if (get().socket && get().isConnected) return
     
-    const socket = io(getWebSocketUrl(), {
+    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
       query: { token },
       transports: ['websocket'],
       reconnection: true,
