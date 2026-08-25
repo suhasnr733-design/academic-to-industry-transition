@@ -47,11 +47,21 @@ class ResumeProcessor:
             resume.experience = parsed_data.get('experience', {})
             resume.projects = parsed_data.get('projects', [])
             
-            # Simple employability calculation based on skills and projects
+            # Employability calculation based on skills, education, and projects
             skill_count = len(resume.skills or [])
-            score = min(50.0 + skill_count * 5.0, 95.0)
-            resume.employability_score = score
-            resume.recommended_roles = ['Software Engineer', 'Data Scientist']
+            project_count = len(resume.projects or [])
+            base_score = 60.0 + (skill_count * 2.0) + (project_count * 5.0)
+            score = min(max(base_score, 50.0), 96.0)
+            resume.employability_score = round(score, 1)
+            
+            # Skill gaps and recommended roles
+            try:
+                gaps = self.analyzer.analyze_gaps(resume.skills, target_role='Software Engineer')
+                resume.skill_gaps = gaps.get('missing_skills', [])
+            except Exception:
+                resume.skill_gaps = []
+                
+            resume.recommended_roles = ['Software Engineer', 'Full Stack Developer', 'Data Analyst']
             resume.status = 'completed'
             
             db.session.commit()

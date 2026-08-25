@@ -14,17 +14,31 @@ class SkillAnalyzer:
             'Python': ['Python for Data Science', 'Python Programming Essentials', 'Advanced Python'],
             'Java': ['Java Fundamentals', 'Advanced Java Programming', 'Spring Framework'],
             'Machine Learning': ['ML Specialization', 'Deep Learning with Python', 'Applied ML'],
-            'Deep Learning': ['Deep Learning Specialization', 'Neural Networks', 'PyTorch'],
+            'Deep Learning': ['Deep Learning Specialization', 'Neural Networks', 'PyTorch for Deep Learning'],
             'AWS': ['AWS Certified Solutions Architect', 'AWS Cloud Practitioner', 'AWS DevOps'],
-            'Docker': ['Docker Mastery', 'DevOps with Docker', 'Containerization'],
-            'Kubernetes': ['Kubernetes Fundamentals', 'Kubernetes Administrator'],
-            'SQL': ['SQL for Data Science', 'Database Management Systems', 'Advanced SQL'],
-            'React': ['React Complete Guide', 'Frontend Development with React', 'React Native'],
-            'JavaScript': ['JavaScript: The Advanced Concepts', 'ES6+ Modern JavaScript'],
-            'Django': ['Django Full Stack', 'Django REST Framework', 'Python Web Development'],
-            'Git': ['Git and GitHub', 'Version Control with Git', 'Advanced Git'],
-            'Data Science': ['Data Science Bootcamp', 'Data Analysis with Python', 'Statistics']
+            'Azure': ['Microsoft Azure Fundamentals (AZ-900)', 'Azure Cloud Solutions Architect', 'Azure DevOps Engineer'],
+            'Docker': ['Docker Mastery', 'DevOps with Docker', 'Containerization Essentials'],
+            'Kubernetes': ['Kubernetes Fundamentals', 'Certified Kubernetes Administrator (CKA)', 'Microservices with K8s'],
+            'SQL': ['SQL for Data Science', 'Database Management Systems', 'Advanced SQL & Query Optimization'],
+            'React': ['React Complete Guide', 'Frontend Development with React', 'React Native Mastery'],
+            'JavaScript': ['JavaScript: The Advanced Concepts', 'ES6+ Modern JavaScript', 'Asynchronous JS Deep Dive'],
+            'Django': ['Django Full Stack', 'Django REST Framework', 'Python Web Development with Django'],
+            'Git': ['Git and GitHub Mastery', 'Version Control with Git', 'Advanced Git Workflows'],
+            'Data Science': ['Data Science Bootcamp', 'Data Analysis with Python', 'Statistics for Data Science'],
+            'Data Structures': ['Mastering Data Structures & Algorithms', 'Data Structures in Java & Python', 'LeetCode Problem Solving Bootcamp'],
+            'Algorithms': ['Design & Analysis of Algorithms', 'Algorithms Specialization (Coursera)', 'Competitive Programming & Algorithms'],
+            'Linux': ['Linux Command Line & Shell Scripting', 'Hands-On Linux Administration', 'Linux for Developers'],
+            'Jenkins': ['Jenkins CI/CD Automation', 'Mastering Jenkins for DevOps', 'Continuous Integration & Deployment Pipeline'],
+            'HTML': ['HTML5 & Modern Web Standards', 'Responsive Web Design Essentials', 'Semantic HTML5 & Accessibility'],
+            'CSS': ['Advanced CSS & Sass', 'Modern CSS with Flexbox & Grid', 'TailwindCSS & Modern UI Design'],
+            'Redux': ['Redux Toolkit & State Management', 'Modern React with Redux', 'Advanced Frontend Architecture'],
+            'Node.js': ['Node.js Developer Course', 'Building RESTful APIs with Node & Express', 'Full-Stack Node.js Mastery'],
+            'APIs': ['RESTful API Design & Architecture', 'API Development & Testing with Postman', 'Microservices & REST APIs'],
+            'PyTorch': ['Deep Learning with PyTorch', 'PyTorch for Deep Learning Bootcamp', 'Practical Neural Networks with PyTorch'],
+            'Statistics': ['Practical Statistics for Data Science', 'Inferential Statistics Specialization', 'Probability & Statistics for ML'],
+            'Data Visualization': ['Data Visualization with Python & Matplotlib', 'Tableau & PowerBI Data Storytelling', 'Interactive Visualizations with D3.js']
         }
+        self._lower_course_mapping = {k.lower(): v for k, v in self.course_mapping.items()}
     
     def analyze_gaps(self, current_skills, target_role=None, domain=None):
         """Analyze skill gaps for a target role"""
@@ -49,7 +63,11 @@ class SkillAnalyzer:
             'rest api': 'apis',
             'restful api': 'apis',
             'ml': 'machine learning',
-            'dl': 'deep learning'
+            'dl': 'deep learning',
+            'dsa': 'data structures',
+            'data structure': 'data structures',
+            'algo': 'algorithms',
+            'algorithm': 'algorithms'
         }
 
         current_normalized = set()
@@ -130,22 +148,31 @@ class SkillAnalyzer:
                 result.append(gap)
         
         return result
-    # backend/app/services/skill_analyzer.py (continued)
 
     def get_recommendations(self, skills, gaps):
         """Get course recommendations based on gaps"""
         recommendations = []
         
         for gap in gaps[:10]:  # Top 10 gaps
-            courses = self.course_mapping.get(gap, [])
-            if courses:
-                recommendations.append({
-                    'skill': gap,
-                    'priority': 'High' if gap in gaps[:3] else 'Medium',
-                    'courses': courses,
-                    'platforms': ['Coursera', 'Udemy', 'NPTEL'],
-                    'estimated_time': '2-4 weeks' if gap in gaps[:3] else '1-2 weeks'
-                })
+            gap_clean = str(gap).strip()
+            gap_lower = gap_clean.lower()
+            
+            courses = self._lower_course_mapping.get(gap_lower) or self.course_mapping.get(gap_clean)
+            if not courses:
+                courses = [
+                    f'{gap_clean} Fundamentals & Core Concepts',
+                    f'Applied {gap_clean} Real-World Projects',
+                    f'Advanced {gap_clean} Certification Bootcamp'
+                ]
+            
+            priority = 'High' if gap in gaps[:3] else 'Medium'
+            recommendations.append({
+                'skill': gap_clean,
+                'priority': priority,
+                'courses': courses,
+                'platforms': ['Coursera', 'Udemy', 'NPTEL'],
+                'estimated_time': '2-4 weeks' if priority == 'High' else '1-2 weeks'
+            })
         
         return {
             'recommendations': recommendations,
@@ -175,7 +202,8 @@ class SkillAnalyzer:
                 'courses': rec['courses'],
                 'resources': [
                     f'https://www.coursera.org/search?query={rec["skill"]}',
-                    f'https://www.udemy.com/courses/search/?q={rec["skill"]}'
+                    f'https://www.udemy.com/courses/search/?q={rec["skill"]}',
+                    f'https://nptel.ac.in/courses'
                 ]
             })
         

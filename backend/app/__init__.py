@@ -20,7 +20,11 @@ migrate = Migrate()
 jwt = JWTManager()
 bcrypt = Bcrypt()
 cors = CORS()
-limiter = Limiter(key_func=get_remote_address, default_limits=["100 per hour"])
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["100 per hour"],
+    storage_uri=os.environ.get('RATELIMIT_STORAGE_URI', 'memory://')
+)
 mail = Mail()
 socketio = None
 
@@ -226,9 +230,32 @@ def create_app(config_class='app.config.DevelopmentConfig'):
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN oauth_provider_id VARCHAR(100)"))
                     if 'profile_picture' not in columns:
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255)"))
-                    conn.commit()
+                
+                # Schema migration check for Job live columns
+                if 'jobs' in inspector.get_table_names():
+                    job_columns = [c['name'] for c in inspector.get_columns('jobs')]
+                    if 'is_live' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN is_live BOOLEAN DEFAULT 0"))
+                    if 'source' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN source VARCHAR(50) DEFAULT 'internal'"))
+                    if 'external_id' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN external_id VARCHAR(255)"))
+                    if 'apply_url' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN apply_url TEXT"))
+                    if 'salary_min' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN salary_min FLOAT"))
+                    if 'salary_max' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN salary_max FLOAT"))
+                    if 'currency' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN currency VARCHAR(10) DEFAULT 'INR'"))
+                    if 'expires_at' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN expires_at DATETIME"))
+                    if 'raw_data' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN raw_data JSON"))
+                conn.commit()
         except Exception as e:
-            logger.warning(f"OAuth columns auto-migration notice: {e}")
+            logger.warning(f"Database columns auto-migration notice: {e}")
+
         
         # Seed admin user safely
         if not User.query.filter_by(username='admin').first():
@@ -251,6 +278,21 @@ def create_app(config_class='app.config.DevelopmentConfig'):
                 db.session.add(admin)
                 db.session.commit()
                 print("ADMIN USER: Created initial admin user from secure configuration.")
+        
+        # Seed faculty demo user safely
+        if not User.query.filter_by(username='faculty').first():
+            faculty_user = User(
+                username='faculty',
+                email='faculty@university.edu',
+                full_name='Dr. Smith (Faculty)',
+                role='faculty',
+                is_active=True,
+                is_email_verified=True
+            )
+            faculty_user.set_password('Faculty@123')
+            db.session.add(faculty_user)
+            db.session.commit()
+            print("FACULTY USER: Created initial faculty user (faculty / Faculty@123).")
         
         # Seed sample jobs if empty
         if Job.query.count() == 0:

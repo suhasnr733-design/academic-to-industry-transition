@@ -60,12 +60,24 @@ export const Profile = () => {
               {...register('department')}
               error={errors.department?.message}
             />
-            <Input
-              label="Year of Study"
-              type="number"
-              {...register('year_of_study')}
-              error={errors.year_of_study?.message}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Year of Study</label>
+              <select
+                {...register('year_of_study')}
+                className={`w-full px-4 py-2 border ${
+                  errors.year_of_study ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'
+                } rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none bg-white text-sm`}
+              >
+                <option value="">Select Year</option>
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">4th Year</option>
+              </select>
+              {errors.year_of_study && (
+                <p className="mt-1 text-xs text-red-500">{errors.year_of_study.message}</p>
+              )}
+            </div>
             <Input
               label="College"
               {...register('college')}

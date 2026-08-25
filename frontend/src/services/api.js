@@ -3,8 +3,9 @@
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { getApiBaseUrl } from '../config/apiConfig'
 
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'
+const baseURL = getApiBaseUrl()
 
 // 1. Create standard Axios instance for direct REST calls across the application
 const axiosInstance = axios.create({

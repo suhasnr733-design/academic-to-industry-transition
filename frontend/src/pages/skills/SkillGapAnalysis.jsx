@@ -8,7 +8,9 @@ import { Heading } from '../../components/common/Typography'
 import { 
   CheckCircleIcon, 
   XCircleIcon,
+  ExternalLinkIcon
 } from '@heroicons/react/outline'
+import { getPlatformUrl, getCourseUrl, getPlatformBadgeConfig } from '../../utils/courseUrls'
 
 export const SkillGapAnalysis = () => {
   const { resumeId } = useParams()
@@ -151,21 +153,47 @@ export const SkillGapAnalysis = () => {
                     )}
                   </div>
                   {rec.courses && rec.courses.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {rec.courses.map((course, ci) => (
-                        <span key={ci} className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-medium shadow-xs">
-                          📚 {course}
-                        </span>
-                      ))}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {rec.courses.map((course, ci) => {
+                        const courseTitle = typeof course === 'object' ? (course.title || course.name) : course
+                        const courseUrl = getCourseUrl(course, rec.skill)
+                        return (
+                          <a
+                            key={ci}
+                            href={courseUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 hover:text-primary-600 hover:border-primary-300 hover:shadow-xs rounded-lg text-xs font-medium transition-all group cursor-pointer"
+                            title={`Open ${courseTitle} webpage`}
+                          >
+                            <span>📚</span>
+                            <span className="group-hover:underline">{courseTitle}</span>
+                            <ExternalLinkIcon className="h-3.5 w-3.5 text-gray-400 group-hover:text-primary-500 transition-colors flex-shrink-0" />
+                          </a>
+                        )
+                      })}
                     </div>
                   )}
                   {rec.platforms && rec.platforms.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {rec.platforms.map((platform, pi) => (
-                        <span key={pi} className="text-xs text-primary-600 font-semibold">
-                          Platform: {platform}
-                        </span>
-                      ))}
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-medium text-gray-500 mr-1">Platforms:</span>
+                      {rec.platforms.map((platform, pi) => {
+                        const pConfig = getPlatformBadgeConfig(platform)
+                        const pUrl = getPlatformUrl(platform, rec.skill)
+                        return (
+                          <a
+                            key={pi}
+                            href={pUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md border transition-all shadow-2xs hover:shadow-xs ${pConfig.badgeClass} cursor-pointer`}
+                            title={`Open ${rec.skill} courses on ${pConfig.name}`}
+                          >
+                            <span>Platform: {pConfig.name}</span>
+                            <ExternalLinkIcon className="h-3 w-3 opacity-75" />
+                          </a>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
@@ -194,14 +222,46 @@ export const SkillGapAnalysis = () => {
                       <p className="text-xs text-gray-500 mt-0.5">Estimated Duration: {step.estimated_time}</p>
                     )}
                     {step.courses && step.courses.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {step.courses.map((course, ci) => (
-                          <span key={ci} className="px-2.5 py-0.5 bg-primary-50 text-primary-700 rounded-full text-xs font-medium">
-                            {course}
-                          </span>
-                        ))}
+                      <div className="mt-2.5 flex flex-wrap gap-1.5">
+                        {step.courses.map((course, ci) => {
+                          const courseTitle = typeof course === 'object' ? (course.title || course.name) : course
+                          const courseUrl = getCourseUrl(course, step.skill)
+                          return (
+                            <a
+                              key={ci}
+                              href={courseUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-50 hover:bg-primary-100 text-primary-700 hover:text-primary-900 border border-primary-100 rounded-full text-xs font-medium transition-all group cursor-pointer"
+                              title={`Open ${courseTitle} webpage`}
+                            >
+                              <span className="group-hover:underline">{courseTitle}</span>
+                              <ExternalLinkIcon className="h-3 w-3 text-primary-400 group-hover:text-primary-700" />
+                            </a>
+                          )
+                        })}
                       </div>
                     )}
+                    <div className="mt-3 flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200/60">
+                      <span className="text-xs text-gray-500 font-medium">Explore on:</span>
+                      {['Coursera', 'Udemy', 'NPTEL'].map((plat, pi) => {
+                        const pUrl = getPlatformUrl(plat, step.skill)
+                        const pConfig = getPlatformBadgeConfig(plat)
+                        return (
+                          <a
+                            key={pi}
+                            href={pUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded border transition-colors ${pConfig.badgeClass}`}
+                            title={`Search ${step.skill} on ${plat}`}
+                          >
+                            <span>{plat}</span>
+                            <ExternalLinkIcon className="h-3 w-3" />
+                          </a>
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
               ))}

@@ -67,6 +67,9 @@ def register():
                 'message': f'Email "{data["email"]}" is already registered'
             }), 409
         
+        requested_role = data.get('role', 'student')
+        role = requested_role if requested_role in ['student', 'faculty'] else 'student'
+
         user = User(
             username=data['username'],
             email=data['email'],
@@ -74,7 +77,9 @@ def register():
             department=data.get('department'),
             year_of_study=data.get('year_of_study'),
             college=data.get('college'),
-            role='student'
+            role=role,
+            is_active=True,
+            is_email_verified=True
         )
         user.set_password(data['password'])
         
@@ -244,12 +249,27 @@ def update_profile():
         updated_fields = []
         for field in allowed_fields:
             if field in data:
-                if field == 'year_of_study' and data[field] is not None:
-                    if not 1 <= int(data[field]) <= 6:
+                if field == 'year_of_study':
+                    val = data.get('year_of_study')
+                    if val is None or str(val).strip() == '':
+                        setattr(user, field, None)
+                        updated_fields.append(field)
+                        continue
+                    try:
+                        int_val = int(val)
+                        if not 1 <= int_val <= 6:
+                            return jsonify({
+                                'error': 'Invalid year of study',
+                                'message': 'Year of study must be between 1 and 6'
+                            }), 400
+                        setattr(user, field, int_val)
+                        updated_fields.append(field)
+                    except (ValueError, TypeError):
                         return jsonify({
                             'error': 'Invalid year of study',
-                            'message': 'Year of study must be between 1 and 6'
+                            'message': 'Year of study must be a valid number'
                         }), 400
+                    continue
                 setattr(user, field, data[field])
                 updated_fields.append(field)
         
@@ -343,27 +363,105 @@ def forgot_password():
             from datetime import timedelta
             reset_token = create_access_token(
                 identity=str(user.id),
-                expires_delta=timedelta(minutes=15),
+                expires_delta=timedelta(minutes=5),
                 additional_claims={'type': 'password_reset'}
             )
             
             from flask import current_app
-            frontend_url = current_app.config.get('FRONTEND_URL', 'http://localhost:3000')
+            raw_origin = request.headers.get('Origin') or request.headers.get('Referer', '')
+            # Clean up referer if it has path like /forgot-password
+            if raw_origin:
+                from urllib.parse import urlparse
+                parsed = urlparse(raw_origin)
+                if parsed.scheme and parsed.netloc:
+                    caller_origin = f"{parsed.scheme}://{parsed.netloc}"
+                else:
+                    caller_origin = raw_origin.rstrip('/')
+            else:
+                caller_origin = None
+
+            frontend_url = caller_origin or current_app.config.get('FRONTEND_URL') or 'http://localhost:5173'
             reset_link = f"{frontend_url}/reset-password?token={reset_token}"
+            
+            # Print to dev console for easy testing (ASCII-safe for Windows terminals)
+            logger.info(f"Password reset link generated for {user.email}: {reset_link}")
+            print(f"\n[PASSWORD RESET LINK for {user.email}]: {reset_link}\n", flush=True)
 
             try:
                 from app import mail
                 from flask_mail import Message
                 
+                sender_email = (
+                    current_app.config.get('MAIL_DEFAULT_SENDER') or 
+                    current_app.config.get('MAIL_USERNAME') or 
+                    'noreply@transitionalai.com'
+                )
+                
                 msg = Message(
                     subject="Password Reset Request - TransitionalAI",
+                    sender=sender_email,
                     recipients=[user.email],
-                    body=f"Hello {user.username},\n\nWe received a request to reset your password. Click the link below to reset your password:\n\n{reset_link}\n\nThis link will expire in 15 minutes.\n\nBest regards,\nTransitionalAI Team"
+                    body=(
+                        f"Hello {user.username},\n\n"
+                        f"We received a request to reset your password. Click the link below to reset your password:\n\n"
+                        f"{reset_link}\n\n"
+                        f"This link will expire in 5 minutes.\n\n"
+                        f"If you did not request this, please ignore this email.\n\n"
+                        f"Best regards,\nTransitionalAI Team"
+                    ),
+                    html=f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #1e293b;">
+    <div style="max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 32px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="display: inline-block; width: 48px; height: 48px; line-height: 48px; border-radius: 12px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: #ffffff; font-weight: bold; font-size: 20px;">
+                AI
+            </div>
+            <h2 style="margin: 16px 0 4px; font-size: 22px; font-weight: 700; color: #0f172a;">Reset Your Password</h2>
+            <p style="margin: 0; color: #64748b; font-size: 14px;">Academic to Industry Transition Platform</p>
+        </div>
+        
+        <p style="font-size: 15px; line-height: 24px; color: #334155; margin-bottom: 16px;">
+            Hello <strong>{user.username}</strong>,
+        </p>
+        <p style="font-size: 15px; line-height: 24px; color: #334155; margin-bottom: 24px;">
+            We received a request to reset your password. Click the button below to set a new password:
+        </p>
+        
+        <div style="text-align: center; margin: 32px 0;">
+            <a href="{reset_link}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);">
+                Reset Password
+            </a>
+        </div>
+        
+        <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 6px; margin-bottom: 24px;">
+            <p style="margin: 0; font-size: 13px; color: #92400e; font-weight: 500;">
+                ⚠️ <strong>Security Notice:</strong> This link will expire in <strong>5 minutes</strong>.
+            </p>
+        </div>
+        
+        <p style="font-size: 13px; line-height: 20px; color: #64748b; margin-bottom: 24px;">
+            If you did not request this password reset, no action is needed. Your account remains secure.
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
+        
+        <p style="margin: 0; font-size: 12px; color: #94a3b8; text-align: center;">
+            Best regards,<br>
+            <strong>TransitionalAI Team</strong>
+        </p>
+    </div>
+</body>
+</html>"""
                 )
                 mail.send(msg)
                 logger.info(f"Password reset email sent to: {user.email}")
             except Exception as mail_err:
-                logger.warning(f"SMTP send notice: {mail_err}")
+                logger.warning(f"SMTP send notice (Brevo/Mail configuration): {mail_err}")
 
         # Return generic success response to prevent user enumeration
         return jsonify({
@@ -488,14 +586,18 @@ import urllib.parse
 import requests
 from flask import current_app, redirect
 
-def find_or_create_oauth_user(provider, provider_id, email, full_name, picture=None):
-    """Find existing user by OAuth ID or email, or create a new student account."""
+def find_or_create_oauth_user(provider, provider_id, email, full_name, picture=None, requested_role='student'):
+    """Find existing user by OAuth ID or email, or create a new user with requested role."""
     if not email:
         raise ValueError("OAuth provider did not return a valid email address.")
+
+    target_role = requested_role if requested_role in ['student', 'faculty', 'admin'] else 'student'
 
     # 1. Check existing user by provider & provider_id
     user = User.query.filter_by(oauth_provider=provider, oauth_provider_id=str(provider_id)).first()
     if user:
+        if target_role == 'faculty' and user.role == 'student':
+            user.role = 'faculty'
         user.last_login = datetime.utcnow()
         if picture and not user.profile_picture:
             user.profile_picture = picture
@@ -505,6 +607,8 @@ def find_or_create_oauth_user(provider, provider_id, email, full_name, picture=N
     # 2. Check existing user by email -> safely link account
     user = User.query.filter_by(email=email).first()
     if user:
+        if target_role == 'faculty' and user.role == 'student':
+            user.role = 'faculty'
         user.oauth_provider = provider
         user.oauth_provider_id = str(provider_id)
         user.is_email_verified = True
@@ -528,7 +632,7 @@ def find_or_create_oauth_user(provider, provider_id, email, full_name, picture=N
         username=username,
         email=email,
         full_name=full_name or username,
-        role='student',
+        role=target_role,
         is_active=True,
         is_email_verified=True,
         oauth_provider=provider,
@@ -546,7 +650,7 @@ def find_or_create_oauth_user(provider, provider_id, email, full_name, picture=N
 # ============================================
 @auth_bp.route('/google', methods=['GET'])
 def google_auth():
-    """Initiate Google OAuth authentication flow"""
+    """Initiate Google OAuth authentication flow with role context"""
     client_id = current_app.config.get('GOOGLE_CLIENT_ID')
     redirect_uri = current_app.config.get('GOOGLE_REDIRECT_URI')
     frontend_url = current_app.config.get('FRONTEND_URL')
@@ -555,7 +659,8 @@ def google_auth():
         logger.warning("Google OAuth credentials missing in configuration.")
         return redirect(f"{frontend_url}/auth/callback?error=google_oauth_not_configured")
 
-    state = secrets.token_urlsafe(16)
+    role = request.args.get('role', 'student')
+    state = f"{secrets.token_urlsafe(16)}--{role}"
     params = {
         'client_id': client_id,
         'redirect_uri': redirect_uri,
@@ -573,6 +678,13 @@ def google_callback():
     frontend_url = current_app.config.get('FRONTEND_URL')
     error = request.args.get('error')
     code = request.args.get('code')
+    state = request.args.get('state', '')
+
+    requested_role = 'student'
+    if '--' in state:
+        parts = state.split('--')
+        if len(parts) > 1 and parts[1] in ['student', 'faculty']:
+            requested_role = parts[1]
 
     if error or not code:
         logger.error(f"Google OAuth error: {error}")
@@ -617,7 +729,7 @@ def google_callback():
         name = user_info.get('name')
         picture = user_info.get('picture')
 
-        user = find_or_create_oauth_user('google', sub, email, name, picture)
+        user = find_or_create_oauth_user('google', sub, email, name, picture, requested_role=requested_role)
 
         access_token = create_access_token(identity=str(user.id))
         refresh_token = create_refresh_token(identity=str(user.id))
@@ -637,7 +749,7 @@ def google_callback():
 # ============================================
 @auth_bp.route('/linkedin', methods=['GET'])
 def linkedin_auth():
-    """Initiate LinkedIn OAuth OpenID Connect flow"""
+    """Initiate LinkedIn OAuth OpenID Connect flow with role context"""
     client_id = current_app.config.get('LINKEDIN_CLIENT_ID')
     redirect_uri = current_app.config.get('LINKEDIN_REDIRECT_URI')
     frontend_url = current_app.config.get('FRONTEND_URL')
@@ -646,7 +758,8 @@ def linkedin_auth():
         logger.warning("LinkedIn OAuth credentials missing in configuration.")
         return redirect(f"{frontend_url}/auth/callback?error=linkedin_oauth_not_configured")
 
-    state = secrets.token_urlsafe(16)
+    role = request.args.get('role', 'student')
+    state = f"{secrets.token_urlsafe(16)}--{role}"
     params = {
         'client_id': client_id,
         'redirect_uri': redirect_uri,
@@ -663,6 +776,13 @@ def linkedin_callback():
     frontend_url = current_app.config.get('FRONTEND_URL')
     error = request.args.get('error')
     code = request.args.get('code')
+    state = request.args.get('state', '')
+
+    requested_role = 'student'
+    if '--' in state:
+        parts = state.split('--')
+        if len(parts) > 1 and parts[1] in ['student', 'faculty']:
+            requested_role = parts[1]
 
     if error or not code:
         logger.error(f"LinkedIn OAuth error: {error}")
@@ -707,7 +827,7 @@ def linkedin_callback():
         name = user_info.get('name') or f"{user_info.get('given_name', '')} {user_info.get('family_name', '')}".strip()
         picture = user_info.get('picture')
 
-        user = find_or_create_oauth_user('linkedin', sub, email, name, picture)
+        user = find_or_create_oauth_user('linkedin', sub, email, name, picture, requested_role=requested_role)
 
         access_token = create_access_token(identity=str(user.id))
         refresh_token = create_refresh_token(identity=str(user.id))
