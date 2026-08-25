@@ -303,16 +303,23 @@ export const JobList = () => {
                   </div>
 
                   {/* Academic Tags & Transition Highlights */}
-                  {job.academic_tags && job.academic_tags.length > 0 && (
+                  {job.academic_tags && job.academic_tags.length > 0 ? (
                     <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
-                      <span className="text-xs text-gray-400 font-medium flex items-center gap-1">
-                        <AcademicCapIcon className="h-3.5 w-3.5 text-indigo-500" /> Academic Fit:
-                      </span>
                       {job.academic_tags.map((tag, idx) => (
-                        <span key={idx} className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium border border-indigo-100">
+                        <span 
+                          key={idx} 
+                          className="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-semibold border border-indigo-100 flex items-center gap-1"
+                        >
+                          <AcademicCapIcon className="h-3.5 w-3.5 text-indigo-600" />
                           {tag}
                         </span>
                       ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+                      <span className="px-2.5 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium border border-gray-200">
+                        💼 Industry Direct
+                      </span>
                     </div>
                   )}
 
@@ -335,30 +342,20 @@ export const JobList = () => {
                 </div>
 
                 {/* Match Score & Actions */}
-                <div className="flex flex-col sm:flex-row md:flex-col items-end justify-between gap-3 min-w-[170px]">
-                  {job.academic_fit_score !== undefined && (
-                    <div className="text-right">
-                      <div className={`px-2.5 py-1 rounded-lg border text-xs font-bold inline-flex items-center gap-1 ${getAcademicFitColor(job.academic_fit_score)}`}>
-                        <AcademicCapIcon className="h-3.5 w-3.5" />
-                        {job.academic_fit_score}% Academic Level
-                      </div>
-                      <div className="text-[10px] text-gray-400 mt-0.5">Role Profile (PhD / R&D)</div>
-                    </div>
-                  )}
-
-                  {/* Personal Resume Match Status */}
+                <div className="flex flex-col sm:flex-row md:flex-col items-end justify-between gap-3 min-w-[150px]">
+                  {/* Single Personal Resume Match Status */}
                   <div className="text-right">
                     {hasActiveResume ? (
-                      <>
-                        <div className="text-xl font-bold text-primary-600">
+                      <div className="bg-primary-50/80 border border-primary-100 px-3 py-1.5 rounded-xl text-right">
+                        <div className="text-xl font-bold text-primary-700 leading-tight">
                           {calculateMatchScore(job)}%
                         </div>
-                        <div className="text-xs text-gray-400">Your Resume Match</div>
-                      </>
+                        <div className="text-[11px] font-medium text-primary-600">Resume Match</div>
+                      </div>
                     ) : (
                       <Link 
                         to="/resume" 
-                        className="text-[11px] font-medium text-primary-600 hover:text-primary-700 bg-primary-50 px-2 py-1 rounded-md border border-primary-100 hover:underline inline-block"
+                        className="text-xs font-medium text-primary-600 hover:text-primary-700 bg-primary-50 px-2.5 py-1.5 rounded-lg border border-primary-100 hover:underline inline-flex items-center gap-1"
                       >
                         📄 Upload Resume to Match
                       </Link>

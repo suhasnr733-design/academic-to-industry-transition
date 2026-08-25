@@ -36,6 +36,14 @@ class AnalyticsService:
             }
         }
 
+    def get_faculty_placement_stats(self, faculty_id=None, filter_type='mentees', department=None):
+        """Get placement stats for faculty dashboard"""
+        from app.models.mentorship import FacultyMentee
+        mentee_ids = []
+        if faculty_id:
+            mentees = FacultyMentee.query.filter_by(faculty_id=faculty_id, is_active=True).all()
+            mentee_ids = [m.student_id for m in mentees]
+
         if filter_type == 'all':
             student_query = User.query.filter_by(role='student')
         else:
