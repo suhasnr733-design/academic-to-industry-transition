@@ -17,6 +17,16 @@ class Notification(db.Model):
     
     user = db.relationship('User', backref=db.backref('notifications', lazy=True))
     
+    def __init__(self, user_id=None, title=None, message=None, notification_type='info', link=None, is_read=False, **kwargs):
+        super().__init__(**kwargs)
+        if user_id is not None:
+            self.user_id = user_id
+        self.title = title
+        self.message = message
+        self.notification_type = notification_type
+        self.link = link
+        self.is_read = is_read
+
     def to_dict(self):
         return {
             'id': self.id,
