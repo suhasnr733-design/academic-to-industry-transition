@@ -104,28 +104,65 @@ def get_recommendations(resume_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@prediction_bp.route('/resume/<int:resume_id>/gap', methods=['GET'])
+@prediction_bp.route('/skill-gap', methods=['GET'])
+@prediction_bp.route('/skill-gap/latest', methods=['GET'])
 @prediction_bp.route('/skill-gap/<int:resume_id>', methods=['GET'])
+@prediction_bp.route('/resume/<int:resume_id>/gap', methods=['GET'])
 @prediction_bp.route('/gap/<int:resume_id>', methods=['GET'])
 @jwt_required()
-def get_skill_gap(resume_id):
+def get_skill_gap(resume_id=None):
     """Get skill gap analysis for a target role"""
     try:
         current_user_id = int(get_jwt_identity())
-        resume = Resume.query.filter_by(id=resume_id, user_id=current_user_id).first()
+        if resume_id:
+            resume = Resume.query.filter_by(id=resume_id, user_id=current_user_id).first()
+        else:
+            resume = Resume.query.filter_by(user_id=current_user_id).order_by(Resume.created_at.desc()).first()
+
         if not resume:
-            return jsonify({'error': 'Resume not found'}), 404
+            return jsonify({
+                'error': 'No resume uploaded yet',
+                'no_resume': True,
+                'match_percentage': 0,
+                'matching_skills': [],
+                'missing_skills': [],
+                'recommendations': [],
+                'learning_path': []
+            }), 404
         
-        target_role = request.args.get('target_role', 'Software Engineer')
+        # On-demand processing if resume is still pending or has no skills extracted
+        if resume.status == 'pending' or (not resume.skills and resume.file_path and os.path.exists(resume.file_path)):
+            try:
+                from app.services.resume_processor import ResumeProcessor
+                processor = ResumeProcessor()
+                processor.process_resume(resume.id)
+                db.session.refresh(resume)
+            except Exception as proc_err:
+                logger.warning(f"On-demand skill gap resume processing error: {proc_err}")
+
+        # Choose appropriate default role based on recommendations or fallback
+        req_role = request.args.get('target_role')
+        if not req_role:
+            if resume.recommended_roles and len(resume.recommended_roles) > 0:
+                req_role = resume.recommended_roles[0]
+            else:
+                req_role = 'Software Engineer'
+
+        target_role = req_role
         domain = request.args.get('domain')
         
         skills = resume.skills or []
         gap_data = skill_analyzer.analyze_gaps(skills, target_role=target_role, domain=domain)
         rec_data = skill_analyzer.get_recommendations(skills, gap_data.get('missing_skills', []))
         
+        available_roles = ['Software Engineer', 'DevOps Engineer', 'Frontend Developer', 'Backend Developer', 'Data Scientist', 'ML Engineer']
+        
         return jsonify({
-            'resume_id': resume_id,
+            'resume_id': resume.id,
+            'filename': resume.filename,
+            'candidate_name': resume.user.full_name if resume.user else None,
             'target_role': target_role,
+            'available_roles': available_roles,
             'current_skills': skills,
             'target_skills': gap_data.get('target_skills', []),
             'matching_skills': gap_data.get('matching_skills', []),
@@ -136,6 +173,7 @@ def get_skill_gap(resume_id):
             'learning_path': rec_data.get('learning_path', [])
         }), 200
     except Exception as e:
+        logger.error(f"Error getting skill gap analysis: {e}")
         return jsonify({'error': str(e)}), 500
 
 @prediction_bp.route('/resume/<int:resume_id>/match', methods=['GET'])
