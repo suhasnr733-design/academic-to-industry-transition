@@ -79,6 +79,12 @@ export const FacultyLogin = () => {
           error={errors.password?.message}
         />
 
+        <div className="flex items-center justify-end text-xs sm:text-sm">
+          <Link to="/forgot-password?role=faculty" className="text-indigo-600 hover:text-indigo-500 font-medium">
+            Forgot password?
+          </Link>
+        </div>
+
         <Button type="submit" className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-500/20" isLoading={isLoading}>
           Sign In to Faculty Portal
         </Button>

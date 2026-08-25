@@ -1,0 +1,209 @@
+# backend/app/api/v1/learning/routes.py
+
+from flask import request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from app import db
+from app.api.v1.learning import learning_bp
+from app.services.learning_service import LearningService
+from app.models.learning import LearningBookmark, LearningProgress, LearningActivity
+from app.models.resume import Resume
+
+learning_service = LearningService()
+
+@learning_bp.route('/roadmap', methods=['GET'])
+@jwt_required()
+def get_roadmap():
+    """Retrieve resume-specific learning roadmap and scored recommendations"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        resume_id_param = request.args.get('resume_id')
+        resume_id = int(resume_id_param) if (resume_id_param and resume_id_param.isdigit()) else None
+
+        roadmap = learning_service.get_roadmap_for_resume(user_id=current_user_id, resume_id=resume_id)
+        return jsonify(roadmap), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@learning_bp.route('/progress', methods=['POST'])
+@jwt_required()
+def update_progress():
+    """Update skill stage progress bound to resume_id"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        data = request.get_json() or {}
+
+        resume_id = data.get('resume_id')
+        skill_name = data.get('skill_name')
+        stage = data.get('stage', 'learn')
+        is_completed = data.get('is_completed', True)
+
+        if not resume_id or not skill_name:
+            return jsonify({'error': 'resume_id and skill_name are required'}), 400
+
+        result = learning_service.update_skill_progress(
+            user_id=current_user_id,
+            resume_id=int(resume_id),
+            skill_name=skill_name,
+            stage=stage,
+            is_completed=is_completed
+        )
+
+        # Log activity
+        activity = LearningActivity(
+            user_id=current_user_id,
+            resume_id=int(resume_id),
+            skill_name=skill_name,
+            activity_type=f"stage_{stage}_{'complete' if is_completed else 'updated'}",
+            details=f"Updated {skill_name} stage {stage}"
+        )
+        db.session.add(activity)
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Progress updated successfully',
+            'progress': result
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@learning_bp.route('/bookmarks', methods=['GET'])
+@jwt_required()
+def get_bookmarks():
+    """Get saved learning resources for active resume"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        resume_id_param = request.args.get('resume_id')
+
+        query = LearningBookmark.query.filter_by(user_id=current_user_id)
+        if resume_id_param and resume_id_param.isdigit():
+            query = query.filter_by(resume_id=int(resume_id_param))
+
+        bookmarks = query.order_by(LearningBookmark.created_at.desc()).all()
+        return jsonify({
+            'bookmarks': [b.to_dict() for b in bookmarks],
+            'total': len(bookmarks)
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@learning_bp.route('/bookmarks', methods=['POST'])
+@jwt_required()
+def add_bookmark():
+    """Bookmark a video, course, article, or project"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        data = request.get_json() or {}
+
+        resume_id = data.get('resume_id')
+        skill_name = data.get('skill_name')
+        resource_type = data.get('resource_type', 'youtube')
+        title = data.get('title')
+
+        if not resume_id or not skill_name or not title:
+            return jsonify({'error': 'resume_id, skill_name and title are required'}), 400
+
+        # Check existing
+        existing = LearningBookmark.query.filter_by(
+            user_id=current_user_id,
+            resume_id=int(resume_id),
+            title=title
+        ).first()
+
+        if existing:
+            return jsonify({'message': 'Bookmark already saved', 'bookmark': existing.to_dict()}), 200
+
+        bookmark = LearningBookmark(
+            user_id=current_user_id,
+            resume_id=int(resume_id),
+            skill_name=skill_name,
+            resource_type=resource_type,
+            title=title,
+            url=data.get('url'),
+            thumbnail=data.get('thumbnail'),
+            provider=data.get('provider'),
+            extra_data=data.get('extra_data', {})
+        )
+        db.session.add(bookmark)
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Bookmark saved successfully',
+            'bookmark': bookmark.to_dict()
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@learning_bp.route('/bookmarks/<int:bookmark_id>', methods=['DELETE'])
+@jwt_required()
+def delete_bookmark(bookmark_id):
+    """Remove a saved bookmark"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        bookmark = LearningBookmark.query.filter_by(id=bookmark_id, user_id=current_user_id).first()
+        if not bookmark:
+            return jsonify({'error': 'Bookmark not found'}), 404
+
+        db.session.delete(bookmark)
+        db.session.commit()
+        return jsonify({'message': 'Bookmark removed successfully', 'id': bookmark_id}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@learning_bp.route('/youtube', methods=['GET'])
+@jwt_required()
+def get_youtube_resources():
+    """Fetch contextual YouTube videos for a skill and stage"""
+    try:
+        skill = request.args.get('skill', 'SQL')
+        target_role = request.args.get('target_role', 'Software Engineer')
+        stage = request.args.get('stage', 'learn')
+
+        videos = learning_service.youtube_service.get_videos_for_skill(skill=skill, target_role=target_role, stage=stage)
+        return jsonify({
+            'skill': skill,
+            'target_role': target_role,
+            'stage': stage,
+            'videos': videos
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@learning_bp.route('/ai-assist', methods=['POST'])
+@jwt_required()
+def ai_learning_assistant():
+    """Contextual AI Learning Assistant endpoint"""
+    try:
+        data = request.get_json() or {}
+        skill = data.get('skill', 'SQL')
+        target_role = data.get('target_role', 'Software Engineer')
+        prompt_type = data.get('prompt_type', 'explain')  # explain, example, practice, interview, project
+        custom_prompt = data.get('custom_prompt')
+
+        responses = {
+            'explain': f"**{skill} Overview for {target_role}s**:\n\n{skill} is essential for managing, querying, and structuring application data efficiently. Master key syntax, logical query execution order, and indexing to pass technical interviews and build production-ready applications.",
+            'example': f"**Code Example for {skill}**:\n\n```sql\n-- Retrieve top performing candidates\nSELECT student_id, name, cgpa \nFROM students \nWHERE cgpa >= 8.0 \nORDER BY cgpa DESC \nLIMIT 5;\n```",
+            'practice': f"**Practice Task for {skill}**:\n\nWrite a query or algorithm to find the 2nd highest salary or element without using hardcoded index values. Think about edge cases where duplicate values exist!",
+            'interview': f"**Top Interview Question for {skill}**:\n\n*Q: What is the difference between INNER JOIN and LEFT JOIN, and how does database indexing improve query execution time?*\n\n*Key Tip*: Explain that INDEX reduces disk read pages from O(N) full table scans to O(log N) B-Tree lookups.",
+            'project': f"**Mini-Project Idea**: Build a **{skill} Student Placement Tracker** with search filters, CSV exports, and performance stats dashboard."
+        }
+
+        response_text = custom_prompt if custom_prompt else responses.get(prompt_type, responses['explain'])
+
+        return jsonify({
+            'skill': skill,
+            'target_role': target_role,
+            'prompt_type': prompt_type,
+            'response': response_text
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

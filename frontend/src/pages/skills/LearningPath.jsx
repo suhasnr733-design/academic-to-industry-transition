@@ -1,144 +1,310 @@
 // src/pages/skills/LearningPath.jsx
 
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useSkills } from '../../hooks/useSkills'
-import { Button } from '../../components/common/Button'
-import { Heading } from '../../components/common/Typography'
+import React, { useState, useEffect, useCallback } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { api } from '../../services/api'
+
+import { LearningDashboardHeader } from '../../components/learning/LearningDashboardHeader'
+import { InteractiveRoadmap } from '../../components/learning/InteractiveRoadmap'
+import { SkillLearningCard } from '../../components/learning/SkillLearningCard'
+import { DailyLearningPlan } from '../../components/learning/DailyLearningPlan'
+import { ContinueLearningWidget } from '../../components/learning/ContinueLearningWidget'
+import { BookmarksSection } from '../../components/learning/BookmarksSection'
+import { AILearningAssistant } from '../../components/learning/AILearningAssistant'
+import { CompletionCelebrationModal } from '../../components/learning/CompletionCelebrationModal'
+
 import { 
   AcademicCapIcon, 
-  CheckCircleIcon,
-  ClockIcon,
-  BookOpenIcon,
-  ExternalLinkIcon
+  BookmarkIcon, 
+  SparklesIcon, 
+  UploadIcon,
+  RefreshIcon
 } from '@heroicons/react/outline'
-import { getPlatformUrl, getCourseUrl, getPlatformBadgeConfig } from '../../utils/courseUrls'
 
 export const LearningPath = () => {
   const navigate = useNavigate()
-  const { learningPath, isLoading } = useSkills()
-  const [path, setPath] = React.useState([])
+  const [searchParams] = useSearchParams()
+  const resumeIdParam = searchParams.get('resume_id')
 
-  React.useEffect(() => {
-    const fetchPath = async () => {
-      const data = await learningPath()
-      setPath(data)
+  const [roadmapData, setRoadmapData] = useState(null)
+  const [bookmarks, setBookmarks] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const [activeSkillId, setActiveSkillId] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterStatus, setFilterStatus] = useState('all') // all, in-progress, not-started, completed
+  const [activeMainTab, setActiveMainTab] = useState('roadmap') // roadmap, bookmarks
+
+  // AI Assistant Drawer state
+  const [isAiOpen, setIsAiOpen] = useState(false)
+  const [aiSkillTarget, setAiSkillTarget] = useState('SQL')
+
+  // Completion modal state
+  const [celebrationSkill, setCelebrationSkill] = useState(null)
+
+  // Fetch resume-specific roadmap & bookmarks
+  const fetchLearningData = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const queryUrl = resumeIdParam ? `/learning/roadmap?resume_id=${resumeIdParam}` : '/learning/roadmap'
+      const roadmapRes = await api.get(queryUrl)
+      setRoadmapData(roadmapRes.data)
+
+      if (roadmapRes.data.skills && roadmapRes.data.skills.length > 0) {
+        setActiveSkillId(prev => prev || roadmapRes.data.skills[0].id)
+        setAiSkillTarget(roadmapRes.data.skills[0].skill_name)
+      }
+
+      // Fetch bookmarks
+      const bookmarkUrl = roadmapRes.data.resume_id ? `/learning/bookmarks?resume_id=${roadmapRes.data.resume_id}` : '/learning/bookmarks'
+      const bookmarkRes = await api.get(bookmarkUrl)
+      setBookmarks(bookmarkRes.data.bookmarks || [])
+
+    } catch (err) {
+      console.error('Error fetching learning data:', err)
+      setError(err.response?.data?.error || 'Failed to load resume-specific learning path.')
+    } finally {
+      setLoading(false)
     }
-    fetchPath()
-  }, [learningPath])
+  }, [resumeIdParam])
 
-  if (isLoading) {
-    return <div className="flex justify-center py-12"><div className="spinner" /></div>
+  useEffect(() => {
+    fetchLearningData()
+  }, [fetchLearningData])
+
+  // Progress update handler
+  const handleUpdateStageProgress = async (skillName, stage, isCompleted) => {
+    if (!roadmapData || !roadmapData.resume_id) return
+
+    try {
+      await api.post('/learning/progress', {
+        resume_id: roadmapData.resume_id,
+        skill_name: skillName,
+        stage: stage,
+        is_completed: isCompleted
+      })
+
+      // Check if skill completed 100%
+      if (stage === 'complete' || stage === 'assess') {
+        const currSkill = roadmapData.skills.find(s => s.skill_name === skillName)
+        const nextSkill = roadmapData.skills.find(s => s.skill_name !== skillName && !s.is_completed)
+        if (currSkill) {
+          setCelebrationSkill({
+            name: skillName,
+            nextName: nextSkill ? nextSkill.skill_name : null
+          })
+        }
+      }
+
+      // Refresh state
+      fetchLearningData()
+    } catch (err) {
+      console.error('Error updating progress:', err)
+    }
   }
 
-  return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <Heading level={2}>Your Learning Path</Heading>
-          <p className="text-gray-500 mt-1">Personalized roadmap to achieve your career goals</p>
+  // Bookmark handlers
+  const handleAddBookmark = async (bookmarkPayload) => {
+    if (!roadmapData || !roadmapData.resume_id) return
+    try {
+      await api.post('/learning/bookmarks', {
+        ...bookmarkPayload,
+        resume_id: roadmapData.resume_id
+      })
+      // Refresh bookmarks
+      const bookmarkRes = await api.get(`/learning/bookmarks?resume_id=${roadmapData.resume_id}`)
+      setBookmarks(bookmarkRes.data.bookmarks || [])
+      alert(`Saved "${bookmarkPayload.title}" to your bookmarks!`)
+    } catch (err) {
+      console.error('Error saving bookmark:', err)
+    }
+  }
+
+  const handleDeleteBookmark = async (bookmarkId) => {
+    try {
+      await api.delete(`/learning/bookmarks/${bookmarkId}`)
+      setBookmarks(prev => prev.filter(b => b.id !== bookmarkId))
+    } catch (err) {
+      console.error('Error deleting bookmark:', err)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto py-12 px-4 text-center space-y-4">
+        <RefreshIcon className="w-10 h-10 text-indigo-600 animate-spin mx-auto" />
+        <p className="text-sm font-semibold text-gray-600">Generating resume-specific personalized learning path...</p>
+      </div>
+    )
+  }
+
+  // Empty state if no resume uploaded yet
+  if (!roadmapData || !roadmapData.has_resume) {
+    return (
+      <div className="max-w-3xl mx-auto py-16 px-4 text-center">
+        <div className="bg-white rounded-3xl p-10 shadow-xl border border-gray-100 space-y-5">
+          <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
+            <AcademicCapIcon className="w-10 h-10" />
+          </div>
+          <h2 className="text-2xl font-extrabold text-gray-900">No Learning Path Generated Yet</h2>
+          <p className="text-sm text-gray-600 max-w-md mx-auto leading-relaxed">
+            Upload your resume to extract skills, analyze your target career gap, and automatically build your custom learning roadmap.
+          </p>
+          <button
+            onClick={() => navigate('/resume/upload')}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-extrabold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all"
+          >
+            <UploadIcon className="w-5 h-5" />
+            Upload Resume
+          </button>
         </div>
-        <Button 
-          variant="outline"
-          onClick={() => window.open('https://www.coursera.org/courses', '_blank', 'noopener,noreferrer')}
-          title="Browse all online courses on Coursera"
+      </div>
+    )
+  }
+
+  // Filter skills based on search query and status
+  const filteredSkills = (roadmapData.skills || []).filter(skillItem => {
+    // Status filter
+    if (filterStatus === 'in-progress' && (skillItem.is_completed || skillItem.progress_percent === 0)) return false
+    if (filterStatus === 'not-started' && skillItem.progress_percent > 0) return false
+    if (filterStatus === 'completed' && !skillItem.is_completed) return false
+
+    // Search query filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      const matchName = skillItem.skill_name.toLowerCase().includes(q)
+      const matchCourse = skillItem.courses && skillItem.courses.some(c => c.title.toLowerCase().includes(q))
+      return matchName || matchCourse
+    }
+
+    return true
+  })
+
+  const activeSkillObj = (roadmapData.skills || []).find(s => s.id === activeSkillId) || filteredSkills[0]
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-6 space-y-8">
+      {/* Top Header */}
+      <LearningDashboardHeader
+        targetRole={roadmapData.target_role}
+        matchPercentage={roadmapData.match_percentage}
+        progressPercent={roadmapData.learning_progress_percent}
+        skillsToMaster={roadmapData.skills_to_master_count}
+        estimatedWeeks={roadmapData.estimated_weeks}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        filterStatus={filterStatus}
+        setFilterStatus={setFilterStatus}
+        onOpenAiAssistant={() => setIsAiOpen(true)}
+      />
+
+      {/* Main Section Navigation Tabs (Roadmap vs Bookmarks) */}
+      <div className="flex items-center gap-3 border-b border-gray-200 pb-2">
+        <button
+          onClick={() => setActiveMainTab('roadmap')}
+          className={`px-4 py-2 font-extrabold text-sm rounded-xl transition-all ${
+            activeMainTab === 'roadmap'
+              ? 'bg-indigo-600 text-white shadow'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
         >
-          <BookOpenIcon className="h-5 w-5 mr-2" />
-          View All Courses
-          <ExternalLinkIcon className="h-4 w-4 ml-1.5 opacity-70" />
-        </Button>
+          🎓 Interactive Learning Roadmap
+        </button>
+
+        <button
+          onClick={() => setActiveMainTab('bookmarks')}
+          className={`px-4 py-2 font-extrabold text-sm rounded-xl transition-all flex items-center gap-1.5 ${
+            activeMainTab === 'bookmarks'
+              ? 'bg-indigo-600 text-white shadow'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          <BookmarkIcon className="w-4 h-4" />
+          Saved Resources ({bookmarks.length})
+        </button>
       </div>
 
-      {path.length > 0 ? (
-        <div className="space-y-6">
-          {path.map((step, idx) => {
-            const skillName = step.skill || step.title || step.name || 'Core Skill'
-            return (
-              <div key={idx} className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-primary-500">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3">
-                      <span className="flex items-center justify-center w-8 h-8 bg-primary-500 text-white rounded-full text-sm font-bold">
-                        {step.step || idx + 1}
-                      </span>
-                      <h4 className="font-semibold text-gray-900">{skillName}</h4>
-                      {(step.priority || step.status) && (
-                        <span className={`px-2 py-0.5 text-xs rounded-full ${
-                          (step.priority === 'High' || step.status === 'urgent') ? 'bg-red-100 text-red-800' :
-                          (step.priority === 'Medium' || step.status === 'in-progress') ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-blue-100 text-blue-800'
-                        }`}>
-                          {step.priority || step.status}
-                        </span>
-                      )}
-                    </div>
-                    {(step.estimated_time || step.duration) && (
-                      <p className="mt-2 text-sm text-gray-600">
-                        <ClockIcon className="h-4 w-4 inline mr-1" />
-                        {step.estimated_time || step.duration}
-                      </p>
-                    )}
-                    {step.courses && step.courses.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {step.courses.map((course, ci) => {
-                          const courseTitle = typeof course === 'object' ? (course.title || course.name) : course
-                          const courseUrl = getCourseUrl(course, skillName)
-                          return (
-                            <a
-                              key={ci}
-                              href={courseUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-50 hover:bg-primary-50 text-gray-700 hover:text-primary-700 rounded-full text-sm font-medium border border-gray-200 hover:border-primary-200 transition-all group cursor-pointer"
-                              title={`Open ${courseTitle} course webpage`}
-                            >
-                              <span className="group-hover:underline">📚 {courseTitle}</span>
-                              <ExternalLinkIcon className="h-3.5 w-3.5 text-gray-400 group-hover:text-primary-600" />
-                            </a>
-                          )
-                        })}
-                      </div>
-                    )}
-                    <div className="mt-3 flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
-                      <span className="text-xs font-medium text-gray-500">Explore on:</span>
-                      {['Coursera', 'Udemy', 'NPTEL'].map((plat, pi) => {
-                        const pUrl = getPlatformUrl(plat, skillName)
-                        const pConfig = getPlatformBadgeConfig(plat)
-                        return (
-                          <a
-                            key={pi}
-                            href={pUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded border transition-colors ${pConfig.badgeClass}`}
-                            title={`Search ${skillName} on ${plat}`}
-                          >
-                            <span>{plat}</span>
-                            <ExternalLinkIcon className="h-3 w-3" />
-                          </a>
-                        )
-                      })}
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    <CheckCircleIcon className="h-5 w-5 text-gray-400 hover:text-green-500" />
-                  </Button>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+      {activeMainTab === 'bookmarks' ? (
+        <BookmarksSection 
+          bookmarks={bookmarks}
+          onDeleteBookmark={handleDeleteBookmark}
+        />
       ) : (
-        <div className="text-center py-12 bg-white rounded-xl shadow-sm">
-          <AcademicCapIcon className="h-16 w-16 text-gray-300 mx-auto" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">No learning path yet</h3>
-          <p className="mt-2 text-gray-500">
-            Upload a resume and analyze your skills to generate a personalized learning path
-          </p>
-          <Button className="mt-4" onClick={() => navigate('/resume/upload')}>
-            Upload Resume
-          </Button>
-        </div>
+        <>
+          {/* Daily Goal & Continue Learning Widgets */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <DailyLearningPlan 
+              dailyPlan={roadmapData.daily_plan}
+              onStartLesson={() => {
+                if (roadmapData.daily_plan) {
+                  const targetSkill = (roadmapData.skills || []).find(s => s.skill_name === roadmapData.daily_plan.skill_name)
+                  if (targetSkill) setActiveSkillId(targetSkill.id)
+                }
+              }}
+            />
+
+            <ContinueLearningWidget 
+              continueData={roadmapData.continue_learning}
+              onContinue={() => {
+                if (roadmapData.continue_learning) {
+                  const targetSkill = (roadmapData.skills || []).find(s => s.skill_name === roadmapData.continue_learning.skill_name)
+                  if (targetSkill) setActiveSkillId(targetSkill.id)
+                }
+              }}
+            />
+          </div>
+
+          {/* Interactive Flowchart Roadmap */}
+          <InteractiveRoadmap 
+            skills={roadmapData.skills}
+            activeSkillId={activeSkillId}
+            onSelectSkill={(id) => {
+              setActiveSkillId(id)
+              const sk = roadmapData.skills.find(s => s.id === id)
+              if (sk) setAiSkillTarget(sk.skill_name)
+            }}
+          />
+
+          {/* Selected Skill Card View */}
+          {activeSkillObj ? (
+            <SkillLearningCard
+              skill={activeSkillObj}
+              targetRole={roadmapData.target_role}
+              onUpdateStageProgress={handleUpdateStageProgress}
+              onBookmark={handleAddBookmark}
+              onOpenAiForSkill={(skillName) => {
+                setAiSkillTarget(skillName)
+                setIsAiOpen(true)
+              }}
+            />
+          ) : (
+            <div className="bg-white rounded-2xl p-8 text-center border border-gray-200">
+              <p className="text-sm font-semibold text-gray-500">No skills match your current search/filter criteria.</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* AI Assistant Drawer */}
+      {isAiOpen && (
+        <AILearningAssistant
+          skillName={aiSkillTarget}
+          targetRole={roadmapData.target_role}
+          stage={activeSkillObj?.stage || 'learn'}
+          onClose={() => setIsAiOpen(false)}
+        />
+      )}
+
+      {/* Completion Celebration Modal */}
+      {celebrationSkill && (
+        <CompletionCelebrationModal
+          skillName={celebrationSkill.name}
+          nextSkillName={celebrationSkill.nextName}
+          onClose={() => setCelebrationSkill(null)}
+        />
       )}
     </div>
   )

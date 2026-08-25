@@ -1,7 +1,6 @@
-// src/pages/faculty/Dashboard.jsx
-
 import React, { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useAuth } from '../../hooks/useAuth'
 import { api } from '../../services/api'
 import { Button } from '../../components/common/Button'
 import toast from 'react-hot-toast'
@@ -25,27 +24,38 @@ import {
   BanIcon,
   ClockIcon,
   UserAddIcon,
-  UserRemoveIcon
+  UserRemoveIcon,
+  KeyIcon,
+  MailIcon,
+  LockClosedIcon
 } from '@heroicons/react/outline'
 
 export const FacultyDashboard = () => {
-  const [searchParams] = useSearchParams()
-  const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const activeTab = searchParams.get('tab') || 'overview'
+
   const [stats, setStats] = useState({
-    total_students: 0,
-    total_resumes: 0,
-    avg_employability_score: 0,
-    placed_count: 0,
-    seeking_count: 0,
-    higher_studies_count: 0,
-    opted_out_count: 0
+    totalStudents: 0,
+    placedStudents: 0,
+    resumesProcessed: 0,
+    placementRate: '0%',
+    activeJobs: 0,
+    hasAssignedMentees: false
   })
   const [cohortSkills, setCohortSkills] = useState([])
-  const [advisorAdvice, setAdvisorAdvice] = useState('')
+  const [advisorInsight, setAdvisorInsight] = useState({
+    title: 'Curriculum Focus Needed',
+    top_deficit_skill: 'Cloud & Docker DevOps',
+    gap_percentage: 65,
+    message: 'Cloud DevOps and Docker represent the largest skill deficit across 65% of the student cohort. Scheduling a 2-week hands-on containerization workshop is recommended.',
+    action_label: 'Inspect Cohort'
+  })
   const [students, setStudents] = useState([])
   const [incomingRequests, setIncomingRequests] = useState([])
-  const [loadingRequests, setLoadingRequests] = useState(false)
-  const [directoryScope, setDirectoryScope] = useState(searchParams.get('scope') === 'mentees' ? 'mentees' : 'all')
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
+  const [directoryScope, setDirectoryScope] = useState(searchParams.get('scope') === 'mentees' ? 'mentees' : 'mentees')
+  const [loading, setLoading] = useState(true)
 
   // Search and Filter State
   const [searchQuery, setSearchQuery] = useState('')
@@ -63,7 +73,62 @@ export const FacultyDashboard = () => {
     package_lpa: ''
   })
 
-  // Fetch all faculty analytics
+  // Password Security Modal State
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [isSendingResetEmail, setIsSendingResetEmail] = useState(false)
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault()
+    if (!passwordForm.oldPassword) {
+      return toast.error('Please enter your current password')
+    }
+    if (!passwordForm.newPassword) {
+      return toast.error('Please enter a new password')
+    }
+    if (passwordForm.newPassword.length < 6) {
+      return toast.error('New password must be at least 6 characters')
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      return toast.error('New passwords do not match')
+    }
+
+    try {
+      setIsChangingPassword(true)
+      const res = await api.post('/auth/change-password', {
+        old_password: passwordForm.oldPassword,
+        new_password: passwordForm.newPassword
+      })
+      toast.success(res.data?.message || 'Password changed successfully!')
+      setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' })
+      setShowPasswordModal(false)
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Failed to update password')
+    } finally {
+      setIsChangingPassword(false)
+    }
+  }
+
+  const handleSendResetEmail = async () => {
+    if (!user?.email) {
+      return toast.error('User email not found')
+    }
+    try {
+      setIsSendingResetEmail(true)
+      const res = await api.post('/auth/forgot-password', { email: user.email })
+      toast.success(res.data?.message || `Password reset link sent to ${user.email}`)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to trigger reset email')
+    } finally {
+      setIsSendingResetEmail(false)
+    }
+  }
+
   const fetchFacultyData = async () => {
     try {
       setLoading(true)
@@ -74,36 +139,52 @@ export const FacultyDashboard = () => {
         api.get(`/analytics/faculty/students?filter_type=${directoryScope}`)
       ])
 
-      if (statsRes.status === 'fulfilled' && statsRes.value?.data?.stats) {
-        setStats(statsRes.value.data.stats)
+      let studentsList = []
+      if (usersRes.status === 'fulfilled' && usersRes.value?.data) {
+        const raw = usersRes.value.data
+        studentsList = raw.students || raw.users || []
+        studentsList = studentsList.filter(u => u.role === 'student' || !u.role)
       }
-      if (skillsRes.status === 'fulfilled' && skillsRes.value?.data?.top_skills) {
-        setCohortSkills(skillsRes.value.data.top_skills)
+
+      if (statsRes.status === 'fulfilled' && statsRes.value?.data) {
+        setStats(statsRes.value.data.stats || statsRes.value.data)
+      } else {
+        const total = studentsList.length
+        const placed = studentsList.filter(s => s.placement_status === 'placed').length
+        setStats({
+          totalStudents: total,
+          placedStudents: placed,
+          resumesProcessed: 0,
+          placementRate: total > 0 ? `${Math.round((placed / total) * 100)}%` : '0%',
+          activeJobs: 0,
+          hasAssignedMentees: false
+        })
       }
-      if (adviceRes.status === 'fulfilled' && adviceRes.value?.data?.advisor_advice) {
-        setAdvisorAdvice(adviceRes.value.data.advisor_advice)
+
+      if (skillsRes.status === 'fulfilled' && skillsRes.value?.data) {
+        setCohortSkills(skillsRes.value.data.top_skills || skillsRes.value.data.skills || [])
       }
-      if (usersRes.status === 'fulfilled' && usersRes.value?.data?.students) {
-        setStudents(usersRes.value.data.students)
+
+      if (adviceRes.status === 'fulfilled' && adviceRes.value?.data) {
+        setAdvisorInsight(adviceRes.value.data.advisor_advice || adviceRes.value.data)
       }
+
+      setStudents(studentsList)
     } catch (err) {
-      console.error('Error loading faculty dashboard:', err)
-      toast.error('Failed to load faculty analytics')
+      console.error('Error fetching faculty data:', err)
+      toast.error('Failed to sync live faculty metrics')
     } finally {
       setLoading(false)
     }
   }
 
-  // Fetch incoming mentorship requests
   const fetchIncomingRequests = async () => {
     try {
-      setLoadingRequests(true)
-      const res = await api.get('/mentorship/requests')
-      setIncomingRequests(res.data.requests || [])
+      const res = await api.get('/mentorship/incoming-requests')
+      setIncomingRequests(res.data?.requests || [])
+      setPendingRequestsCount(res.data?.pending_count || res.data?.requests?.filter(r => r.status === 'pending').length || 0)
     } catch (err) {
-      console.error('Error loading mentorship requests:', err)
-    } finally {
-      setLoadingRequests(false)
+      console.error('Error fetching mentorship requests:', err)
     }
   }
 
@@ -112,22 +193,20 @@ export const FacultyDashboard = () => {
     fetchIncomingRequests()
   }, [directoryScope])
 
-  // Handle Accept / Reject mentorship request
   const handleRequestAction = async (requestId, action) => {
     try {
       setIsProcessingAction(requestId)
-      await api.put(`/mentorship/requests/${requestId}`, { status: action })
-      toast.success(`Mentorship request ${action}ed successfully`)
+      await api.put(`/mentorship/requests/${requestId}/action`, { action })
+      toast.success(`Mentorship request ${action === 'accept' ? 'accepted' : 'declined'}!`)
       fetchIncomingRequests()
       fetchFacultyData()
     } catch (err) {
-      toast.error(err.response?.data?.error || err.message || `Failed to ${action} request`)
+      toast.error(err.response?.data?.error || err.message || 'Failed to process request')
     } finally {
       setIsProcessingAction(null)
     }
   }
 
-  // Remove/Release an assigned mentee
   const handleRemoveMentee = async (student) => {
     if (!student) return
     const name = student.full_name || student.username || 'this student'
@@ -152,17 +231,15 @@ export const FacultyDashboard = () => {
     }
   }
 
-
-  // Filter students based on search, department, and year
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
       const name = (student.full_name || student.username || '').toLowerCase()
       const email = (student.email || '').toLowerCase()
       const matchesSearch = name.includes(searchQuery.toLowerCase()) || email.includes(searchQuery.toLowerCase())
-      
+
       const dept = student.department || 'General'
       const matchesDept = selectedDept === 'all' || dept.toLowerCase() === selectedDept.toLowerCase()
-      
+
       const year = student.year_of_study ? String(student.year_of_study) : 'all'
       const matchesYear = selectedYear === 'all' || year === selectedYear
 
@@ -170,13 +247,11 @@ export const FacultyDashboard = () => {
     })
   }, [students, searchQuery, selectedDept, selectedYear])
 
-  // Extract unique departments for filter dropdown
   const departments = useMemo(() => {
     const depts = new Set(students.map(s => s.department || 'General').filter(Boolean))
     return Array.from(depts)
   }, [students])
 
-  // Open modal and prepopulate form
   const handleOpenStudentModal = (student) => {
     setSelectedStudent(student)
     setPlacementForm({
@@ -186,7 +261,6 @@ export const FacultyDashboard = () => {
     })
   }
 
-  // Save student placement status
   const handleSavePlacement = async (e) => {
     e.preventDefault()
     if (!selectedStudent) return
@@ -199,8 +273,8 @@ export const FacultyDashboard = () => {
       }
       const res = await api.put(`/analytics/student/${selectedStudent.id}/placement`, payload)
       toast.success('Placement status updated successfully!')
-      
-      const updated = res.data.student
+
+      const updated = res.data?.student || payload
       setStudents(prev => prev.map(s => s.id === selectedStudent.id ? { ...s, ...updated } : s))
       setSelectedStudent(prev => ({ ...prev, ...updated }))
       fetchFacultyData()
@@ -211,7 +285,6 @@ export const FacultyDashboard = () => {
     }
   }
 
-  // Export cohort to CSV
   const handleExportCSV = () => {
     if (students.length === 0) {
       toast.error('No students available to export')
@@ -232,7 +305,7 @@ export const FacultyDashboard = () => {
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement('a')
     link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `cohort_${directoryScope}_${new Date().toISOString().slice(0,10)}.csv`)
+    link.setAttribute('download', `cohort_${directoryScope}_${new Date().toISOString().slice(0, 10)}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -240,10 +313,10 @@ export const FacultyDashboard = () => {
   }
 
   const facultyStatCards = [
-    { name: directoryScope === 'mentees' ? 'My Assigned Mentees' : 'Total Department Students', value: `${stats.totalStudents}`, icon: UserGroupIcon, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { name: 'Verified Resumes', value: `${stats.resumesProcessed}`, icon: DocumentTextIcon, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { name: 'Placed Students', value: `${stats.placedStudents}`, icon: AcademicCapIcon, color: 'text-green-600', bg: 'bg-green-50' },
-    { name: 'Cohort Placement Rate', value: stats.placementRate, icon: ChartBarIcon, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { name: directoryScope === 'mentees' ? 'My Assigned Mentees' : 'Total Department Students', value: `${stats.totalStudents || stats.total_students || 0}`, icon: UserGroupIcon, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { name: 'Verified Resumes', value: `${stats.resumesProcessed || stats.total_resumes || 0}`, icon: DocumentTextIcon, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { name: 'Placed Students', value: `${stats.placedStudents || stats.placed_count || 0}`, icon: AcademicCapIcon, color: 'text-green-600', bg: 'bg-green-50' },
+    { name: 'Cohort Placement Rate', value: stats.placementRate || '0%', icon: ChartBarIcon, color: 'text-purple-600', bg: 'bg-purple-50' },
   ]
 
   return (
@@ -269,6 +342,15 @@ export const FacultyDashboard = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowPasswordModal(true)}
+            className="flex items-center text-gray-700 hover:bg-gray-50 border-gray-300"
+          >
+            <KeyIcon className="h-4 w-4 mr-1.5 text-purple-600" />
+            Security & Password
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -368,7 +450,6 @@ export const FacultyDashboard = () => {
 
           {/* Quick Insights Banner */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Live Cohort Skill Breakdown */}
             <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -403,7 +484,6 @@ export const FacultyDashboard = () => {
               </div>
             </div>
 
-            {/* Dynamic Faculty Action Advice */}
             <div className="bg-gradient-to-br from-purple-900 to-indigo-900 rounded-xl p-6 text-white shadow-sm flex flex-col justify-between">
               <div>
                 <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-800 text-purple-200 mb-3">
@@ -468,7 +548,7 @@ export const FacultyDashboard = () => {
                           )}
                         </div>
                         <p className="text-xs text-gray-500 mt-0.5">{req.student?.email}</p>
-                        
+
                         {req.message && (
                           <div className="mt-2.5 p-3 bg-white rounded-lg border border-gray-200 text-xs text-gray-700 max-w-xl">
                             <span className="font-semibold text-gray-900 block mb-0.5">Student Note:</span>
@@ -528,14 +608,12 @@ export const FacultyDashboard = () => {
       {/* Tab 3: Student Directory */}
       {activeTab === 'students' && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          {/* Scope Selector Bar */}
           <div className="px-6 pt-5 pb-3 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-base font-bold text-gray-900">Student Cohort Directory</h3>
               <p className="text-xs text-gray-500">Filter between your personal assigned mentees and the department-wide roster.</p>
             </div>
 
-            {/* Mentees vs All Toggle */}
             <div className="inline-flex rounded-xl bg-gray-100 p-1 self-start sm:self-auto border border-gray-200">
               <button
                 onClick={() => setDirectoryScope('mentees')}
@@ -560,7 +638,6 @@ export const FacultyDashboard = () => {
             </div>
           </div>
 
-          {/* Search Controls Bar */}
           <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-col sm:flex-row gap-3 items-center justify-between bg-gray-50/50">
             <div className="relative w-full sm:w-80">
               <SearchIcon className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
@@ -599,7 +676,6 @@ export const FacultyDashboard = () => {
             </div>
           </div>
 
-          {/* Student Table */}
           {loading ? (
             <div className="flex justify-center py-16">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600" />
@@ -682,7 +758,6 @@ export const FacultyDashboard = () => {
                             </Button>
                           )}
                         </div>
-
                       </td>
                     </tr>
                   ))}
@@ -777,7 +852,7 @@ export const FacultyDashboard = () => {
       {/* Student Detail & Placement Update Modal */}
       {selectedStudent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center">
@@ -796,7 +871,6 @@ export const FacultyDashboard = () => {
               </button>
             </div>
 
-            {/* Profile Info Cards */}
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="p-3 bg-gray-50 rounded-xl">
                 <span className="text-xs text-gray-500 block">Username</span>
@@ -818,12 +892,11 @@ export const FacultyDashboard = () => {
               </div>
             </div>
 
-            {/* Placement Status Editor */}
             <form onSubmit={handleSavePlacement} className="p-4 bg-purple-50/60 rounded-xl border border-purple-100 space-y-3">
               <h4 className="text-xs font-bold text-purple-900 uppercase tracking-wider">
                 Manage Placement Status
               </h4>
-              
+
               <div>
                 <label className="text-xs font-medium text-gray-700 block mb-1">Status</label>
                 <select
@@ -898,6 +971,105 @@ export const FacultyDashboard = () => {
                 onClick={() => setSelectedStudent(null)}
               >
                 Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password & Security Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 relative space-y-5">
+            <div className="flex items-start justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+                  <KeyIcon className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 text-lg">Faculty Password & Security</h3>
+                  <p className="text-xs text-gray-500">{user?.email || 'Logged in account'}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <XIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Current Password</label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={passwordForm.oldPassword}
+                  onChange={e => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
+                  className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">New Password</label>
+                  <input
+                    type="password"
+                    placeholder="Min. 6 characters"
+                    value={passwordForm.newPassword}
+                    onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                    className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Confirm New Password</label>
+                  <input
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={passwordForm.confirmPassword}
+                    onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                    className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowPasswordModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  isLoading={isChangingPassword}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-semibold flex items-center gap-1.5"
+                >
+                  <LockClosedIcon className="w-4 h-4" />
+                  Update Password
+                </Button>
+              </div>
+            </form>
+
+            <div className="pt-4 border-t border-gray-100 bg-purple-50/60 -mx-6 -mb-6 p-5 rounded-b-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs text-gray-600">
+                <span className="font-semibold text-gray-800">Forgot your current password?</span>
+                <p className="text-[11px] text-gray-500">We'll dispatch a secure reset link to your faculty inbox.</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSendResetEmail}
+                isLoading={isSendingResetEmail}
+                className="text-purple-700 border-purple-300 hover:bg-purple-100 text-xs shrink-0 flex items-center gap-1"
+              >
+                <MailIcon className="w-3.5 h-3.5" />
+                Send Reset Link
               </Button>
             </div>
           </div>
