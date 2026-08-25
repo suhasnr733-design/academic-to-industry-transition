@@ -1,7 +1,6 @@
-// src/pages/faculty/Dashboard.jsx
-
 import React, { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useAuth } from '../../hooks/useAuth'
 import { api } from '../../services/api'
 import { Button } from '../../components/common/Button'
 import toast from 'react-hot-toast'
@@ -25,10 +24,14 @@ import {
   BanIcon,
   ClockIcon,
   UserAddIcon,
-  UserRemoveIcon
+  UserRemoveIcon,
+  KeyIcon,
+  MailIcon,
+  LockClosedIcon
 } from '@heroicons/react/outline'
 
 export const FacultyDashboard = () => {
+  const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTab = searchParams.get('tab') || 'overview'
 
@@ -65,6 +68,62 @@ export const FacultyDashboard = () => {
     placed_company: '',
     package_lpa: ''
   })
+
+  // Password Security Modal State
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [isSendingResetEmail, setIsSendingResetEmail] = useState(false)
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault()
+    if (!passwordForm.oldPassword) {
+      return toast.error('Please enter your current password')
+    }
+    if (!passwordForm.newPassword) {
+      return toast.error('Please enter a new password')
+    }
+    if (passwordForm.newPassword.length < 6) {
+      return toast.error('New password must be at least 6 characters')
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      return toast.error('New passwords do not match')
+    }
+
+    try {
+      setIsChangingPassword(true)
+      const res = await api.post('/auth/change-password', {
+        old_password: passwordForm.oldPassword,
+        new_password: passwordForm.newPassword
+      })
+      toast.success(res.data?.message || 'Password changed successfully!')
+      setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' })
+      setShowPasswordModal(false)
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Failed to update password')
+    } finally {
+      setIsChangingPassword(false)
+    }
+  }
+
+  const handleSendResetEmail = async () => {
+    if (!user?.email) {
+      return toast.error('User email not found')
+    }
+    try {
+      setIsSendingResetEmail(true)
+      const res = await api.post('/auth/forgot-password', { email: user.email })
+      toast.success(res.data?.message || `Password reset link sent to ${user.email}`)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to trigger reset email')
+    } finally {
+      setIsSendingResetEmail(false)
+    }
+  }
 
   useEffect(() => {
     fetchFacultyData()
@@ -286,6 +345,15 @@ export const FacultyDashboard = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowPasswordModal(true)}
+            className="flex items-center text-gray-700 hover:bg-gray-50 border-gray-300"
+          >
+            <KeyIcon className="h-4 w-4 mr-1.5 text-purple-600" />
+            Security & Password
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -913,6 +981,107 @@ export const FacultyDashboard = () => {
                 onClick={() => setSelectedStudent(null)}
               >
                 Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password & Security Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 relative animate-in fade-in zoom-in-95 duration-150 space-y-5">
+            <div className="flex items-start justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+                  <KeyIcon className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 text-lg">Faculty Password & Security</h3>
+                  <p className="text-xs text-gray-500">{user?.email || 'Logged in account'}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <XIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Change Password Form */}
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Current Password</label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={passwordForm.oldPassword}
+                  onChange={e => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
+                  className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">New Password</label>
+                  <input
+                    type="password"
+                    placeholder="Min. 6 characters"
+                    value={passwordForm.newPassword}
+                    onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                    className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Confirm New Password</label>
+                  <input
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={passwordForm.confirmPassword}
+                    onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                    className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowPasswordModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  isLoading={isChangingPassword}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-semibold flex items-center gap-1.5"
+                >
+                  <LockClosedIcon className="w-4 h-4" />
+                  Update Password
+                </Button>
+              </div>
+            </form>
+
+            {/* Forgot Password Recovery Alternative */}
+            <div className="pt-4 border-t border-gray-100 bg-purple-50/60 -mx-6 -mb-6 p-5 rounded-b-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs text-gray-600">
+                <span className="font-semibold text-gray-800">Forgot your current password?</span>
+                <p className="text-[11px] text-gray-500">We'll dispatch a secure reset link to your faculty inbox.</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSendResetEmail}
+                isLoading={isSendingResetEmail}
+                className="text-purple-700 border-purple-300 hover:bg-purple-100 text-xs shrink-0 flex items-center gap-1"
+              >
+                <MailIcon className="w-3.5 h-3.5" />
+                Send Reset Link
               </Button>
             </div>
           </div>
