@@ -24,7 +24,8 @@ import {
   CheckIcon,
   BanIcon,
   ClockIcon,
-  UserAddIcon
+  UserAddIcon,
+  UserRemoveIcon
 } from '@heroicons/react/outline'
 
 export const FacultyDashboard = () => {
@@ -58,6 +59,7 @@ export const FacultyDashboard = () => {
   const [selectedStudent, setSelectedStudent] = useState(null)
   const [isUpdatingPlacement, setIsUpdatingPlacement] = useState(false)
   const [isProcessingAction, setIsProcessingAction] = useState(null)
+  const [isReleasingMentee, setIsReleasingMentee] = useState(null)
   const [placementForm, setPlacementForm] = useState({
     placement_status: 'seeking',
     placed_company: '',
@@ -73,7 +75,7 @@ export const FacultyDashboard = () => {
     try {
       setLoading(true)
       const [statsRes, skillsRes, adviceRes, usersRes] = await Promise.allSettled([
-        api.get('/analytics/faculty/stats'),
+        api.get(`/analytics/faculty/stats?filter_type=${directoryScope}`),
         api.get('/analytics/cohort-skills'),
         api.get('/analytics/advisor-recommendations'),
         api.get(`/analytics/faculty/students?filter_type=${directoryScope}`)
@@ -140,6 +142,31 @@ export const FacultyDashboard = () => {
       toast.error(err.response?.data?.error || err.message || 'Failed to process request')
     } finally {
       setIsProcessingAction(null)
+    }
+  }
+
+  // Remove/Release an assigned mentee
+  const handleRemoveMentee = async (student) => {
+    if (!student) return
+    const name = student.full_name || student.username || 'this student'
+    const confirmed = window.confirm(
+      `Are you sure you want to release ${name} from your assigned mentees?\n\nThis will free up your mentee capacity and allow the student to request a new faculty advisor.`
+    )
+    if (!confirmed) return
+
+    try {
+      setIsReleasingMentee(student.id)
+      await api.delete(`/mentorship/faculty/mentees/${student.id}`)
+      toast.success(`${name} released from assigned mentees`)
+      if (selectedStudent && selectedStudent.id === student.id) {
+        setSelectedStudent(null)
+      }
+      fetchFacultyData()
+      fetchIncomingRequests()
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.message || 'Failed to release mentee')
+    } finally {
+      setIsReleasingMentee(null)
     }
   }
 
@@ -647,15 +674,31 @@ export const FacultyDashboard = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleOpenStudentModal(student)}
-                          className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                        >
-                          <EyeIcon className="h-4 w-4 mr-1" />
-                          View / Edit
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenStudentModal(student)}
+                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                          >
+                            <EyeIcon className="h-4 w-4 mr-1" />
+                            View / Edit
+                          </Button>
+
+                          {directoryScope === 'mentees' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveMentee(student)}
+                              isLoading={isReleasingMentee === student.id}
+                              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                              title="Release Mentee"
+                            >
+                              <UserRemoveIcon className="h-4 w-4 mr-1" />
+                              Release
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -849,7 +892,21 @@ export const FacultyDashboard = () => {
               </div>
             </form>
 
-            <div className="pt-1 flex justify-end">
+            <div className="pt-1 flex items-center justify-between">
+              {directoryScope === 'mentees' ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleRemoveMentee(selectedStudent)}
+                  isLoading={isReleasingMentee === selectedStudent?.id}
+                  className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:border-rose-300 text-xs"
+                >
+                  <UserRemoveIcon className="h-3.5 w-3.5 mr-1" />
+                  Release Mentee
+                </Button>
+              ) : (
+                <div />
+              )}
               <Button
                 variant="outline"
                 size="sm"
