@@ -34,6 +34,8 @@ class Resume(db.Model):
         return {
             'id': self.id,
             'user_id': self.user_id,
+            'candidate_name': self.user.full_name if self.user else None,
+            'user_email': self.user.email if self.user else None,
             'filename': self.filename,
             'file_size': self.file_size,
             'file_type': self.file_type,
