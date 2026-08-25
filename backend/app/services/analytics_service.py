@@ -36,41 +36,93 @@ class AnalyticsService:
             }
         }
 
-    def get_faculty_placement_stats(self, faculty_id=None, department=None):
-        """Get detailed placement statistics for faculty dashboard"""
-        from app.models import MentorshipRequest
-
-        mentee_records = MentorshipRequest.query.filter_by(
-            faculty_id=faculty_id, 
-            status='accepted'
-        ).all() if faculty_id else []
-        mentee_ids = [m.student_id for m in mentee_records]
-
-        if mentee_ids:
-            student_query = User.query.filter(User.id.in_(mentee_ids))
-        else:
+        if filter_type == 'all':
             student_query = User.query.filter_by(role='student')
+        else:
+            if mentee_ids:
+                student_query = User.query.filter(User.id.in_(mentee_ids))
+            else:
+                student_query = None
 
-        if department and department.lower() != 'all':
-            student_query = student_query.filter(User.department.ilike(f"%{department}%"))
-        
-        total_students = student_query.count()
-        placed_students = student_query.filter(User.placement_status == 'placed').count()
-        
-        student_ids = [s.id for s in student_query.all()]
-        if student_ids:
+        if student_query is not None:
+            if department and department.lower() != 'all':
+                student_query = student_query.filter(User.department.ilike(f"%{department}%"))
+
+            total_students = student_query.count()
+            placed_students = student_query.filter(User.placement_status == 'placed').count()
+
+            student_ids = [s.id for s in student_query.all()]
             resumes_processed = Resume.query.filter(
                 Resume.user_id.in_(student_ids),
                 Resume.status == 'completed'
-            ).count()
+            ).count() if student_ids else 0
         else:
-            resumes_processed = Resume.query.filter_by(status='completed').count()
+            total_students = 0
+            placed_students = 0
+            resumes_processed = 0
 
         placement_rate = f"{round((placed_students / total_students) * 100)}%" if total_students > 0 else "0%"
         active_jobs = Job.query.filter_by(is_active=True).count()
 
         return {
             'totalStudents': total_students,
+            'assignedMenteesCount': len(mentee_ids),
+            'placedStudents': placed_students,
+            'resumesProcessed': resumes_processed,
+            'placementRate': placement_rate,
+            'activeJobs': active_jobs,
+            'hasAssignedMentees': len(mentee_ids) > 0
+        }
+    def get_faculty_dashboard_data(self, faculty_id=None, filter_type='mentees', department=None):
+        """Get detailed placement statistics for faculty dashboard"""
+        from app.models import MentorshipRequest
+
+        mentee_records = MentorshipRequest.query.filter_by(
+            faculty_id=faculty_id,
+            status='accepted'
+        ).all() if faculty_id else []
+
+        mentee_ids = [m.student_id for m in mentee_records]
+
+        if filter_type == 'all':
+            student_query = User.query.filter_by(role='student')
+        else:
+            if mentee_ids:
+                student_query = User.query.filter(User.id.in_(mentee_ids))
+            else:
+                student_query = None
+
+        if student_query is not None:
+            if department and department.lower() != 'all':
+                student_query = student_query.filter(
+                    User.department.ilike(f"%{department}%")
+                )
+
+            total_students = student_query.count()
+            placed_students = student_query.filter(
+                User.placement_status == 'placed'
+            ).count()
+
+            student_ids = [s.id for s in student_query.all()]
+            resumes_processed = Resume.query.filter(
+                Resume.user_id.in_(student_ids),
+                Resume.status == 'completed'
+            ).count() if student_ids else 0
+        else:
+            total_students = 0
+            placed_students = 0
+            resumes_processed = 0
+
+        placement_rate = (
+            f"{round((placed_students / total_students) * 100)}%"
+            if total_students > 0 else "0%"
+        )
+
+        active_jobs = Job.query.filter_by(is_active=True).count()
+
+        return {
+            'totalStudents': total_students,
+            'assignedMenteesCount': len(mentee_ids),
             'placedStudents': placed_students,
             'resumesProcessed': resumes_processed,
             'placementRate': placement_rate,

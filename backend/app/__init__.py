@@ -23,6 +23,7 @@ from flask_limiter.util import get_remote_address
 from flask_mail import Mail, Message
 
 import re
+import logging
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -37,6 +38,7 @@ limiter = Limiter(
 )
 mail = Mail()
 socketio = None
+logger = logging.getLogger(__name__)
 
 def create_app(config_class='app.config.DevelopmentConfig'):
     """Application factory pattern"""
@@ -240,6 +242,14 @@ def create_app(config_class='app.config.DevelopmentConfig'):
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN oauth_provider_id VARCHAR(100)"))
                     if 'profile_picture' not in columns:
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255)"))
+if 'users' in inspector.get_table_names():
+                    columns = [c['name'] for c in inspector.get_columns('users')]
+                    if 'oauth_provider' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN oauth_provider VARCHAR(30)"))
+                    if 'oauth_provider_id' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN oauth_provider_id VARCHAR(100)"))
+                    if 'profile_picture' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255)"))
                     if 'placement_status' not in columns:
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN placement_status VARCHAR(20) DEFAULT 'seeking'"))
                     if 'placed_company' not in columns:
@@ -256,9 +266,31 @@ def create_app(config_class='app.config.DevelopmentConfig'):
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN phone VARCHAR(20)"))
                     if 'bio' not in columns:
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN bio TEXT"))
-                    conn.commit()
+
+                if 'jobs' in inspector.get_table_names():
+                    job_columns = [c['name'] for c in inspector.get_columns('jobs')]
+                    if 'is_live' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN is_live BOOLEAN DEFAULT 0"))
+                    if 'source' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN source VARCHAR(50) DEFAULT 'internal'"))
+                    if 'external_id' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN external_id VARCHAR(255)"))
+                    if 'apply_url' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN apply_url TEXT"))
+                    if 'salary_min' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN salary_min FLOAT"))
+                    if 'salary_max' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN salary_max FLOAT"))
+                    if 'currency' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN currency VARCHAR(10) DEFAULT 'INR'"))
+                    if 'expires_at' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN expires_at DATETIME"))
+                    if 'raw_data' not in job_columns:
+                        conn.execute(db.text("ALTER TABLE jobs ADD COLUMN raw_data JSON"))
+
+                conn.commit()
         except Exception as e:
-            logger.warning(f"Database schema auto-migration notice: {e}")
+            logger.warning(f"Database columns auto-migration notice: {e}")
         
         # Seed admin user safely
         if not User.query.filter_by(username='admin').first():

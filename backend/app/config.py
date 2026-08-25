@@ -56,6 +56,15 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', os.environ.get('MAIL_USERNAME'))
 
+    # Job Provider & Real-Time Aggregator Configurations
+    RAPIDAPI_KEY = os.environ.get('RAPIDAPI_KEY')
+    ADZUNA_APP_ID = os.environ.get('ADZUNA_APP_ID')
+    ADZUNA_APP_KEY = os.environ.get('ADZUNA_APP_KEY')
+    DEFAULT_JOB_LOCATION = os.environ.get('DEFAULT_JOB_LOCATION', 'India')
+    JOB_SYNC_INTERVAL_HOURS = int(os.environ.get('JOB_SYNC_INTERVAL_HOURS', 24))
+    REMOTIVE_API_BASE_URL = os.environ.get('REMOTIVE_API_BASE_URL', 'https://remotive.com/api/remote-jobs')
+    ARBEITNOW_API_BASE_URL = os.environ.get('ARBEITNOW_API_BASE_URL', 'https://www.arbeitnow.com/api/job-board-api')
+
     # OAuth & Frontend URL Configurations
     FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
     
