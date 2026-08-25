@@ -21,7 +21,12 @@ export const LearningDashboardHeader = ({
   setSearchQuery,
   filterStatus,
   setFilterStatus,
-  onOpenAiAssistant
+  onOpenAiAssistant,
+  resumes = [],
+  activeResumeId = null,
+  onSelectResume = () => {},
+  selectedLanguage = 'en',
+  onSelectLanguage = () => {}
 }) => {
   return (
     <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-2xl p-6 md:p-8 shadow-xl mb-8 border border-indigo-700/30 relative overflow-hidden">
@@ -31,11 +36,11 @@ export const LearningDashboardHeader = ({
 
       <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         {/* Header Left Info */}
-        <div className="space-y-2 max-w-2xl">
-          <div className="flex items-center gap-2">
+        <div className="space-y-3 max-w-2xl">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="px-3 py-1 bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 rounded-full text-xs font-semibold tracking-wide uppercase flex items-center gap-1.5">
               <SparklesIcon className="w-3.5 h-3.5 text-indigo-300" />
-              Target Role: {targetRole || 'Software Engineer'}
+              Target Role: {targetRole || 'N/A'}
             </span>
             <span className="px-3 py-1 bg-green-500/20 border border-green-400/30 text-green-300 rounded-full text-xs font-semibold">
               {matchPercentage}% Skill Match
@@ -48,6 +53,39 @@ export const LearningDashboardHeader = ({
           <p className="text-indigo-200/80 text-sm md:text-base leading-relaxed">
             Tailored career preparation path derived from your active resume analysis. Complete priority skill gaps to reach full industry readiness.
           </p>
+
+          {/* Active Resume & Language Selectors */}
+          <div className="pt-2 flex flex-wrap items-center gap-4">
+            {resumes && resumes.length > 0 && (
+              <div className="flex items-center gap-2 bg-white/10 p-1.5 rounded-xl border border-white/15">
+                <span className="text-xs font-extrabold text-indigo-200 pl-2">Active Resume:</span>
+                <select
+                  value={activeResumeId || ''}
+                  onChange={(e) => onSelectResume(Number(e.target.value))}
+                  className="bg-indigo-950/80 text-white font-bold text-xs rounded-lg px-2.5 py-1.5 border border-indigo-400/40 focus:outline-none focus:ring-2 focus:ring-indigo-300 cursor-pointer"
+                >
+                  {resumes.map(r => (
+                    <option key={r.id} value={r.id} className="text-gray-900 font-semibold">
+                      📄 {r.filename} {r.target_role ? `— ${r.target_role}` : (r.recommended_roles && r.recommended_roles[0] ? `— ${r.recommended_roles[0]}` : '')}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 bg-white/10 p-1.5 rounded-xl border border-white/15">
+              <span className="text-xs font-extrabold text-indigo-200 pl-2">Learning Language:</span>
+              <select
+                value={selectedLanguage || 'en'}
+                onChange={(e) => onSelectLanguage(e.target.value)}
+                className="bg-indigo-950/80 text-white font-bold text-xs rounded-lg px-2.5 py-1.5 border border-indigo-400/40 focus:outline-none focus:ring-2 focus:ring-indigo-300 cursor-pointer"
+              >
+                <option value="en" className="text-gray-900 font-semibold">🌐 English</option>
+                <option value="hi" className="text-gray-900 font-semibold">🇮🇳 Hindi</option>
+                <option value="en+hi" className="text-gray-900 font-semibold">🗣️ English + Hindi</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         {/* Header Right Action Button */}

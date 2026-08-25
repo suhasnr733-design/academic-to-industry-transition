@@ -41,14 +41,32 @@ export const SkillLearningCard = ({
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-8 hover:border-indigo-200 transition-all">
       {/* Skill Card Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-5">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            {skill.category && (
+              <span className="px-2.5 py-0.5 text-xs rounded-md font-extrabold uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">
+                {skill.category}
+              </span>
+            )}
+
+            {(skill.is_existing || skill.status === 'matching') ? (
+              <span className="px-2.5 py-0.5 text-xs rounded-full font-bold bg-green-100 text-green-800">
+                ✓ Existing Skill
+              </span>
+            ) : (
+              <span className="px-2.5 py-0.5 text-xs rounded-full font-bold bg-amber-100 text-amber-900">
+                ⚡ Priority Learning Gap
+              </span>
+            )}
+
             <span className={`px-2.5 py-0.5 text-xs rounded-full font-bold uppercase tracking-wider ${
               skill.priority === 'High' ? 'bg-red-100 text-red-800' :
-              skill.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'
+              skill.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+              skill.priority === 'Developing' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
             }`}>
-              {skill.priority} Priority
+              {skill.priority}
             </span>
+
             <span className="text-xs text-gray-500 font-medium flex items-center gap-1">
               <ClockIcon className="w-3.5 h-3.5" />
               Est. {skill.estimated_duration}
@@ -59,9 +77,10 @@ export const SkillLearningCard = ({
             {skill.skill_name}
           </h3>
 
-          <p className="text-xs text-gray-600">
+          <div className="bg-indigo-50/60 border border-indigo-100 p-2.5 rounded-xl text-xs text-indigo-900 font-medium">
+            <span className="font-bold text-indigo-700 block mb-0.5">Why recommended for you:</span>
             {skill.why_recommended}
-          </p>
+          </div>
         </div>
 
         {/* Progress & AI Helper Button */}

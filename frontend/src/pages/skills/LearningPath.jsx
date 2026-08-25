@@ -1,11 +1,13 @@
 // src/pages/skills/LearningPath.jsx
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../../services/api'
+import { useResume } from '../../context/ResumeContext'
 
 import { LearningDashboardHeader } from '../../components/learning/LearningDashboardHeader'
 import { InteractiveRoadmap } from '../../components/learning/InteractiveRoadmap'
+import { YourSkillsLearningSection } from '../../components/learning/YourSkillsLearningSection'
 import { SkillLearningCard } from '../../components/learning/SkillLearningCard'
 import { DailyLearningPlan } from '../../components/learning/DailyLearningPlan'
 import { ContinueLearningWidget } from '../../components/learning/ContinueLearningWidget'
@@ -23,8 +25,14 @@ import {
 
 export const LearningPath = () => {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const resumeIdParam = searchParams.get('resume_id')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { resumes, fetchResumes } = useResume()
+
+  const urlResumeId = searchParams.get('resume_id')
+  const urlLanguage = searchParams.get('language') || 'en'
+
+  const [activeResumeId, setActiveResumeId] = useState(urlResumeId ? Number(urlResumeId) : null)
+  const [selectedLanguage, setSelectedLanguage] = useState(urlLanguage)
 
   const [roadmapData, setRoadmapData] = useState(null)
   const [bookmarks, setBookmarks] = useState([])
@@ -43,37 +51,118 @@ export const LearningPath = () => {
   // Completion modal state
   const [celebrationSkill, setCelebrationSkill] = useState(null)
 
-  // Fetch resume-specific roadmap & bookmarks
-  const fetchLearningData = useCallback(async () => {
+  // Track active request ID to prevent race conditions on fast resume switching
+  const activeRequestIdRef = useRef(0)
+
+  // Auto-sync resumes list on mount
+  useEffect(() => {
+    fetchResumes()
+  }, [fetchResumes])
+
+  // Sync activeResumeId with available resumes or URL parameter
+  useEffect(() => {
+    if (urlResumeId) {
+      const parsedId = Number(urlResumeId)
+      if (!isNaN(parsedId) && parsedId !== activeResumeId) {
+        setActiveResumeId(parsedId)
+      }
+    } else if (!activeResumeId && resumes && resumes.length > 0) {
+      setActiveResumeId(resumes[0].id)
+    }
+  }, [urlResumeId, resumes, activeResumeId])
+
+  // Fetch learning data for activeResumeId & selectedLanguage
+  const fetchLearningData = useCallback(async (targetResumeId, targetLanguage) => {
+    if (!targetResumeId) {
+      setRoadmapData(null)
+      setBookmarks([])
+      setActiveSkillId(null)
+      setLoading(false)
+      return
+    }
+
+    const currentReqId = ++activeRequestIdRef.current
+
     try {
       setLoading(true)
       setError(null)
 
-      const queryUrl = resumeIdParam ? `/learning/roadmap?resume_id=${resumeIdParam}` : '/learning/roadmap'
+      // Fetch roadmap
+      const queryUrl = `/learning/roadmap?resume_id=${targetResumeId}&language=${targetLanguage}`
       const roadmapRes = await api.get(queryUrl)
-      setRoadmapData(roadmapRes.data)
 
-      if (roadmapRes.data.skills && roadmapRes.data.skills.length > 0) {
-        setActiveSkillId(prev => prev || roadmapRes.data.skills[0].id)
-        setAiSkillTarget(roadmapRes.data.skills[0].skill_name)
+      // Stale response guard
+      if (currentReqId !== activeRequestIdRef.current) return
+
+      const fetchedRoadmap = roadmapRes.data
+
+      if (!fetchedRoadmap || !fetchedRoadmap.has_resume) {
+        setRoadmapData(null)
+        setBookmarks([])
+        setActiveSkillId(null)
+        return
       }
 
-      // Fetch bookmarks
-      const bookmarkUrl = roadmapRes.data.resume_id ? `/learning/bookmarks?resume_id=${roadmapRes.data.resume_id}` : '/learning/bookmarks'
+      setRoadmapData(fetchedRoadmap)
+
+      if (fetchedRoadmap.skills && fetchedRoadmap.skills.length > 0) {
+        setActiveSkillId(fetchedRoadmap.skills[0].id)
+        setAiSkillTarget(fetchedRoadmap.skills[0].skill_name)
+      } else {
+        setActiveSkillId(null)
+      }
+
+      // Fetch bookmarks for this specific resume_id
+      const bookmarkUrl = `/learning/bookmarks?resume_id=${targetResumeId}`
       const bookmarkRes = await api.get(bookmarkUrl)
-      setBookmarks(bookmarkRes.data.bookmarks || [])
+
+      // Stale response guard
+      if (currentReqId !== activeRequestIdRef.current) return
+      setBookmarks(bookmarkRes.data?.bookmarks || [])
 
     } catch (err) {
+      if (currentReqId !== activeRequestIdRef.current) return
       console.error('Error fetching learning data:', err)
       setError(err.response?.data?.error || 'Failed to load resume-specific learning path.')
+      setRoadmapData(null)
+      setBookmarks([])
+      setActiveSkillId(null)
     } finally {
-      setLoading(false)
+      if (currentReqId === activeRequestIdRef.current) {
+        setLoading(false)
+      }
     }
-  }, [resumeIdParam])
+  }, [])
 
   useEffect(() => {
-    fetchLearningData()
-  }, [fetchLearningData])
+    if (activeResumeId) {
+      fetchLearningData(activeResumeId, selectedLanguage)
+    } else {
+      setLoading(false)
+    }
+  }, [activeResumeId, selectedLanguage, fetchLearningData])
+
+  // Resume switch handler
+  const handleSelectResume = (newResumeId) => {
+    if (newResumeId === activeResumeId) return
+
+    // 1. Clear previous state completely
+    setRoadmapData(null)
+    setBookmarks([])
+    setActiveSkillId(null)
+    setActiveResumeId(newResumeId)
+
+    // 2. Sync URL query params
+    setSearchParams({ resume_id: newResumeId, language: selectedLanguage })
+  }
+
+  // Language switch handler
+  const handleSelectLanguage = (newLanguage) => {
+    setSelectedLanguage(newLanguage)
+    if (activeResumeId) {
+      setSearchParams({ resume_id: activeResumeId, language: newLanguage })
+    }
+  }
 
   // Progress update handler
   const handleUpdateStageProgress = async (skillName, stage, isCompleted) => {
@@ -99,8 +188,8 @@ export const LearningPath = () => {
         }
       }
 
-      // Refresh state
-      fetchLearningData()
+      // Refresh state for current active resume
+      fetchLearningData(activeResumeId, selectedLanguage)
     } catch (err) {
       console.error('Error updating progress:', err)
     }
@@ -114,7 +203,7 @@ export const LearningPath = () => {
         ...bookmarkPayload,
         resume_id: roadmapData.resume_id
       })
-      // Refresh bookmarks
+      // Refresh bookmarks for current active resume
       const bookmarkRes = await api.get(`/learning/bookmarks?resume_id=${roadmapData.resume_id}`)
       setBookmarks(bookmarkRes.data.bookmarks || [])
       alert(`Saved "${bookmarkPayload.title}" to your bookmarks!`)
@@ -134,32 +223,52 @@ export const LearningPath = () => {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto py-12 px-4 text-center space-y-4">
+      <div className="max-w-6xl mx-auto py-16 px-4 text-center space-y-4">
         <RefreshIcon className="w-10 h-10 text-indigo-600 animate-spin mx-auto" />
         <p className="text-sm font-semibold text-gray-600">Generating resume-specific personalized learning path...</p>
       </div>
     )
   }
 
-  // Empty state if no resume uploaded yet
-  if (!roadmapData || !roadmapData.has_resume) {
+  // Empty state if no resume selected or no resumes uploaded yet
+  if (!activeResumeId || !roadmapData || !roadmapData.has_resume) {
     return (
       <div className="max-w-3xl mx-auto py-16 px-4 text-center">
         <div className="bg-white rounded-3xl p-10 shadow-xl border border-gray-100 space-y-5">
           <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
             <AcademicCapIcon className="w-10 h-10" />
           </div>
-          <h2 className="text-2xl font-extrabold text-gray-900">No Learning Path Generated Yet</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900">No Resume Selected</h2>
           <p className="text-sm text-gray-600 max-w-md mx-auto leading-relaxed">
-            Upload your resume to extract skills, analyze your target career gap, and automatically build your custom learning roadmap.
+            Upload or select a resume to generate your personalized Learning Path.
           </p>
-          <button
-            onClick={() => navigate('/resume/upload')}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-extrabold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all"
-          >
-            <UploadIcon className="w-5 h-5" />
-            Upload Resume
-          </button>
+          
+          {resumes && resumes.length > 0 && (
+            <div className="pt-2 flex items-center justify-center gap-2">
+              <span className="text-xs font-bold text-gray-600">Select an uploaded resume:</span>
+              <select
+                onChange={(e) => handleSelectResume(Number(e.target.value))}
+                className="bg-indigo-50 text-indigo-900 font-bold text-xs rounded-xl px-3 py-2 border border-indigo-200 cursor-pointer"
+              >
+                <option value="">-- Choose Resume --</option>
+                {resumes.map(r => (
+                  <option key={r.id} value={r.id}>
+                    📄 {r.filename}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="pt-3">
+            <button
+              onClick={() => navigate('/resume/upload')}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-extrabold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all"
+            >
+              <UploadIcon className="w-5 h-5" />
+              Upload New Resume
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -187,7 +296,7 @@ export const LearningPath = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-8">
-      {/* Top Header */}
+      {/* Top Header with Active Resume & Language Selectors */}
       <LearningDashboardHeader
         targetRole={roadmapData.target_role}
         matchPercentage={roadmapData.match_percentage}
@@ -199,6 +308,11 @@ export const LearningPath = () => {
         filterStatus={filterStatus}
         setFilterStatus={setFilterStatus}
         onOpenAiAssistant={() => setIsAiOpen(true)}
+        resumes={resumes}
+        activeResumeId={activeResumeId}
+        onSelectResume={handleSelectResume}
+        selectedLanguage={selectedLanguage}
+        onSelectLanguage={handleSelectLanguage}
       />
 
       {/* Main Section Navigation Tabs (Roadmap vs Bookmarks) */}
@@ -256,6 +370,17 @@ export const LearningPath = () => {
               }}
             />
           </div>
+
+          {/* Categorized Skills & Learning Section */}
+          <YourSkillsLearningSection
+            skills={roadmapData.skills}
+            activeSkillId={activeSkillId}
+            onSelectSkill={(id) => {
+              setActiveSkillId(id)
+              const sk = roadmapData.skills.find(s => s.id === id)
+              if (sk) setAiSkillTarget(sk.skill_name)
+            }}
+          />
 
           {/* Interactive Flowchart Roadmap */}
           <InteractiveRoadmap 

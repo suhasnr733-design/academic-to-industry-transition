@@ -15,17 +15,17 @@ class YouTubeService:
         self.api_key = os.environ.get('YOUTUBE_API_KEY')
         self._cache: Dict[str, List[Dict[str, Any]]] = {}
 
-    def get_videos_for_skill(self, skill: str, target_role: str = 'Software Engineer', stage: str = 'learn', max_results: int = 4) -> List[Dict[str, Any]]:
-        """Fetch YouTube videos dynamically based on target role, skill, and learning stage"""
-        query = self._build_contextual_query(skill, target_role, stage)
-        cache_key = f"{query}_{max_results}"
+    def get_videos_for_skill(self, skill: str, target_role: str = 'Software Engineer', stage: str = 'learn', max_results: int = 4, language: str = 'en') -> List[Dict[str, Any]]:
+        """Fetch YouTube videos dynamically based on target role, skill, learning stage, and language preference"""
+        query = self._build_contextual_query(skill, target_role, stage, language)
+        cache_key = f"{query}_{max_results}_{language}"
 
         if cache_key in self._cache:
             return self._cache[cache_key]
 
         if self.api_key:
             try:
-                videos = self._fetch_from_youtube_api(query, max_results)
+                videos = self._fetch_from_youtube_api(query, max_results, language)
                 if videos:
                     self._cache[cache_key] = videos
                     return videos
@@ -37,23 +37,31 @@ class YouTubeService:
         self._cache[cache_key] = fallback_videos
         return fallback_videos
 
-    def _build_contextual_query(self, skill: str, target_role: str, stage: str) -> str:
-        """Generate smart contextual search query based on stage and career target"""
+    def _build_contextual_query(self, skill: str, target_role: str, stage: str, language: str = 'en') -> str:
+        """Generate smart contextual search query based on stage, career target, and language"""
         skill_clean = str(skill).strip()
         role_clean = str(target_role or 'Software Engineer').strip()
 
-        if stage == 'practice':
-            return f"{skill_clean} practice problems interview preparation {role_clean}"
-        elif stage == 'build':
-            return f"{skill_clean} full project tutorial for {role_clean}"
-        elif stage == 'assess':
-            return f"{skill_clean} interview questions quiz test"
-        elif stage == 'advanced':
-            return f"Advanced {skill_clean} architecture and best practices"
+        lang_low = str(language or 'en').lower()
+        if lang_low in ['hi', 'hindi']:
+            lang_suffix = " Hindi tutorial"
+        elif lang_low in ['en+hi', 'en_hi', 'english_hindi', 'english+hindi']:
+            lang_suffix = " English Hindi tutorial"
         else:
-            return f"{skill_clean} full course tutorial for {role_clean} beginners"
+            lang_suffix = " English tutorial"
 
-    def _fetch_from_youtube_api(self, query: str, max_results: int) -> List[Dict[str, Any]]:
+        if stage == 'practice':
+            return f"{skill_clean} practice problems interview preparation {role_clean}{lang_suffix}"
+        elif stage == 'build':
+            return f"{skill_clean} full project tutorial for {role_clean}{lang_suffix}"
+        elif stage == 'assess':
+            return f"{skill_clean} interview questions quiz test{lang_suffix}"
+        elif stage == 'advanced':
+            return f"Advanced {skill_clean} architecture and best practices{lang_suffix}"
+        else:
+            return f"{skill_clean} full course tutorial for {role_clean} beginners{lang_suffix}"
+
+    def _fetch_from_youtube_api(self, query: str, max_results: int, language: str = 'en') -> List[Dict[str, Any]]:
         """Query official YouTube Data API v3"""
         url = "https://www.googleapis.com/youtube/v3/search"
         params = {
@@ -62,7 +70,7 @@ class YouTubeService:
             'type': 'video',
             'maxResults': max_results,
             'key': self.api_key,
-            'relevanceLanguage': 'en'
+            'relevanceLanguage': 'hi' if language in ['hi', 'hindi'] else 'en'
         }
         res = requests.get(url, params=params, timeout=5)
         if res.status_code == 200:
