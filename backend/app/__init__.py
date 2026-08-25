@@ -1,6 +1,16 @@
 # backend/app/__init__.py
 
 import os
+import sys
+
+# Ensure backend and root project directories are in python search path
+_backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_root_dir = os.path.dirname(_backend_dir)
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
+if _root_dir not in sys.path:
+    sys.path.insert(0, _root_dir)
+
 from datetime import timedelta
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
@@ -13,6 +23,7 @@ from flask_limiter.util import get_remote_address
 from flask_mail import Mail, Message
 
 import re
+import logging
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -27,6 +38,7 @@ limiter = Limiter(
 )
 mail = Mail()
 socketio = None
+logger = logging.getLogger(__name__)
 
 def create_app(config_class='app.config.DevelopmentConfig'):
     """Application factory pattern"""
@@ -214,10 +226,10 @@ def create_app(config_class='app.config.DevelopmentConfig'):
     
     # Initialize database tables and default data
     with app.app_context():
-        from app.models import User, Job, Resume
+        from app.models import User, Job, Resume, ABTest, ABTestVariant, Notification, AssessmentResult, OAuth2Client, MentorshipRequest, Webhook, WebhookEvent
         db.create_all()
 
-        # Schema migration check for OAuth columns
+        # Schema auto-migration check for existing tables (e.g. SQLite / Postgres)
         try:
             with db.engine.connect() as conn:
                 from sqlalchemy import inspect
@@ -236,7 +248,17 @@ def create_app(config_class='app.config.DevelopmentConfig'):
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN placed_company VARCHAR(100)"))
                     if 'package_lpa' not in columns:
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN package_lpa FLOAT"))
-                
+                    if 'department' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN department VARCHAR(100)"))
+                    if 'year_of_study' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN year_of_study INTEGER"))
+                    if 'college' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN college VARCHAR(150)"))
+                    if 'phone' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN phone VARCHAR(20)"))
+                    if 'bio' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN bio TEXT"))
+
                 # Schema migration check for Job live columns
                 if 'jobs' in inspector.get_table_names():
                     job_columns = [c['name'] for c in inspector.get_columns('jobs')]
@@ -258,10 +280,10 @@ def create_app(config_class='app.config.DevelopmentConfig'):
                         conn.execute(db.text("ALTER TABLE jobs ADD COLUMN expires_at DATETIME"))
                     if 'raw_data' not in job_columns:
                         conn.execute(db.text("ALTER TABLE jobs ADD COLUMN raw_data JSON"))
+
                 conn.commit()
         except Exception as e:
             logger.warning(f"Database columns auto-migration notice: {e}")
-
         
         # Seed admin user safely
         if not User.query.filter_by(username='admin').first():
