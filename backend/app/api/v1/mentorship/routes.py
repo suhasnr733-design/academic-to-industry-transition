@@ -7,9 +7,11 @@ from app.extensions import db
 from app.models import User, MentorshipRequest, Notification
 from app.api.v1.mentorship import mentorship_bp
 
+
 # ==========================================================
 # 1. STUDENT: BROWSE FACULTY LIST WITH LIVE REQUEST STATUS
 # ==========================================================
+
 @mentorship_bp.route('/faculty-list', methods=['GET'])
 @jwt_required()
 def get_faculty_list():
@@ -17,37 +19,38 @@ def get_faculty_list():
     try:
         current_user_id = int(get_jwt_identity())
         student = User.query.get(current_user_id)
+
         if not student:
             return jsonify({'error': 'User not found'}), 404
 
         faculty_members = User.query.filter(
-            User.role == 'faculty',
+            User.role.in_(['faculty', 'admin']),
             User.is_active == True
         ).all()
 
-        # Get existing requests from this student
         existing_requests = {
-            req.faculty_id: req 
+            req.faculty_id: req
             for req in MentorshipRequest.query.filter_by(student_id=student.id).all()
         }
 
         results = []
-        for f in faculty_members:
-            # Count accepted mentees for this faculty
+
+        for faculty in faculty_members:
             mentee_count = MentorshipRequest.query.filter_by(
-                faculty_id=f.id, 
+                faculty_id=faculty.id,
                 status='accepted'
             ).count()
 
-            req = existing_requests.get(f.id)
+            req = existing_requests.get(faculty.id)
+
             results.append({
-                'id': f.id,
-                'full_name': f.full_name,
-                'username': f.username,
-                'email': f.email,
-                'department': f.department or 'Academic Faculty',
-                'college': f.college,
-                'bio': f.bio,
+                'id': faculty.id,
+                'full_name': faculty.full_name,
+                'username': faculty.username,
+                'email': faculty.email,
+                'department': faculty.department or 'Academic Faculty',
+                'college': faculty.college,
+                'bio': faculty.bio,
                 'mentee_count': mentee_count,
                 'request_status': req.status if req else 'none',
                 'request_id': req.id if req else None,
@@ -62,15 +65,17 @@ def get_faculty_list():
 
 
 # ==========================================================
-# 2. STUDENT: SEND MENTORSHIP / ADVISOR REQUEST
+# 2. STUDENT: SEND MENTORSHIP REQUEST
 # ==========================================================
+
 @mentorship_bp.route('/request', methods=['POST'])
 @jwt_required()
 def send_mentorship_request():
-    """Student sends a mentorship request to a faculty member"""
+    """Student sends a mentorship request"""
     try:
         current_user_id = int(get_jwt_identity())
         student = User.query.get(current_user_id)
+
         if not student:
             return jsonify({'error': 'Student not found'}), 404
 
@@ -78,6 +83,7 @@ def send_mentorship_request():
             return jsonify({'error': 'Only student accounts can send mentorship requests'}), 403
 
         data = request.get_json() or {}
+
         faculty_id = data.get('faculty_id')
         message = data.get('message', '').strip()
 
@@ -88,10 +94,10 @@ def send_mentorship_request():
             return jsonify({'error': 'You cannot request mentorship from yourself'}), 400
 
         faculty = User.query.get(faculty_id)
-        if not faculty or faculty.role != 'faculty':
+
+        if not faculty or faculty.role not in ['faculty', 'admin']:
             return jsonify({'error': 'Invalid faculty member selected'}), 404
 
-        # Check existing request
         existing = MentorshipRequest.query.filter_by(
             student_id=student.id,
             faculty_id=faculty.id
@@ -99,11 +105,16 @@ def send_mentorship_request():
 
         if existing:
             if existing.status == 'accepted':
-                return jsonify({'message': 'You are already mentored by this professor', 'request': existing.to_dict()}), 200
+                return jsonify({
+                    'message': 'You are already mentored by this professor',
+                    'request': existing.to_dict()
+                }), 200
+
             existing.status = 'pending'
             existing.message = message
             existing.updated_at = datetime.utcnow()
             req_obj = existing
+
         else:
             req_obj = MentorshipRequest(
                 student_id=student.id,
@@ -111,15 +122,16 @@ def send_mentorship_request():
                 status='pending',
                 message=message
             )
+
             db.session.add(req_obj)
 
-        # Create in-app notification for the faculty member
         notification = Notification(
             user_id=faculty.id,
             title='New Mentorship Request',
             message=f'Student {student.full_name or student.username} ({student.department or "General"}) requested you as an academic/career advisor.',
             notification_type='mentorship'
         )
+
         db.session.add(notification)
         db.session.commit()
 
@@ -134,25 +146,24 @@ def send_mentorship_request():
 
 
 # ==========================================================
-# 3. STUDENT: GET CURRENT ADVISOR & SENT REQUESTS
+# 3. STUDENT: MY ADVISOR
 # ==========================================================
+
 @mentorship_bp.route('/my-advisor', methods=['GET'])
 @jwt_required()
 def get_my_advisor():
-    """Get student's active advisor and sent requests"""
     try:
         current_user_id = int(get_jwt_identity())
         student = User.query.get(current_user_id)
+
         if not student:
             return jsonify({'error': 'User not found'}), 404
 
-        # Get accepted advisor
         accepted = MentorshipRequest.query.filter_by(
             student_id=student.id,
             status='accepted'
         ).first()
 
-        # Get all sent requests
         all_requests = MentorshipRequest.query.filter_by(
             student_id=student.id
         ).order_by(MentorshipRequest.created_at.desc()).all()
@@ -168,23 +179,29 @@ def get_my_advisor():
 
 
 # ==========================================================
-# 4. FACULTY: GET INCOMING MENTORSHIP REQUESTS
+# 4. FACULTY: INCOMING REQUESTS
 # ==========================================================
+
 @mentorship_bp.route('/incoming-requests', methods=['GET'])
 @jwt_required()
 def get_incoming_requests():
-    """Get all incoming requests for the logged-in faculty member"""
     try:
         current_user_id = int(get_jwt_identity())
         faculty = User.query.get(current_user_id)
+
         if not faculty or faculty.role not in ['faculty', 'admin']:
             return jsonify({'error': 'Faculty access required'}), 403
 
         status_filter = request.args.get('status')
-        query = MentorshipRequest.query.join(User, MentorshipRequest.student_id == User.id).filter(
+
+        query = MentorshipRequest.query.join(
+            User,
+            MentorshipRequest.student_id == User.id
+        ).filter(
             MentorshipRequest.faculty_id == faculty.id,
             User.role == 'student'
         )
+
         if status_filter:
             query = query.filter(MentorshipRequest.status == status_filter)
 
@@ -201,24 +218,26 @@ def get_incoming_requests():
 
 
 # ==========================================================
-# 5. FACULTY: ACCEPT OR DECLINE REQUEST
+# 5. FACULTY: ACCEPT / REJECT
 # ==========================================================
+
 @mentorship_bp.route('/requests/<int:request_id>/action', methods=['PUT'])
 @jwt_required()
 def handle_mentorship_action(request_id):
-    """Faculty accepts or declines a mentorship request"""
     try:
         current_user_id = int(get_jwt_identity())
         faculty = User.query.get(current_user_id)
+
         if not faculty or faculty.role not in ['faculty', 'admin']:
             return jsonify({'error': 'Faculty access required'}), 403
 
         req_obj = MentorshipRequest.query.get(request_id)
+
         if not req_obj or req_obj.faculty_id != faculty.id:
             return jsonify({'error': 'Mentorship request not found'}), 404
 
         data = request.get_json() or {}
-        action = data.get('action')  # 'accept' or 'reject'
+        action = data.get('action')
         response_note = data.get('response_note', '')
 
         if action not in ['accept', 'reject']:
@@ -228,8 +247,7 @@ def handle_mentorship_action(request_id):
         req_obj.response_note = response_note
         req_obj.updated_at = datetime.utcnow()
 
-        # Send notification to student
-        student_notification = Notification(
+        notification = Notification(
             user_id=req_obj.student_id,
             title='Mentorship Request Update',
             message=(
@@ -239,7 +257,8 @@ def handle_mentorship_action(request_id):
             ),
             notification_type='mentorship'
         )
-        db.session.add(student_notification)
+
+        db.session.add(notification)
         db.session.commit()
 
         return jsonify({
@@ -253,15 +272,16 @@ def handle_mentorship_action(request_id):
 
 
 # ==========================================================
-# 6. CANCEL OR REMOVE MENTORSHIP
+# 6. DELETE REQUEST
 # ==========================================================
+
 @mentorship_bp.route('/requests/<int:request_id>', methods=['DELETE'])
 @jwt_required()
 def delete_mentorship_request(request_id):
-    """Cancel a pending request or remove a mentorship link"""
     try:
         current_user_id = int(get_jwt_identity())
         req_obj = MentorshipRequest.query.get(request_id)
+
         if not req_obj:
             return jsonify({'error': 'Request not found'}), 404
 
@@ -279,19 +299,19 @@ def delete_mentorship_request(request_id):
 
 
 # ==========================================================
-# 7. FACULTY: UNASSIGN / RELEASE MENTEE
+# 7. RELEASE MENTEE
 # ==========================================================
+
 @mentorship_bp.route('/faculty/mentees/<int:student_id>', methods=['DELETE'])
 @jwt_required()
 def release_mentee(student_id):
-    """Faculty releases/unassigns an accepted student mentee"""
     try:
         current_user_id = int(get_jwt_identity())
         faculty = User.query.get(current_user_id)
+
         if not faculty or faculty.role not in ['faculty', 'admin']:
             return jsonify({'error': 'Faculty access required'}), 403
 
-        # Find the active accepted mentorship link
         req_obj = MentorshipRequest.query.filter_by(
             student_id=student_id,
             faculty_id=faculty.id,
@@ -303,13 +323,13 @@ def release_mentee(student_id):
 
         db.session.delete(req_obj)
 
-        # Notify the student
         notification = Notification(
             user_id=student_id,
             title='Mentorship Assignment Concluded',
             message=f'Professor {faculty.full_name} has concluded your mentorship assignment. You may now request a new advisor.',
             notification_type='mentorship'
         )
+
         db.session.add(notification)
         db.session.commit()
 
@@ -318,4 +338,3 @@ def release_mentee(student_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to release mentee', 'message': str(e)}), 500
-

@@ -767,6 +767,7 @@ export const FacultyDashboard = () => {
                             </Button>
                           )}
                         </div>
+
                       </td>
                     </tr>
                   ))}
@@ -861,7 +862,7 @@ export const FacultyDashboard = () => {
       {/* Student Detail & Placement Update Modal */}
       {selectedStudent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center">
@@ -975,6 +976,7 @@ export const FacultyDashboard = () => {
               ) : (
                 <div />
               )}
+
               <Button
                 variant="outline"
                 size="sm"
@@ -990,7 +992,7 @@ export const FacultyDashboard = () => {
       {/* Password & Security Modal */}
       {showPasswordModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 relative animate-in fade-in zoom-in-95 duration-150 space-y-5">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 relative space-y-5">
             <div className="flex items-start justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
