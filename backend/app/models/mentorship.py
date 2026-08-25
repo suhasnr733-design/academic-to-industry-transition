@@ -26,6 +26,16 @@ class MentorshipRequest(db.Model):
         db.UniqueConstraint('student_id', 'faculty_id', name='uq_student_faculty_mentorship'),
     )
 
+    def __init__(self, student_id=None, faculty_id=None, status='pending', message=None, response_note=None, **kwargs):
+        super().__init__(**kwargs)
+        if student_id is not None:
+            self.student_id = student_id
+        if faculty_id is not None:
+            self.faculty_id = faculty_id
+        self.status = status
+        self.message = message
+        self.response_note = response_note
+
     def to_dict(self):
         return {
             'id': self.id,

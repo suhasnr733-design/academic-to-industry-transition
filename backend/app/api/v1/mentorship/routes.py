@@ -21,7 +21,7 @@ def get_faculty_list():
             return jsonify({'error': 'User not found'}), 404
 
         faculty_members = User.query.filter(
-            User.role.in_(['faculty', 'admin']),
+            User.role == 'faculty',
             User.is_active == True
         ).all()
 
@@ -82,7 +82,7 @@ def send_mentorship_request():
             return jsonify({'error': 'faculty_id is required'}), 400
 
         faculty = User.query.get(faculty_id)
-        if not faculty or faculty.role not in ['faculty', 'admin']:
+        if not faculty or faculty.role != 'faculty':
             return jsonify({'error': 'Invalid faculty member selected'}), 404
 
         # Check existing request
