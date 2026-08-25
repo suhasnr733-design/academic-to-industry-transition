@@ -8,6 +8,7 @@ from app.models.notification import Notification
 from app.models.assessment import AssessmentResult
 from app.models.oauth import OAuth2Client
 from app.models.mentorship import MentorshipRequest
+from app.models.learning import LearningProgress, LearningBookmark, LearningActivity
 
-__all__ = ['User', 'AuditLog', 'Resume', 'Job', 'ABTest', 'ABTestVariant', 'Notification', 'AssessmentResult', 'OAuth2Client', 'MentorshipRequest']
+__all__ = ['User', 'AuditLog', 'Resume', 'Job', 'ABTest', 'ABTestVariant', 'Notification', 'AssessmentResult', 'OAuth2Client', 'MentorshipRequest', 'LearningProgress', 'LearningBookmark', 'LearningActivity']
 

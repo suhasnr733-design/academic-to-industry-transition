@@ -230,6 +230,12 @@ def create_app(config_class='app.config.DevelopmentConfig'):
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN oauth_provider_id VARCHAR(100)"))
                     if 'profile_picture' not in columns:
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255)"))
+                    if 'placement_status' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN placement_status VARCHAR(20) DEFAULT 'seeking'"))
+                    if 'placed_company' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN placed_company VARCHAR(100)"))
+                    if 'package_lpa' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN package_lpa FLOAT"))
                 
                 # Schema migration check for Job live columns
                 if 'jobs' in inspector.get_table_names():
