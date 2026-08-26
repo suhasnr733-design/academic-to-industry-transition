@@ -73,7 +73,7 @@ export const JobList = () => {
   const applyFilters = () => {
     if (isLiveMode) {
       fetchLiveJobs({
-        search: filters.search || 'Software Engineer',
+        search: filters.search || '',
         location: filters.location || ''
       })
     } else {
@@ -89,7 +89,7 @@ export const JobList = () => {
     setIsLiveMode(enableLive)
     if (enableLive) {
       fetchLiveJobs({
-        search: filters.search || 'Software Engineer',
+        search: filters.search || '',
         location: filters.location || ''
       })
     } else {
@@ -100,7 +100,7 @@ export const JobList = () => {
   const clearFilters = () => {
     setFilters({ domain: '', location: '', search: '' })
     if (isLiveMode) {
-      fetchLiveJobs({ search: 'Software Engineer' })
+      fetchLiveJobs({ search: '' })
     } else {
       fetchJobs()
     }
@@ -206,9 +206,9 @@ export const JobList = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Input
-            label="Search Keywords"
+            label="Job Role"
             name="search"
-            placeholder={isLiveMode ? "e.g. Research Scientist, Python, Machine Learning..." : "Job title, company..."}
+            placeholder="e.g. DevOps Engineer, Data Analyst, Software Engineer..."
             value={filters.search}
             onChange={handleFilterChange}
           />
@@ -331,9 +331,12 @@ export const JobList = () => {
 
                   {/* Skills Display */}
                   {job.required_skills && job.required_skills.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-3">
+                    <div className="flex flex-wrap items-center gap-2 mt-3">
                       {job.required_skills.slice(0, 7).map((skill, idx) => (
-                        <span key={idx} className="px-2 py-0.5 bg-gray-50 text-gray-600 rounded border text-xs">
+                        <span 
+                          key={idx} 
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-300 shadow-sm"
+                        >
                           {skill}
                         </span>
                       ))}

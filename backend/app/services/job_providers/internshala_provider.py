@@ -24,8 +24,11 @@ class InternshalaProvider(BaseJobProvider):
         """Fetch fresher jobs and internships from Internshala"""
         jobs: List[Dict[str, Any]] = []
         try:
-            formatted_query = (query or "developer").lower().replace(' ', '-')
-            url = f"{self.BASE_URL}/{formatted_query}-jobs"
+            if query and query.strip():
+                formatted_query = query.strip().lower().replace(' ', '-')
+                url = f"{self.BASE_URL}/{formatted_query}-jobs"
+            else:
+                url = self.BASE_URL
             
             response = self.session.get(url, timeout=10)
             if response.status_code != 200:

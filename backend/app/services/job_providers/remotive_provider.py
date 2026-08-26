@@ -24,10 +24,9 @@ class RemotiveProvider(BaseJobProvider):
         """Fetch remote tech jobs from Remotive"""
         jobs = []
         try:
-            params = {
-                'search': query or 'developer',
-                'limit': limit * 2  # Fetch slightly more to filter effectively
-            }
+            params = {'limit': limit * 2}
+            if query and query.strip():
+                params['search'] = query.strip()
             
             response = self.session.get(self.base_url, params=params, timeout=10)
             if response.status_code != 200:
@@ -36,23 +35,27 @@ class RemotiveProvider(BaseJobProvider):
             
             data = response.json()
             raw_jobs = data.get('jobs', [])
-            
-            for item in raw_jobs[:limit]:
+            for item in raw_jobs:
+                raw_title = item.get('title', 'Software Engineer')
+                raw_tags = item.get('tags', []) or []
+                clean_tags = [str(t).strip() for t in raw_tags if str(t).strip()]
+                category = item.get('category', 'Software Development')
                 raw_desc = item.get('description', '')
                 clean_desc = re.sub(r'<[^>]+>', ' ', raw_desc).strip()
-                
-                tags = item.get('tags', []) or []
-                category = item.get('category', 'Software Development')
-                
+
+                if query:
+                    if not self.is_query_relevant(query, raw_title, clean_tags, clean_desc, domain=category):
+                        continue
+
                 normalized = self.normalize_job(
                     external_id=str(item.get('id', '')),
-                    title=item.get('title', 'Software Engineer'),
+                    title=raw_title,
                     company=item.get('company_name', 'Tech Company'),
                     description=clean_desc[:1500] if clean_desc else 'Remote tech opportunity.',
                     apply_url=item.get('url', 'https://remotive.com'),
                     source='remotive',
                     location=item.get('candidate_required_location') or 'Remote',
-                    required_skills=tags,
+                    required_skills=clean_tags,
                     job_type=item.get('job_type', 'full_time').replace('_', ' ').title(),
                     domain=category,
                     salary_range=item.get('salary') or 'Competitive',
@@ -63,10 +66,12 @@ class RemotiveProvider(BaseJobProvider):
                     }
                 )
                 jobs.append(normalized)
+                if len(jobs) >= limit:
+                    break
                 
             logger.info(f"RemotiveProvider: fetched {len(jobs)} jobs for query '{query}'")
             return jobs
             
         except Exception as e:
-            logger.warning(f"RemotiveProvider error during search: {e}")
+            logger.debug(f"RemotiveProvider network drop: {e}")
             return []

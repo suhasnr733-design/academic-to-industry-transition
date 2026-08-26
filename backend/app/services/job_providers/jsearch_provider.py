@@ -29,7 +29,7 @@ class JSearchProvider(BaseJobProvider):
             
         jobs = []
         try:
-            search_query = query or "Software Engineer"
+            search_query = query or "Technology"
             if location and location.lower() != 'remote':
                 search_query = f"{search_query} in {location}"
                 

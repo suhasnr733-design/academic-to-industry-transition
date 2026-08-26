@@ -33,16 +33,18 @@ class ArbeitnowProvider(BaseJobProvider):
             raw_jobs = data.get('data', [])
             
             query_terms = [t.lower() for t in query.split()] if query else []
-            
+            query_phrase = query.lower() if query else ''
+
             for item in raw_jobs:
                 title = item.get('title', '')
+                title_lower = title.lower()
                 company = item.get('company_name', '')
                 tags = item.get('tags', []) or []
+                tags_str = ' '.join(tags).lower()
                 clean_desc = re.sub(r'<[^>]+>', ' ', item.get('description', '')).strip()
-                
-                if query_terms:
-                    searchable_blob = f"{title} {company} {' '.join(tags)} {clean_desc}".lower()
-                    if not any(term in searchable_blob for term in query_terms):
+
+                if query:
+                    if not self.is_query_relevant(query, title, tags, clean_desc):
                         continue
                 
                 job_location = item.get('location', 'Remote / Global')
@@ -73,5 +75,5 @@ class ArbeitnowProvider(BaseJobProvider):
             return jobs
             
         except Exception as e:
-            logger.warning(f"ArbeitnowProvider error during search: {e}")
+            logger.debug(f"ArbeitnowProvider network drop: {e}")
             return []

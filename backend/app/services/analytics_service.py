@@ -38,10 +38,13 @@ class AnalyticsService:
 
     def get_faculty_placement_stats(self, faculty_id=None, filter_type='mentees', department=None):
         """Get placement stats for faculty dashboard"""
-        from app.models.mentorship import FacultyMentee
+        from app.models import MentorshipRequest
         mentee_ids = []
         if faculty_id:
-            mentees = FacultyMentee.query.filter_by(faculty_id=faculty_id, is_active=True).all()
+            mentees = MentorshipRequest.query.filter_by(
+                faculty_id=faculty_id,
+                status='accepted'
+            ).all()
             mentee_ids = [m.student_id for m in mentees]
 
         if filter_type == 'all':

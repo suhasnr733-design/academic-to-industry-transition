@@ -90,7 +90,7 @@ class WeWorkRemotelyProvider(BaseJobProvider):
 
             logger.info(f"WeWorkRemotelyProvider returned {len(jobs)} jobs for query '{query}'")
         except Exception as exc:
-            logger.error(f"WeWorkRemotelyProvider error during search: {exc}")
+            logger.debug(f"WeWorkRemotelyProvider network drop: {exc}")
 
         return jobs
 
