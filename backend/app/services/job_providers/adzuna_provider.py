@@ -51,16 +51,16 @@ class AdzunaProvider(BaseJobProvider):
                 'app_id': self.app_id,
                 'app_key': self.app_key,
                 'results_per_page': limit,
-                'what': query or 'Software Engineer',
+                'what': query or 'Technology',
                 'content-type': 'application/json'
             }
             
             if location and location.lower() != 'remote':
                 params['where'] = location
                 
-            response = requests.get(url, params=params, timeout=10)
+            response = self.session.get(url, params=params, timeout=10)
             if response.status_code != 200:
-                logger.warning(f"AdzunaProvider returned status {response.status_code}")
+                logger.debug(f"AdzunaProvider returned status {response.status_code}")
                 return []
                 
             data = response.json()

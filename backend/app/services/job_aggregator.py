@@ -18,6 +18,7 @@ from app.services.job_providers import (
     InternshalaProvider,
     NaukriProvider
 )
+from app.services.job_providers.base_provider import BaseJobProvider
 from app.services.job_matcher import JobMatcher
 
 logger = logging.getLogger(__name__)
@@ -89,10 +90,31 @@ class JobAggregatorService:
                 except Exception as exc:
                     logger.warning(f"Provider {p_name} raised exception: {exc}")
 
-        # Deduplicate by (company, title)
+        # Deduplicate by (company, title) and enforce query relevance
         seen_keys = set()
         deduped_jobs = []
         for job in all_jobs:
+            if query and not BaseJobProvider.is_query_relevant(
+                query,
+                job.get('title', ''),
+                job.get('required_skills', []),
+                job.get('description', ''),
+                job.get('domain', '')
+            ):
+                continue
+
+            if location and not BaseJobProvider.is_location_relevant(
+                location,
+                job.get('location', '')
+            ):
+                continue
+
+            if not BaseJobProvider.is_domain_relevant(
+                job.get('title', ''),
+                job.get('description', '')
+            ):
+                continue
+
             c_norm = (job.get('company') or '').strip().lower()
             t_norm = (job.get('title') or '').strip().lower()
             dedup_key = f"{c_norm}::{t_norm}"
