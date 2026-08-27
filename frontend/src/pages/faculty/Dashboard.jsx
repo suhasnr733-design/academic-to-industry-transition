@@ -24,8 +24,11 @@ import {
   BanIcon,
   ClockIcon,
   UserAddIcon,
-  UserRemoveIcon
+  UserRemoveIcon,
+  OfficeBuildingIcon
 } from '@heroicons/react/outline'
+import { PlacementShortlist } from './PlacementShortlist'
+import { CampusDrives } from './CampusDrives'
 
 export const FacultyDashboard = () => {
   const { user } = useAuth()
@@ -42,11 +45,11 @@ export const FacultyDashboard = () => {
   })
   const [cohortSkills, setCohortSkills] = useState([])
   const [advisorInsight, setAdvisorInsight] = useState({
-    title: 'Curriculum Focus Needed',
-    top_deficit_skill: 'Cloud & Docker DevOps',
-    gap_percentage: 65,
-    message: 'Cloud DevOps and Docker represent the largest skill deficit across 65% of the student cohort. Scheduling a 2-week hands-on containerization workshop is recommended.',
-    action_label: 'Inspect Cohort'
+    title: 'Awaiting Resume Submissions',
+    top_deficit_skill: 'No Resumes Uploaded',
+    gap_percentage: 100,
+    message: 'No student resumes have been uploaded for AI skill verification yet. Encourage your student cohort to upload their resumes to unlock live skill deficit analytics and placement recommendations.',
+    action_label: 'Inspect Student Cohort'
   })
   const [students, setStudents] = useState([])
   const [incomingRequests, setIncomingRequests] = useState([])
@@ -370,6 +373,36 @@ export const FacultyDashboard = () => {
           <SparklesIcon className="h-4 w-4" />
           Cohort Skill Gap Analytics
         </button>
+
+        <button
+          onClick={() => setSearchParams({ tab: 'drives' })}
+          className={`pb-3 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 relative ${
+            activeTab === 'drives'
+              ? 'border-purple-600 text-purple-600 font-semibold'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <OfficeBuildingIcon className="h-4 w-4" />
+          Campus Drives
+          <span className="px-1.5 py-0.5 text-[10px] uppercase font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+            Attendees
+          </span>
+        </button>
+
+        <button
+          onClick={() => setSearchParams({ tab: 'shortlist' })}
+          className={`pb-3 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 relative ${
+            activeTab === 'shortlist'
+              ? 'border-purple-600 text-purple-600 font-semibold'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <BriefcaseIcon className="h-4 w-4" />
+          Placement Shortlist & Bundle Export
+          <span className="px-1.5 py-0.5 text-[10px] uppercase font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+            Drive Tool
+          </span>
+        </button>
       </div>
 
       {/* Tab 1: Overview */}
@@ -408,23 +441,26 @@ export const FacultyDashboard = () => {
                 </button>
               </div>
               <div className="space-y-4">
-                {(cohortSkills.length > 0 ? cohortSkills.slice(0, 4) : [
-                  { skill: 'Python / Backend Development', profCount: 80, gapCount: 20, color: 'bg-blue-500' },
-                  { skill: 'React & Modern Frontend', profCount: 70, gapCount: 30, color: 'bg-indigo-500' },
-                  { skill: 'SQL & Database Architecture', profCount: 65, gapCount: 35, color: 'bg-green-500' },
-                  { skill: 'Cloud & Docker DevOps', profCount: 35, gapCount: 65, color: 'bg-amber-500' },
-                ]).map((item) => (
-                  <div key={item.skill} className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-medium">
-                      <span className="text-gray-700">{item.skill}</span>
-                      <span className="text-purple-700 font-semibold">{item.profCount}% Ready</span>
+                {cohortSkills.length > 0 ? (
+                  cohortSkills.slice(0, 4).map((item) => (
+                    <div key={item.skill} className="space-y-1.5">
+                      <div className="flex justify-between text-xs font-medium">
+                        <span className="text-gray-700">{item.skill}</span>
+                        <span className={`font-semibold ${item.profCount > 0 ? 'text-purple-700' : 'text-gray-400'}`}>
+                          {item.profCount}% Ready
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden flex">
+                        <div className={`h-full ${item.color}`} style={{ width: `${item.profCount}%` }} />
+                        <div className="h-full bg-rose-200" style={{ width: `${item.gapCount}%` }} />
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden flex">
-                      <div className={`h-full ${item.color}`} style={{ width: `${item.profCount}%` }} />
-                      <div className="h-full bg-rose-200" style={{ width: `${item.gapCount}%` }} />
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-xs text-gray-400">
+                    No verified resumes uploaded yet.
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -757,14 +793,7 @@ export const FacultyDashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {(cohortSkills.length > 0 ? cohortSkills : [
-                { skill: 'Python / Backend Development', profCount: 80, gapCount: 20, color: 'bg-blue-500' },
-                { skill: 'React & Modern Frontend', profCount: 70, gapCount: 30, color: 'bg-indigo-500' },
-                { skill: 'SQL & Database Architecture', profCount: 65, gapCount: 35, color: 'bg-green-500' },
-                { skill: 'Cloud & Docker DevOps', profCount: 35, gapCount: 65, color: 'bg-amber-500' },
-                { skill: 'Machine Learning & AI APIs', profCount: 45, gapCount: 55, color: 'bg-purple-500' },
-                { skill: 'System Design & Data Structures', profCount: 60, gapCount: 40, color: 'bg-rose-500' },
-              ]).map((item) => (
+              {cohortSkills.map((item) => (
                 <div key={item.skill} className="p-4 rounded-xl border border-gray-100 bg-gray-50/50 space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="font-semibold text-gray-900 text-sm">{item.skill}</span>
@@ -791,6 +820,21 @@ export const FacultyDashboard = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Tab 5: Campus Drives & Confirmed Attendees */}
+      {activeTab === 'drives' && (
+        <CampusDrives
+          onNavigateToShortlist={() => setSearchParams({ tab: 'shortlist' })}
+        />
+      )}
+
+      {/* Tab 6: Placement Shortlist & Bundle Export */}
+      {activeTab === 'shortlist' && (
+        <PlacementShortlist
+          departments={departments}
+          initialScope={directoryScope}
+        />
       )}
 
       {/* Student Detail & Placement Update Modal */}

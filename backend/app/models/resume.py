@@ -30,6 +30,31 @@ class Resume(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    def __init__(self, user_id=None, filename=None, file_path=None, file_size=None,
+                 file_type=None, skills=None, education=None, experience=None,
+                 projects=None, certifications=None, employability_score=None,
+                 recommended_roles=None, skill_gaps=None, status='pending',
+                 error_message=None, **kwargs):
+        super().__init__(**kwargs)
+        if user_id is not None:
+            self.user_id = user_id
+        self.filename = filename
+        self.file_path = file_path
+        self.file_size = file_size
+        self.file_type = file_type
+        self.skills = skills if skills is not None else []
+        self.education = education if education is not None else []
+        self.experience = experience if experience is not None else {}
+        self.projects = projects if projects is not None else []
+        self.certifications = certifications if certifications is not None else []
+        self.employability_score = employability_score
+        self.recommended_roles = recommended_roles if recommended_roles is not None else []
+        self.skill_gaps = skill_gaps if skill_gaps is not None else []
+        self.status = status
+        self.error_message = error_message
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
     def to_dict(self):
         return {
             'id': self.id,
