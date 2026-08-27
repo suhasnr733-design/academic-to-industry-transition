@@ -19,8 +19,9 @@ def get_roadmap():
         resume_id_param = request.args.get('resume_id')
         resume_id = int(resume_id_param) if (resume_id_param and resume_id_param.isdigit()) else None
         language = request.args.get('language', 'en')
+        target_date = request.args.get('target_date', None)
 
-        roadmap = learning_service.get_roadmap_for_resume(user_id=current_user_id, resume_id=resume_id, language=language)
+        roadmap = learning_service.get_roadmap_for_resume(user_id=current_user_id, resume_id=resume_id, language=language, target_date=target_date)
         return jsonify(roadmap), 200
 
     except Exception as e:

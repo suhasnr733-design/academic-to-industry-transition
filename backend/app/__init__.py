@@ -236,7 +236,16 @@ def create_app(config_class='app.config.DevelopmentConfig'):
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN placed_company VARCHAR(100)"))
                     if 'package_lpa' not in columns:
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN package_lpa FLOAT"))
-                
+                    if 'department' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN department VARCHAR(100)"))
+                    if 'year_of_study' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN year_of_study INTEGER"))
+                    if 'college' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN college VARCHAR(150)"))
+                    if 'phone' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN phone VARCHAR(20)"))
+                    if 'bio' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN bio TEXT"))
                 # Schema migration check for Job live columns
                 if 'jobs' in inspector.get_table_names():
                     job_columns = [c['name'] for c in inspector.get_columns('jobs')]
@@ -301,4 +310,3 @@ def create_app(config_class='app.config.DevelopmentConfig'):
             print("FACULTY USER: Created initial faculty user (faculty / Faculty@123).")
             
     return app
-

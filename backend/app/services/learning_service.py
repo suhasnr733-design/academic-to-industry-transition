@@ -112,7 +112,7 @@ class LearningService:
 
         return 'Other'
 
-    def get_roadmap_for_resume(self, user_id: int, resume_id: Optional[int] = None, language: str = 'en') -> Dict[str, Any]:
+    def get_roadmap_for_resume(self, user_id: int, resume_id: Optional[int] = None, language: str = 'en', target_date: Optional[str] = None) -> Dict[str, Any]:
         """Generate a complete resume-specific learning path payload"""
         # 1. Fetch requested or active/latest resume for user
         if resume_id:
@@ -125,6 +125,9 @@ class LearningService:
                 'resume_id': None,
                 'has_resume': False,
                 'target_role': None,
+                'target_date': None,
+                'days_remaining': None,
+                'pace_label': None,
                 'match_percentage': 0,
                 'learning_progress_percent': 0,
                 'skills_to_master_count': 0,
@@ -253,9 +256,23 @@ class LearningService:
         overall_progress = round(total_progress_sum / total_skills_count, 1) if total_skills_count > 0 else 0.0
         total_weeks_est = sum(int(s['estimated_duration'].split('-')[0]) for s in roadmap_skills if s['estimated_duration'] and s['estimated_duration'][0].isdigit()) if roadmap_skills else 4
 
+        # Calculate Target Date Countdown & Daily Pace
+        days_remaining = None
+        target_date_str = target_date
+        if target_date_str:
+            try:
+                from datetime import datetime, date
+                target_dt = datetime.strptime(target_date_str, '%Y-%m-%d').date()
+                today = date.today()
+                days_diff = (target_dt - today).days
+                days_remaining = max(1, days_diff)
+            except Exception as e:
+                logger.warning(f"Error parsing target_date {target_date_str}: {e}")
+                days_remaining = None
+
         # Build Daily Plan & Continue Learning
         active_skill = next((s for s in roadmap_skills if not s['is_completed']), roadmap_skills[0] if roadmap_skills else None)
-        daily_plan = self._build_daily_plan(active_skill, target_role) if active_skill else None
+        daily_plan = self._build_daily_plan(active_skill, target_role, days_remaining=days_remaining, target_date=target_date_str, roadmap_skills=roadmap_skills) if active_skill else None
         continue_learning = self._build_continue_learning(active_skill) if active_skill else None
 
         return {
@@ -263,6 +280,9 @@ class LearningService:
             'filename': getattr(resume, 'filename', 'Uploaded Resume'),
             'has_resume': True,
             'target_role': target_role,
+            'target_date': target_date_str,
+            'days_remaining': days_remaining,
+            'pace_label': daily_plan.get('pace_label') if daily_plan else None,
             'current_skills': current_skills,
             'matching_skills': matching_skills,
             'missing_skills': missing_skills,
@@ -578,8 +598,8 @@ class LearningService:
             }
         ]
 
-    def _build_daily_plan(self, active_skill: Dict[str, Any], target_role: str) -> Dict[str, Any]:
-        """Build Today's Goal widget data"""
+    def _build_daily_plan(self, active_skill: Dict[str, Any], target_role: str, days_remaining: Optional[int] = None, target_date: Optional[str] = None, roadmap_skills: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+        """Build Today's Goal widget data with dynamic pace calculation"""
         skill_name = active_skill['skill_name']
         stage = active_skill['stage']
 
@@ -590,13 +610,35 @@ class LearningService:
             'assess': f"Complete the 5-question {skill_name} readiness quiz."
         }
 
+        est_mins = 30
+        pace_label = "🎯 Standard Pace"
+
+        if days_remaining and roadmap_skills:
+            uncompleted_skills = [s for s in roadmap_skills if not s.get('is_completed')]
+            total_hours = len(uncompleted_skills) * 3
+            computed_mins = max(15, round((total_hours * 60) / days_remaining))
+            est_mins = min(120, computed_mins)
+
+            if days_remaining <= 21:
+                pace_label = "⚡ Crash Course Pace"
+                est_mins = max(60, est_mins)
+            elif days_remaining <= 60:
+                pace_label = "🎯 Standard Pace"
+                est_mins = min(55, max(35, est_mins))
+            else:
+                pace_label = "☕ Relaxed Pace"
+                est_mins = min(30, est_mins)
+
         return {
             'skill_name': skill_name,
             'goal_title': f"Mastering {skill_name} — {stage.capitalize()} Phase",
-            'estimated_minutes': 30,
-            'task_description': stage_tasks.get(stage, f"Spend 30 minutes practicing {skill_name}."),
+            'estimated_minutes': est_mins,
+            'task_description': stage_tasks.get(stage, f"Spend {est_mins} minutes practicing {skill_name}."),
             'stage': stage,
-            'target_role': target_role
+            'target_role': target_role,
+            'target_date': target_date,
+            'days_remaining': days_remaining,
+            'pace_label': pace_label
         }
 
     def _build_continue_learning(self, active_skill: Dict[str, Any]) -> Dict[str, Any]:

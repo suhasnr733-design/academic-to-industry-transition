@@ -64,7 +64,7 @@ export const YourSkillsLearningSection = ({ skills, activeSkillId, onSelectSkill
   })
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 mb-8">
+    <div id="skills-section" className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 mb-8 scroll-mt-6">
       {/* Section Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-gray-100 pb-4">
         <div>
