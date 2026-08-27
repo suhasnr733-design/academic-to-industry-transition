@@ -55,4 +55,28 @@ export const FacultyRoute = () => {
   }
 
   return <Outlet />
+}
+
+export const PublicRoute = () => {
+  const { isAuthenticated, user, isLoading } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="spinner" />
+      </div>
+    )
+  }
+
+  if (isAuthenticated) {
+    if (user?.role === 'faculty') {
+      return <Navigate to="/faculty" replace />
+    }
+    if (user?.role === 'admin') {
+      return <Navigate to="/admin" replace />
+    }
+    return <Navigate to="/dashboard" replace />
+  }
+
+  return <Outlet />
 }
