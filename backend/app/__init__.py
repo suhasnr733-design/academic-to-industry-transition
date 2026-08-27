@@ -49,7 +49,7 @@ def create_app(config_class='app.config.DevelopmentConfig'):
     if not app.config.get('JWT_SECRET_KEY'):
         app.config['JWT_SECRET_KEY'] = 'dev-jwt-secret-key-change-in-production'
     
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
     app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
     
     # Ensure instance and upload folders exist
@@ -299,50 +299,6 @@ def create_app(config_class='app.config.DevelopmentConfig'):
             db.session.add(faculty_user)
             db.session.commit()
             print("FACULTY USER: Created initial faculty user (faculty / Faculty@123).")
-        
-        # Seed sample jobs if empty
-        if Job.query.count() == 0:
-            sample_jobs = [
-                Job(
-                    title='Software Engineer',
-                    company='Google',
-                    description='Develop web and software solutions.',
-                    required_skills=['Python', 'Java', 'SQL', 'Git'],
-                    experience_required=1,
-                    location='Bangalore',
-                    salary_range='12-18 LPA',
-                    job_type='Full-time',
-                    domain='Software Engineering',
-                    is_active=True
-                ),
-                Job(
-                    title='Data Scientist',
-                    company='Microsoft',
-                    description='Build machine learning models and analyze datasets.',
-                    required_skills=['Python', 'Machine Learning', 'SQL', 'Pandas'],
-                    experience_required=2,
-                    location='Hyderabad',
-                    salary_range='15-22 LPA',
-                    job_type='Full-time',
-                    domain='Data Science',
-                    is_active=True
-                ),
-                Job(
-                    title='Frontend Developer',
-                    company='Amazon',
-                    description='Build responsive React interfaces.',
-                    required_skills=['JavaScript', 'React', 'HTML', 'CSS'],
-                    experience_required=1,
-                    location='Bangalore',
-                    salary_range='10-16 LPA',
-                    job_type='Full-time',
-                    domain='Frontend',
-                    is_active=True
-                )
-            ]
-            for job in sample_jobs:
-                db.session.add(job)
-            db.session.commit()
-            print("SAMPLE JOBS: Seeded sample jobs into database.")
             
     return app
+

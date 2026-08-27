@@ -137,6 +137,18 @@ export const FacultyDashboard = () => {
     fetchIncomingRequests()
   }, [directoryScope])
 
+  // Automatically open student modal if selectedStudent is in query params
+  useEffect(() => {
+    const studentIdParam = searchParams.get('selectedStudent')
+    if (studentIdParam && students.length > 0) {
+      const studentId = parseInt(studentIdParam)
+      const targetStudent = students.find(s => s.id === studentId)
+      if (targetStudent) {
+        handleOpenStudentModal(targetStudent)
+      }
+    }
+  }, [searchParams, students])
+
   const handleRequestAction = async (requestId, action) => {
     try {
       setIsProcessingAction(requestId)
@@ -866,6 +878,68 @@ export const FacultyDashboard = () => {
                   {selectedStudent.year_of_study ? `Year ${selectedStudent.year_of_study}` : 'Not Specified'}
                 </span>
               </div>
+            </div>
+
+            {/* Student's Target Companies & Job Applications */}
+            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <BriefcaseIcon className="h-4 w-4 text-purple-600" />
+                  Target Companies & Saved Jobs ({selectedStudent.job_interests?.length || 0})
+                </h4>
+                {selectedStudent.job_interests?.length > 0 && (
+                  <span className="text-[11px] text-gray-500">Live Student Pipeline</span>
+                )}
+              </div>
+
+              {selectedStudent.job_interests && selectedStudent.job_interests.length > 0 ? (
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {selectedStudent.job_interests.map((item) => (
+                    <div
+                      key={item.id}
+                      className="p-2.5 bg-white rounded-lg border border-gray-200/80 shadow-xs flex items-center justify-between text-xs hover:border-purple-200 transition-colors"
+                    >
+                      <div className="min-w-0 pr-2">
+                        <p className="font-bold text-gray-900 truncate">{item.company}</p>
+                        <p className="text-gray-500 text-[11px] truncate">{item.job_title}</p>
+                        {item.notes && (
+                          <p className="text-gray-400 text-[10px] italic mt-0.5 truncate">"{item.notes}"</p>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-2 shrink-0">
+                        <span
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                            item.status === 'offer'
+                              ? 'bg-green-100 text-green-800'
+                              : item.status === 'interviewing'
+                              ? 'bg-blue-100 text-blue-800'
+                              : item.status === 'applied'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-amber-100 text-amber-800'
+                          }`}
+                        >
+                          {item.status || 'Interested'}
+                        </span>
+                        {item.job_id && (
+                          <a
+                            href={`/jobs/${item.job_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded"
+                            title="View Job Details"
+                          >
+                            <EyeIcon className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400 italic bg-white p-3 rounded-lg border border-dashed border-gray-200 text-center">
+                  This mentee has not marked interest in any company roles or campus jobs yet.
+                </p>
+              )}
             </div>
 
             <form onSubmit={handleSavePlacement} className="p-4 bg-purple-50/60 rounded-xl border border-purple-100 space-y-3">

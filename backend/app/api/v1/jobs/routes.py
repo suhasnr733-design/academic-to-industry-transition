@@ -1,8 +1,7 @@
-# backend/app/api/v1/jobs/routes.py
-
 from flask import request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
-from app.models import Job
+from app.models import Job, JobInterest, User, MentorshipRequest
 from app.api.v1.jobs import jobs_bp
 from app.services.multilevel_cache import cache
 from app.services.job_aggregator import JobAggregatorService
@@ -40,6 +39,167 @@ def get_jobs():
         'total': pagination.total,
         'page': page,
         'pages': pagination.pages
+    }), 200
+
+@jobs_bp.route('/interested', methods=['GET'])
+@jwt_required()
+def get_interested_jobs():
+    """Get all jobs marked as interested / saved by the authenticated student"""
+    current_user_id = int(get_jwt_identity())
+    status_filter = request.args.get('status')
+
+    query = JobInterest.query.filter_by(user_id=current_user_id)
+    if status_filter:
+        query = query.filter_by(status=status_filter)
+
+    interests = query.order_by(JobInterest.created_at.desc()).all()
+    return jsonify({
+        'status': 'success',
+        'count': len(interests),
+        'interests': [i.to_dict() for i in interests]
+    }), 200
+
+@jobs_bp.route('/interested', methods=['POST'])
+@jwt_required()
+def add_or_toggle_job_interest():
+    """Save or toggle student interest in a job (internal or external)"""
+    current_user_id = int(get_jwt_identity())
+    data = request.get_json() or {}
+
+    job_id = data.get('job_id')
+    external_job_id = data.get('external_job_id')
+    job_title = data.get('job_title') or data.get('title')
+    company = data.get('company')
+    job_data = data.get('job_data') or data
+    status = data.get('status', 'interested')
+    notes = data.get('notes')
+
+    # If internal job_id provided, fetch details from DB
+    if job_id:
+        job = db.session.get(Job, job_id)
+        if job:
+            job_title = job_title or job.title
+            company = company or job.company
+            job_data = job.to_dict()
+
+    if not job_title or not company:
+        return jsonify({'error': 'Job title and company are required'}), 400
+
+    # Check if existing interest exists
+    existing = None
+    if job_id:
+        existing = JobInterest.query.filter_by(user_id=current_user_id, job_id=job_id).first()
+    elif external_job_id:
+        existing = JobInterest.query.filter_by(user_id=current_user_id, external_job_id=external_job_id).first()
+    else:
+        existing = JobInterest.query.filter_by(user_id=current_user_id, job_title=job_title, company=company).first()
+
+    if existing:
+        # Toggle: remove if already interested or update status
+        action = data.get('action')
+        if action == 'remove':
+            db.session.delete(existing)
+            db.session.commit()
+            return jsonify({'message': 'Job interest removed', 'is_interested': False, 'id': existing.id}), 200
+        
+        # Update existing
+        if 'status' in data:
+            existing.status = status
+        if notes is not None:
+            existing.notes = notes
+        db.session.commit()
+        return jsonify({
+            'message': 'Job interest updated',
+            'is_interested': True,
+            'interest': existing.to_dict()
+        }), 200
+
+    new_interest = JobInterest(
+        user_id=current_user_id,
+        job_id=job_id,
+        external_job_id=external_job_id,
+        job_title=job_title,
+        company=company,
+        job_data=job_data,
+        status=status,
+        notes=notes
+    )
+    db.session.add(new_interest)
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Job saved to Campus Board',
+        'is_interested': True,
+        'interest': new_interest.to_dict()
+    }), 201
+
+@jobs_bp.route('/interested/<int:interest_id>', methods=['DELETE'])
+@jwt_required()
+def delete_job_interest(interest_id):
+    """Delete a saved job interest"""
+    current_user_id = int(get_jwt_identity())
+    interest = JobInterest.query.filter_by(id=interest_id, user_id=current_user_id).first()
+    if not interest:
+        return jsonify({'error': 'Job interest record not found'}), 404
+
+    db.session.delete(interest)
+    db.session.commit()
+    return jsonify({'message': 'Job interest removed successfully', 'id': interest_id}), 200
+
+@jobs_bp.route('/interested/<int:interest_id>/status', methods=['PATCH'])
+@jwt_required()
+def update_interest_status(interest_id):
+    """Update pipeline application status (interested, applied, interviewing, shortlisted, offer)"""
+    current_user_id = int(get_jwt_identity())
+    data = request.get_json() or {}
+    new_status = data.get('status')
+    notes = data.get('notes')
+
+    interest = JobInterest.query.filter_by(id=interest_id, user_id=current_user_id).first()
+    if not interest:
+        return jsonify({'error': 'Job interest record not found'}), 404
+
+    if new_status:
+        valid_statuses = ['interested', 'applied', 'interviewing', 'shortlisted', 'rejected', 'offer']
+        if new_status not in valid_statuses:
+            return jsonify({'error': f'Invalid status. Allowed: {valid_statuses}'}), 400
+        interest.status = new_status
+
+    if notes is not None:
+        interest.notes = notes
+
+    db.session.commit()
+    return jsonify({
+        'message': 'Status updated successfully',
+        'interest': interest.to_dict()
+    }), 200
+
+@jobs_bp.route('/campus-board', methods=['GET'])
+def get_campus_board():
+    """Get aggregated campus board opportunities with student interest counts"""
+    # 1. Fetch campus jobs
+    campus_jobs = Job.query.filter_by(is_active=True).order_by(Job.posted_date.desc()).limit(50).all()
+    
+    # 2. Compute interest count per job
+    job_ids = [j.id for j in campus_jobs]
+    interest_counts = {}
+    if job_ids:
+        counts = db.session.query(
+            JobInterest.job_id,
+            db.func.count(JobInterest.id)
+        ).filter(JobInterest.job_id.in_(job_ids)).group_by(JobInterest.job_id).all()
+        interest_counts = {cid: cnt for cid, cnt in counts}
+
+    results = []
+    for j in campus_jobs:
+        d = j.to_dict()
+        d['campus_interest_count'] = interest_counts.get(j.id, 0)
+        results.append(d)
+
+    return jsonify({
+        'status': 'success',
+        'total': len(results),
+        'campus_jobs': results
     }), 200
 
 @jobs_bp.route('/live', methods=['GET'])
@@ -124,3 +284,118 @@ def get_job(job_id):
     if not job:
         return jsonify({'error': 'Job not found'}), 404
     return jsonify(job.to_dict()), 200
+
+
+@jobs_bp.route('/<int:job_id>/interested-mentees', methods=['GET'])
+@jwt_required()
+def get_job_interested_mentees(job_id):
+    """Get accepted mentees of the authenticated faculty member who are interested in this job"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        faculty = db.session.get(User, current_user_id)
+
+        if not faculty or faculty.role not in ['faculty', 'admin']:
+            return jsonify({'error': 'Faculty access required'}), 403
+
+        job = db.session.get(Job, job_id)
+        if not job:
+            return jsonify({'error': 'Job not found'}), 404
+
+        # Query accepted mentees of this faculty who marked interest in this job or company/title
+        query = (
+            db.session.query(User, JobInterest)
+            .join(MentorshipRequest, MentorshipRequest.student_id == User.id)
+            .join(JobInterest, JobInterest.user_id == User.id)
+            .filter(
+                MentorshipRequest.faculty_id == faculty.id,
+                MentorshipRequest.status == 'accepted',
+                (
+                    (JobInterest.job_id == job_id) |
+                    ((JobInterest.company.ilike(job.company)) & (JobInterest.job_title.ilike(job.title)))
+                )
+            )
+            .order_by(JobInterest.created_at.desc())
+        )
+
+        results = []
+        for student, interest in query.all():
+            results.append({
+                'student_id': student.id,
+                'full_name': student.full_name,
+                'username': student.username,
+                'email': student.email,
+                'department': student.department,
+                'year_of_study': student.year_of_study,
+                'placement_status': student.placement_status,
+                'placed_company': student.placed_company,
+                'interest_status': interest.status,
+                'interest_id': interest.id,
+                'notes': interest.notes,
+                'created_at': interest.created_at.isoformat() if interest.created_at else None
+            })
+
+        return jsonify({
+            'status': 'success',
+            'job_id': job_id,
+            'job_title': job.title,
+            'company': job.company,
+            'total_mentees': len(results),
+            'mentees': results
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch interested mentees', 'message': str(e)}), 500
+
+
+@jobs_bp.route('/company/<string:company_name>/interested-mentees', methods=['GET'])
+@jwt_required()
+def get_company_interested_mentees(company_name):
+    """Get accepted mentees of the authenticated faculty member interested in a company"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        faculty = db.session.get(User, current_user_id)
+
+        if not faculty or faculty.role not in ['faculty', 'admin']:
+            return jsonify({'error': 'Faculty access required'}), 403
+
+        query = (
+            db.session.query(User, JobInterest)
+            .join(MentorshipRequest, MentorshipRequest.student_id == User.id)
+            .join(JobInterest, JobInterest.user_id == User.id)
+            .filter(
+                MentorshipRequest.faculty_id == faculty.id,
+                MentorshipRequest.status == 'accepted',
+                JobInterest.company.ilike(f"%{company_name}%")
+            )
+            .order_by(JobInterest.created_at.desc())
+        )
+
+        results = []
+        for student, interest in query.all():
+            results.append({
+                'student_id': student.id,
+                'full_name': student.full_name,
+                'username': student.username,
+                'email': student.email,
+                'department': student.department,
+                'year_of_study': student.year_of_study,
+                'placement_status': student.placement_status,
+                'job_title': interest.job_title,
+                'company': interest.company,
+                'interest_status': interest.status,
+                'interest_id': interest.id,
+                'notes': interest.notes,
+                'created_at': interest.created_at.isoformat() if interest.created_at else None
+            })
+
+        return jsonify({
+            'status': 'success',
+            'company': company_name,
+            'total_mentees': len(results),
+            'mentees': results
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch company interested mentees', 'message': str(e)}), 500
+
+

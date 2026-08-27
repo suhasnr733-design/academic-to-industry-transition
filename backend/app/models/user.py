@@ -32,6 +32,7 @@ class User(db.Model):
 
     # Relationships
     resumes = db.relationship('Resume', backref='user', lazy=True, cascade='all, delete-orphan')
+    job_interests = db.relationship('JobInterest', backref='user', lazy=True, cascade='all, delete-orphan')
 
     def __init__(self, username=None, email=None, password_hash=None, full_name=None,
                  role='student', department=None, year_of_study=None, college=None,

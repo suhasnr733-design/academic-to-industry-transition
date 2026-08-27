@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '../services/api'
+import toast from 'react-hot-toast'
 
 export const useJobs = () => {
   const [jobs, setJobs] = useState([])
   const [selectedJob, setSelectedJob] = useState(null)
+  const [interestedJobs, setInterestedJobs] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [totalPages, setTotalPages] = useState(1)
@@ -70,6 +72,94 @@ export const useJobs = () => {
     }
   }, [])
 
+  const fetchInterestedJobs = useCallback(async (status = null) => {
+    try {
+      const params = status ? { status } : {}
+      const res = await api.get('/jobs/interested', { params })
+      const list = res.data.interests || []
+      setInterestedJobs(list)
+      return list
+    } catch (err) {
+      // Graceful fallback if not authenticated
+      console.log('Could not fetch interested jobs:', err)
+      return []
+    }
+  }, [])
+
+  const toggleJobInterest = useCallback(async (job) => {
+    try {
+      const jobId = job.id && typeof job.id === 'number' ? job.id : null
+      const extId = job.external_id || (typeof job.id === 'string' ? job.id : null)
+
+      // Find if already interested
+      const existing = interestedJobs.find(
+        (i) => (jobId && i.job_id === jobId) || (extId && i.external_job_id === extId) || (i.job_title === job.title && i.company === job.company)
+      )
+
+      if (existing) {
+        // Remove interest
+        await api.delete(`/jobs/interested/${existing.id}`)
+        setInterestedJobs((prev) => prev.filter((i) => i.id !== existing.id))
+        toast.success(`Removed "${job.title}" from Campus Board`)
+        return false
+      } else {
+        // Add interest
+        const payload = {
+          job_id: jobId,
+          external_job_id: extId,
+          job_title: job.title,
+          company: job.company,
+          job_data: {
+            location: job.location,
+            salary_range: job.salary_range,
+            job_type: job.job_type,
+            required_skills: job.required_skills,
+            apply_url: job.apply_url,
+            source: job.source,
+            match_score: job.match_score
+          },
+          status: 'interested'
+        }
+        const res = await api.post('/jobs/interested', payload)
+        if (res.data.interest) {
+          setInterestedJobs((prev) => [res.data.interest, ...prev])
+        }
+        toast.success(`Saved "${job.title}" to Campus Board ⭐`)
+        return true
+      }
+    } catch (err) {
+      console.error('Error toggling job interest:', err)
+      toast.error(err.response?.data?.error || 'Please log in to save jobs to your Campus Board')
+      return null
+    }
+  }, [interestedJobs])
+
+  const updateInterestStatus = useCallback(async (interestId, status, notes = null) => {
+    try {
+      const res = await api.patch(`/jobs/interested/${interestId}/status`, { status, notes })
+      if (res.data.interest) {
+        setInterestedJobs((prev) =>
+          prev.map((i) => (i.id === interestId ? res.data.interest : i))
+        )
+        toast.success(`Updated stage to ${status.toUpperCase()}`)
+      }
+      return res.data.interest
+    } catch (err) {
+      console.error('Error updating status:', err)
+      toast.error('Failed to update stage')
+      return null
+    }
+  }, [])
+
+  const isJobInterested = useCallback((job) => {
+    if (!job) return false
+    const jobId = job.id && typeof job.id === 'number' ? job.id : null
+    const extId = job.external_id || (typeof job.id === 'string' ? job.id : null)
+    return interestedJobs.some(
+      (i) => (jobId && i.job_id === jobId) || (extId && i.external_job_id === extId) || (i.job_title === job.title && i.company === job.company)
+    )
+  }, [interestedJobs])
+
   const getJobById = useCallback(async (id) => {
     try {
       setIsLoading(true)
@@ -102,11 +192,13 @@ export const useJobs = () => {
   useEffect(() => {
     fetchJobs()
     fetchDomains()
-  }, [fetchJobs, fetchDomains])
+    fetchInterestedJobs()
+  }, [fetchJobs, fetchDomains, fetchInterestedJobs])
 
   return {
     jobs,
     selectedJob,
+    interestedJobs,
     isLoading,
     error,
     totalPages,
@@ -117,9 +209,14 @@ export const useJobs = () => {
     fetchJobs,
     fetchLiveJobs,
     fetchLiveMatches,
+    fetchInterestedJobs,
+    toggleJobInterest,
+    updateInterestStatus,
+    isJobInterested,
     getJobById
   }
 }
 
 export const useJob = useJobs
 export default useJobs
+

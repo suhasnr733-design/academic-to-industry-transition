@@ -142,8 +142,8 @@ class AnalyticsService:
         }
 
     def get_faculty_students(self, faculty_id=None, filter_type='mentees', department=None):
-        """Get student list for faculty directory (mentees vs all department students)"""
-        from app.models import MentorshipRequest
+        """Get student list for faculty directory (mentees vs all department students) with target job interests"""
+        from app.models import MentorshipRequest, JobInterest
         
         if filter_type == 'mentees' and faculty_id:
             mentee_records = MentorshipRequest.query.filter_by(
@@ -161,7 +161,15 @@ class AnalyticsService:
             query = query.filter(User.department.ilike(f"%{department}%"))
 
         students = query.order_by(User.id.desc()).all()
-        return [s.to_dict() for s in students]
+        
+        results = []
+        for s in students:
+            data = s.to_dict()
+            interests = JobInterest.query.filter_by(user_id=s.id).order_by(JobInterest.created_at.desc()).all()
+            data['job_interests'] = [i.to_dict() for i in interests]
+            results.append(data)
+
+        return results
 
     def get_cohort_skill_readiness(self, department=None):
         """Compute real aggregate skill readiness and deficits across student cohort"""

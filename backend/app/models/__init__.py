@@ -10,6 +10,7 @@ from app.models.oauth import OAuth2Client
 from app.models.mentorship import MentorshipRequest
 from app.models.placement_nomination import PlacementNomination
 from app.models.learning import LearningProgress, LearningBookmark, LearningActivity
+from app.models.job_interest import JobInterest
 
 __all__ = [
     'User',
@@ -25,5 +26,6 @@ __all__ = [
     'PlacementNomination',
     'LearningProgress',
     'LearningBookmark',
-    'LearningActivity'
+    'LearningActivity',
+    'JobInterest',
 ]
