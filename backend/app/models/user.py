@@ -32,6 +32,7 @@ class User(db.Model):
 
     # Relationships
     resumes = db.relationship('Resume', backref='user', lazy=True, cascade='all, delete-orphan')
+    job_interests = db.relationship('JobInterest', backref='user', lazy=True, cascade='all, delete-orphan')
 
     def set_password(self, password):
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
