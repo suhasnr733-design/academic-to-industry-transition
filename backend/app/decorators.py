@@ -11,7 +11,10 @@ def role_required(allowed_roles):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             current_user_id = get_jwt_identity()
-            user = User.query.get(current_user_id)
+            try:
+                user = User.query.get(int(current_user_id)) if current_user_id is not None else None
+            except (ValueError, TypeError):
+                user = User.query.get(current_user_id)
             
             if not user:
                 return jsonify({'error': 'User not found'}), 404

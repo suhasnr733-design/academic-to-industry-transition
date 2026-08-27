@@ -108,7 +108,6 @@ class AnalyticsService:
 
     def get_cohort_skill_readiness(self, department=None):
         """Compute real aggregate skill readiness and deficits across student cohort"""
-        # Baseline key industry skills and their market demand weighting
         standard_skills = [
             {'skill': 'Python / Backend Development', 'keywords': ['python', 'django', 'flask', 'fastapi', 'backend'], 'color': 'bg-blue-500'},
             {'skill': 'React & Modern Frontend', 'keywords': ['react', 'javascript', 'typescript', 'vue', 'frontend', 'html', 'css'], 'color': 'bg-indigo-500'},
@@ -124,11 +123,13 @@ class AnalyticsService:
             student_query = student_query.filter(User.department.ilike(f"%{department}%"))
         
         students = student_query.all()
-        total_students = len(students)
-
-        # Collect skills from parsed resumes
         student_ids = [s.id for s in students]
-        resumes = Resume.query.filter(Resume.user_id.in_(student_ids)).all() if student_ids else Resume.query.all()
+
+        # Query only completed/verified resumes
+        resumes = Resume.query.filter(
+            Resume.user_id.in_(student_ids),
+            Resume.status == 'completed'
+        ).all() if student_ids else []
         
         student_skill_sets = []
         for r in resumes:
@@ -138,22 +139,20 @@ class AnalyticsService:
             student_skill_sets.append(s_skills)
 
         results = []
+        total_resumes = len(student_skill_sets)
+
         for item in standard_skills:
             keywords = item['keywords']
-            # Count how many resumes have at least one keyword
             match_count = 0
-            for skill_set in student_skill_sets:
-                if any(any(kw in sk for kw in keywords) for sk in skill_set):
-                    match_count += 1
             
-            if total_students > 0 and len(student_skill_sets) > 0:
-                prof_count = round((match_count / max(total_students, len(student_skill_sets))) * 100)
+            if total_resumes > 0:
+                for skill_set in student_skill_sets:
+                    if any(any(kw in sk for kw in keywords) for sk in skill_set):
+                        match_count += 1
+                prof_count = round((match_count / total_resumes) * 100)
             else:
-                # Default demonstration baseline if no resumes uploaded yet
-                prof_count = 50
+                prof_count = 0
             
-            # Bound prof_count between 5% and 95%
-            prof_count = max(10, min(95, prof_count))
             gap_count = 100 - prof_count
 
             results.append({
@@ -167,9 +166,26 @@ class AnalyticsService:
 
     def get_advisor_recommendations(self, department=None):
         """Generate dynamic advisor recommendations based on biggest cohort skill deficit"""
+        student_query = User.query.filter_by(role='student')
+        if department and department.lower() != 'all':
+            student_query = student_query.filter(User.department.ilike(f"%{department}%"))
+        student_ids = [s.id for s in student_query.all()]
+
+        has_resumes = Resume.query.filter(
+            Resume.user_id.in_(student_ids),
+            Resume.status == 'completed'
+        ).count() > 0 if student_ids else False
+
+        if not has_resumes:
+            return {
+                'title': 'Awaiting Resume Submissions',
+                'top_deficit_skill': 'No Resumes Uploaded',
+                'gap_percentage': 100,
+                'message': 'No student resumes have been uploaded for AI skill verification yet. Encourage your student cohort to upload their resumes to unlock live skill deficit analytics and placement recommendations.',
+                'action_label': 'View Student Directory'
+            }
+
         cohort_skills = self.get_cohort_skill_readiness(department)
-        
-        # Sort by largest gap
         sorted_by_gap = sorted(cohort_skills, key=lambda x: x['gapCount'], reverse=True)
         top_deficit = sorted_by_gap[0] if sorted_by_gap else {
             'skill': 'Cloud & Docker DevOps',
@@ -262,3 +278,294 @@ class AnalyticsService:
         counts = distribution.value_counts().to_dict()
         
         return [{'range': k, 'count': v} for k, v in counts.items()]
+
+    def get_placement_shortlist(self, criteria=None):
+        """Filter and rank students for company placement drives based on custom criteria"""
+        criteria = criteria or {}
+        required_skills = criteria.get('required_skills', [])
+        if isinstance(required_skills, str):
+            required_skills = [s.strip() for s in required_skills.split(',') if s.strip()]
+        required_skills = [s.strip() for s in required_skills if s and s.strip()]
+
+        department = criteria.get('department')
+        min_year = criteria.get('min_year')
+        max_year = criteria.get('max_year')
+        placement_status = criteria.get('placement_status', 'seeking')
+        min_employability_score = criteria.get('min_employability_score')
+        filter_scope = criteria.get('filter_scope', 'all')
+        faculty_id = criteria.get('faculty_id')
+
+        # Base student query
+        if filter_scope == 'mentees' and faculty_id:
+            from app.models import MentorshipRequest
+            mentee_records = MentorshipRequest.query.filter_by(
+                faculty_id=faculty_id,
+                status='accepted'
+            ).all()
+            mentee_ids = [m.student_id for m in mentee_records]
+            if not mentee_ids:
+                return []
+            query = User.query.filter(User.id.in_(mentee_ids), User.role == 'student')
+        else:
+            query = User.query.filter_by(role='student')
+
+        # Filter by department
+        if department and department.lower() != 'all':
+            query = query.filter(User.department.ilike(f"%{department}%"))
+
+        # Filter by year of study
+        if min_year and str(min_year).lower() != 'all':
+            try:
+                query = query.filter(User.year_of_study >= int(min_year))
+            except (ValueError, TypeError):
+                pass
+        if max_year and str(max_year).lower() != 'all':
+            try:
+                query = query.filter(User.year_of_study <= int(max_year))
+            except (ValueError, TypeError):
+                pass
+
+        # Filter by placement status
+        if placement_status and placement_status.lower() != 'all':
+            if placement_status == 'seeking':
+                query = query.filter((User.placement_status == 'seeking') | (User.placement_status.is_(None)))
+            else:
+                query = query.filter(User.placement_status == placement_status)
+
+        students = query.order_by(User.id.desc()).all()
+        student_ids = [s.id for s in students]
+
+        # Fetch latest completed or available resume for each student
+        resumes_by_user = {}
+        if student_ids:
+            all_resumes = Resume.query.filter(Resume.user_id.in_(student_ids)).order_by(Resume.id.desc()).all()
+            for r in all_resumes:
+                if r.user_id not in resumes_by_user:
+                    resumes_by_user[r.user_id] = r
+                elif r.status == 'completed' and resumes_by_user[r.user_id].status != 'completed':
+                    resumes_by_user[r.user_id] = r
+
+        # Fetch nominations for this company if company_name provided
+        company_name = (criteria.get('company_name') or '').strip()
+        nominations_by_user = {}
+        if student_ids and company_name:
+            try:
+                from app.models import PlacementNomination
+                noms = PlacementNomination.query.filter(
+                    PlacementNomination.student_id.in_(student_ids),
+                    PlacementNomination.company_name.ilike(f"%{company_name}%")
+                ).all()
+                for n in noms:
+                    nominations_by_user[n.student_id] = n
+            except Exception:
+                pass
+
+        shortlisted = []
+
+        for student in students:
+            resume = resumes_by_user.get(student.id)
+            student_skills = []
+            if resume and isinstance(resume.skills, list):
+                student_skills = [str(sk) for sk in resume.skills if sk]
+
+            # Calculate match percentage and skill intersection
+            matched_skills = []
+            missing_skills = []
+
+            if required_skills:
+                student_skills_lower = [s.lower() for s in student_skills]
+                for req in required_skills:
+                    req_lower = req.lower()
+                    # Check substring or exact token match
+                    if any(req_lower in sk or sk in req_lower for sk in student_skills_lower):
+                        matched_skills.append(req)
+                    else:
+                        missing_skills.append(req)
+                
+                match_pct = round((len(matched_skills) / len(required_skills)) * 100)
+            else:
+                match_pct = 100
+                matched_skills = student_skills[:6]
+                missing_skills = []
+
+            emp_score = float(resume.employability_score) if (resume and resume.employability_score is not None) else 0.0
+
+            # Filter by min employability score if provided
+            if min_employability_score is not None and str(min_employability_score) != '':
+                try:
+                    if emp_score < float(min_employability_score):
+                        continue
+                except (ValueError, TypeError):
+                    pass
+
+            nom = nominations_by_user.get(student.id)
+
+            shortlisted.append({
+                'id': student.id,
+                'full_name': student.full_name or student.username,
+                'username': student.username,
+                'email': student.email,
+                'phone': student.phone or 'N/A',
+                'department': student.department or 'General',
+                'year_of_study': student.year_of_study or 'N/A',
+                'placement_status': student.placement_status or 'seeking',
+                'placed_company': student.placed_company,
+                'package_lpa': student.package_lpa,
+                'has_resume': resume is not None,
+                'resume_id': resume.id if resume else None,
+                'resume_filename': resume.filename if resume else None,
+                'employability_score': round(emp_score, 1),
+                'skills': student_skills,
+                'matched_skills': matched_skills,
+                'missing_skills': missing_skills,
+                'match_percentage': match_pct,
+                'nomination_status': nom.status if nom else None,
+                'nomination_id': nom.id if nom else None,
+                'nomination_role': nom.job_role if nom else None,
+                'nomination_package': nom.package_lpa if nom else None
+            })
+
+        # Rank candidates: match percentage desc, then employability score desc
+        shortlisted.sort(key=lambda x: (x['match_percentage'], x['employability_score']), reverse=True)
+        return shortlisted
+
+    def generate_shortlist_bundle(self, company_name='Campus_Drive', student_ids=None, criteria=None):
+        """Generate an in-memory ZIP package containing candidate resumes and CSV summary for HR"""
+        import io
+        import zipfile
+        import csv
+        import os
+        import re
+
+        student_ids = student_ids or []
+        criteria = criteria or {}
+        clean_company = re.sub(r'[^a-zA-Z0-9_\-]', '_', company_name.strip()) or 'Campus_Drive'
+
+        students = []
+        if student_ids:
+            students = User.query.filter(User.id.in_(student_ids), User.role == 'student').all()
+            # Maintain incoming selection order
+            id_order = {sid: idx for idx, sid in enumerate(student_ids)}
+            students.sort(key=lambda s: id_order.get(s.id, 9999))
+        else:
+            # If no student_ids provided, run shortlist query with criteria
+            candidates = self.get_placement_shortlist(criteria)
+            c_ids = [c['id'] for c in candidates]
+            if c_ids:
+                students = User.query.filter(User.id.in_(c_ids)).all()
+                id_order = {sid: idx for idx, sid in enumerate(c_ids)}
+                students.sort(key=lambda s: id_order.get(s.id, 9999))
+
+        zip_buffer = io.BytesIO()
+
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            csv_buffer = io.StringIO()
+            csv_writer = csv.writer(csv_buffer)
+            csv_writer.writerow([
+                'Student ID',
+                'Full Name',
+                'Email',
+                'Phone',
+                'Department',
+                'Year of Study',
+                'Placement Status',
+                'Employability Score (%)',
+                'Verified Skills',
+                'Resume Document'
+            ])
+
+            for student in students:
+                # Latest resume
+                resume = Resume.query.filter_by(user_id=student.id).order_by(Resume.id.desc()).first()
+                safe_name = re.sub(r'[^a-zA-Z0-9_\-]', '_', student.full_name or student.username)
+                skills_str = ", ".join(resume.skills) if (resume and isinstance(resume.skills, list)) else 'None'
+                emp_score = f"{resume.employability_score:.1f}%" if (resume and resume.employability_score is not None) else 'N/A'
+
+                resume_doc_name = 'Not Uploaded'
+
+                if resume and resume.file_path and os.path.exists(resume.file_path):
+                    ext = resume.filename.rsplit('.', 1)[-1] if '.' in resume.filename else 'pdf'
+                    dest_name = f"Resumes/{safe_name}_{student.id}_Resume.{ext}"
+                    try:
+                        zip_file.write(resume.file_path, arcname=dest_name)
+                        resume_doc_name = dest_name
+                    except Exception as e:
+                        resume_doc_name = f"Error reading file ({str(e)})"
+                else:
+                    # Generate a comprehensive candidate brief if resume file is not available on disk
+                    dossier_text = f"""=====================================================
+STUDENT PLACEMENT CANDIDATE DOSSIER
+Company Drive: {company_name}
+=====================================================
+Full Name: {student.full_name or student.username}
+Student ID: {student.id}
+Email: {student.email}
+Phone: {student.phone or 'N/A'}
+Department: {student.department or 'General'}
+Year of Study: {student.year_of_study or 'N/A'}
+Placement Status: {student.placement_status or 'seeking'}
+Employability Readiness Score: {emp_score}
+
+VERIFIED SKILLS:
+{skills_str}
+
+PROJECTS & EXPERIENCE:
+{str(resume.projects) if resume and resume.projects else 'None recorded'}
+
+EDUCATION & BACKGROUND:
+{str(resume.education) if resume and resume.education else 'None recorded'}
+=====================================================
+"""
+                    dest_name = f"Resumes/{safe_name}_{student.id}_Candidate_Profile.txt"
+                    zip_file.writestr(dest_name, dossier_text)
+                    resume_doc_name = dest_name
+
+                csv_writer.writerow([
+                    student.id,
+                    student.full_name or student.username,
+                    student.email,
+                    student.phone or 'N/A',
+                    student.department or 'General',
+                    student.year_of_study or 'N/A',
+                    student.placement_status or 'seeking',
+                    emp_score,
+                    skills_str,
+                    resume_doc_name
+                ])
+
+            # Embed CSV inside the ZIP
+            zip_file.writestr("shortlist_summary.csv", csv_buffer.getvalue())
+
+            # Embed Drive Metadata Overview
+            req_skills = criteria.get('required_skills', [])
+            if isinstance(req_skills, list):
+                req_skills_str = ", ".join(req_skills) if req_skills else "Any"
+            else:
+                req_skills_str = str(req_skills)
+
+            drive_overview = f"""=====================================================
+CAMPUS PLACEMENT SHORTLIST BUNDLE
+=====================================================
+Drive / Company Name: {company_name}
+Generated At: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}
+Total Candidates Shortlisted: {len(students)}
+
+MATCHING CRITERIA:
+- Required Skills: {req_skills_str}
+- Minimum Academic Year: {criteria.get('min_year', 'All')}
+- Target Department: {criteria.get('department', 'All')}
+- Placement Status: {criteria.get('placement_status', 'Seeking Placement')}
+- Minimum Employability Index: {criteria.get('min_employability_score', '0')}%
+
+CONTENTS OF THIS BUNDLE:
+1. shortlist_summary.csv - Complete spreadsheet of all candidates & contact details
+2. Resumes/ - Folder containing individual verified candidate resume files
+
+Generated via Academic-to-Industry Transition Platform (Faculty Command Center).
+=====================================================
+"""
+            zip_file.writestr("Company_Drive_Overview.txt", drive_overview)
+
+        zip_buffer.seek(0)
+        bundle_filename = f"{clean_company}_Placement_Shortlist.zip"
+        return zip_buffer, bundle_filename

@@ -44,6 +44,13 @@ export const Dashboard = () => {
   const [requestMessage, setRequestMessage] = useState('')
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false)
 
+  // Company Placement Nominations State
+  const [nominations, setNominations] = useState([])
+  const [isRespondingNomination, setIsRespondingNomination] = useState(null)
+  const [showDeclineModal, setShowDeclineModal] = useState(false)
+  const [declineTargetNomination, setDeclineTargetNomination] = useState(null)
+  const [declineReason, setDeclineReason] = useState('')
+
   // 1. Compute dynamic profile completeness
   const profileFields = ['full_name', 'email', 'department', 'year_of_study']
   const filledFields = profileFields.filter((f) => Boolean(user?.[f]))
@@ -76,10 +83,11 @@ export const Dashboard = () => {
     }
   }, [latestResume?.status, latestResume?.id])
 
-  // 4. Fetch jobs, metrics & advisor details
+  // 4. Fetch jobs, metrics, advisor & company nominations
   useEffect(() => {
     fetchDashboardMetrics()
     fetchAdvisorDetails()
+    fetchNominations()
   }, [completedResume?.id, completedResume?.status])
 
   const fetchDashboardMetrics = async () => {
@@ -109,6 +117,66 @@ export const Dashboard = () => {
       setAdvisorData(res.data)
     } catch (err) {
       console.error('Error fetching advisor details:', err)
+    }
+  }
+
+  const fetchNominations = async () => {
+    try {
+      const res = await api.get('/placement/my-nominations')
+      setNominations(res.data?.nominations || [])
+    } catch (err) {
+      console.error('Error fetching placement nominations:', err)
+    }
+  }
+
+  const handleAcceptNomination = async (nomination) => {
+    try {
+      setIsRespondingNomination(nomination.id)
+      const res = await api.put(`/placement/nominations/${nomination.id}/respond`, {
+        action: 'accept',
+        response_note: 'Confirmed attendance for placement drive'
+      })
+      if (res.data?.success) {
+        toast.success(
+          `🎉 Attendance confirmed! You are registered to attend the ${nomination.company_name} placement drive.`,
+          { duration: 6000 }
+        )
+        fetchNominations()
+      }
+    } catch (err) {
+      console.error('Error confirming attendance:', err)
+      toast.error(
+        err.response?.data?.message || err.response?.data?.error || 'Failed to confirm attendance'
+      )
+    } finally {
+      setIsRespondingNomination(null)
+    }
+  }
+
+  const handleOpenDeclineModal = (nomination) => {
+    setDeclineTargetNomination(nomination)
+    setDeclineReason('')
+    setShowDeclineModal(true)
+  }
+
+  const handleConfirmDecline = async () => {
+    if (!declineTargetNomination) return
+    try {
+      setIsRespondingNomination(declineTargetNomination.id)
+      const res = await api.put(`/placement/nominations/${declineTargetNomination.id}/respond`, {
+        action: 'reject',
+        response_note: declineReason.trim()
+      })
+      if (res.data?.success) {
+        toast.info(`You have declined the invitation for ${declineTargetNomination.company_name}.`)
+        setShowDeclineModal(false)
+        fetchNominations()
+      }
+    } catch (err) {
+      console.error('Error declining nomination:', err)
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Failed to decline')
+    } finally {
+      setIsRespondingNomination(null)
     }
   }
 
@@ -239,6 +307,173 @@ export const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Placement Drive Nominations / Offers Section */}
+      {nominations && nominations.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <SparklesIcon className="h-5 w-5 text-amber-500" />
+              Company Placement Drive Invitations & Shortlists
+            </h2>
+            <span className="text-xs text-gray-500">
+              {nominations.filter((n) => n.status === 'pending').length} Action Required
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {nominations.map((nom) => {
+              const isPending = nom.status === 'pending'
+              const isConfirmed = nom.status === 'confirmed_attending' || nom.status === 'accepted'
+              const isPlaced = nom.status === 'placed'
+              const isRejected = nom.status === 'rejected'
+
+              return (
+                <div
+                  key={nom.id}
+                  className={`rounded-2xl p-6 border shadow-md transition-all relative overflow-hidden ${
+                    isPending
+                      ? 'bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 border-amber-300 bg-white'
+                      : isPlaced
+                      ? 'bg-purple-50/80 border-purple-300 bg-white'
+                      : isConfirmed
+                      ? 'bg-emerald-50/70 border-emerald-300 bg-white'
+                      : 'bg-gray-50 border-gray-200 bg-white'
+                  }`}
+                >
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                    <div className="flex items-start gap-4">
+                      <div
+                        className={`p-3.5 rounded-2xl flex-shrink-0 ${
+                          isPending
+                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                            : isPlaced
+                            ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/25'
+                            : isConfirmed
+                            ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                            : 'bg-gray-400 text-white'
+                        }`}
+                      >
+                        <OfficeBuildingIcon className="h-7 w-7" />
+                      </div>
+
+                      <div>
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                              isPending
+                                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                : isPlaced
+                                ? 'bg-purple-100 text-purple-900 border border-purple-300'
+                                : isConfirmed
+                                ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                                : 'bg-gray-200 text-gray-700 border border-gray-300'
+                            }`}
+                          >
+                            {isPending
+                              ? '⚡ Drive Invitation (RSVP Required)'
+                              : isPlaced
+                              ? '🏆 Officially Hired & Placed'
+                              : isConfirmed
+                              ? '✅ Registered & Attending Drive'
+                              : 'Drive Invitation Declined'}
+                          </span>
+                          {nom.package_lpa && (
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-900 border border-purple-200">
+                              💰 ₹{nom.package_lpa} LPA CTC
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="text-xl font-extrabold text-gray-900 mt-1.5 flex items-center gap-2">
+                          {nom.company_name}
+                          <span className="text-sm font-normal text-gray-500">
+                            • {nom.job_role || 'Software Engineer'}
+                          </span>
+                        </h3>
+
+                        <p className="text-xs text-gray-600 mt-1">
+                          Shortlisted by{' '}
+                          <span className="font-semibold text-gray-800">
+                            {nom.faculty?.full_name || 'Faculty Advisor'}
+                          </span>{' '}
+                          ({nom.faculty?.department || 'Faculty'}) on{' '}
+                          {new Date(nom.created_at).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </p>
+
+                        {nom.faculty_notes && (
+                          <div className="mt-2.5 text-xs text-purple-900 bg-purple-50/80 border border-purple-200/80 rounded-xl p-2.5 max-w-2xl">
+                            <span className="font-semibold">Coordinator Note:</span> {nom.faculty_notes}
+                          </div>
+                        )}
+
+                        {isConfirmed && !isPlaced && (
+                          <p className="text-xs text-emerald-700 mt-2 font-medium">
+                            ✓ You have confirmed attendance for this placement drive. Please keep your resume updated!
+                          </p>
+                        )}
+
+                        {nom.student_response_note && !isPending && (
+                          <p className="text-xs text-gray-500 mt-1.5 italic">
+                            Your response: "{nom.student_response_note}"
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Decision Actions */}
+                    {isPending && (
+                      <div className="flex items-center gap-3 self-end md:self-center flex-shrink-0">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenDeclineModal(nom)}
+                          disabled={isRespondingNomination === nom.id}
+                          className="text-xs border-gray-300 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 flex items-center gap-1.5"
+                        >
+                          <XIcon className="h-4 w-4" />
+                          Decline Invitation
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleAcceptNomination(nom)}
+                          isLoading={isRespondingNomination === nom.id}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20"
+                        >
+                          <CheckCircleIcon className="h-4 w-4" />
+                          Confirm Attendance
+                        </Button>
+                      </div>
+                    )}
+
+                    {isConfirmed && !isPlaced && (
+                      <div className="self-end md:self-center flex-shrink-0">
+                        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-100 text-emerald-900 font-bold text-xs border border-emerald-300">
+                          <CheckCircleIcon className="h-4 w-4 text-emerald-600" />
+                          Attendance Confirmed
+                        </span>
+                      </div>
+                    )}
+
+                    {isPlaced && (
+                      <div className="self-end md:self-center flex-shrink-0">
+                        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-100 text-purple-900 font-bold text-xs border border-purple-300">
+                          <SparklesIcon className="h-4 w-4 text-amber-500" />
+                          Officially Hired & Placed!
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Profile & Mentorship Grid Banner */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -661,6 +896,60 @@ export const Dashboard = () => {
                 onClick={() => { setShowAdvisorModal(false); setSelectedFacultyForRequest(null); }}
               >
                 Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Decline Nomination Modal */}
+      {showDeclineModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-900">
+                Decline {declineTargetNomination?.company_name} Offer
+              </h3>
+              <button
+                onClick={() => setShowDeclineModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-600 mt-3">
+              Are you sure you want to decline this company placement selection? You can provide an optional note for your faculty coordinator (e.g. higher studies, accepted another offer).
+            </p>
+
+            <div className="my-4">
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                Reason / Note (Optional)
+              </label>
+              <textarea
+                rows={3}
+                value={declineReason}
+                onChange={(e) => setDeclineReason(e.target.value)}
+                placeholder="e.g. Planning to pursue Masters, or accepted another offer."
+                className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 resize-none"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-gray-100">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDeclineModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleConfirmDecline}
+                isLoading={isRespondingNomination === declineTargetNomination?.id}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs"
+              >
+                Confirm Decline
               </Button>
             </div>
           </div>
