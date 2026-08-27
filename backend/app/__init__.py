@@ -1,6 +1,7 @@
 # backend/app/__init__.py
 
 import os
+import logging
 from datetime import timedelta
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
@@ -13,6 +14,8 @@ from flask_limiter.util import get_remote_address
 from flask_mail import Mail, Message
 
 import re
+
+logger = logging.getLogger(__name__)
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -246,6 +249,10 @@ def create_app(config_class='app.config.DevelopmentConfig'):
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN phone VARCHAR(20)"))
                     if 'bio' not in columns:
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN bio TEXT"))
+                    if 'notifications_enabled' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN notifications_enabled BOOLEAN DEFAULT 1"))
+                    if 'email_alerts_enabled' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN email_alerts_enabled BOOLEAN DEFAULT 1"))
                 # Schema migration check for Job live columns
                 if 'jobs' in inspector.get_table_names():
                     job_columns = [c['name'] for c in inspector.get_columns('jobs')]

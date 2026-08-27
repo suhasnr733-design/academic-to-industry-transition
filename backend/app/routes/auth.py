@@ -176,7 +176,10 @@ def update_profile():
     data = request.get_json() or {}
     
     # Allowed fields to update
-    allowed_fields = ['full_name', 'email', 'department', 'year_of_study', 'college', 'phone', 'bio']
+    allowed_fields = [
+        'full_name', 'email', 'department', 'year_of_study', 
+        'college', 'phone', 'bio', 'notifications_enabled', 'email_alerts_enabled'
+    ]
     
     if 'email' in data:
         new_email = str(data.get('email', '')).strip().lower()
@@ -192,6 +195,9 @@ def update_profile():
         if field == 'email':
             continue
         if field in data:
+            if field in ('notifications_enabled', 'email_alerts_enabled'):
+                setattr(user, field, bool(data[field]))
+                continue
             if field == 'year_of_study':
                 val = data.get('year_of_study')
                 if val is None or str(val).strip() == '':

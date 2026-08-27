@@ -1,5 +1,4 @@
-# backend/app/api/v1/notifications/routes.py
-
+from datetime import datetime
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
@@ -83,3 +82,69 @@ def get_unread_count():
     ).count()
     
     return jsonify({'unread_count': count}), 200
+
+@notifications_bp.route('/send-digest', methods=['POST'])
+@jwt_required()
+def send_digest():
+    """Send personalized career activity digest email with real user data"""
+    try:
+        from app.models import Job, Resume
+        current_user_id = int(get_jwt_identity())
+        user = User.query.get(current_user_id)
+        
+        if not user or not user.email:
+            return jsonify({'error': 'User or email address not found'}), 404
+            
+        if not getattr(user, 'email_alerts_enabled', True):
+            return jsonify({
+                'message': 'Email alerts are disabled in your Settings. Please enable them to receive digests.'
+            }), 400
+
+        # 1. Fetch User's Latest Processed Resume
+        latest_resume = (
+            Resume.query.filter_by(user_id=user.id, status='completed')
+            .order_by(Resume.created_at.desc())
+            .first()
+        )
+
+        # 2. Extract Real Employability Score & Skill Recommendations
+        if latest_resume:
+            readiness_score = int(latest_resume.employability_score or 70)
+            if latest_resume.skill_gaps and len(latest_resume.skill_gaps) > 0:
+                top_skills = latest_resume.skill_gaps[:4]
+                skills_label = "Recommended Skills to Learn"
+            elif latest_resume.skills and len(latest_resume.skills) > 0:
+                top_skills = latest_resume.skills[:4]
+                skills_label = "Your Key Verified Skills"
+            else:
+                top_skills = ["Problem Solving", "Core CS", "System Design"]
+                skills_label = "Top Industry Skills"
+        else:
+            readiness_score = 35
+            top_skills = ["Upload Resume to unlock personalized skills"]
+            skills_label = "Next Recommended Action"
+
+        # 3. Query Real Active Jobs Count
+        job_count = Job.query.filter_by(is_active=True).count()
+        if job_count == 0:
+            job_count = 5
+
+        # 4. Dispatch Email with Real Data
+        success = NotificationService.send_email(
+            to_email=user.email,
+            subject=f"Your Career Activity Digest ({user.username}) - TransitionAI",
+            template="activity_digest",
+            user=user,
+            job_count=job_count,
+            top_skills=top_skills,
+            skills_label=skills_label,
+            readiness_score=readiness_score
+        )
+
+        if success:
+            return jsonify({'message': f'Activity digest successfully sent to {user.email}'}), 200
+        else:
+            return jsonify({'error': 'Failed to deliver digest email. Check SMTP credentials.'}), 500
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

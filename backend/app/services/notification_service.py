@@ -1,4 +1,4 @@
-from app import db
+from app import db, mail
 try:
     from flask_mail import Message
 except ImportError:
@@ -11,23 +11,51 @@ from app.models import Notification, User
 logger = logging.getLogger(__name__)
 
 class NotificationService:
-    """Notification service for emails, in-app notifications, etc."""
+    """Notification service for emails, in-app notifications, and activity digests"""
     
     @staticmethod
-    def send_email(to: str, subject: str, template: str, **kwargs):
-        """Send email notification"""
+    def send_email(to_email: str, subject: str, template: str, user=None, **kwargs):
+        """Send email with user preference checking, HTML rendering, and safe plain-text fallback"""
         try:
+            # 1. Check user preference if user object provided
+            if user and hasattr(user, 'email_alerts_enabled') and not user.email_alerts_enabled:
+                logger.info(f"User {user.id} has disabled email alerts. Skipping email delivery.")
+                return False
+
+            sender = (
+                current_app.config.get('MAIL_DEFAULT_SENDER') or 
+                current_app.config.get('MAIL_USERNAME') or 
+                'noreply@transitionai.com'
+            )
+            frontend_url = current_app.config.get('FRONTEND_URL') or 'http://localhost:5173'
+
+            if not Message:
+                logger.warning("Flask-Mail Message class not available. Skipping email.")
+                return False
+
             msg = Message(
                 subject=subject,
-                sender=current_app.config['MAIL_DEFAULT_SENDER'],
-                recipients=[to]
+                sender=sender,
+                recipients=[to_email]
             )
-            msg.html = render_template(f'emails/{template}.html', **kwargs)
+
+            # 2. Render HTML template with fallback
+            try:
+                msg.html = render_template(
+                    f'emails/{template}.html',
+                    user=user,
+                    frontend_url=frontend_url,
+                    **kwargs
+                )
+            except Exception as tmpl_err:
+                logger.warning(f"Could not render HTML template '{template}': {tmpl_err}. Using plain body fallback.")
+                msg.body = f"Hello,\n\n{subject}\n\nPlease visit {frontend_url} to view details."
+
             mail.send(msg)
-            logger.info(f"Email sent to {to}")
+            logger.info(f"Email sent successfully to {to_email}")
             return True
         except Exception as e:
-            logger.error(f"Email error: {e}")
+            logger.error(f"Email error when sending to {to_email}: {e}")
             return False
     
     @staticmethod
@@ -35,6 +63,11 @@ class NotificationService:
                                   notification_type: str = 'info', link: str = None):
         """Send in-app notification"""
         try:
+            user = User.query.get(user_id)
+            if user and hasattr(user, 'notifications_enabled') and not user.notifications_enabled:
+                logger.info(f"User {user_id} has disabled in-app notifications. Skipping.")
+                return False
+
             notification = Notification(
                 user_id=user_id,
                 title=title,
@@ -53,22 +86,26 @@ class NotificationService:
     
     @staticmethod
     def send_resume_processed_notification(user_id: int, resume_id: int):
-        """Send resume processed notification"""
+        """Send resume processed notification (in-app and email)"""
+        user = User.query.get(user_id)
+        if not user:
+            return
+
         title = "Resume Processed Successfully"
         message = "Your resume has been analyzed. Check your dashboard for insights."
         link = f"/resume/{resume_id}"
         
+        # 1. In-App Alert
         NotificationService.send_in_app_notification(
-            user_id, title, message, 'success', link
+            user_id=user.id, title=title, message=message, notification_type='success', link=link
         )
         
-        # Also send email
-        user = User.query.get(user_id)
-        if user and user.email:
+        # 2. Activity Email Alert (respects user.email_alerts_enabled)
+        if user.email and getattr(user, 'email_alerts_enabled', True):
             NotificationService.send_email(
-                user.email,
-                "Resume Analysis Complete",
-                "resume_processed",
+                to_email=user.email,
+                subject="Resume Analysis Complete - TransitionAI",
+                template="resume_processed",
                 user=user,
                 resume_id=resume_id
             )
