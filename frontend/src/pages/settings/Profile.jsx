@@ -13,9 +13,10 @@ export const Profile = () => {
   const { user, updateProfile } = useAuth()
   const [isLoading, setIsLoading] = React.useState(false)
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
     defaultValues: {
       full_name: user?.full_name || '',
+      email: user?.email || '',
       department: user?.department || '',
       year_of_study: user?.year_of_study || '',
       college: user?.college || '',
@@ -24,13 +25,28 @@ export const Profile = () => {
     }
   })
 
+  React.useEffect(() => {
+    if (user) {
+      reset({
+        full_name: user.full_name || '',
+        email: user.email || '',
+        department: user.department || '',
+        year_of_study: user.year_of_study || '',
+        college: user.college || '',
+        phone: user.phone || '',
+        bio: user.bio || '',
+      })
+    }
+  }, [user, reset])
+
   const onSubmit = async (data) => {
     try {
       setIsLoading(true)
       await updateProfile(data)
       toast.success('Profile updated successfully!')
     } catch (error) {
-      toast.error(error.message || 'Update failed')
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || 'Update failed'
+      toast.error(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -51,9 +67,15 @@ export const Profile = () => {
             />
             <Input
               label="Email"
-              value={user?.email}
-              disabled
-              className="bg-gray-100"
+              type="email"
+              {...register('email', {
+                required: 'Email is required',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Please enter a valid email address'
+                }
+              })}
+              error={errors.email?.message}
             />
             <Input
               label="Department"

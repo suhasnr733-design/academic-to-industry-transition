@@ -173,12 +173,24 @@ def update_profile():
     if not user:
         return jsonify({'error': 'User not found'}), 404
     
-    data = request.get_json()
+    data = request.get_json() or {}
     
     # Allowed fields to update
-    allowed_fields = ['full_name', 'department', 'year_of_study']
+    allowed_fields = ['full_name', 'email', 'department', 'year_of_study', 'college', 'phone', 'bio']
     
+    if 'email' in data:
+        new_email = str(data.get('email', '')).strip().lower()
+        if not new_email or not validate_email(new_email):
+            return jsonify({'error': 'Please enter a valid email address'}), 400
+        if new_email != (user.email or '').lower():
+            existing_user = User.query.filter(User.email == new_email, User.id != current_user_id).first()
+            if existing_user:
+                return jsonify({'error': 'This email is already registered to another account'}), 400
+            user.email = new_email
+
     for field in allowed_fields:
+        if field == 'email':
+            continue
         if field in data:
             if field == 'year_of_study':
                 val = data.get('year_of_study')
