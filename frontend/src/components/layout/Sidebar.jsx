@@ -1,9 +1,10 @@
 // src/components/layout/Sidebar.jsx
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { cn } from '../../utils/helpers'
 import { useAuth } from '../../hooks/useAuth'
+import { api } from '../../services/api'
 import {
   HomeIcon,
   DocumentTextIcon,
@@ -12,17 +13,21 @@ import {
   AcademicCapIcon,
   UserGroupIcon,
   ClipboardListIcon,
+  OfficeBuildingIcon,
+  UserCircleIcon,
   CogIcon,
   XIcon
 } from '@heroicons/react/outline'
 
 const studentNavigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
+  { name: 'Placement Drives', href: '/placements', icon: OfficeBuildingIcon, badgeKey: 'placement' },
   { name: 'Resume', href: '/resume', icon: DocumentTextIcon },
   { name: 'Jobs', href: '/jobs', icon: BriefcaseIcon },
   { name: 'Skills', href: '/skills', icon: ChartBarIcon },
   { name: 'Learning', href: '/learning', icon: AcademicCapIcon },
   { name: 'Assessments', href: '/assessment', icon: ClipboardListIcon },
+  { name: 'Profile', href: '/profile', icon: UserCircleIcon },
   { name: 'Settings', href: '/settings', icon: CogIcon },
 ]
 
@@ -30,17 +35,20 @@ const facultyNavigation = [
   { name: 'Faculty Overview', href: '/faculty', icon: HomeIcon },
   { name: 'Student Directory', href: '/faculty?tab=students', icon: UserGroupIcon },
   { name: 'Cohort Analytics', href: '/faculty?tab=analytics', icon: ChartBarIcon },
+  { name: 'Profile Settings', href: '/profile', icon: UserCircleIcon },
   { name: 'Settings', href: '/settings', icon: CogIcon },
 ]
 
 const adminNavigation = [
   { name: 'Admin Dashboard', href: '/admin', icon: HomeIcon },
   { name: 'Faculty Overview', href: '/faculty', icon: UserGroupIcon },
+  { name: 'Profile Settings', href: '/profile', icon: UserCircleIcon },
   { name: 'Settings', href: '/settings', icon: CogIcon },
 ]
 
 export const Sidebar = ({ isOpen, onClose }) => {
   const { user } = useAuth()
+  const [pendingPlacementsCount, setPendingPlacementsCount] = useState(0)
 
   const role = user?.role || 'student'
   const navigation = role === 'admin' 
@@ -48,6 +56,26 @@ export const Sidebar = ({ isOpen, onClose }) => {
     : role === 'faculty' 
     ? facultyNavigation 
     : studentNavigation
+
+  // Fetch pending placement drive notifications for student badge
+  useEffect(() => {
+    if (role === 'student' && user) {
+      const fetchPending = async () => {
+        try {
+          const res = await api.get('/placement/my-nominations')
+          const noms = res.data?.nominations || []
+          const pending = noms.filter(n => n.status === 'pending').length
+          setPendingPlacementsCount(pending)
+        } catch (e) {
+          // ignore background errors
+        }
+      }
+
+      fetchPending()
+      const interval = setInterval(fetchPending, 25000)
+      return () => clearInterval(interval)
+    }
+  }, [role, user])
 
   const roleLabel = role === 'faculty' 
     ? 'Faculty' 
@@ -106,7 +134,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
                 to={item.href}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
+                    'flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group',
                     isActive
                       ? 'bg-primary-50 text-primary-700 font-semibold shadow-sm'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -114,8 +142,15 @@ export const Sidebar = ({ isOpen, onClose }) => {
                 }
                 onClick={() => onClose()}
               >
-                <item.icon className="h-5 w-5 mr-3 flex-shrink-0" />
-                {item.name}
+                <div className="flex items-center min-w-0">
+                  <item.icon className="h-5 w-5 mr-3 flex-shrink-0" />
+                  <span className="truncate">{item.name}</span>
+                </div>
+                {item.badgeKey === 'placement' && pendingPlacementsCount > 0 && (
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-extrabold bg-amber-500 text-white rounded-full shadow-sm animate-pulse ml-2 flex-shrink-0">
+                    {pendingPlacementsCount}
+                  </span>
+                )}
               </NavLink>
             ))}
           </nav>

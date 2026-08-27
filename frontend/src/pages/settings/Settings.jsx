@@ -1,13 +1,15 @@
 // frontend/src/pages/settings/Settings.jsx
 
 import React, { useState } from 'react'
-import { FiSettings, FiBell, FiShield, FiKey, FiMail, FiLock, FiCheck } from 'react-icons/fi'
+import { useNavigate } from 'react-router-dom'
+import { FiSettings, FiBell, FiShield, FiKey, FiMail, FiLock, FiCheck, FiUser } from 'react-icons/fi'
 import { useAuth } from '../../hooks/useAuth'
 import { api } from '../../services/api'
 import toast from 'react-hot-toast'
 
 export default function Settings() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [notifications, setNotifications] = useState(true)
   const [emailAlerts, setEmailAlerts] = useState(true)
 
@@ -75,7 +77,53 @@ export default function Settings() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <FiSettings className="text-primary-600" /> Platform Settings
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">Customize your preferences and account security</p>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">Customize your profile preferences and account security</p>
+      </div>
+
+      {/* Profile Overview & Quick Edit Card */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md border border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+        <div className="flex items-center space-x-4">
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white font-extrabold text-xl shadow-md ${
+            user?.role === 'faculty'
+              ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 shadow-purple-500/25'
+              : user?.role === 'admin'
+              ? 'bg-gradient-to-tr from-red-600 to-orange-600'
+              : 'bg-gradient-to-tr from-primary-600 to-secondary-600 shadow-primary-500/25'
+          }`}>
+            {user?.full_name?.[0] || user?.username?.[0] || 'U'}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                {user?.full_name || user?.username || 'User Profile'}
+              </h2>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
+                user?.role === 'faculty'
+                  ? 'bg-purple-100 text-purple-800 border-purple-200'
+                  : user?.role === 'admin'
+                  ? 'bg-red-100 text-red-800 border-red-200'
+                  : 'bg-primary-50 text-primary-700 border-primary-200'
+              }`}>
+                {user?.role || 'student'}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {user?.email} • {user?.department || 'Department not set'} {user?.college ? `• ${user.college}` : ''}
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => navigate('/profile')}
+          className={`px-4 py-2.5 font-semibold text-xs rounded-xl transition-all border flex items-center gap-1.5 self-start sm:self-center flex-shrink-0 ${
+            user?.role === 'faculty'
+              ? 'bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200'
+              : 'bg-primary-50 text-primary-700 hover:bg-primary-100 border-primary-200'
+          }`}
+        >
+          <FiUser className="w-4 h-4" />
+          Edit Profile Information &rarr;
+        </button>
       </div>
 
       {/* Notification Preferences */}

@@ -344,169 +344,38 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* Placement Drive Nominations / Offers Section */}
-      {nominations && nominations.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-              <SparklesIcon className="h-5 w-5 text-amber-500" />
-              Company Placement Drive Invitations & Shortlists
-            </h2>
-            <span className="text-xs text-gray-500">
-              {nominations.filter((n) => n.status === 'pending').length} Action Required
-            </span>
-          </div>
-
-          <div className="space-y-3">
-            {nominations.map((nom) => {
-              const isPending = nom.status === 'pending'
-              const isConfirmed = nom.status === 'confirmed_attending' || nom.status === 'accepted'
-              const isPlaced = nom.status === 'placed'
-              const isRejected = nom.status === 'rejected'
-
-              return (
-                <div
-                  key={nom.id}
-                  className={`rounded-2xl p-6 border shadow-md transition-all relative overflow-hidden ${
-                    isPending
-                      ? 'bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 border-amber-300 bg-white'
-                      : isPlaced
-                      ? 'bg-purple-50/80 border-purple-300 bg-white'
-                      : isConfirmed
-                      ? 'bg-emerald-50/70 border-emerald-300 bg-white'
-                      : 'bg-gray-50 border-gray-200 bg-white'
-                  }`}
-                >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
-                    <div className="flex items-start gap-4">
-                      <div
-                        className={`p-3.5 rounded-2xl flex-shrink-0 ${
-                          isPending
-                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
-                            : isPlaced
-                            ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/25'
-                            : isConfirmed
-                            ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                            : 'bg-gray-400 text-white'
-                        }`}
-                      >
-                        <OfficeBuildingIcon className="h-7 w-7" />
-                      </div>
-
-                      <div>
-                        <div className="flex items-center gap-2.5 flex-wrap">
-                          <span
-                            className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
-                              isPending
-                                ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                                : isPlaced
-                                ? 'bg-purple-100 text-purple-900 border border-purple-300'
-                                : isConfirmed
-                                ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                                : 'bg-gray-200 text-gray-700 border border-gray-300'
-                            }`}
-                          >
-                            {isPending
-                              ? '⚡ Drive Invitation (RSVP Required)'
-                              : isPlaced
-                              ? '🏆 Officially Hired & Placed'
-                              : isConfirmed
-                              ? '✅ Registered & Attending Drive'
-                              : 'Drive Invitation Declined'}
-                          </span>
-                          {nom.package_lpa && (
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-900 border border-purple-200">
-                              💰 ₹{nom.package_lpa} LPA CTC
-                            </span>
-                          )}
-                        </div>
-
-                        <h3 className="text-xl font-extrabold text-gray-900 mt-1.5 flex items-center gap-2">
-                          {nom.company_name}
-                          <span className="text-sm font-normal text-gray-500">
-                            • {nom.job_role || 'Software Engineer'}
-                          </span>
-                        </h3>
-
-                        <p className="text-xs text-gray-600 mt-1">
-                          Shortlisted by{' '}
-                          <span className="font-semibold text-gray-800">
-                            {nom.faculty?.full_name || 'Faculty Advisor'}
-                          </span>{' '}
-                          ({nom.faculty?.department || 'Faculty'}) on{' '}
-                          {new Date(nom.created_at).toLocaleDateString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
-                          })}
-                        </p>
-
-                        {nom.faculty_notes && (
-                          <div className="mt-2.5 text-xs text-purple-900 bg-purple-50/80 border border-purple-200/80 rounded-xl p-2.5 max-w-2xl">
-                            <span className="font-semibold">Coordinator Note:</span> {nom.faculty_notes}
-                          </div>
-                        )}
-
-                        {isConfirmed && !isPlaced && (
-                          <p className="text-xs text-emerald-700 mt-2 font-medium">
-                            ✓ You have confirmed attendance for this placement drive. Please keep your resume updated!
-                          </p>
-                        )}
-
-                        {nom.student_response_note && !isPending && (
-                          <p className="text-xs text-gray-500 mt-1.5 italic">
-                            Your response: "{nom.student_response_note}"
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Decision Actions */}
-                    {isPending && (
-                      <div className="flex items-center gap-3 self-end md:self-center flex-shrink-0">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenDeclineModal(nom)}
-                          disabled={isRespondingNomination === nom.id}
-                          className="text-xs border-gray-300 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 flex items-center gap-1.5"
-                        >
-                          <XIcon className="h-4 w-4" />
-                          Decline Invitation
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleAcceptNomination(nom)}
-                          isLoading={isRespondingNomination === nom.id}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20"
-                        >
-                          <CheckCircleIcon className="h-4 w-4" />
-                          Confirm Attendance
-                        </Button>
-                      </div>
-                    )}
-
-                    {isConfirmed && !isPlaced && (
-                      <div className="self-end md:self-center flex-shrink-0">
-                        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-100 text-emerald-900 font-bold text-xs border border-emerald-300">
-                          <CheckCircleIcon className="h-4 w-4 text-emerald-600" />
-                          Attendance Confirmed
-                        </span>
-                      </div>
-                    )}
-
-                    {isPlaced && (
-                      <div className="self-end md:self-center flex-shrink-0">
-                        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-100 text-purple-900 font-bold text-xs border border-purple-300">
-                          <SparklesIcon className="h-4 w-4 text-amber-500" />
-                          Officially Hired & Placed!
-                        </span>
-                      </div>
-                    )}
-                  </div>
+      {/* Company Placement Drives Notification Banner (Under Student Career Suite) */}
+      {nominations && nominations.some((n) => n.status === 'pending') && (
+        <div className="bg-gradient-to-r from-amber-500/15 via-purple-500/10 to-indigo-500/10 border border-amber-300 rounded-2xl p-4 sm:p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="p-2.5 bg-amber-500 text-white rounded-xl shadow-md shadow-amber-500/20 flex-shrink-0">
+                <SparklesIcon className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-bold text-gray-900">
+                    Campus Placement Drive Invitations
+                  </h3>
+                  <span className="px-2 py-0.5 text-[11px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 rounded-full">
+                    {nominations.filter((n) => n.status === 'pending').length} Action Required
+                  </span>
                 </div>
-              )
-            })}
+                <p className="text-xs text-gray-600 mt-1">
+                  You have company shortlist invitations awaiting your RSVP. Review CTC packages and confirm attendance under{' '}
+                  <span className="font-semibold text-gray-800">Student Career Suite &rarr; Placement Drives</span>.
+                </p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => navigate('/placements')}
+              className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm self-end sm:self-center flex-shrink-0"
+            >
+              <OfficeBuildingIcon className="h-4 w-4" />
+              View Placement Drives
+              <ArrowRightIcon className="h-3.5 w-3.5" />
+            </Button>
           </div>
         </div>
       )}

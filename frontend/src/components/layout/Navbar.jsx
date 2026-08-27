@@ -139,16 +139,48 @@ export const Navbar = ({ onMenuClick }) => {
                           <HomeIcon className="h-4 w-4 mr-2.5 text-purple-600" />
                           Faculty Dashboard
                         </Link>
+                      ) : isAdmin ? (
+                        <Link
+                          to="/admin"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700"
+                          onClick={() => setShowDropdown(false)}
+                        >
+                          <HomeIcon className="h-4 w-4 mr-2.5 text-red-600" />
+                          Admin Console
+                        </Link>
                       ) : (
                         <Link
-                          to="/profile"
+                          to="/dashboard"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700"
                           onClick={() => setShowDropdown(false)}
                         >
-                          <UserCircleIcon className="h-4 w-4 mr-2.5 text-primary-600" />
-                          Profile
+                          <HomeIcon className="h-4 w-4 mr-2.5 text-primary-600" />
+                          Student Dashboard
                         </Link>
                       )}
+
+                      <Link
+                        to="/profile"
+                        className={`flex items-center px-4 py-2 text-sm text-gray-700 ${
+                          isFaculty
+                            ? 'hover:bg-purple-50 hover:text-purple-700'
+                            : isAdmin
+                            ? 'hover:bg-red-50 hover:text-red-700'
+                            : 'hover:bg-primary-50 hover:text-primary-700'
+                        }`}
+                        onClick={() => setShowDropdown(false)}
+                      >
+                        <UserCircleIcon
+                          className={`h-4 w-4 mr-2.5 ${
+                            isFaculty
+                              ? 'text-purple-600'
+                              : isAdmin
+                              ? 'text-red-600'
+                              : 'text-primary-600'
+                          }`}
+                        />
+                        Profile Settings
+                      </Link>
 
                       <Link
                         to="/settings"
