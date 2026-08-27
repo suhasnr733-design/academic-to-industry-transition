@@ -46,6 +46,7 @@ const LearningPath = lazy(() => import('./pages/skills/LearningPath').then(m => 
 const Profile = lazy(() => import('./pages/settings/Profile').then(m => ({ default: m.default || m.Profile })))
 const Settings = lazy(() => import('./pages/settings/Settings').then(m => ({ default: m.default || m.Settings })))
 const Assessment = lazy(() => import('./pages/assessments/Assessment').then(m => ({ default: m.default || m.Assessment })))
+const PlacementDrives = lazy(() => import('./pages/student/PlacementDrives').then(m => ({ default: m.default || m.PlacementDrives })))
 const Notifications = lazy(() => import('./pages/notifications/Notifications').then(m => ({ default: m.default || m.Notifications })))
 
 function App() {
@@ -80,6 +81,8 @@ function App() {
                           <Route path="/dashboard" element={<Dashboard />} />
                           <Route path="/dashboard/advanced" element={<AdvancedDashboard />} />
                           <Route path="/advanced-dashboard" element={<AdvancedDashboard />} />
+                          <Route path="/placements" element={<PlacementDrives />} />
+                          <Route path="/placement-drives" element={<PlacementDrives />} />
                           <Route path="/resume" element={<ResumeList />} />
                           <Route path="/resume/upload" element={<ResumeUpload />} />
                           <Route path="/resume/:id" element={<ResumeDetail />} />
