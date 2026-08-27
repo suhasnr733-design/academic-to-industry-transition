@@ -1,7 +1,6 @@
-// src/pages/faculty/Dashboard.jsx
-
 import React, { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useAuth } from '../../hooks/useAuth'
 import { api } from '../../services/api'
 import { Button } from '../../components/common/Button'
 import toast from 'react-hot-toast'
@@ -32,6 +31,7 @@ import { PlacementShortlist } from './PlacementShortlist'
 import { CampusDrives } from './CampusDrives'
 
 export const FacultyDashboard = () => {
+  const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTab = searchParams.get('tab') || 'overview'
 
@@ -54,11 +54,15 @@ export const FacultyDashboard = () => {
   const [students, setStudents] = useState([])
   const [incomingRequests, setIncomingRequests] = useState([])
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
-  const [directoryScope, setDirectoryScope] = useState('mentees') // 'mentees' or 'all'
+  const [directoryScope, setDirectoryScope] = useState(searchParams.get('scope') === 'mentees' ? 'mentees' : 'mentees')
   const [loading, setLoading] = useState(true)
+
+  // Search and Filter State
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedDept, setSelectedDept] = useState('all')
   const [selectedYear, setSelectedYear] = useState('all')
+
+  // Selected Student Modal & Placement Form
   const [selectedStudent, setSelectedStudent] = useState(null)
   const [isUpdatingPlacement, setIsUpdatingPlacement] = useState(false)
   const [isProcessingAction, setIsProcessingAction] = useState(null)
@@ -68,11 +72,6 @@ export const FacultyDashboard = () => {
     placed_company: '',
     package_lpa: ''
   })
-
-  useEffect(() => {
-    fetchFacultyData()
-    fetchIncomingRequests()
-  }, [directoryScope])
 
   const fetchFacultyData = async () => {
     try {
@@ -85,14 +84,14 @@ export const FacultyDashboard = () => {
       ])
 
       let studentsList = []
-      if (usersRes.status === 'fulfilled' && usersRes.value.data) {
+      if (usersRes.status === 'fulfilled' && usersRes.value?.data) {
         const raw = usersRes.value.data
         studentsList = raw.students || raw.users || []
         studentsList = studentsList.filter(u => u.role === 'student' || !u.role)
       }
 
-      if (statsRes.status === 'fulfilled' && statsRes.value.data) {
-        setStats(statsRes.value.data)
+      if (statsRes.status === 'fulfilled' && statsRes.value?.data) {
+        setStats(statsRes.value.data.stats || statsRes.value.data)
       } else {
         const total = studentsList.length
         const placed = studentsList.filter(s => s.placement_status === 'placed').length
@@ -106,12 +105,12 @@ export const FacultyDashboard = () => {
         })
       }
 
-      if (skillsRes.status === 'fulfilled' && skillsRes.value.data?.skills) {
-        setCohortSkills(skillsRes.value.data.skills)
+      if (skillsRes.status === 'fulfilled' && skillsRes.value?.data) {
+        setCohortSkills(skillsRes.value.data.top_skills || skillsRes.value.data.skills || [])
       }
 
-      if (adviceRes.status === 'fulfilled' && adviceRes.value.data) {
-        setAdvisorInsight(adviceRes.value.data)
+      if (adviceRes.status === 'fulfilled' && adviceRes.value?.data) {
+        setAdvisorInsight(adviceRes.value.data.advisor_advice || adviceRes.value.data)
       }
 
       setStudents(studentsList)
@@ -127,13 +126,17 @@ export const FacultyDashboard = () => {
     try {
       const res = await api.get('/mentorship/incoming-requests')
       setIncomingRequests(res.data?.requests || [])
-      setPendingRequestsCount(res.data?.pending_count || 0)
+      setPendingRequestsCount(res.data?.pending_count || res.data?.requests?.filter(r => r.status === 'pending').length || 0)
     } catch (err) {
       console.error('Error fetching mentorship requests:', err)
     }
   }
 
-  // Accept or Decline mentorship request
+  useEffect(() => {
+    fetchFacultyData()
+    fetchIncomingRequests()
+  }, [directoryScope])
+
   const handleRequestAction = async (requestId, action) => {
     try {
       setIsProcessingAction(requestId)
@@ -148,7 +151,6 @@ export const FacultyDashboard = () => {
     }
   }
 
-  // Remove/Release an assigned mentee
   const handleRemoveMentee = async (student) => {
     if (!student) return
     const name = student.full_name || student.username || 'this student'
@@ -173,16 +175,15 @@ export const FacultyDashboard = () => {
     }
   }
 
-  // Filter students based on search, department, and year
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
       const name = (student.full_name || student.username || '').toLowerCase()
       const email = (student.email || '').toLowerCase()
       const matchesSearch = name.includes(searchQuery.toLowerCase()) || email.includes(searchQuery.toLowerCase())
-      
+
       const dept = student.department || 'General'
       const matchesDept = selectedDept === 'all' || dept.toLowerCase() === selectedDept.toLowerCase()
-      
+
       const year = student.year_of_study ? String(student.year_of_study) : 'all'
       const matchesYear = selectedYear === 'all' || year === selectedYear
 
@@ -190,13 +191,11 @@ export const FacultyDashboard = () => {
     })
   }, [students, searchQuery, selectedDept, selectedYear])
 
-  // Extract unique departments for filter dropdown
   const departments = useMemo(() => {
     const depts = new Set(students.map(s => s.department || 'General').filter(Boolean))
     return Array.from(depts)
   }, [students])
 
-  // Open modal and prepopulate form
   const handleOpenStudentModal = (student) => {
     setSelectedStudent(student)
     setPlacementForm({
@@ -206,7 +205,6 @@ export const FacultyDashboard = () => {
     })
   }
 
-  // Save student placement status
   const handleSavePlacement = async (e) => {
     e.preventDefault()
     if (!selectedStudent) return
@@ -219,8 +217,8 @@ export const FacultyDashboard = () => {
       }
       const res = await api.put(`/analytics/student/${selectedStudent.id}/placement`, payload)
       toast.success('Placement status updated successfully!')
-      
-      const updated = res.data.student
+
+      const updated = res.data?.student || payload
       setStudents(prev => prev.map(s => s.id === selectedStudent.id ? { ...s, ...updated } : s))
       setSelectedStudent(prev => ({ ...prev, ...updated }))
       fetchFacultyData()
@@ -231,7 +229,6 @@ export const FacultyDashboard = () => {
     }
   }
 
-  // Export cohort to CSV
   const handleExportCSV = () => {
     if (students.length === 0) {
       toast.error('No students available to export')
@@ -252,7 +249,7 @@ export const FacultyDashboard = () => {
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement('a')
     link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `cohort_${directoryScope}_${new Date().toISOString().slice(0,10)}.csv`)
+    link.setAttribute('download', `cohort_${directoryScope}_${new Date().toISOString().slice(0, 10)}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -260,10 +257,10 @@ export const FacultyDashboard = () => {
   }
 
   const facultyStatCards = [
-    { name: directoryScope === 'mentees' ? 'My Assigned Mentees' : 'Total Department Students', value: `${stats.totalStudents}`, icon: UserGroupIcon, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { name: 'Verified Resumes', value: `${stats.resumesProcessed}`, icon: DocumentTextIcon, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { name: 'Placed Students', value: `${stats.placedStudents}`, icon: AcademicCapIcon, color: 'text-green-600', bg: 'bg-green-50' },
-    { name: 'Cohort Placement Rate', value: stats.placementRate, icon: ChartBarIcon, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { name: directoryScope === 'mentees' ? 'My Assigned Mentees' : 'Total Department Students', value: `${stats.totalStudents || stats.total_students || 0}`, icon: UserGroupIcon, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { name: 'Verified Resumes', value: `${stats.resumesProcessed || stats.total_resumes || 0}`, icon: DocumentTextIcon, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { name: 'Placed Students', value: `${stats.placedStudents || stats.placed_count || 0}`, icon: AcademicCapIcon, color: 'text-green-600', bg: 'bg-green-50' },
+    { name: 'Cohort Placement Rate', value: stats.placementRate || '0%', icon: ChartBarIcon, color: 'text-purple-600', bg: 'bg-purple-50' },
   ]
 
   return (
@@ -418,7 +415,6 @@ export const FacultyDashboard = () => {
 
           {/* Quick Insights Banner */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Live Cohort Skill Breakdown */}
             <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -456,7 +452,6 @@ export const FacultyDashboard = () => {
               </div>
             </div>
 
-            {/* Dynamic Faculty Action Advice */}
             <div className="bg-gradient-to-br from-purple-900 to-indigo-900 rounded-xl p-6 text-white shadow-sm flex flex-col justify-between">
               <div>
                 <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-800 text-purple-200 mb-3">
@@ -521,7 +516,7 @@ export const FacultyDashboard = () => {
                           )}
                         </div>
                         <p className="text-xs text-gray-500 mt-0.5">{req.student?.email}</p>
-                        
+
                         {req.message && (
                           <div className="mt-2.5 p-3 bg-white rounded-lg border border-gray-200 text-xs text-gray-700 max-w-xl">
                             <span className="font-semibold text-gray-900 block mb-0.5">Student Note:</span>
@@ -581,14 +576,12 @@ export const FacultyDashboard = () => {
       {/* Tab 3: Student Directory */}
       {activeTab === 'students' && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          {/* Scope Selector Bar */}
           <div className="px-6 pt-5 pb-3 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-base font-bold text-gray-900">Student Cohort Directory</h3>
               <p className="text-xs text-gray-500">Filter between your personal assigned mentees and the department-wide roster.</p>
             </div>
 
-            {/* Mentees vs All Toggle */}
             <div className="inline-flex rounded-xl bg-gray-100 p-1 self-start sm:self-auto border border-gray-200">
               <button
                 onClick={() => setDirectoryScope('mentees')}
@@ -613,7 +606,6 @@ export const FacultyDashboard = () => {
             </div>
           </div>
 
-          {/* Search Controls Bar */}
           <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-col sm:flex-row gap-3 items-center justify-between bg-gray-50/50">
             <div className="relative w-full sm:w-80">
               <SearchIcon className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
@@ -652,7 +644,6 @@ export const FacultyDashboard = () => {
             </div>
           </div>
 
-          {/* Student Table */}
           {loading ? (
             <div className="flex justify-center py-16">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600" />
@@ -837,7 +828,7 @@ export const FacultyDashboard = () => {
       {/* Student Detail & Placement Update Modal */}
       {selectedStudent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center">
@@ -856,7 +847,6 @@ export const FacultyDashboard = () => {
               </button>
             </div>
 
-            {/* Profile Info Cards */}
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="p-3 bg-gray-50 rounded-xl">
                 <span className="text-xs text-gray-500 block">Username</span>
@@ -878,12 +868,11 @@ export const FacultyDashboard = () => {
               </div>
             </div>
 
-            {/* Placement Status Editor */}
             <form onSubmit={handleSavePlacement} className="p-4 bg-purple-50/60 rounded-xl border border-purple-100 space-y-3">
               <h4 className="text-xs font-bold text-purple-900 uppercase tracking-wider">
                 Manage Placement Status
               </h4>
-              
+
               <div>
                 <label className="text-xs font-medium text-gray-700 block mb-1">Status</label>
                 <select
@@ -951,6 +940,7 @@ export const FacultyDashboard = () => {
               ) : (
                 <div />
               )}
+
               <Button
                 variant="outline"
                 size="sm"
@@ -962,6 +952,7 @@ export const FacultyDashboard = () => {
           </div>
         </div>
       )}
+
     </div>
   )
 }

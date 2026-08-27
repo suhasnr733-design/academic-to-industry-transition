@@ -230,6 +230,12 @@ def create_app(config_class='app.config.DevelopmentConfig'):
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN oauth_provider_id VARCHAR(100)"))
                     if 'profile_picture' not in columns:
                         conn.execute(db.text("ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255)"))
+                    if 'placement_status' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN placement_status VARCHAR(20) DEFAULT 'seeking'"))
+                    if 'placed_company' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN placed_company VARCHAR(100)"))
+                    if 'package_lpa' not in columns:
+                        conn.execute(db.text("ALTER TABLE users ADD COLUMN package_lpa FLOAT"))
                 
                 # Schema migration check for Job live columns
                 if 'jobs' in inspector.get_table_names():
@@ -277,6 +283,23 @@ def create_app(config_class='app.config.DevelopmentConfig'):
                 admin.set_password(admin_password)
                 db.session.add(admin)
                 db.session.commit()
+                print("ADMIN USER: Created initial admin user from secure configuration.")
+        
+        # Seed faculty demo user safely
+        if not User.query.filter_by(username='faculty').first():
+            faculty_user = User(
+                username='faculty',
+                email='faculty@university.edu',
+                full_name='Dr. Smith (Faculty)',
+                role='faculty',
+                is_active=True,
+                is_email_verified=True
+            )
+            faculty_user.set_password('Faculty@123')
+            db.session.add(faculty_user)
+            db.session.commit()
+            print("FACULTY USER: Created initial faculty user (faculty / Faculty@123).")
+        
         # Seed sample jobs if empty
         if Job.query.count() == 0:
             sample_jobs = [

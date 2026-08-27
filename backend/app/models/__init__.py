@@ -9,6 +9,21 @@ from app.models.assessment import AssessmentResult
 from app.models.oauth import OAuth2Client
 from app.models.mentorship import MentorshipRequest
 from app.models.placement_nomination import PlacementNomination
+from app.models.learning import LearningProgress, LearningBookmark, LearningActivity
 
-__all__ = ['User', 'AuditLog', 'Resume', 'Job', 'ABTest', 'ABTestVariant', 'Notification', 'AssessmentResult', 'OAuth2Client', 'MentorshipRequest', 'PlacementNomination']
-
+__all__ = [
+    'User',
+    'AuditLog',
+    'Resume',
+    'Job',
+    'ABTest',
+    'ABTestVariant',
+    'Notification',
+    'AssessmentResult',
+    'OAuth2Client',
+    'MentorshipRequest',
+    'PlacementNomination',
+    'LearningProgress',
+    'LearningBookmark',
+    'LearningActivity'
+]

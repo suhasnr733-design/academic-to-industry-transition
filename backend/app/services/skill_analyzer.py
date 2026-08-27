@@ -112,6 +112,7 @@ class SkillAnalyzer:
         """Get target skills for a role/domain"""
         skill_map = {
             'Data Scientist': ['Python', 'Machine Learning', 'SQL', 'Statistics', 'Data Visualization', 'Deep Learning'],
+            'Data Analyst': ['Python', 'SQL', 'Excel', 'Power BI', 'Tableau', 'Statistics', 'Data Visualization'],
             'Software Engineer': ['Python', 'Java', 'SQL', 'Data Structures', 'Algorithms', 'Git'],
             'DevOps Engineer': ['Linux', 'Docker', 'Kubernetes', 'AWS', 'Jenkins', 'Git'],
             'Frontend Developer': ['JavaScript', 'React', 'HTML', 'CSS', 'Git', 'Redux'],

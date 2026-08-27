@@ -359,57 +359,68 @@ def forgot_password():
             }), 400
         
         user = User.query.filter_by(email=email).first()
-        if user and user.is_active:
-            from datetime import timedelta
-            reset_token = create_access_token(
-                identity=str(user.id),
-                expires_delta=timedelta(minutes=5),
-                additional_claims={'type': 'password_reset'}
+        if not user:
+            return jsonify({
+                'error': 'Account not registered',
+                'message': 'This email is not registered with us. Please check your email or sign up first.'
+            }), 404
+
+        if not user.is_active:
+            return jsonify({
+                'error': 'Account inactive',
+                'message': 'Your account is currently inactive. Please contact support.'
+            }), 403
+
+        from datetime import timedelta
+        reset_token = create_access_token(
+            identity=str(user.id),
+            expires_delta=timedelta(minutes=5),
+            additional_claims={'type': 'password_reset'}
+        )
+        
+        from flask import current_app
+        raw_origin = request.headers.get('Origin') or request.headers.get('Referer', '')
+        # Clean up referer if it has path like /forgot-password
+        if raw_origin:
+            from urllib.parse import urlparse
+            parsed = urlparse(raw_origin)
+            if parsed.scheme and parsed.netloc:
+                caller_origin = f"{parsed.scheme}://{parsed.netloc}"
+            else:
+                caller_origin = raw_origin.rstrip('/')
+        else:
+            caller_origin = None
+
+        frontend_url = caller_origin or current_app.config.get('FRONTEND_URL') or 'http://localhost:5173'
+        reset_link = f"{frontend_url}/reset-password?token={reset_token}"
+        
+        # Print to dev console for easy testing (ASCII-safe for Windows terminals)
+        logger.info(f"Password reset link generated for {user.email}: {reset_link}")
+        print(f"\n[PASSWORD RESET LINK for {user.email}]: {reset_link}\n", flush=True)
+
+        try:
+            from app import mail
+            from flask_mail import Message
+            
+            sender_email = (
+                current_app.config.get('MAIL_DEFAULT_SENDER') or 
+                current_app.config.get('MAIL_USERNAME') or 
+                'noreply@transitionalai.com'
             )
             
-            from flask import current_app
-            raw_origin = request.headers.get('Origin') or request.headers.get('Referer', '')
-            # Clean up referer if it has path like /forgot-password
-            if raw_origin:
-                from urllib.parse import urlparse
-                parsed = urlparse(raw_origin)
-                if parsed.scheme and parsed.netloc:
-                    caller_origin = f"{parsed.scheme}://{parsed.netloc}"
-                else:
-                    caller_origin = raw_origin.rstrip('/')
-            else:
-                caller_origin = None
-
-            frontend_url = caller_origin or current_app.config.get('FRONTEND_URL') or 'http://localhost:5173'
-            reset_link = f"{frontend_url}/reset-password?token={reset_token}"
-            
-            # Print to dev console for easy testing (ASCII-safe for Windows terminals)
-            logger.info(f"Password reset link generated for {user.email}: {reset_link}")
-            print(f"\n[PASSWORD RESET LINK for {user.email}]: {reset_link}\n", flush=True)
-
-            try:
-                from app import mail
-                from flask_mail import Message
-                
-                sender_email = (
-                    current_app.config.get('MAIL_DEFAULT_SENDER') or 
-                    current_app.config.get('MAIL_USERNAME') or 
-                    'noreply@transitionalai.com'
-                )
-                
-                msg = Message(
-                    subject="Password Reset Request - TransitionalAI",
-                    sender=sender_email,
-                    recipients=[user.email],
-                    body=(
-                        f"Hello {user.username},\n\n"
-                        f"We received a request to reset your password. Click the link below to reset your password:\n\n"
-                        f"{reset_link}\n\n"
-                        f"This link will expire in 5 minutes.\n\n"
-                        f"If you did not request this, please ignore this email.\n\n"
-                        f"Best regards,\nTransitionalAI Team"
-                    ),
-                    html=f"""<!DOCTYPE html>
+            msg = Message(
+                subject="Password Reset Request - TransitionalAI",
+                sender=sender_email,
+                recipients=[user.email],
+                body=(
+                    f"Hello {user.username},\n\n"
+                    f"We received a request to reset your password. Click the link below to reset your password:\n\n"
+                    f"{reset_link}\n\n"
+                    f"This link will expire in 5 minutes.\n\n"
+                    f"If you did not request this, please ignore this email.\n\n"
+                    f"Best regards,\nTransitionalAI Team"
+                ),
+                html=f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -457,15 +468,14 @@ def forgot_password():
     </div>
 </body>
 </html>"""
-                )
-                mail.send(msg)
-                logger.info(f"Password reset email sent to: {user.email}")
-            except Exception as mail_err:
-                logger.warning(f"SMTP send notice (Brevo/Mail configuration): {mail_err}")
+            )
+            mail.send(msg)
+            logger.info(f"Password reset email sent to: {user.email}")
+        except Exception as mail_err:
+            logger.warning(f"SMTP send notice (Brevo/Mail configuration): {mail_err}")
 
-        # Return generic success response to prevent user enumeration
         return jsonify({
-            'message': 'If an account exists for that email address, a password reset link has been sent to your inbox.'
+            'message': f'Password reset link has been sent to {user.email}. Please check your inbox.'
         }), 200
         
     except Exception as e:

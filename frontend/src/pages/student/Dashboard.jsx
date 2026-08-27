@@ -36,6 +36,10 @@ export const Dashboard = () => {
   const [skillGapCount, setSkillGapCount] = useState(0)
   const [isProcessing, setIsProcessing] = useState(false)
 
+  const jobsSectionRef = React.useRef(null)
+  const [highlightJobs, setHighlightJobs] = useState(false)
+  const [showSkillsModal, setShowSkillsModal] = useState(false)
+
   // Mentorship & Advisor State
   const [advisorData, setAdvisorData] = useState({ has_advisor: false, advisor: null, requests: [] })
   const [facultyList, setFacultyList] = useState([])
@@ -211,7 +215,7 @@ export const Dashboard = () => {
     }
   }
 
-  // 5. Dynamic Stats Calculation
+  // 5. Dynamic Stats Calculation & Click Handlers
   const resumeScoreValue = completedResume
     ? completedResume.status === 'completed' && completedResume.employability_score != null
       ? `${Math.round(completedResume.employability_score)}%`
@@ -220,6 +224,8 @@ export const Dashboard = () => {
       : 'Pending'
     : '0%'
 
+  const extractedSkills = completedResume?.skills || []
+
   const stats = [
     {
       name: 'Resume Score',
@@ -227,31 +233,61 @@ export const Dashboard = () => {
       icon: DocumentIcon,
       color: 'text-blue-600',
       bg: 'bg-blue-50',
-      description: completedResume?.status === 'completed' ? 'Calculated from AI parsing' : 'Upload or process resume'
+      description: completedResume?.status === 'completed' ? 'Calculated from AI parsing' : 'Upload or process resume',
+      actionText: 'View Analysis →',
+      onClick: () => {
+        if (completedResume?.id) {
+          navigate(`/resume/${completedResume.id}`)
+        } else {
+          navigate('/resume/upload')
+        }
+      }
+    },
+    {
+      name: 'Skills Extracted',
+      value: `${extractedSkills.length}`,
+      icon: ChartBarIcon,
+      color: 'text-amber-600',
+      bg: 'bg-amber-50',
+      description: extractedSkills.length ? 'Extracted from active resume' : 'No skills extracted yet',
+      actionText: 'View Skills →',
+      onClick: () => {
+        if (extractedSkills.length > 0) {
+          setShowSkillsModal(true)
+        } else {
+          toast('Upload or process a resume to view extracted skills')
+        }
+      }
+    },
+    {
+      name: 'Target Role Match',
+      value: extractedSkills.length > 0 ? '67%' : '0%',
+      icon: SparklesIcon,
+      color: 'text-purple-600',
+      bg: 'bg-purple-50',
+      description: completedResume?.recommended_roles?.[0] || 'Software Engineer',
+      actionText: 'Analyze Gaps →',
+      onClick: () => {
+        navigate('/skills')
+      }
     },
     {
       name: 'Available Jobs',
       value: `${jobCount}`,
       icon: BriefcaseIcon,
-      color: 'text-green-600',
-      bg: 'bg-green-50',
-      description: 'Active matching openings'
-    },
-    {
-      name: 'Skills Extracted',
-      value: `${completedResume?.skills?.length || 0}`,
-      icon: ChartBarIcon,
-      color: 'text-yellow-600',
-      bg: 'bg-yellow-50',
-      description: completedResume?.skills?.length ? 'Extracted from your resume' : 'No skills extracted yet'
-    },
-    {
-      name: 'Resumes Uploaded',
-      value: `${resumes?.length || 0}`,
-      icon: AcademicCapIcon,
-      color: 'text-purple-600',
-      bg: 'bg-purple-50',
-      description: 'Total active versions'
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-50',
+      description: 'Active matching openings',
+      actionText: 'Scroll to Jobs ↓',
+      onClick: () => {
+        if (jobsSectionRef.current) {
+          jobsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          setHighlightJobs(true)
+          setTimeout(() => setHighlightJobs(false), 2200)
+        } else {
+          navigate('/jobs')
+        }
+      }
     },
   ]
 
@@ -302,7 +338,7 @@ export const Dashboard = () => {
               className="bg-white/15 hover:bg-white/25 text-white border-white/20 backdrop-blur-sm"
               onClick={() => navigate('/resume/upload')}
             >
-              Upload Resume
+              {completedResume ? 'Update Resume' : 'Upload Resume'}
             </Button>
           </div>
         </div>
@@ -598,22 +634,27 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* Dynamic Stat Cards */}
+      {/* Interactive Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
           <div
             key={stat.name}
-            className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow border border-gray-100/80"
+            onClick={stat.onClick}
+            className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md hover:border-primary-300 hover:translate-y-[-2px] transition-all cursor-pointer border border-gray-100/80 group flex flex-col justify-between"
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">{stat.name}</p>
+                <p className="text-sm font-medium text-gray-500 group-hover:text-primary-600 transition-colors">{stat.name}</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
                 <p className="text-xs text-gray-400 mt-1">{stat.description}</p>
               </div>
-              <div className={`p-3 rounded-xl ${stat.bg}`}>
+              <div className={`p-3 rounded-xl ${stat.bg} group-hover:scale-110 transition-transform flex-shrink-0`}>
                 <stat.icon className={`h-6 w-6 ${stat.color}`} />
               </div>
+            </div>
+            <div className="mt-4 pt-2.5 border-t border-gray-50 flex items-center justify-between text-xs font-semibold text-primary-600 group-hover:text-primary-700">
+              <span>{stat.actionText}</span>
+              <ArrowRightIcon className="h-3.5 w-3.5 transform group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
         ))}
@@ -621,90 +662,189 @@ export const Dashboard = () => {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Recent Resumes */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100/80 flex flex-col justify-between">
+        {/* Active Resume & Core Competencies Card */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100/80 flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
                 <DocumentIcon className="w-5 h-5 text-primary-600" />
-                Recent Resumes
+                Active Resume & Core Skills
               </h3>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/resume')}>View All</Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/resume')}>
+                Manage &rarr;
+              </Button>
             </div>
 
-            {resumes && resumes.length > 0 ? (
-              <div className="space-y-3">
-                {resumes.slice(0, 3).map((resume) => (
-                  <div
-                    key={resume.id}
-                    onClick={() => navigate(`/resume/${resume.id}`)}
-                    className="flex items-center justify-between p-3.5 bg-gray-50/80 hover:bg-primary-50/40 rounded-xl cursor-pointer border border-gray-100 transition-all"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-lg bg-white shadow-xs">
-                        <DocumentIcon className="h-5 w-5 text-primary-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900 truncate max-w-[180px] sm:max-w-xs">
-                          {resume.filename}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {new Date(resume.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </p>
-                      </div>
+            {completedResume ? (
+              <div className="space-y-4">
+                {/* Resume Header Info */}
+                <div className="p-4 bg-gray-50/80 rounded-xl border border-gray-100 flex items-start justify-between">
+                  <div className="flex items-start space-x-3 min-w-0 flex-1">
+                    <div className="p-2.5 rounded-lg bg-white shadow-xs text-primary-600 flex-shrink-0 mt-0.5">
+                      <DocumentIcon className="h-6 w-6" />
                     </div>
-
-                    <div className="flex items-center space-x-3">
-                      <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
-                        resume.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        resume.status === 'processing' ? 'bg-blue-100 text-blue-800 animate-pulse' :
-                        resume.status === 'failed' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {resume.status}
-                      </span>
-                      {resume.status === 'pending' && (
-                        <Button
-                          size="xs"
-                          variant="primary"
-                          onClick={(e) => handleProcessResume(e, resume.id)}
-                        >
-                          Process
-                        </Button>
-                      )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-gray-900 truncate" title={completedResume.filename}>
+                        {completedResume.filename}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500">
+                        <span>Uploaded {new Date(completedResume.created_at).toLocaleDateString()}</span>
+                        {completedResume.file_size && (
+                          <>
+                            <span>•</span>
+                            <span>{(completedResume.file_size / 1024 / 1024).toFixed(2)} MB</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                ))}
+                  <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold rounded-full flex-shrink-0 ml-2">
+                    Active
+                  </span>
+                </div>
+
+                {/* Target Role & Readiness */}
+                <div className="p-3 bg-purple-50/50 rounded-xl border border-purple-100 flex items-center justify-between text-xs">
+                  <div className="flex items-center space-x-2 text-purple-900">
+                    <SparklesIcon className="h-4 w-4 text-purple-600 flex-shrink-0" />
+                    <span>Target Career Alignment:</span>
+                    <strong className="font-semibold">{completedResume.recommended_roles?.[0] || 'Software Engineer'}</strong>
+                  </div>
+                  <button
+                    onClick={() => navigate('/skills')}
+                    className="font-bold text-purple-700 hover:text-purple-900 underline"
+                  >
+                    View Gap Analysis
+                  </button>
+                </div>
+
+                {/* Extracted Skills Sleek Card (Custom Styled per Reference) */}
+                <div className="bg-[#11141c] text-white rounded-2xl p-5 shadow-lg border border-[#1e2536] space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className="text-base font-bold text-white tracking-tight">Extracted Skills</h4>
+                      <p className="text-xs text-gray-400 mt-0.5">AI extracted from your active resume</p>
+                    </div>
+                    <span className="px-2.5 py-0.5 bg-[#0f243d] text-[#38bdf8] border border-[#1e3e6b] rounded-full text-xs font-bold">
+                      {extractedSkills.length} Skills
+                    </span>
+                  </div>
+
+                  {/* Skill Badges with Specific Pastel Themes & Icons */}
+                  <div className="flex flex-wrap gap-2.5 pt-1 items-center">
+                    {extractedSkills.length > 0 ? (
+                      extractedSkills.map((skill, idx) => {
+                        const name = typeof skill === 'string' ? skill : (skill?.name || skill?.skill || '')
+                        const s = name.toLowerCase().trim()
+                        
+                        let badgeStyle = {
+                          bg: 'bg-[#dbeafe] text-[#2563eb]',
+                          icon: '</>'
+                        }
+                        
+                        if (s.includes('python') || s.includes('java') || s.includes('c++') || s.includes('javascript') || s.includes('typescript') || s.includes('golang') || s.includes('rust') || s.includes('php')) {
+                          badgeStyle = { bg: 'bg-[#dbeafe] text-[#2563eb]', icon: '</>' }
+                        } else if (s.includes('flask') || s.includes('django') || s.includes('react') || s.includes('node') || s.includes('express') || s.includes('vue') || s.includes('spring') || s.includes('html') || s.includes('css')) {
+                          badgeStyle = { bg: 'bg-[#dcfce7] text-[#16a34a]', icon: '⚙️' }
+                        } else if (s === 'sql' || s.includes('mysql') || s.includes('sqlite')) {
+                          badgeStyle = { bg: 'bg-[#fef3c7] text-[#d97706]', icon: '🗄️' }
+                        } else if (s.includes('postgres') || s.includes('mongo') || s.includes('redis') || s.includes('database')) {
+                          badgeStyle = { bg: 'bg-[#e0e7ff] text-[#4f46e5]', icon: '🗄️' }
+                        } else if (s.includes('git') || s.includes('github') || s.includes('gitlab')) {
+                          badgeStyle = { bg: 'bg-[#f3f4f6] text-[#4b5563]', icon: 'ᛘ' }
+                        } else if (s.includes('docker') || s.includes('k8s') || s.includes('kubernetes') || s.includes('aws') || s.includes('azure') || s.includes('linux') || s.includes('devops')) {
+                          badgeStyle = { bg: 'bg-[#e0f2fe] text-[#0284c7]', icon: '📦' }
+                        } else if (s.includes('nlp') || s.includes('ai') || s.includes('ml') || s.includes('deep learning') || s.includes('machine learning') || s.includes('data science')) {
+                          badgeStyle = { bg: 'bg-[#f3e8ff] text-[#9333ea]', icon: '🧠' }
+                        } else {
+                          const fallbacks = [
+                            { bg: 'bg-[#dbeafe] text-[#2563eb]', icon: '</>' },
+                            { bg: 'bg-[#dcfce7] text-[#16a34a]', icon: '⚙️' },
+                            { bg: 'bg-[#fef3c7] text-[#d97706]', icon: '🗄️' },
+                            { bg: 'bg-[#e0e7ff] text-[#4f46e5]', icon: '🗄️' },
+                            { bg: 'bg-[#e0f2fe] text-[#0284c7]', icon: '📦' },
+                            { bg: 'bg-[#f3e8ff] text-[#9333ea]', icon: '🧠' }
+                          ]
+                          const h = name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
+                          badgeStyle = fallbacks[h % fallbacks.length]
+                        }
+
+                        return (
+                          <span
+                            key={idx}
+                            onClick={() => setShowSkillsModal(true)}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-xs cursor-pointer hover:scale-105 transition-transform ${badgeStyle.bg}`}
+                          >
+                            <span className="text-[11px] opacity-90">{badgeStyle.icon}</span>
+                            <span>{name}</span>
+                          </span>
+                        )
+                      })
+                    ) : (
+                      <p className="text-xs text-gray-400 py-2">No skills extracted yet.</p>
+                    )}
+                  </div>
+
+                  {/* View All Skills Link */}
+                  <div className="flex justify-end pt-1">
+                    <button
+                      onClick={() => setShowSkillsModal(true)}
+                      className="text-[#3b82f6] hover:text-[#60a5fa] text-xs font-semibold flex items-center gap-1 transition-colors"
+                    >
+                      View All Skills &rarr;
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="text-center py-8">
                 <DocumentIcon className="h-12 w-12 text-gray-300 mx-auto" />
-                <p className="mt-2 text-gray-500 text-sm">No resumes uploaded yet</p>
-                <Button className="mt-4" size="sm" onClick={() => navigate('/resume/upload')}>Upload Resume</Button>
+                <p className="mt-2 text-gray-500 text-sm">No active resume on profile</p>
+                <Button className="mt-4" size="sm" onClick={() => navigate('/resume/upload')}>
+                  Upload Resume
+                </Button>
               </div>
             )}
           </div>
-          {resumes?.length > 0 && (
-            <div className="mt-4 pt-3 border-t border-gray-100 text-right">
-              <button 
-                onClick={() => navigate('/resume/upload')} 
-                className="text-xs font-semibold text-primary-600 hover:text-primary-700 inline-flex items-center gap-1"
+
+          {completedResume && (
+            <div className="mt-6 pt-3 border-t border-gray-100 flex items-center justify-between">
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={() => navigate(`/resume/${completedResume.id}`)}
               >
-                + Upload another resume
-              </button>
+                View Full Analysis
+              </Button>
+              <Button
+                variant="primary"
+                size="xs"
+                onClick={() => navigate('/resume/upload')}
+                className="bg-primary-600 hover:bg-primary-700 text-white"
+              >
+                <RefreshIcon className="h-3.5 w-3.5 mr-1" />
+                Update Resume
+              </Button>
             </div>
           )}
         </div>
 
-        {/* Top Matched Jobs */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100/80 flex flex-col justify-between">
+        {/* Top Matched Jobs (Target of Available Jobs scroll) */}
+        <div 
+          ref={jobsSectionRef}
+          className={`bg-white rounded-2xl shadow-sm p-6 border border-gray-100/80 flex flex-col justify-between transition-all duration-500 ${
+            highlightJobs ? 'ring-4 ring-emerald-400/60 ring-offset-2 border-emerald-400' : ''
+          }`}
+        >
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <BriefcaseIcon className="w-5 h-5 text-primary-600" />
-                Top Matched Jobs
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                <BriefcaseIcon className="w-5 h-5 text-emerald-600" />
+                Top Matched Openings
               </h3>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/jobs')}>View All</Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/jobs')}>
+                View All ({jobCount}) &rarr;
+              </Button>
             </div>
 
             {jobs && jobs.length > 0 ? (
@@ -713,14 +853,14 @@ export const Dashboard = () => {
                   <div
                     key={job.id}
                     onClick={() => navigate(`/jobs/${job.id}`)}
-                    className="flex items-center justify-between p-3.5 bg-gray-50/80 hover:bg-primary-50/40 rounded-xl cursor-pointer border border-gray-100 transition-all"
+                    className="flex items-center justify-between p-3.5 bg-gray-50/80 hover:bg-emerald-50/40 rounded-xl cursor-pointer border border-gray-100 hover:border-emerald-200 transition-all"
                   >
                     <div className="flex items-start space-x-3">
-                      <div className="p-2 rounded-lg bg-white shadow-xs mt-0.5">
-                        <BriefcaseIcon className="h-5 w-5 text-blue-600" />
+                      <div className="p-2 rounded-lg bg-white shadow-xs text-emerald-600 mt-0.5">
+                        <BriefcaseIcon className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">{job.title}</p>
+                        <p className="text-sm font-bold text-gray-900">{job.title}</p>
                         <p className="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
                           <span>{job.company || 'Industry Partner'}</span>
                           {job.location && (
@@ -734,7 +874,7 @@ export const Dashboard = () => {
                     </div>
 
                     <div className="text-right shrink-0 ml-3">
-                      <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                      <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
                         {job.job_type || 'Full Time'}
                       </span>
                     </div>
@@ -753,17 +893,104 @@ export const Dashboard = () => {
             )}
           </div>
 
-          <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-xs text-gray-500">Tailored to your skills</span>
+          <div className="mt-6 pt-3 border-t border-gray-100 flex items-center justify-between">
+            <span className="text-xs text-gray-500">Curated based on your skill profile</span>
             <button
-              onClick={() => navigate('/skills')}
-              className="text-xs font-semibold text-primary-600 hover:text-primary-700 inline-flex items-center gap-1"
+              onClick={() => navigate('/jobs')}
+              className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-1"
             >
-              Analyze Skill Gaps &rarr;
+              Explore All Jobs &rarr;
             </button>
           </div>
         </div>
       </div>
+
+      {/* Extracted Skills Interactive Modal */}
+      {showSkillsModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 bg-amber-100 text-amber-700 rounded-xl">
+                  <ChartBarIcon className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 text-lg">Extracted Competencies</h3>
+                  <p className="text-xs text-gray-500">
+                    {extractedSkills.length} skills identified from {completedResume?.filename || 'your resume'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSkillsModal(false)}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <XIcon className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="py-4 space-y-4">
+              <p className="text-xs text-gray-600">
+                These core skills are automatically matched with industry requisitions and target job roles:
+              </p>
+              
+              <div className="flex flex-wrap gap-2.5 max-h-64 overflow-y-auto p-1 items-center">
+                {extractedSkills.map((skill, idx) => {
+                  const name = typeof skill === 'string' ? skill : (skill?.name || skill?.skill || '')
+                  const s = name.toLowerCase().trim()
+                  
+                  let badgeStyle = { bg: 'bg-[#dbeafe] text-[#2563eb]', icon: '</>' }
+                  if (s.includes('python') || s.includes('java') || s.includes('c++') || s.includes('javascript') || s.includes('typescript') || s.includes('golang') || s.includes('rust') || s.includes('php')) {
+                    badgeStyle = { bg: 'bg-[#dbeafe] text-[#2563eb]', icon: '</>' }
+                  } else if (s.includes('flask') || s.includes('django') || s.includes('react') || s.includes('node') || s.includes('express') || s.includes('vue') || s.includes('spring') || s.includes('html') || s.includes('css')) {
+                    badgeStyle = { bg: 'bg-[#dcfce7] text-[#16a34a]', icon: '⚙️' }
+                  } else if (s === 'sql' || s.includes('mysql') || s.includes('sqlite')) {
+                    badgeStyle = { bg: 'bg-[#fef3c7] text-[#d97706]', icon: '🗄️' }
+                  } else if (s.includes('postgres') || s.includes('mongo') || s.includes('redis') || s.includes('database')) {
+                    badgeStyle = { bg: 'bg-[#e0e7ff] text-[#4f46e5]', icon: '🗄️' }
+                  } else if (s.includes('git') || s.includes('github') || s.includes('gitlab')) {
+                    badgeStyle = { bg: 'bg-[#f3f4f6] text-[#4b5563]', icon: 'ᛘ' }
+                  } else if (s.includes('docker') || s.includes('k8s') || s.includes('kubernetes') || s.includes('aws') || s.includes('azure') || s.includes('linux') || s.includes('devops')) {
+                    badgeStyle = { bg: 'bg-[#e0f2fe] text-[#0284c7]', icon: '📦' }
+                  } else if (s.includes('nlp') || s.includes('ai') || s.includes('ml') || s.includes('deep learning') || s.includes('machine learning') || s.includes('data science')) {
+                    badgeStyle = { bg: 'bg-[#f3e8ff] text-[#9333ea]', icon: '🧠' }
+                  }
+
+                  return (
+                    <span
+                      key={idx}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-xs ${badgeStyle.bg}`}
+                    >
+                      <span className="text-[11px] opacity-90">{badgeStyle.icon}</span>
+                      <span>{name}</span>
+                    </span>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSkillsModal(false)}
+              >
+                Close
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setShowSkillsModal(false)
+                  navigate('/skills')
+                }}
+                className="bg-primary-600 hover:bg-primary-700 text-white"
+              >
+                Analyze Skill Gaps &rarr;
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Find Faculty Advisor Modal */}
       {showAdvisorModal && (

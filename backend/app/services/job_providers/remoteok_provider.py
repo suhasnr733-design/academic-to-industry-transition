@@ -32,19 +32,17 @@ class RemoteOKProvider(BaseJobProvider):
             data = response.json()
             raw_jobs = [item for item in data if isinstance(item, dict) and item.get('id')]
             
-            query_terms = [t.lower() for t in query.split()] if query else []
-            
             for item in raw_jobs:
                 title = item.get('position', '')
                 company = item.get('company', '')
-                tags = item.get('tags', []) or []
+                raw_tags = item.get('tags', []) or []
+                clean_tags = [str(t).strip() for t in raw_tags if str(t).strip()]
                 raw_desc = item.get('description', '')
                 clean_desc = re.sub(r'<[^>]+>', ' ', raw_desc).strip()
-                
-                # Filter by query terms
-                if query_terms:
-                    searchable = f"{title} {company} {' '.join(tags)} {clean_desc}".lower()
-                    if not any(t in searchable for t in query_terms):
+
+                # Filter by query terms with title priority & strict match
+                if query:
+                    if not self.is_query_relevant(query, title, clean_tags, clean_desc):
                         continue
                 
                 salary_min = item.get('salary_min')
@@ -59,15 +57,15 @@ class RemoteOKProvider(BaseJobProvider):
                     description=clean_desc[:1500] if clean_desc else 'Remote role.',
                     apply_url=apply_url,
                     source='remoteok',
-                    location=item.get('location') or 'Remote / Worldwide',
-                    required_skills=tags[:6],
+                    location=str(item.get('location') or 'Remote / Worldwide').strip().rstrip(','),
+                    required_skills=clean_tags[:6],
                     job_type='Full-time',
                     domain='Tech & Software',
                     salary_range=salary_range,
                     salary_min=float(salary_min) if salary_min else None,
                     salary_max=float(salary_max) if salary_max else None,
                     posted_date=item.get('date'),
-                    raw_data={'tags': tags}
+                    raw_data={'tags': clean_tags}
                 )
                 jobs.append(normalized)
                 
@@ -78,5 +76,5 @@ class RemoteOKProvider(BaseJobProvider):
             return jobs
             
         except Exception as e:
-            logger.warning(f"RemoteOKProvider error during search: {e}")
+            logger.debug(f"RemoteOKProvider unavailable/network drop: {e}")
             return []

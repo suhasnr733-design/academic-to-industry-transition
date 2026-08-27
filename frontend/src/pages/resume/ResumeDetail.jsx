@@ -3,13 +3,15 @@
 import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useResume } from '../../hooks/useResume'
+import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../../components/common/Button'
 import { Heading } from '../../components/common/Typography'
-import { ArrowLeftIcon } from '@heroicons/react/outline'
+import { ArrowLeftIcon, DocumentTextIcon } from '@heroicons/react/outline'
 
 export const ResumeDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { getResume, deleteResume, isLoading } = useResume()
   const [resume, setResume] = React.useState(null)
   const [fetchError, setFetchError] = React.useState(null)
@@ -35,6 +37,21 @@ export const ResumeDetail = () => {
       navigate('/resume')
     }
   }
+
+  // Derive candidate name cleanly from resume user data, current user, or filename
+  const candidateName = React.useMemo(() => {
+    if (resume?.candidate_name) return resume.candidate_name
+    if (user?.full_name) return user.full_name
+    if (resume?.filename) {
+      // Remove extension and format underscores / hyphens to clean title case
+      const cleaned = resume.filename
+        .replace(/\.[^/.]+$/, '')
+        .replace(/[-_]/g, ' ')
+        .replace(/\b\w/g, char => char.toUpperCase())
+      return cleaned
+    }
+    return 'Candidate Resume'
+  }, [resume, user])
 
   if (isLoading && !resume) {
     return (
@@ -69,18 +86,34 @@ export const ResumeDetail = () => {
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
-          <div className="flex items-start justify-between">
-            <div>
-              <Heading level={2}>{resume.filename}</Heading>
-              <p className="text-gray-500 mt-1">
-                Uploaded on {resume.created_at ? new Date(resume.created_at).toLocaleDateString() : 'N/A'}
-              </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <Heading level={2} className="text-gray-900 truncate">
+                {candidateName}
+              </Heading>
+              <div className="flex flex-wrap items-center gap-y-1 gap-x-2 text-sm text-gray-500 mt-1.5">
+                <span>
+                  Uploaded on {resume.created_at ? new Date(resume.created_at).toLocaleDateString() : 'N/A'}
+                </span>
+                {resume.filename && (
+                  <>
+                    <span className="text-gray-300">•</span>
+                    <span 
+                      className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 max-w-xs truncate"
+                      title={resume.filename}
+                    >
+                      <DocumentTextIcon className="h-3.5 w-3.5 mr-1 text-gray-400 flex-shrink-0" />
+                      <span className="truncate">{resume.filename}</span>
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm" onClick={() => navigate(`/skills/${resume.id}`)}>
+            <div className="flex items-center space-x-2.5 flex-shrink-0">
+              <Button variant="outline" size="sm" onClick={() => navigate(`/skills/${resume.id}`)} className="whitespace-nowrap">
                 Skill Gap Analysis
               </Button>
-              <Button variant="danger" size="sm" onClick={handleDelete}>
+              <Button variant="danger" size="sm" onClick={handleDelete} className="whitespace-nowrap">
                 Delete
               </Button>
             </div>

@@ -7,40 +7,45 @@ export const useSkills = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  const getGapAnalysis = useCallback(async (resumeId) => {
+  const getGapAnalysis = useCallback(async (resumeId, targetRole) => {
     try {
       setIsLoading(true)
-      const targetId = resumeId || 1
-      const res = await api.get(`/prediction/skill-gap/${targetId}`)
+      setError(null)
+      const url = resumeId ? `/prediction/skill-gap/${resumeId}` : `/prediction/skill-gap/latest`
+      const params = {}
+      if (targetRole) {
+        params.target_role = targetRole
+      }
+      const res = await api.get(url, { params })
       return res.data
     } catch (err) {
-      console.log('Error fetching gap analysis:', err)
-      setError(err.response?.data?.error || 'Failed to fetch skill gap analysis')
+      console.error('Error fetching gap analysis:', err)
+      const errMessage = err.response?.data?.error || 'Failed to fetch skill gap analysis'
+      setError(errMessage)
       return {
+        error: errMessage,
+        no_resume: err.response?.data?.no_resume || err.response?.status === 404,
         match_percentage: 0,
         matching_skills: [],
         missing_skills: [],
         recommendations: [],
-        learning_path: []
+        learning_path: [],
+        available_roles: ['Software Engineer', 'DevOps Engineer', 'Frontend Developer', 'Backend Developer', 'Data Scientist', 'ML Engineer']
       }
     } finally {
       setIsLoading(false)
     }
   }, [])
 
-  const learningPath = useCallback(async (resumeId) => {
+  const learningPath = useCallback(async (resumeId, targetRole) => {
     try {
       setIsLoading(true)
-      if (!resumeId) {
-        const resumesRes = await api.get('/resume')
-        const resumesList = resumesRes.data?.resumes || resumesRes.data || []
-        if (resumesList.length > 0) {
-          resumeId = resumesList[0].id
-        }
+      const url = resumeId ? `/prediction/skill-gap/${resumeId}` : `/prediction/skill-gap/latest`
+      const params = {}
+      if (targetRole) {
+        params.target_role = targetRole
       }
-      if (!resumeId) return []
-      
-      const res = await api.get(`/prediction/skill-gap/${resumeId}`)
+      const res = await api.get(url, { params })
       if (res.data && res.data.learning_path && res.data.learning_path.length > 0) {
         return res.data.learning_path
       }

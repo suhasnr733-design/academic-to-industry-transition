@@ -1,8 +1,7 @@
-// src/pages/jobs/JobList.jsx
-
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useJobs } from '../../hooks/useJobs'
+import { useResume } from '../../hooks/useResume'
 import { Button } from '../../components/common/Button'
 import { Heading } from '../../components/common/Typography'
 import { Input } from '../../components/common/Input'
@@ -21,6 +20,34 @@ import {
 
 export const JobList = () => {
   const [searchParams, setSearchParams] = useSearchParams()
+  const { resumes } = useResume()
+  const activeResume = resumes?.find(r => r.status === 'completed') || resumes?.[0]
+  const hasActiveResume = Boolean(activeResume && (activeResume.status === 'completed' || (activeResume.skills && activeResume.skills.length > 0)))
+
+  const userSkills = useMemo(() => {
+    return (activeResume?.skills || []).map(s => String(s).toLowerCase().trim())
+  }, [activeResume])
+
+  const calculateMatchScore = (job) => {
+    if (job.match_score !== undefined && job.match_score !== null && job.match_score > 0) {
+      return Math.round(job.match_score)
+    }
+
+    const required = (job.required_skills || []).map(s => String(s).toLowerCase().trim())
+    if (required.length === 0) {
+      return 78
+    }
+
+    if (userSkills.length === 0) return 60
+
+    const matched = required.filter(req => 
+      userSkills.some(uSkill => uSkill.includes(req) || req.includes(uSkill))
+    )
+
+    const score = Math.round((matched.length / required.length) * 100)
+    return Math.min(98, Math.max(50, score > 0 ? score : 55))
+  }
+
   const { 
     jobs, 
     isLoading, 
@@ -46,7 +73,7 @@ export const JobList = () => {
   const applyFilters = () => {
     if (isLiveMode) {
       fetchLiveJobs({
-        search: filters.search || 'Software Engineer',
+        search: filters.search || '',
         location: filters.location || ''
       })
     } else {
@@ -62,7 +89,7 @@ export const JobList = () => {
     setIsLiveMode(enableLive)
     if (enableLive) {
       fetchLiveJobs({
-        search: filters.search || 'Software Engineer',
+        search: filters.search || '',
         location: filters.location || ''
       })
     } else {
@@ -73,7 +100,7 @@ export const JobList = () => {
   const clearFilters = () => {
     setFilters({ domain: '', location: '', search: '' })
     if (isLiveMode) {
-      fetchLiveJobs({ search: 'Software Engineer' })
+      fetchLiveJobs({ search: '' })
     } else {
       fetchJobs()
     }
@@ -179,9 +206,9 @@ export const JobList = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Input
-            label="Search Keywords"
+            label="Job Role"
             name="search"
-            placeholder={isLiveMode ? "e.g. Research Scientist, Python, Machine Learning..." : "Job title, company..."}
+            placeholder="e.g. DevOps Engineer, Data Analyst, Software Engineer..."
             value={filters.search}
             onChange={handleFilterChange}
           />
@@ -276,16 +303,23 @@ export const JobList = () => {
                   </div>
 
                   {/* Academic Tags & Transition Highlights */}
-                  {job.academic_tags && job.academic_tags.length > 0 && (
+                  {job.academic_tags && job.academic_tags.length > 0 ? (
                     <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
-                      <span className="text-xs text-gray-400 font-medium flex items-center gap-1">
-                        <AcademicCapIcon className="h-3.5 w-3.5 text-indigo-500" /> Academic Fit:
-                      </span>
                       {job.academic_tags.map((tag, idx) => (
-                        <span key={idx} className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium border border-indigo-100">
+                        <span 
+                          key={idx} 
+                          className="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-semibold border border-indigo-100 flex items-center gap-1"
+                        >
+                          <AcademicCapIcon className="h-3.5 w-3.5 text-indigo-600" />
                           {tag}
                         </span>
                       ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+                      <span className="px-2.5 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium border border-gray-200">
+                        💼 Industry Direct
+                      </span>
                     </div>
                   )}
 
@@ -297,9 +331,12 @@ export const JobList = () => {
 
                   {/* Skills Display */}
                   {job.required_skills && job.required_skills.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-3">
+                    <div className="flex flex-wrap items-center gap-2 mt-3">
                       {job.required_skills.slice(0, 7).map((skill, idx) => (
-                        <span key={idx} className="px-2 py-0.5 bg-gray-50 text-gray-600 rounded border text-xs">
+                        <span 
+                          key={idx} 
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-300 shadow-sm"
+                        >
                           {skill}
                         </span>
                       ))}
@@ -309,24 +346,24 @@ export const JobList = () => {
 
                 {/* Match Score & Actions */}
                 <div className="flex flex-col sm:flex-row md:flex-col items-end justify-between gap-3 min-w-[150px]">
-                  {job.academic_fit_score !== undefined && (
-                    <div className="text-right">
-                      <div className={`px-2.5 py-1 rounded-lg border text-sm font-bold inline-flex items-center gap-1 ${getAcademicFitColor(job.academic_fit_score)}`}>
-                        <AcademicCapIcon className="h-4 w-4" />
-                        {job.academic_fit_score}% Fit
+                  {/* Single Personal Resume Match Status */}
+                  <div className="text-right">
+                    {hasActiveResume ? (
+                      <div className="bg-primary-50/80 border border-primary-100 px-3 py-1.5 rounded-xl text-right">
+                        <div className="text-xl font-bold text-primary-700 leading-tight">
+                          {calculateMatchScore(job)}%
+                        </div>
+                        <div className="text-[11px] font-medium text-primary-600">Resume Match</div>
                       </div>
-                      <div className="text-[11px] text-gray-400 mt-0.5">Academic Match</div>
-                    </div>
-                  )}
-
-                  {job.match_score !== undefined && (
-                    <div className="text-right">
-                      <div className="text-xl font-bold text-primary-600">
-                        {job.match_score}%
-                      </div>
-                      <div className="text-xs text-gray-400">Resume Match</div>
-                    </div>
-                  )}
+                    ) : (
+                      <Link 
+                        to="/resume" 
+                        className="text-xs font-medium text-primary-600 hover:text-primary-700 bg-primary-50 px-2.5 py-1.5 rounded-lg border border-primary-100 hover:underline inline-flex items-center gap-1"
+                      >
+                        📄 Upload Resume to Match
+                      </Link>
+                    )}
+                  </div>
 
                   <div className="flex items-center gap-2 w-full">
                     {job.apply_url ? (
