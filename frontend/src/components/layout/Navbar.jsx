@@ -1,7 +1,5 @@
-// src/components/layout/Navbar.jsx
-
 import React from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../common/Button'
 import { 
@@ -19,7 +17,21 @@ import { RecommendedActionsDropdown } from './RecommendedActionsDropdown'
 export const Navbar = ({ onMenuClick }) => {
   const { isAuthenticated, user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [showDropdown, setShowDropdown] = React.useState(false)
+
+  const authPaths = [
+    '/login',
+    '/register',
+    '/faculty/login',
+    '/faculty/register',
+    '/forgot-password',
+    '/forgot_password',
+    '/reset-password',
+    '/reset_password',
+    '/auth/callback'
+  ]
+  const isAuthPage = authPaths.includes(location.pathname) || location.pathname.startsWith('/reset-password/')
 
   const handleLogout = () => {
     logout()
@@ -62,7 +74,7 @@ export const Navbar = ({ onMenuClick }) => {
                 <span className="text-lg font-bold text-gray-900 leading-none block">
                   TransitionAI
                 </span>
-                {isAuthenticated && (
+                {isAuthenticated && !isAuthPage && (
                   <span className="text-[11px] font-medium text-gray-500 block leading-tight">
                     {isFaculty ? 'Faculty Portal' : isAdmin ? 'Admin Console' : 'Student Portal'}
                   </span>
@@ -73,7 +85,7 @@ export const Navbar = ({ onMenuClick }) => {
 
           {/* Right side */}
           <div className="flex items-center space-x-3 sm:space-x-4">
-            {isAuthenticated ? (
+            {isAuthenticated && !isAuthPage ? (
               <>
                 {/* Recommended Actions Top Bar Menu (Students Only) */}
                 {isStudent && (

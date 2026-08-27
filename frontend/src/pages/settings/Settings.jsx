@@ -1,17 +1,36 @@
-// frontend/src/pages/settings/Settings.jsx
-
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FiSettings, FiBell, FiShield, FiKey, FiMail, FiLock, FiCheck, FiUser } from 'react-icons/fi'
+import {
+  FiSettings,
+  FiBell,
+  FiShield,
+  FiKey,
+  FiMail,
+  FiLock,
+  FiCheck,
+  FiUser,
+  FiEye,
+  FiEyeOff
+} from 'react-icons/fi'
 import { useAuth } from '../../hooks/useAuth'
 import { api } from '../../services/api'
 import toast from 'react-hot-toast'
 
 export default function Settings() {
-  const { user } = useAuth()
+  const { user, updateProfile } = useAuth()
   const navigate = useNavigate()
-  const [notifications, setNotifications] = useState(true)
-  const [emailAlerts, setEmailAlerts] = useState(true)
+
+  const [notifications, setNotifications] = useState(user?.notifications_enabled ?? true)
+  const [emailAlerts, setEmailAlerts] = useState(user?.email_alerts_enabled ?? true)
+  const [isSavingPreferences, setIsSavingPreferences] = useState(false)
+
+  // Sync state if user profile loads/updates asynchronously
+  useEffect(() => {
+    if (user) {
+      setNotifications(user.notifications_enabled !== undefined ? user.notifications_enabled : true)
+      setEmailAlerts(user.email_alerts_enabled !== undefined ? user.email_alerts_enabled : true)
+    }
+  }, [user])
 
   // Password change state
   const [passwordForm, setPasswordForm] = useState({
@@ -19,11 +38,41 @@ export default function Settings() {
     newPassword: '',
     confirmPassword: ''
   })
+  const [showOldPassword, setShowOldPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [isSendingResetEmail, setIsSendingResetEmail] = useState(false)
+  const [isSendingDigest, setIsSendingDigest] = useState(false)
 
-  const handleSavePreferences = () => {
-    toast.success('Preferences saved successfully')
+  const handleSavePreferences = async () => {
+    try {
+      setIsSavingPreferences(true)
+      await updateProfile({
+        notifications_enabled: notifications,
+        email_alerts_enabled: emailAlerts
+      })
+      toast.success('Preferences saved successfully')
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to save preferences')
+    } finally {
+      setIsSavingPreferences(false)
+    }
+  }
+
+  const handleSendTestDigest = async () => {
+    if (!emailAlerts) {
+      return toast.error('Please enable Email Digest & Activity Alerts first')
+    }
+    try {
+      setIsSendingDigest(true)
+      const res = await api.post('/notifications/send-digest')
+      toast.success(res.data?.message || 'Test digest email sent!')
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Failed to send test digest email')
+    } finally {
+      setIsSendingDigest(false)
+    }
   }
 
   const handleChangePassword = async (e) => {
@@ -77,19 +126,23 @@ export default function Settings() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <FiSettings className="text-primary-600" /> Platform Settings
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">Customize your profile preferences and account security</p>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">
+          Customize your profile preferences and account security
+        </p>
       </div>
 
       {/* Profile Overview & Quick Edit Card */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md border border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
         <div className="flex items-center space-x-4">
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white font-extrabold text-xl shadow-md ${
-            user?.role === 'faculty'
-              ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 shadow-purple-500/25'
-              : user?.role === 'admin'
-              ? 'bg-gradient-to-tr from-red-600 to-orange-600'
-              : 'bg-gradient-to-tr from-primary-600 to-secondary-600 shadow-primary-500/25'
-          }`}>
+          <div
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white font-extrabold text-xl shadow-md ${
+              user?.role === 'faculty'
+                ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 shadow-purple-500/25'
+                : user?.role === 'admin'
+                ? 'bg-gradient-to-tr from-red-600 to-orange-600'
+                : 'bg-gradient-to-tr from-primary-600 to-secondary-600 shadow-primary-500/25'
+            }`}
+          >
             {user?.full_name?.[0] || user?.username?.[0] || 'U'}
           </div>
           <div>
@@ -97,18 +150,21 @@ export default function Settings() {
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">
                 {user?.full_name || user?.username || 'User Profile'}
               </h2>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
-                user?.role === 'faculty'
-                  ? 'bg-purple-100 text-purple-800 border-purple-200'
-                  : user?.role === 'admin'
-                  ? 'bg-red-100 text-red-800 border-red-200'
-                  : 'bg-primary-50 text-primary-700 border-primary-200'
-              }`}>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
+                  user?.role === 'faculty'
+                    ? 'bg-purple-100 text-purple-800 border-purple-200'
+                    : user?.role === 'admin'
+                    ? 'bg-red-100 text-red-800 border-red-200'
+                    : 'bg-primary-50 text-primary-700 border-primary-200'
+                }`}
+              >
                 {user?.role || 'student'}
               </span>
             </div>
             <p className="text-xs text-gray-500 mt-0.5">
-              {user?.email} • {user?.department || 'Department not set'} {user?.college ? `• ${user.college}` : ''}
+              {user?.email} • {user?.department || 'Department not set'}{' '}
+              {user?.college ? `• ${user.college}` : ''}
             </p>
           </div>
         </div>
@@ -135,36 +191,53 @@ export default function Settings() {
           <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
             <div>
               <p className="font-semibold text-gray-900 dark:text-white">In-App Notifications</p>
-              <p className="text-sm text-gray-500">Receive alerts when resume processing or evaluations complete</p>
+              <p className="text-sm text-gray-500">
+                Receive alerts when resume processing or evaluations complete
+              </p>
             </div>
-            <input 
-              type="checkbox" 
-              checked={notifications} 
-              onChange={e => setNotifications(e.target.checked)}
+            <input
+              type="checkbox"
+              checked={notifications}
+              onChange={(e) => setNotifications(e.target.checked)}
               className="w-5 h-5 accent-primary-600 rounded cursor-pointer"
             />
           </div>
 
           <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
             <div>
-              <p className="font-semibold text-gray-900 dark:text-white">Email Digest & Activity Alerts</p>
-              <p className="text-sm text-gray-500">Receive email notifications for critical updates</p>
+              <p className="font-semibold text-gray-900 dark:text-white">
+                Email Digest & Activity Alerts
+              </p>
+              <p className="text-sm text-gray-500">
+                Receive email notifications for critical updates
+              </p>
             </div>
-            <input 
-              type="checkbox" 
-              checked={emailAlerts} 
-              onChange={e => setEmailAlerts(e.target.checked)}
+            <input
+              type="checkbox"
+              checked={emailAlerts}
+              onChange={(e) => setEmailAlerts(e.target.checked)}
               className="w-5 h-5 accent-primary-600 rounded cursor-pointer"
             />
           </div>
         </div>
 
-        <div className="flex justify-end">
-          <button 
-            onClick={handleSavePreferences}
-            className="btn-primary px-5 py-2 text-sm shadow-md"
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            onClick={handleSendTestDigest}
+            disabled={isSendingDigest || !emailAlerts}
+            className="px-4 py-2 text-sm font-semibold rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            Save Preferences
+            <FiMail className="w-4 h-4 text-primary-500" />
+            {isSendingDigest ? 'Sending Digest...' : 'Send Test Digest'}
+          </button>
+          <button
+            type="button"
+            onClick={handleSavePreferences}
+            disabled={isSavingPreferences}
+            className="btn-primary px-5 py-2 text-sm shadow-md disabled:opacity-50"
+          >
+            {isSavingPreferences ? 'Saving...' : 'Save Preferences'}
           </button>
         </div>
       </div>
@@ -181,41 +254,91 @@ export default function Settings() {
         </div>
 
         {/* Change Password Form */}
-        <form onSubmit={handleChangePassword} className="space-y-4 pt-2 border-t border-gray-100 dark:border-gray-700">
+        <form
+          onSubmit={handleChangePassword}
+          className="space-y-4 pt-2 border-t border-gray-100 dark:border-gray-700"
+        >
           <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <FiKey className="text-gray-500" /> Change Password
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Current Password</label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={passwordForm.oldPassword}
-                onChange={e => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
-                className="w-full px-3.5 py-2.5 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
-              />
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                Current Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showOldPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={passwordForm.oldPassword}
+                  onChange={(e) =>
+                    setPasswordForm({ ...passwordForm, oldPassword: e.target.value })
+                  }
+                  className="w-full pl-3.5 pr-10 py-2.5 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowOldPassword(!showOldPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                  tabIndex={-1}
+                  aria-label={showOldPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showOldPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
+
             <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">New Password</label>
-              <input
-                type="password"
-                placeholder="Min. 6 characters"
-                value={passwordForm.newPassword}
-                onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                className="w-full px-3.5 py-2.5 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
-              />
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                New Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  placeholder="Min. 6 characters"
+                  value={passwordForm.newPassword}
+                  onChange={(e) =>
+                    setPasswordForm({ ...passwordForm, newPassword: e.target.value })
+                  }
+                  className="w-full pl-3.5 pr-10 py-2.5 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                  tabIndex={-1}
+                  aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showNewPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
+
             <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Confirm New Password</label>
-              <input
-                type="password"
-                placeholder="Confirm new password"
-                value={passwordForm.confirmPassword}
-                onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                className="w-full px-3.5 py-2.5 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
-              />
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                Confirm New Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Confirm new password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) =>
+                    setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
+                  }
+                  className="w-full pl-3.5 pr-10 py-2.5 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                  tabIndex={-1}
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirmPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -248,7 +371,9 @@ export default function Settings() {
         {/* 2FA Section */}
         <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl flex items-center justify-between mt-4">
           <div>
-            <p className="font-semibold text-gray-900 dark:text-white">Two-Factor Authentication (2FA)</p>
+            <p className="font-semibold text-gray-900 dark:text-white">
+              Two-Factor Authentication (2FA)
+            </p>
             <p className="text-sm text-gray-500">Enhance your account login security</p>
           </div>
           <span className="px-3 py-1 bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300 text-xs font-semibold rounded-full">

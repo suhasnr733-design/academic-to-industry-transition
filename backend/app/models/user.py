@@ -24,6 +24,8 @@ class User(db.Model):
 
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     is_email_verified = db.Column(db.Boolean, default=False, nullable=False)
+    notifications_enabled = db.Column(db.Boolean, default=True, nullable=False)
+    email_alerts_enabled = db.Column(db.Boolean, default=True, nullable=False)
     oauth_provider = db.Column(db.String(30), nullable=True)
     oauth_provider_id = db.Column(db.String(100), nullable=True, index=True)
     profile_picture = db.Column(db.String(255), nullable=True)
@@ -38,6 +40,7 @@ class User(db.Model):
                  role='student', department=None, year_of_study=None, college=None,
                  phone=None, bio=None, placement_status='seeking', placed_company=None,
                  package_lpa=None, is_active=True, is_email_verified=False,
+                 notifications_enabled=True, email_alerts_enabled=True,
                  oauth_provider=None, oauth_provider_id=None, profile_picture=None,
                  **kwargs):
         super().__init__(**kwargs)
@@ -60,6 +63,8 @@ class User(db.Model):
         self.package_lpa = package_lpa
         self.is_active = is_active
         self.is_email_verified = is_email_verified
+        self.notifications_enabled = notifications_enabled if notifications_enabled is not None else True
+        self.email_alerts_enabled = email_alerts_enabled if email_alerts_enabled is not None else True
         self.oauth_provider = oauth_provider
         self.oauth_provider_id = oauth_provider_id
         self.profile_picture = profile_picture
@@ -89,6 +94,8 @@ class User(db.Model):
             'package_lpa': self.package_lpa,
             'is_active': self.is_active,
             'is_email_verified': self.is_email_verified,
+            'notifications_enabled': self.notifications_enabled if self.notifications_enabled is not None else True,
+            'email_alerts_enabled': self.email_alerts_enabled if self.email_alerts_enabled is not None else True,
             'oauth_provider': self.oauth_provider,
             'profile_picture': self.profile_picture,
             'created_at': self.created_at.isoformat() if self.created_at else None,

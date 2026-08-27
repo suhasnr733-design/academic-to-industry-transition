@@ -1,0 +1,10 @@
+{% extends 'emails/base.html' %}
+{% block content %}
+  <h2 style="color: #111827; margin-top: 0;">Your Resume Analysis is Ready 🚀</h2>
+  <p>Hello <strong>{{ user.full_name or user.username }}</strong>,</p>
+  <p>Our AI engine has finished analyzing your uploaded resume. Your ATS score, identified skill gaps, and curated industry job matches are now ready to view.</p>
+  <div style="text-align: center; margin: 28px 0;">
+    <a href="{{ frontend_url }}/resume/{{ resume_id }}" class="btn">View Resume Evaluation &rarr;</a>
+  </div>
+  <p style="font-size: 13px; color: #6b7280; margin-bottom: 0;">Log in to TransitionAI anytime to update your skills, take practice assessments, and explore top job recommendations.</p>
+{% endblock %}

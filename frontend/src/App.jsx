@@ -12,7 +12,7 @@ import { useAuth } from './hooks/useAuth'
 import { ThemeProvider } from './context/ThemeContext'
 import { ResumeProvider } from './context/ResumeContext'
 import { Layout } from './components/layout/Layout'
-import { ProtectedRoute, AdminRoute, FacultyRoute } from './components/common/ProtectedRoute'
+import { ProtectedRoute, AdminRoute, FacultyRoute, PublicRoute } from './components/common/ProtectedRoute'
 import { LoadingFallback } from './components/common/LoadingFallback'
 
 // Smart role-based home redirect component
@@ -61,14 +61,18 @@ function App() {
                   <Layout>
                     <Suspense fallback={<LoadingFallback />}>
                       <Routes>
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/faculty/login" element={<FacultyLogin />} />
-                        <Route path="/faculty/register" element={<FacultyRegister />} />
-                        <Route path="/register" element={<Register />} />
-                        <Route path="/forgot-password" element={<ForgotPassword />} />
-                        <Route path="/forgot_password" element={<ForgotPassword />} />
-                        <Route path="/reset-password" element={<ResetPassword />} />
-                        <Route path="/reset_password" element={<ResetPassword />} />
+                        {/* Guest / Public Only Routes */}
+                        <Route element={<PublicRoute />}>
+                          <Route path="/login" element={<Login />} />
+                          <Route path="/faculty/login" element={<FacultyLogin />} />
+                          <Route path="/faculty/register" element={<FacultyRegister />} />
+                          <Route path="/register" element={<Register />} />
+                          <Route path="/forgot-password" element={<ForgotPassword />} />
+                          <Route path="/forgot_password" element={<ForgotPassword />} />
+                          <Route path="/reset-password" element={<ResetPassword />} />
+                          <Route path="/reset_password" element={<ResetPassword />} />
+                        </Route>
+
                         <Route path="/auth/callback" element={<AuthCallback />} />
 
                         <Route path="/" element={<RoleHomeRedirect />} />

@@ -244,11 +244,49 @@ def update_profile():
             }), 404
         
         data = request.get_json() or {}
-        allowed_fields = ['full_name', 'department', 'year_of_study', 'college', 'phone', 'bio']
+        allowed_fields = [
+            'full_name', 'email', 'department', 'year_of_study', 
+            'college', 'phone', 'bio', 'notifications_enabled', 'email_alerts_enabled'
+        ]
         
+        # Validate email if provided and changed
+        if 'email' in data:
+            new_email = str(data.get('email', '')).strip().lower()
+            if not new_email:
+                return jsonify({
+                    'error': 'Invalid email',
+                    'message': 'Email cannot be empty'
+                }), 400
+                
+            email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+            if not re.match(email_pattern, new_email):
+                return jsonify({
+                    'error': 'Invalid email',
+                    'message': 'Please enter a valid email address'
+                }), 400
+                
+            if new_email != (user.email or '').lower():
+                existing_user = User.query.filter(User.email == new_email, User.id != current_user_id).first()
+                if existing_user:
+                    return jsonify({
+                        'error': 'Email already in use',
+                        'message': 'This email is already registered to another account'
+                    }), 400
+                user.email = new_email
+
         updated_fields = []
         for field in allowed_fields:
+            if field == 'email':
+                if 'email' in data:
+                    updated_fields.append('email')
+                continue
+                
             if field in data:
+                if field in ('notifications_enabled', 'email_alerts_enabled'):
+                    val = bool(data[field])
+                    setattr(user, field, val)
+                    updated_fields.append(field)
+                    continue
                 if field == 'year_of_study':
                     val = data.get('year_of_study')
                     if val is None or str(val).strip() == '':

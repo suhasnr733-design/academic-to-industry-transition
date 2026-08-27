@@ -1,0 +1,35 @@
+{% extends 'emails/base.html' %}
+{% block content %}
+  <h2 style="color: #111827; margin-top: 0;">Your Career Activity Digest 📬</h2>
+  <p>Hello <strong>{{ user.full_name or user.username }}</strong>,</p>
+  <p>Here is your personalized summary of your career readiness and industry matches:</p>
+  
+  <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin: 22px 0;">
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td style="padding: 8px 0; color: #6b7280; font-size: 14px;"><strong>Profile Readiness:</strong></td>
+        <td style="padding: 8px 0; font-weight: 700; color: #4f46e5; font-size: 16px; text-align: right;">{{ readiness_score }}%</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 0; color: #6b7280; font-size: 14px;"><strong>Matching Job Openings:</strong></td>
+        <td style="padding: 8px 0; font-weight: 700; color: #111827; font-size: 15px; text-align: right;">{{ job_count }} active roles</td>
+      </tr>
+      <tr>
+        <td colspan="2" style="padding-top: 14px; border-top: 1px solid #f3f4f6;">
+          <p style="margin: 4px 0 10px 0; font-size: 13px; color: #6b7280;"><strong>{{ skills_label }}:</strong></p>
+          <div>
+            {% for skill in top_skills %}
+              <span style="display: inline-block; background-color: #e0e7ff; color: #3730a3; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; margin: 2px;">
+                {{ skill }}
+              </span>
+            {% endfor %}
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div style="text-align: center; margin: 24px 0;">
+    <a href="{{ frontend_url }}/jobs" class="btn">Explore Matching Jobs &rarr;</a>
+  </div>
+{% endblock %}

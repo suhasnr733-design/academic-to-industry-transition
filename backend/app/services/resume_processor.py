@@ -66,6 +66,13 @@ class ResumeProcessor:
             
             db.session.commit()
             self.logger.info(f"Resume {resume_id} processed successfully")
+
+            # 🔔 Trigger in-app notification & activity email
+            try:
+                from app.services.notification_service import NotificationService
+                NotificationService.send_resume_processed_notification(resume.user_id, resume.id)
+            except Exception as notif_err:
+                self.logger.warning(f"Could not dispatch resume notification: {notif_err}")
             
         except Exception as e:
             self.logger.error(f"Error processing resume {resume_id}: {e}")

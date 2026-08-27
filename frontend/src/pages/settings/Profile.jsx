@@ -1,24 +1,21 @@
 // frontend/src/pages/settings/Profile.jsx
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../../components/common/Button'
-import { Input } from '../../components/common/Input'
 import toast from 'react-hot-toast'
 import {
   UserCircleIcon,
   AcademicCapIcon,
   OfficeBuildingIcon,
-  MailIcon,
   PhoneIcon,
   CheckCircleIcon,
   ArrowLeftIcon,
   SparklesIcon,
   ShieldCheckIcon,
-  BookOpenIcon,
-  BriefcaseIcon
+  BookOpenIcon
 } from '@heroicons/react/outline'
 
 export const Profile = () => {
@@ -31,25 +28,46 @@ export const Profile = () => {
   const isAdmin = role === 'admin'
   const isStudent = !isFaculty && !isAdmin
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors }
+  } = useForm({
     defaultValues: {
       full_name: user?.full_name || '',
+      email: user?.email || '',
       department: user?.department || '',
       year_of_study: user?.year_of_study || '',
       college: user?.college || '',
       phone: user?.phone || '',
-      bio: user?.bio || '',
+      bio: user?.bio || ''
     }
   })
 
-  // Watch fields for live preview
+  // Synchronize form when user auth state updates/loads
+  useEffect(() => {
+    if (user) {
+      reset({
+        full_name: user.full_name || '',
+        email: user.email || '',
+        department: user.department || '',
+        year_of_study: user.year_of_study || '',
+        college: user.college || '',
+        phone: user.phone || '',
+        bio: user.bio || ''
+      })
+    }
+  }, [user, reset])
+
+  // Watch fields for live preview and readiness calculation
   const watchedValues = watch()
 
-  // Calculate profile completeness
-  const checkFields = isFaculty 
+  const checkFields = isFaculty
     ? ['full_name', 'department', 'college', 'phone', 'bio']
     : ['full_name', 'department', 'year_of_study', 'college', 'phone', 'bio']
-  
+
   const filledCount = checkFields.filter((f) => {
     const val = watchedValues[f] !== undefined ? watchedValues[f] : user?.[f]
     return val && String(val).trim().length > 0
@@ -59,19 +77,23 @@ export const Profile = () => {
   const onSubmit = async (data) => {
     try {
       setIsLoading(true)
-      // For faculty/admin, clear year_of_study if not applicable
       const payload = {
         ...data,
         year_of_study: isFaculty || isAdmin ? null : (data.year_of_study ? Number(data.year_of_study) : null)
       }
       await updateProfile(payload)
       toast.success(
-        isFaculty 
-          ? '🎉 Faculty profile updated successfully!' 
+        isFaculty
+          ? '🎉 Faculty profile updated successfully!'
           : '🎉 Profile updated successfully!'
       )
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message || 'Failed to update profile')
+      const errorMsg =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        'Failed to update profile'
+      toast.error(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -324,8 +346,8 @@ export const Profile = () => {
 
             <div className="flex items-center space-x-4">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white font-extrabold text-xl shadow-md ${
-                isFaculty 
-                  ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 shadow-purple-500/25' 
+                isFaculty
+                  ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 shadow-purple-500/25'
                   : isAdmin
                   ? 'bg-gradient-to-tr from-red-600 to-orange-600'
                   : 'bg-gradient-to-tr from-primary-600 to-secondary-600 shadow-primary-500/25'
