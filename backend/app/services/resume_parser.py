@@ -21,18 +21,71 @@ class ResumeParser:
     def __init__(self):
         # Predefined skill sets
         self.skill_keywords = {
-            'Programming Languages': ['Python', 'Java', 'C++', 'JavaScript', 'C#', 'Ruby', 'Swift', 'Kotlin', 'Go', 'Rust'],
-            'Web Technologies': ['HTML', 'CSS', 'React', 'Angular', 'Vue.js', 'Node.js', 'Django', 'Flask', 'Spring', 'Bootstrap'],
-            'Database': ['SQL', 'MySQL', 'PostgreSQL', 'MongoDB', 'Oracle', 'Redis', 'Firebase', 'Elasticsearch'],
-            'Cloud & DevOps': ['AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'Jenkins', 'DevOps', 'Terraform', 'Ansible'],
-            'ML/AI': ['Machine Learning', 'Deep Learning', 'NLP', 'Computer Vision', 'TensorFlow', 'PyTorch', 'Keras', 'Scikit-learn'],
-            'Data Science': ['Data Science', 'Data Analysis', 'Data Visualization', 'Statistics', 'Tableau', 'Power BI'],
-            'Tools': ['Git', 'JIRA', 'Linux', 'Excel', 'VS Code', 'IntelliJ', 'Postman'],
-            'Soft Skills': ['Communication', 'Leadership', 'Teamwork', 'Problem Solving', 'Critical Thinking', 'Time Management']
+            'Programming Languages': [
+                'Python', 'Java', 'C++', 'C#', 'C', 'JavaScript', 'TypeScript',
+                'Ruby', 'Swift', 'Kotlin', 'Go', 'Golang', 'Rust', 'PHP', 'R', 'Scala', 'Dart'
+            ],
+            'Web Technologies': [
+                'HTML', 'HTML5', 'CSS', 'CSS3', 'React', 'React.js', 'Angular',
+                'Vue.js', 'Vue', 'Node.js', 'Express', 'Express.js', 'Django',
+                'Flask', 'FastAPI', 'Spring', 'Spring Boot', 'Next.js', 'Tailwind CSS',
+                'Tailwind', 'Bootstrap', 'REST API', 'RESTful APIs', 'GraphQL', 'Redux'
+            ],
+            'Database': [
+                'SQL', 'MySQL', 'PostgreSQL', 'MongoDB', 'Oracle', 'Redis',
+                'Firebase', 'Elasticsearch', 'SQLite', 'Cassandra', 'DynamoDB', 'DBMS'
+            ],
+            'Core CS Concepts': [
+                'Data Structures', 'Algorithms', 'DSA', 'OOP', 'Object Oriented Programming',
+                'DBMS', 'Operating Systems', 'System Design', 'Computer Networks'
+            ],
+            'ML/AI': [
+                'Machine Learning', 'Deep Learning', 'Generative AI', 'GenAI',
+                'LLM', 'LLMs', 'NLP', 'Natural Language Processing', 'Computer Vision',
+                'TensorFlow', 'PyTorch', 'Keras', 'Scikit-learn', 'HuggingFace', 'OpenAI'
+            ],
+            'Cloud & DevOps': [
+                'AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'Jenkins',
+                'DevOps', 'CI/CD', 'Terraform', 'Ansible', 'Linux'
+            ],
+            'Data Science': [
+                'Data Science', 'Data Analysis', 'Data Visualization', 'Statistics',
+                'Tableau', 'Power BI', 'Pandas', 'NumPy', 'Matplotlib', 'Seaborn'
+            ],
+            'Tools': [
+                'Git', 'GitHub', 'GitLab', 'Bitbucket', 'JIRA', 'Postman',
+                'VS Code', 'IntelliJ', 'Excel', 'Figma'
+            ],
+            'Soft Skills': [
+                'Communication', 'Leadership', 'Teamwork', 'Problem Solving',
+                'Critical Thinking', 'Time Management'
+            ]
         }
         
-        # Flatten skill list for quick lookup
-        self.all_skills = [skill for skills in self.skill_keywords.values() for skill in skills]
+        # Flatten and sort skill list for greedy matching (longer terms first)
+        all_skills_flat = [skill for skills in self.skill_keywords.values() for skill in skills]
+        self.all_skills = sorted(list(set(all_skills_flat)), key=lambda s: len(s), reverse=True)
+        
+        # Canonical normalization map
+        self.alias_map = {
+            'react.js': 'React',
+            'reactjs': 'React',
+            'node.js': 'Node.js',
+            'nodejs': 'Node.js',
+            'express.js': 'Express.js',
+            'expressjs': 'Express.js',
+            'express': 'Express.js',
+            'golang': 'Go',
+            'html5': 'HTML',
+            'css3': 'CSS',
+            'restful apis': 'REST API',
+            'rest apis': 'REST API',
+            'dsa': 'Data Structures',
+            'object oriented programming': 'OOP',
+            'genai': 'Generative AI',
+            'llms': 'LLM',
+            'natural language processing': 'NLP'
+        }
         
         # Education keywords
         self.education_patterns = [
@@ -45,7 +98,6 @@ class ResumeParser:
             r'(\d+)\+?\s*(?:years?|yrs?|Years?)\s+(?:of\s+)?(?:experience|Experience)',
             r'Experience\s*:\s*(\d+)\+?\s*(?:years?|yrs?)'
         ]
-        # backend/app/services/resume_parser.py (continued)
 
     def extract_text_from_pdf(self, file_path: str) -> str:
         """Extract text from PDF file"""
@@ -92,45 +144,66 @@ class ResumeParser:
                 return ""
         else:
             raise ValueError(f"Unsupported file type: {file_type}")
-        # backend/app/services/resume_parser.py (continued)
 
     def extract_skills(self, text: str) -> List[str]:
         """Extract technical skills from text using NLP and keyword matching"""
-        found_skills = []
-        text_lower = text.lower()
+        found_skills = set()
         
-        # Method 1: Keyword matching
+        # Filter out letter-spaced uppercase header artifacts (e.g., 'S U M M A R Y')
+        clean_lines = []
+        for line in text.splitlines():
+            tokens = line.strip().split()
+            if len(tokens) >= 3 and all(len(t) == 1 for t in tokens):
+                continue
+            clean_lines.append(line)
+        cleaned_text = "\n".join(clean_lines)
+
+        # Method 1: Keyword matching with contextual word boundaries
         for skill in self.all_skills:
-            # Check if skill appears as whole word
-            skill_lower = skill.lower()
-            if re.search(r'\b' + re.escape(skill_lower) + r'\b', text_lower):
-                found_skills.append(skill)
+            if skill in ['C', 'R']:
+                # Safely match single-letter programming languages like C or R in language lists/skill sections
+                pattern = r'(?i)(?:(?:programming|languages|skills|technologies|tools)\s*:[^\n]*\b' + re.escape(skill) + r'\b)|(?:,\s*' + re.escape(skill) + r'\s*,)|(?:,\s*' + re.escape(skill) + r'\s*$)|(?:^\s*' + re.escape(skill) + r'\s*,)|(?:\b' + re.escape(skill) + r'\s*\/)|(?:\/\s*' + re.escape(skill) + r'\b)'
+                if re.search(pattern, cleaned_text):
+                    canonical = self.alias_map.get(skill.lower(), skill)
+                    found_skills.add(canonical)
+            else:
+                # Whole word match for regular keywords
+                pattern = r'(?i)\b' + re.escape(skill) + r'(?:\b|$)'
+                if re.search(pattern, cleaned_text):
+                    canonical = self.alias_map.get(skill.lower(), skill)
+                    found_skills.add(canonical)
         
         # Method 2: spaCy NER for organizations and products
         if nlp is not None:
             try:
-                doc = nlp(text)
+                doc = nlp(cleaned_text)
                 for ent in doc.ents:
                     if ent.label_ in ["ORG", "PRODUCT"] and ent.text in self.all_skills:
-                        if ent.text not in found_skills:
-                            found_skills.append(ent.text)
+                        canonical = self.alias_map.get(ent.text.lower(), ent.text)
+                        found_skills.add(canonical)
             except Exception:
                 pass
         
         # Method 3: Extract from bullet points using patterns
         skill_patterns = [
-            r'(?:Skills|Technical Skills|Technologies|Languages)\s*[:\-]\s*([^\n]+)',
+            r'(?:Skills|Technical Skills|Technologies|Languages|Tools|Core Concepts|Programming|Web Development|AI/ML|Database)\s*[:\-]\s*([^\n]+)',
             r'(?:Proficient|Experienced|Expertise)\s+in\s+([^\n.]+)'
         ]
         for pattern in skill_patterns:
-            matches = re.finditer(pattern, text, re.IGNORECASE)
+            matches = re.finditer(pattern, cleaned_text, re.IGNORECASE)
             for match in matches:
                 skills_text = match.group(1)
                 for skill in self.all_skills:
-                    if skill.lower() in skills_text.lower() and skill not in found_skills:
-                        found_skills.append(skill)
+                    if skill in ['C', 'R']:
+                        c_pattern = r'(?i)(?:^|[\s,;:\(\[\/\-])' + re.escape(skill) + r'(?:[\s,;:\)\]\/\-]|$)'
+                        if re.search(c_pattern, skills_text):
+                            canonical = self.alias_map.get(skill.lower(), skill)
+                            found_skills.add(canonical)
+                    elif re.search(r'(?i)\b' + re.escape(skill) + r'(?:\b|$)', skills_text):
+                        canonical = self.alias_map.get(skill.lower(), skill)
+                        found_skills.add(canonical)
         
-        return list(set(found_skills))  # Remove duplicates
+        return sorted(list(found_skills))
     # backend/app/services/resume_parser.py (continued)
 
     def extract_education(self, text: str) -> List[Dict[str, Any]]:

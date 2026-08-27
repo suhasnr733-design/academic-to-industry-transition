@@ -20,6 +20,7 @@ from app.api.v1.pipeline import pipeline_bp
 from app.api.v1.models import models_bp
 from app.api.v1.assessment import assessment_bp
 from app.api.v1.mentorship import mentorship_bp
+from app.api.v1.placement import placement_bp
 from app.api.v1.learning import learning_bp
 
 api_v1_bp.register_blueprint(auth_bp, url_prefix='/auth')
@@ -32,6 +33,7 @@ api_v1_bp.register_blueprint(pipeline_bp, url_prefix='/pipeline')
 api_v1_bp.register_blueprint(models_bp, url_prefix='/models')
 api_v1_bp.register_blueprint(assessment_bp, url_prefix='/assessment')
 api_v1_bp.register_blueprint(mentorship_bp, url_prefix='/mentorship')
+api_v1_bp.register_blueprint(placement_bp, url_prefix='/placement')
 api_v1_bp.register_blueprint(learning_bp, url_prefix='/learning')
 
 @api_v1_bp.route('/info', methods=['GET'])
@@ -48,7 +50,10 @@ def get_api_info():
             '/analytics/*',
             '/pipeline/*',
             '/models/*',
-            '/assessment/*'
+            '/assessment/*',
+            '/mentorship/*',
+            '/placement/*',
+            '/learning/*'
         ],
         'status': 'healthy'
     })

@@ -32,6 +32,39 @@ class User(db.Model):
 
     # Relationships
     resumes = db.relationship('Resume', backref='user', lazy=True, cascade='all, delete-orphan')
+    job_interests = db.relationship('JobInterest', backref='user', lazy=True, cascade='all, delete-orphan')
+
+    def __init__(self, username=None, email=None, password_hash=None, full_name=None,
+                 role='student', department=None, year_of_study=None, college=None,
+                 phone=None, bio=None, placement_status='seeking', placed_company=None,
+                 package_lpa=None, is_active=True, is_email_verified=False,
+                 oauth_provider=None, oauth_provider_id=None, profile_picture=None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        if username is not None:
+            self.username = username
+        if email is not None:
+            self.email = email
+        if password_hash is not None:
+            self.password_hash = password_hash
+        if full_name is not None:
+            self.full_name = full_name
+        self.role = role
+        self.department = department
+        self.year_of_study = year_of_study
+        self.college = college
+        self.phone = phone
+        self.bio = bio
+        self.placement_status = placement_status
+        self.placed_company = placed_company
+        self.package_lpa = package_lpa
+        self.is_active = is_active
+        self.is_email_verified = is_email_verified
+        self.oauth_provider = oauth_provider
+        self.oauth_provider_id = oauth_provider_id
+        self.profile_picture = profile_picture
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     def set_password(self, password):
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')

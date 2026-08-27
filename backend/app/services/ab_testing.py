@@ -61,3 +61,4 @@ class ABTesting:
         return results
 
 ab_testing = ABTesting()
+ABTestingService = ABTesting

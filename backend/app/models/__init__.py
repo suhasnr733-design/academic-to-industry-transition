@@ -8,8 +8,10 @@ from app.models.notification import Notification
 from app.models.assessment import AssessmentResult
 from app.models.oauth import OAuth2Client
 from app.models.mentorship import MentorshipRequest
+from app.models.placement_nomination import PlacementNomination
 from app.models.learning import LearningProgress, LearningBookmark, LearningActivity
 from app.models.webhook import Webhook, WebhookEvent
+from app.models.job_interest import JobInterest
 
 __all__ = [
     'User',
@@ -22,9 +24,11 @@ __all__ = [
     'AssessmentResult',
     'OAuth2Client',
     'MentorshipRequest',
+    'PlacementNomination',
     'LearningProgress',
     'LearningBookmark',
     'LearningActivity',
     'Webhook',
     'WebhookEvent',
+    'JobInterest',
 ]

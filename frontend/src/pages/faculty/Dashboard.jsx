@@ -25,10 +25,10 @@ import {
   ClockIcon,
   UserAddIcon,
   UserRemoveIcon,
-  KeyIcon,
-  MailIcon,
-  LockClosedIcon
+  OfficeBuildingIcon
 } from '@heroicons/react/outline'
+import { PlacementShortlist } from './PlacementShortlist'
+import { CampusDrives } from './CampusDrives'
 
 export const FacultyDashboard = () => {
   const { user } = useAuth()
@@ -45,11 +45,11 @@ export const FacultyDashboard = () => {
   })
   const [cohortSkills, setCohortSkills] = useState([])
   const [advisorInsight, setAdvisorInsight] = useState({
-    title: 'Curriculum Focus Needed',
-    top_deficit_skill: 'Cloud & Docker DevOps',
-    gap_percentage: 65,
-    message: 'Cloud DevOps and Docker represent the largest skill deficit across 65% of the student cohort. Scheduling a 2-week hands-on containerization workshop is recommended.',
-    action_label: 'Inspect Cohort'
+    title: 'Awaiting Resume Submissions',
+    top_deficit_skill: 'No Resumes Uploaded',
+    gap_percentage: 100,
+    message: 'No student resumes have been uploaded for AI skill verification yet. Encourage your student cohort to upload their resumes to unlock live skill deficit analytics and placement recommendations.',
+    action_label: 'Inspect Student Cohort'
   })
   const [students, setStudents] = useState([])
   const [incomingRequests, setIncomingRequests] = useState([])
@@ -72,62 +72,6 @@ export const FacultyDashboard = () => {
     placed_company: '',
     package_lpa: ''
   })
-
-  // Password Security Modal State
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [passwordForm, setPasswordForm] = useState({
-    oldPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  })
-  const [isChangingPassword, setIsChangingPassword] = useState(false)
-  const [isSendingResetEmail, setIsSendingResetEmail] = useState(false)
-
-  const handleChangePassword = async (e) => {
-    e.preventDefault()
-    if (!passwordForm.oldPassword) {
-      return toast.error('Please enter your current password')
-    }
-    if (!passwordForm.newPassword) {
-      return toast.error('Please enter a new password')
-    }
-    if (passwordForm.newPassword.length < 6) {
-      return toast.error('New password must be at least 6 characters')
-    }
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      return toast.error('New passwords do not match')
-    }
-
-    try {
-      setIsChangingPassword(true)
-      const res = await api.post('/auth/change-password', {
-        old_password: passwordForm.oldPassword,
-        new_password: passwordForm.newPassword
-      })
-      toast.success(res.data?.message || 'Password changed successfully!')
-      setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' })
-      setShowPasswordModal(false)
-    } catch (err) {
-      toast.error(err.response?.data?.message || err.response?.data?.error || 'Failed to update password')
-    } finally {
-      setIsChangingPassword(false)
-    }
-  }
-
-  const handleSendResetEmail = async () => {
-    if (!user?.email) {
-      return toast.error('User email not found')
-    }
-    try {
-      setIsSendingResetEmail(true)
-      const res = await api.post('/auth/forgot-password', { email: user.email })
-      toast.success(res.data?.message || `Password reset link sent to ${user.email}`)
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to trigger reset email')
-    } finally {
-      setIsSendingResetEmail(false)
-    }
-  }
 
   const fetchFacultyData = async () => {
     try {
@@ -192,6 +136,18 @@ export const FacultyDashboard = () => {
     fetchFacultyData()
     fetchIncomingRequests()
   }, [directoryScope])
+
+  // Automatically open student modal if selectedStudent is in query params
+  useEffect(() => {
+    const studentIdParam = searchParams.get('selectedStudent')
+    if (studentIdParam && students.length > 0) {
+      const studentId = parseInt(studentIdParam)
+      const targetStudent = students.find(s => s.id === studentId)
+      if (targetStudent) {
+        handleOpenStudentModal(targetStudent)
+      }
+    }
+  }, [searchParams, students])
 
   const handleRequestAction = async (requestId, action) => {
     try {
@@ -345,15 +301,6 @@ export const FacultyDashboard = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setShowPasswordModal(true)}
-            className="flex items-center text-gray-700 hover:bg-gray-50 border-gray-300"
-          >
-            <KeyIcon className="h-4 w-4 mr-1.5 text-purple-600" />
-            Security & Password
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
             onClick={() => { fetchFacultyData(); fetchIncomingRequests(); }}
             isLoading={loading}
             className="flex items-center"
@@ -426,6 +373,36 @@ export const FacultyDashboard = () => {
           <SparklesIcon className="h-4 w-4" />
           Cohort Skill Gap Analytics
         </button>
+
+        <button
+          onClick={() => setSearchParams({ tab: 'drives' })}
+          className={`pb-3 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 relative ${
+            activeTab === 'drives'
+              ? 'border-purple-600 text-purple-600 font-semibold'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <OfficeBuildingIcon className="h-4 w-4" />
+          Campus Drives
+          <span className="px-1.5 py-0.5 text-[10px] uppercase font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+            Attendees
+          </span>
+        </button>
+
+        <button
+          onClick={() => setSearchParams({ tab: 'shortlist' })}
+          className={`pb-3 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 relative ${
+            activeTab === 'shortlist'
+              ? 'border-purple-600 text-purple-600 font-semibold'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <BriefcaseIcon className="h-4 w-4" />
+          Placement Shortlist & Bundle Export
+          <span className="px-1.5 py-0.5 text-[10px] uppercase font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+            Drive Tool
+          </span>
+        </button>
       </div>
 
       {/* Tab 1: Overview */}
@@ -464,23 +441,26 @@ export const FacultyDashboard = () => {
                 </button>
               </div>
               <div className="space-y-4">
-                {(cohortSkills.length > 0 ? cohortSkills.slice(0, 4) : [
-                  { skill: 'Python / Backend Development', profCount: 80, gapCount: 20, color: 'bg-blue-500' },
-                  { skill: 'React & Modern Frontend', profCount: 70, gapCount: 30, color: 'bg-indigo-500' },
-                  { skill: 'SQL & Database Architecture', profCount: 65, gapCount: 35, color: 'bg-green-500' },
-                  { skill: 'Cloud & Docker DevOps', profCount: 35, gapCount: 65, color: 'bg-amber-500' },
-                ]).map((item) => (
-                  <div key={item.skill} className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-medium">
-                      <span className="text-gray-700">{item.skill}</span>
-                      <span className="text-purple-700 font-semibold">{item.profCount}% Ready</span>
+                {cohortSkills.length > 0 ? (
+                  cohortSkills.slice(0, 4).map((item) => (
+                    <div key={item.skill} className="space-y-1.5">
+                      <div className="flex justify-between text-xs font-medium">
+                        <span className="text-gray-700">{item.skill}</span>
+                        <span className={`font-semibold ${item.profCount > 0 ? 'text-purple-700' : 'text-gray-400'}`}>
+                          {item.profCount}% Ready
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden flex">
+                        <div className={`h-full ${item.color}`} style={{ width: `${item.profCount}%` }} />
+                        <div className="h-full bg-rose-200" style={{ width: `${item.gapCount}%` }} />
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden flex">
-                      <div className={`h-full ${item.color}`} style={{ width: `${item.profCount}%` }} />
-                      <div className="h-full bg-rose-200" style={{ width: `${item.gapCount}%` }} />
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-xs text-gray-400">
+                    No verified resumes uploaded yet.
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -813,14 +793,7 @@ export const FacultyDashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {(cohortSkills.length > 0 ? cohortSkills : [
-                { skill: 'Python / Backend Development', profCount: 80, gapCount: 20, color: 'bg-blue-500' },
-                { skill: 'React & Modern Frontend', profCount: 70, gapCount: 30, color: 'bg-indigo-500' },
-                { skill: 'SQL & Database Architecture', profCount: 65, gapCount: 35, color: 'bg-green-500' },
-                { skill: 'Cloud & Docker DevOps', profCount: 35, gapCount: 65, color: 'bg-amber-500' },
-                { skill: 'Machine Learning & AI APIs', profCount: 45, gapCount: 55, color: 'bg-purple-500' },
-                { skill: 'System Design & Data Structures', profCount: 60, gapCount: 40, color: 'bg-rose-500' },
-              ]).map((item) => (
+              {cohortSkills.map((item) => (
                 <div key={item.skill} className="p-4 rounded-xl border border-gray-100 bg-gray-50/50 space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="font-semibold text-gray-900 text-sm">{item.skill}</span>
@@ -847,6 +820,21 @@ export const FacultyDashboard = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Tab 5: Campus Drives & Confirmed Attendees */}
+      {activeTab === 'drives' && (
+        <CampusDrives
+          onNavigateToShortlist={() => setSearchParams({ tab: 'shortlist' })}
+        />
+      )}
+
+      {/* Tab 6: Placement Shortlist & Bundle Export */}
+      {activeTab === 'shortlist' && (
+        <PlacementShortlist
+          departments={departments}
+          initialScope={directoryScope}
+        />
       )}
 
       {/* Student Detail & Placement Update Modal */}
@@ -890,6 +878,68 @@ export const FacultyDashboard = () => {
                   {selectedStudent.year_of_study ? `Year ${selectedStudent.year_of_study}` : 'Not Specified'}
                 </span>
               </div>
+            </div>
+
+            {/* Student's Target Companies & Job Applications */}
+            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <BriefcaseIcon className="h-4 w-4 text-purple-600" />
+                  Target Companies & Saved Jobs ({selectedStudent.job_interests?.length || 0})
+                </h4>
+                {selectedStudent.job_interests?.length > 0 && (
+                  <span className="text-[11px] text-gray-500">Live Student Pipeline</span>
+                )}
+              </div>
+
+              {selectedStudent.job_interests && selectedStudent.job_interests.length > 0 ? (
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {selectedStudent.job_interests.map((item) => (
+                    <div
+                      key={item.id}
+                      className="p-2.5 bg-white rounded-lg border border-gray-200/80 shadow-xs flex items-center justify-between text-xs hover:border-purple-200 transition-colors"
+                    >
+                      <div className="min-w-0 pr-2">
+                        <p className="font-bold text-gray-900 truncate">{item.company}</p>
+                        <p className="text-gray-500 text-[11px] truncate">{item.job_title}</p>
+                        {item.notes && (
+                          <p className="text-gray-400 text-[10px] italic mt-0.5 truncate">"{item.notes}"</p>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-2 shrink-0">
+                        <span
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                            item.status === 'offer'
+                              ? 'bg-green-100 text-green-800'
+                              : item.status === 'interviewing'
+                              ? 'bg-blue-100 text-blue-800'
+                              : item.status === 'applied'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-amber-100 text-amber-800'
+                          }`}
+                        >
+                          {item.status || 'Interested'}
+                        </span>
+                        {item.job_id && (
+                          <a
+                            href={`/jobs/${item.job_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded"
+                            title="View Job Details"
+                          >
+                            <EyeIcon className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400 italic bg-white p-3 rounded-lg border border-dashed border-gray-200 text-center">
+                  This mentee has not marked interest in any company roles or campus jobs yet.
+                </p>
+              )}
             </div>
 
             <form onSubmit={handleSavePlacement} className="p-4 bg-purple-50/60 rounded-xl border border-purple-100 space-y-3">
@@ -977,104 +1027,6 @@ export const FacultyDashboard = () => {
         </div>
       )}
 
-      {/* Password & Security Modal */}
-      {showPasswordModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 relative space-y-5">
-            <div className="flex items-start justify-between pb-3 border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
-                  <KeyIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 text-lg">Faculty Password & Security</h3>
-                  <p className="text-xs text-gray-500">{user?.email || 'Logged in account'}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowPasswordModal(false)}
-                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <XIcon className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleChangePassword} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Current Password</label>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={passwordForm.oldPassword}
-                  onChange={e => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
-                  className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">New Password</label>
-                  <input
-                    type="password"
-                    placeholder="Min. 6 characters"
-                    value={passwordForm.newPassword}
-                    onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                    className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Confirm New Password</label>
-                  <input
-                    type="password"
-                    placeholder="Confirm new password"
-                    value={passwordForm.confirmPassword}
-                    onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                    className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowPasswordModal(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  isLoading={isChangingPassword}
-                  className="bg-purple-600 hover:bg-purple-700 text-white font-semibold flex items-center gap-1.5"
-                >
-                  <LockClosedIcon className="w-4 h-4" />
-                  Update Password
-                </Button>
-              </div>
-            </form>
-
-            <div className="pt-4 border-t border-gray-100 bg-purple-50/60 -mx-6 -mb-6 p-5 rounded-b-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="text-xs text-gray-600">
-                <span className="font-semibold text-gray-800">Forgot your current password?</span>
-                <p className="text-[11px] text-gray-500">We'll dispatch a secure reset link to your faculty inbox.</p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleSendResetEmail}
-                isLoading={isSendingResetEmail}
-                className="text-purple-700 border-purple-300 hover:bg-purple-100 text-xs shrink-0 flex items-center gap-1"
-              >
-                <MailIcon className="w-3.5 h-3.5" />
-                Send Reset Link
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

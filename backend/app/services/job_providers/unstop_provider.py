@@ -2,6 +2,7 @@
 
 import requests
 import re
+import html
 from typing import Dict, List, Any, Optional
 import logging
 from app.services.job_providers.base_provider import BaseJobProvider
@@ -23,12 +24,12 @@ class UnstopProvider(BaseJobProvider):
         """Fetch jobs and hiring opportunities from Unstop"""
         jobs: List[Dict[str, Any]] = []
         try:
-            search_query = query or "Developer"
             params = {
                 'opportunity': 'jobs',
-                'searchTerm': search_query,
                 'per_page': str(limit * 2)
             }
+            if query and query.strip():
+                params['searchTerm'] = query.strip()
             
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -103,6 +104,11 @@ class UnstopProvider(BaseJobProvider):
                     desc_str = str(raw_desc.get('text') or raw_desc.get('description') or f"Hiring opportunity on Unstop for {title} at {company}.")
                 else:
                     desc_str = str(raw_desc or f"Hiring opportunity on Unstop for {title} at {company}.")
+
+                # Clean and strip HTML tags & entities
+                desc_str = html.unescape(desc_str)
+                desc_str = re.sub(r'<[^>]+>', ' ', desc_str)
+                desc_str = re.sub(r'\s+', ' ', desc_str).strip()
 
                 normalized = self.normalize_job(
                     external_id=str(item.get('id') or hash(title + company)),
