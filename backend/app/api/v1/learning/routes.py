@@ -18,8 +18,10 @@ def get_roadmap():
         current_user_id = int(get_jwt_identity())
         resume_id_param = request.args.get('resume_id')
         resume_id = int(resume_id_param) if (resume_id_param and resume_id_param.isdigit()) else None
+        language = request.args.get('language', 'en')
+        target_date = request.args.get('target_date', None)
 
-        roadmap = learning_service.get_roadmap_for_resume(user_id=current_user_id, resume_id=resume_id)
+        roadmap = learning_service.get_roadmap_for_resume(user_id=current_user_id, resume_id=resume_id, language=language, target_date=target_date)
         return jsonify(roadmap), 200
 
     except Exception as e:
@@ -165,12 +167,14 @@ def get_youtube_resources():
         skill = request.args.get('skill', 'SQL')
         target_role = request.args.get('target_role', 'Software Engineer')
         stage = request.args.get('stage', 'learn')
+        language = request.args.get('language', 'en')
 
-        videos = learning_service.youtube_service.get_videos_for_skill(skill=skill, target_role=target_role, stage=stage)
+        videos = learning_service.youtube_service.get_videos_for_skill(skill=skill, target_role=target_role, stage=stage, language=language)
         return jsonify({
             'skill': skill,
             'target_role': target_role,
             'stage': stage,
+            'language': language,
             'videos': videos
         }), 200
 

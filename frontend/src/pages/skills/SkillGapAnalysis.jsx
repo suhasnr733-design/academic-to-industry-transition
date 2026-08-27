@@ -1,36 +1,49 @@
 // src/pages/skills/SkillGapAnalysis.jsx
 
-import React from 'react'
-import { useParams } from 'react-router-dom'
+import React, { useState, useEffect, useCallback } from 'react'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useSkills } from '../../hooks/useSkills'
 import { Button } from '../../components/common/Button'
 import { Heading } from '../../components/common/Typography'
 import { 
   CheckCircleIcon, 
   XCircleIcon,
-  ExternalLinkIcon
+  ExternalLinkIcon,
+  DocumentTextIcon,
+  BriefcaseIcon
 } from '@heroicons/react/outline'
 import { getPlatformUrl, getCourseUrl, getPlatformBadgeConfig } from '../../utils/courseUrls'
 
 export const SkillGapAnalysis = () => {
   const { resumeId } = useParams()
+  const navigate = useNavigate()
   const { getGapAnalysis, isLoading } = useSkills()
-  const [analysis, setAnalysis] = React.useState(null)
-  const [fetchError, setFetchError] = React.useState(null)
+  const [analysis, setAnalysis] = useState(null)
+  const [fetchError, setFetchError] = useState(null)
+  const [selectedRole, setSelectedRole] = useState('')
 
-  React.useEffect(() => {
-    const fetchAnalysis = async () => {
-      try {
-        setFetchError(null)
-        const data = await getGapAnalysis(resumeId)
-        setAnalysis(data)
-      } catch (err) {
-        console.error('Error in SkillGapAnalysis:', err)
-        setFetchError(err.message || 'Failed to load skill gap analysis')
+  const fetchAnalysis = useCallback(async (role) => {
+    try {
+      setFetchError(null)
+      const data = await getGapAnalysis(resumeId, role)
+      setAnalysis(data)
+      if (data?.target_role && !role) {
+        setSelectedRole(data.target_role)
       }
+    } catch (err) {
+      console.error('Error in SkillGapAnalysis:', err)
+      setFetchError(err.message || 'Failed to load skill gap analysis')
     }
-    fetchAnalysis()
   }, [resumeId, getGapAnalysis])
+
+  useEffect(() => {
+    fetchAnalysis(selectedRole)
+  }, [resumeId])
+
+  const handleRoleChange = (newRole) => {
+    setSelectedRole(newRole)
+    fetchAnalysis(newRole)
+  }
 
   if (isLoading && !analysis) {
     return (
@@ -40,47 +53,134 @@ export const SkillGapAnalysis = () => {
     )
   }
 
-  if (fetchError || !analysis) {
+  // Handle no resume state gracefully
+  if (analysis?.no_resume || (!isLoading && !analysis?.resume_id && !analysis?.current_skills?.length && fetchError)) {
     return (
-      <div className="max-w-4xl mx-auto py-12 text-center bg-white rounded-2xl shadow-lg p-8">
-        <Heading level={3} className="text-gray-800">Skill Gap Analysis Unavailable</Heading>
-        <p className="text-gray-500 mt-2">{fetchError || 'Could not load skill gap analysis.'}</p>
+      <div className="max-w-3xl mx-auto py-16 px-6 text-center bg-white rounded-2xl shadow-lg border border-gray-100">
+        <div className="p-4 bg-primary-50 rounded-full w-20 h-20 mx-auto flex items-center justify-center mb-4">
+          <DocumentTextIcon className="h-10 w-10 text-primary-600" />
+        </div>
+        <Heading level={2} className="text-gray-900">No Resume Uploaded Yet</Heading>
+        <p className="text-gray-500 mt-2 max-w-md mx-auto text-sm leading-relaxed">
+          Upload your resume to automatically extract your skills, analyze skill gaps for your target job roles, and get tailored course recommendations.
+        </p>
+        <div className="mt-6 flex justify-center gap-3">
+          <Button onClick={() => navigate('/resume/upload')}>
+            Upload Resume
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/resume')}>
+            View Resumes
+          </Button>
+        </div>
       </div>
     )
   }
 
-  const matchPercentage = analysis.match_percentage ?? 0
-  const matchingSkills = analysis.matching_skills || []
-  const missingSkills = analysis.missing_skills || []
-  const recommendations = analysis.recommendations || []
-  const learningPath = analysis.learning_path || []
+  if (fetchError && !analysis) {
+    return (
+      <div className="max-w-4xl mx-auto py-12 text-center bg-white rounded-2xl shadow-lg p-8">
+        <Heading level={3} className="text-gray-800">Skill Gap Analysis Unavailable</Heading>
+        <p className="text-gray-500 mt-2">{fetchError || 'Could not load skill gap analysis.'}</p>
+        <Button className="mt-4" onClick={() => fetchAnalysis(selectedRole)}>
+          Try Again
+        </Button>
+      </div>
+    )
+  }
+
+  const matchPercentage = analysis?.match_percentage ?? 0
+  const matchingSkills = analysis?.matching_skills || []
+  const missingSkills = analysis?.missing_skills || []
+  const currentSkills = analysis?.current_skills || []
+  const recommendations = analysis?.recommendations || []
+  const learningPath = analysis?.learning_path || []
+  const availableRoles = analysis?.available_roles || [
+    'Software Engineer',
+    'DevOps Engineer',
+    'Frontend Developer',
+    'Backend Developer',
+    'Data Scientist',
+    'ML Engineer'
+  ]
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto space-y-6">
       <div className="bg-white rounded-2xl shadow-lg p-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6 pb-6 border-b border-gray-100">
           <div>
             <Heading level={2}>Skill Gap Analysis</Heading>
-            <p className="text-gray-500 mt-1">
-              Target Role: <span className="font-semibold text-gray-700">{analysis.target_role || 'Software Engineer'}</span> ({matchPercentage}% match)
-            </p>
+            <div className="flex flex-wrap items-center gap-3 mt-3">
+              <div className="flex items-center space-x-2">
+                <BriefcaseIcon className="h-4 w-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">Target Role:</span>
+                <select
+                  value={selectedRole || analysis?.target_role || 'Software Engineer'}
+                  onChange={(e) => handleRoleChange(e.target.value)}
+                  className="px-3 py-1.5 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-primary-500 focus:outline-none cursor-pointer"
+                >
+                  {availableRoles.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {analysis?.filename && (
+                <span className="text-xs text-gray-500 bg-gray-100 px-2.5 py-1 rounded-md max-w-xs truncate" title={analysis.filename}>
+                  Resume: {analysis.candidate_name || analysis.filename}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="text-center">
-            <div className="text-4xl font-bold text-primary-600">
+          <div className="flex items-center gap-4 sm:flex-col sm:items-end sm:gap-1">
+            <div className="text-4xl font-black text-primary-600">
               {matchPercentage}%
             </div>
-            <div className="text-sm text-gray-500">Overall Match</div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Overall Match</div>
           </div>
         </div>
 
         {/* Match Progress Bar */}
-        <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden mb-8">
-          <div 
-            className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full transition-all duration-500"
-            style={{ width: `${matchPercentage}%` }}
-          />
+        <div className="mb-8">
+          <div className="flex items-center justify-between text-xs text-gray-500 mb-1.5">
+            <span>Skill Match Alignment</span>
+            <span className="font-semibold text-gray-700">{matchingSkills.length} of {matchingSkills.length + missingSkills.length} target skills met</span>
+          </div>
+          <div className="w-full h-3.5 bg-gray-100 rounded-full overflow-hidden">
+            <div 
+              className={`h-full rounded-full transition-all duration-700 ${
+                matchPercentage >= 70
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
+                  : matchPercentage >= 40
+                  ? 'bg-gradient-to-r from-primary-500 to-indigo-600'
+                  : 'bg-gradient-to-r from-amber-500 to-rose-500'
+              }`}
+              style={{ width: `${matchPercentage}%` }}
+            />
+          </div>
         </div>
+
+        {/* Candidate's Extracted Skills Preview */}
+        {currentSkills.length > 0 && (
+          <div className="mb-8 p-4 bg-gray-50/80 rounded-xl border border-gray-200/70">
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-600">
+                Skills Found in Resume ({currentSkills.length})
+              </span>
+              <Link to={`/resume/${analysis?.resume_id || ''}`} className="text-xs font-semibold text-primary-600 hover:text-primary-700 hover:underline">
+                View Resume Details &rarr;
+              </Link>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {currentSkills.map((skill, idx) => (
+                <span key={idx} className="px-2.5 py-0.5 bg-white text-gray-700 border border-gray-200 rounded-md text-xs font-medium shadow-2xs">
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Skills Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

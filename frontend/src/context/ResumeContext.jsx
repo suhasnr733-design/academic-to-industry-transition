@@ -74,11 +74,8 @@ export const ResumeProvider = ({ children }) => {
         created_at: res.data?.created_at || new Date().toISOString()
       }
 
-      // Optimistically prepend new resume to state
-      setResumes(prev => {
-        const filtered = prev.filter(r => r.id !== newResume.id)
-        return [newResume, ...filtered]
-      })
+      // Single active resume policy: replace previous resume in state
+      setResumes([newResume])
 
       toast.success('Resume uploaded successfully')
       

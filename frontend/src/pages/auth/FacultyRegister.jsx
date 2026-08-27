@@ -21,7 +21,7 @@ const facultyRegisterSchema = yup.object({
     .min(3, 'Username must be at least 3 characters')
     .matches(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
   email: yup.string()
-    .required('Institutional / Faculty Email is required')
+    .required('Faculty Email is required')
     .email('Invalid email address'),
   department: yup.string()
     .required('Academic Department is required'),
@@ -110,7 +110,7 @@ export const FacultyRegister = () => {
           />
 
           <Input
-            label="Institutional Email"
+            label="Faculty Email"
             type="email"
             placeholder="faculty@university.edu"
             {...register('email')}

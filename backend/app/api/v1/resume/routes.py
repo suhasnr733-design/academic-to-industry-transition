@@ -1,7 +1,7 @@
 # backend/app/api/v1/resume/routes.py
 
 import os
-from flask import request, jsonify, current_app
+from flask import request, jsonify, current_app, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 from app import db
@@ -45,6 +45,16 @@ def upload_resume():
         
         file_size = os.path.getsize(file_path)
         file_type = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+        
+        # Automatically delete previous resumes for this user so only 1 active resume exists
+        existing_resumes = Resume.query.filter_by(user_id=current_user_id).all()
+        for old_resume in existing_resumes:
+            if old_resume.file_path and os.path.exists(old_resume.file_path) and old_resume.file_path != file_path:
+                try:
+                    os.remove(old_resume.file_path)
+                except Exception as del_err:
+                    logger.warning(f"Could not remove old resume file {old_resume.file_path}: {del_err}")
+            db.session.delete(old_resume)
         
         resume = Resume(
             user_id=current_user_id,
@@ -235,4 +245,32 @@ def get_resume_data(resume_id):
             'skill_gaps': resume.skill_gaps or []
         }), 200
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@resume_bp.route('/<int:resume_id>/file', methods=['GET'])
+@resume_bp.route('/<int:resume_id>/download', methods=['GET'])
+def get_resume_file(resume_id):
+    """Serve the raw resume file for live PDF viewer or download"""
+    try:
+        resume = Resume.query.filter_by(id=resume_id).first()
+        if not resume:
+            return jsonify({'error': 'Resume not found'}), 404
+        
+        if not resume.file_path or not os.path.exists(resume.file_path):
+            return jsonify({'error': 'Resume file does not exist on server'}), 404
+        
+        as_attachment = request.args.get('download', 'false').lower() == 'true'
+        
+        # Determine mimetype
+        ext = resume.file_type.lower() if resume.file_type else 'pdf'
+        mimetype = 'application/pdf' if ext == 'pdf' else ('application/vnd.openxmlformats-officedocument.wordprocessingml.document' if ext == 'docx' else 'text/plain')
+        
+        return send_file(
+            resume.file_path,
+            mimetype=mimetype,
+            as_attachment=as_attachment,
+            download_name=resume.filename
+        )
+    except Exception as e:
+        logger.error(f"Error serving resume file: {e}")
         return jsonify({'error': str(e)}), 500
