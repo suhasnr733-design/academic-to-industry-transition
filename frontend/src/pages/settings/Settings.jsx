@@ -5,9 +5,18 @@ import { api } from '../../services/api'
 import toast from 'react-hot-toast'
 
 export default function Settings() {
-  const { user } = useAuth()
-  const [notifications, setNotifications] = useState(true)
-  const [emailAlerts, setEmailAlerts] = useState(true)
+  const { user, updateProfile } = useAuth()
+  const [notifications, setNotifications] = useState(user?.notifications_enabled ?? true)
+  const [emailAlerts, setEmailAlerts] = useState(user?.email_alerts_enabled ?? true)
+  const [isSavingPreferences, setIsSavingPreferences] = useState(false)
+
+  // Sync state if user profile loads/updates asynchronously
+  React.useEffect(() => {
+    if (user) {
+      setNotifications(user.notifications_enabled !== undefined ? user.notifications_enabled : true)
+      setEmailAlerts(user.email_alerts_enabled !== undefined ? user.email_alerts_enabled : true)
+    }
+  }, [user])
 
   // Password change state
   const [passwordForm, setPasswordForm] = useState({
@@ -21,8 +30,36 @@ export default function Settings() {
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [isSendingResetEmail, setIsSendingResetEmail] = useState(false)
 
-  const handleSavePreferences = () => {
-    toast.success('Preferences saved successfully')
+  const [isSendingDigest, setIsSendingDigest] = useState(false)
+
+  const handleSavePreferences = async () => {
+    try {
+      setIsSavingPreferences(true)
+      await updateProfile({
+        notifications_enabled: notifications,
+        email_alerts_enabled: emailAlerts
+      })
+      toast.success('Preferences saved successfully')
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to save preferences')
+    } finally {
+      setIsSavingPreferences(false)
+    }
+  }
+
+  const handleSendTestDigest = async () => {
+    if (!emailAlerts) {
+      return toast.error('Please enable Email Digest & Activity Alerts first')
+    }
+    try {
+      setIsSendingDigest(true)
+      const res = await api.post('/notifications/send-digest')
+      toast.success(res.data?.message || 'Test digest email sent!')
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Failed to send test digest email')
+    } finally {
+      setIsSendingDigest(false)
+    }
   }
 
   const handleChangePassword = async (e) => {
@@ -112,12 +149,23 @@ export default function Settings() {
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex items-center justify-end gap-3 pt-2">
           <button 
-            onClick={handleSavePreferences}
-            className="btn-primary px-5 py-2 text-sm shadow-md"
+            type="button"
+            onClick={handleSendTestDigest}
+            disabled={isSendingDigest || !emailAlerts}
+            className="px-4 py-2 text-sm font-semibold rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            Save Preferences
+            <FiMail className="w-4 h-4 text-primary-500" />
+            {isSendingDigest ? 'Sending Digest...' : 'Send Test Digest'}
+          </button>
+          <button 
+            type="button"
+            onClick={handleSavePreferences}
+            disabled={isSavingPreferences}
+            className="btn-primary px-5 py-2 text-sm shadow-md disabled:opacity-50"
+          >
+            {isSavingPreferences ? 'Saving...' : 'Save Preferences'}
           </button>
         </div>
       </div>

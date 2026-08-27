@@ -244,7 +244,10 @@ def update_profile():
             }), 404
         
         data = request.get_json() or {}
-        allowed_fields = ['full_name', 'email', 'department', 'year_of_study', 'college', 'phone', 'bio']
+        allowed_fields = [
+            'full_name', 'email', 'department', 'year_of_study', 
+            'college', 'phone', 'bio', 'notifications_enabled', 'email_alerts_enabled'
+        ]
         
         # Validate email if provided and changed
         if 'email' in data:
@@ -279,6 +282,11 @@ def update_profile():
                 continue
                 
             if field in data:
+                if field in ('notifications_enabled', 'email_alerts_enabled'):
+                    val = bool(data[field])
+                    setattr(user, field, val)
+                    updated_fields.append(field)
+                    continue
                 if field == 'year_of_study':
                     val = data.get('year_of_study')
                     if val is None or str(val).strip() == '':

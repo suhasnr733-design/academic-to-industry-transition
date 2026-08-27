@@ -14,6 +14,15 @@ class OAuth2Client(db.Model):
     client_name = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    def __init__(self, client_id=None, client_secret=None, client_type='confidential', client_name='API Client', **kwargs):
+        super().__init__(**kwargs)
+        if client_id is not None:
+            self.client_id = client_id
+        if client_secret is not None:
+            self.client_secret = client_secret
+        self.client_type = client_type
+        self.client_name = client_name
+
     def to_dict(self):
         return {
             'id': self.id,
