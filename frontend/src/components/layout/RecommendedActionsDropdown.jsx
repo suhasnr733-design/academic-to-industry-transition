@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../hooks/useAuth'
 import { useRecommendedActions } from '../../hooks/useRecommendedActions'
 import {
   CheckCircleIcon,
@@ -13,7 +14,8 @@ import {
   UserCircleIcon,
   DocumentTextIcon,
   AcademicCapIcon,
-  BriefcaseIcon
+  BriefcaseIcon,
+  OfficeBuildingIcon
 } from '@heroicons/react/outline'
 import { CheckCircleIcon as CheckCircleSolid } from '@heroicons/react/solid'
 
@@ -21,6 +23,10 @@ export const RecommendedActionsDropdown = () => {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef(null)
   const navigate = useNavigate()
+  const { user } = useAuth()
+
+  const role = user?.role || 'student'
+  const isFaculty = role === 'faculty'
 
   const {
     actions,
@@ -28,8 +34,7 @@ export const RecommendedActionsDropdown = () => {
     completedCount,
     totalCount,
     progressPercent,
-    allCoreCompleted,
-    pendingCount
+    allCoreCompleted
   } = useRecommendedActions()
 
   // Close dropdown on outside click
@@ -50,13 +55,17 @@ export const RecommendedActionsDropdown = () => {
   const getActionIcon = (id) => {
     switch (id) {
       case 'profile':
-        return <UserCircleIcon className="w-5 h-5 text-blue-500" />
+        return <UserCircleIcon className={`w-5 h-5 ${isFaculty ? 'text-purple-500' : 'text-blue-500'}`} />
+      case 'mentorship':
+        return <AcademicCapIcon className="w-5 h-5 text-purple-600" />
+      case 'drives':
+        return <OfficeBuildingIcon className="w-5 h-5 text-indigo-600" />
       case 'resume':
         return <DocumentTextIcon className="w-5 h-5 text-amber-500" />
       case 'assessment':
         return <AcademicCapIcon className="w-5 h-5 text-emerald-500" />
       default:
-        return <SparklesIcon className="w-5 h-5 text-primary-500" />
+        return <SparklesIcon className={`w-5 h-5 ${isFaculty ? 'text-purple-500' : 'text-primary-500'}`} />
     }
   }
 
@@ -74,16 +83,20 @@ export const RecommendedActionsDropdown = () => {
         className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border ${
           allCoreCompleted
             ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 shadow-sm'
+            : isFaculty
+            ? 'bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-800 border-purple-200 hover:shadow-md'
             : 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 border-blue-200 hover:shadow-md'
         }`}
       >
         <span className="relative flex h-2 w-2">
           {!allCoreCompleted && (
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+              isFaculty ? 'bg-purple-400' : 'bg-blue-400'
+            }`}></span>
           )}
           <span
             className={`relative inline-flex rounded-full h-2 w-2 ${
-              allCoreCompleted ? 'bg-emerald-500' : 'bg-blue-600'
+              allCoreCompleted ? 'bg-emerald-500' : isFaculty ? 'bg-purple-600' : 'bg-blue-600'
             }`}
           ></span>
         </span>
@@ -98,7 +111,7 @@ export const RecommendedActionsDropdown = () => {
         {allCoreCompleted ? (
           <CheckCircleSolid className="w-4 h-4 text-emerald-600 ml-0.5" />
         ) : (
-          <SparklesIcon className="w-4 h-4 text-blue-600 ml-0.5" />
+          <SparklesIcon className={`w-4 h-4 ml-0.5 ${isFaculty ? 'text-purple-600' : 'text-blue-600'}`} />
         )}
       </button>
 
@@ -108,18 +121,28 @@ export const RecommendedActionsDropdown = () => {
           {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-gray-100">
             <div className="flex items-center space-x-2">
-              <div className="p-1.5 rounded-lg bg-primary-50 text-primary-600">
-                <ClipboardCheckIcon className="w-5 h-5" />
+              <div className={`p-1.5 rounded-lg ${isFaculty ? 'bg-purple-50 text-purple-600' : 'bg-primary-50 text-primary-600'}`}>
+                {isFaculty ? (
+                  <AcademicCapIcon className="w-5 h-5" />
+                ) : (
+                  <ClipboardCheckIcon className="w-5 h-5" />
+                )}
               </div>
               <div>
-                <h3 className="text-sm font-bold text-gray-900">Career Readiness Actions</h3>
-                <p className="text-xs text-gray-500">Track your essential profile setup</p>
+                <h3 className="text-sm font-bold text-gray-900">
+                  {isFaculty ? 'Faculty Advisor Actions' : 'Career Readiness Actions'}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  {isFaculty ? 'Track your essential department setup' : 'Track your essential profile setup'}
+                </p>
               </div>
             </div>
             <span
               className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
                 allCoreCompleted
                   ? 'bg-emerald-100 text-emerald-800'
+                  : isFaculty
+                  ? 'bg-purple-100 text-purple-800'
                   : 'bg-primary-100 text-primary-800'
               }`}
             >
@@ -138,6 +161,8 @@ export const RecommendedActionsDropdown = () => {
                 className={`h-full rounded-full transition-all duration-500 ${
                   allCoreCompleted
                     ? 'bg-gradient-to-r from-emerald-400 to-emerald-600'
+                    : isFaculty
+                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600'
                     : 'bg-gradient-to-r from-primary-500 to-indigo-600'
                 }`}
                 style={{ width: `${progressPercent}%` }}
@@ -199,6 +224,8 @@ export const RecommendedActionsDropdown = () => {
                   className={`text-xs font-medium ml-2 shrink-0 flex items-center gap-0.5 ${
                     action.isCompleted
                       ? 'text-emerald-700 hover:text-emerald-800'
+                      : isFaculty
+                      ? 'text-purple-600 hover:text-purple-700 font-semibold'
                       : 'text-primary-600 hover:text-primary-700 font-semibold'
                   }`}
                 >
@@ -213,17 +240,20 @@ export const RecommendedActionsDropdown = () => {
           {allCoreCompleted && (
             <div className="mt-3.5 pt-3 border-t border-gray-100">
               <p className="text-xs font-bold text-gray-700 mb-2 flex items-center gap-1">
-                <SparklesIcon className="w-3.5 h-3.5 text-amber-500" /> Next Career Recommendations
+                <SparklesIcon className={`w-3.5 h-3.5 ${isFaculty ? 'text-purple-600' : 'text-amber-500'}`} />
+                {isFaculty ? 'Next Faculty Recommendations' : 'Next Career Recommendations'}
               </p>
               <div className="grid grid-cols-2 gap-2">
                 {advancedRecommendations.slice(0, 2).map((item) => (
                   <button
                     key={item.id}
                     onClick={() => handleActionClick(item.link)}
-                    className="p-2 rounded-lg bg-gray-50 hover:bg-primary-50 hover:text-primary-700 text-left border border-gray-200/60 transition-all text-xs"
+                    className="p-2 rounded-lg bg-gray-50 hover:bg-purple-50 hover:text-purple-700 text-left border border-gray-200/60 transition-all text-xs"
                   >
                     <p className="font-semibold text-gray-800 line-clamp-1">{item.title}</p>
-                    <span className="text-[10px] text-primary-600 font-medium flex items-center gap-0.5 mt-1">
+                    <span className={`text-[10px] font-medium flex items-center gap-0.5 mt-1 ${
+                      isFaculty ? 'text-purple-600' : 'text-primary-600'
+                    }`}>
                       {item.actionLabel} &rarr;
                     </span>
                   </button>

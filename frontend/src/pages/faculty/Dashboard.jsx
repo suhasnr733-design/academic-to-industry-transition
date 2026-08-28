@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { api } from '../../services/api'
 import { Button } from '../../components/common/Button'
+import { WelcomeActionsModal } from '../../components/dashboard/WelcomeActionsModal'
 import toast from 'react-hot-toast'
 import {
   UserGroupIcon,
@@ -32,8 +33,14 @@ import { CampusDrives } from './CampusDrives'
 
 export const FacultyDashboard = () => {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTab = searchParams.get('tab') || 'overview'
+
+  // Dynamic faculty profile completeness
+  const facultyProfileFields = ['full_name', 'email', 'department', 'college', 'phone', 'bio']
+  const filledFacultyFields = facultyProfileFields.filter((f) => Boolean(user?.[f] && String(user?.[f]).trim().length > 0))
+  const facultyProfilePercentage = Math.round((filledFacultyFields.length / facultyProfileFields.length) * 100)
 
   const [stats, setStats] = useState({
     totalStudents: 0,
@@ -277,6 +284,9 @@ export const FacultyDashboard = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Faculty Welcome / Onboarding Actions Modal */}
+      <WelcomeActionsModal />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <div>
@@ -408,6 +418,85 @@ export const FacultyDashboard = () => {
       {/* Tab 1: Overview */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
+          {/* Profile Readiness & Mentorship Status Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Profile Completeness Card */}
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100/80 flex flex-col justify-between hover:shadow-md transition-shadow">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-gray-700">Profile Readiness</span>
+                  <span className={`text-sm font-bold ${facultyProfilePercentage === 100 ? 'text-emerald-600' : 'text-purple-600'}`}>
+                    {facultyProfilePercentage}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-purple-600 to-indigo-600 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${facultyProfilePercentage}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-3 leading-relaxed">
+                  {facultyProfilePercentage < 100
+                    ? 'Complete department, institution, contact phone, and bio for verified student mentorship.'
+                    : 'Your faculty advisor profile is fully configured!'}
+                </p>
+              </div>
+              {facultyProfilePercentage < 100 && (
+                <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
+                  <button
+                    onClick={() => navigate('/profile')}
+                    className="text-xs font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-1"
+                  >
+                    Complete Profile &rarr;
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Academic Department & Advisor Overview Card */}
+            <div className="md:col-span-2 bg-white rounded-2xl shadow-sm p-6 border border-gray-100/80 flex flex-col justify-between hover:shadow-md transition-shadow">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2.5 bg-purple-50 text-purple-600 rounded-xl">
+                    <AcademicCapIcon className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900">Faculty Advisor Status</h3>
+                    <p className="text-xs text-gray-500">
+                      {user?.department ? `${user.department} • ${user.college || 'Academic Institution'}` : 'Connect with students and guide campus placement drives'}
+                    </p>
+                  </div>
+                </div>
+
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200 self-start sm:self-auto">
+                  {stats.totalStudents || 0} Students in Cohort
+                </span>
+              </div>
+
+              <div className="bg-purple-50/50 rounded-xl p-3.5 border border-purple-100/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold text-purple-950">
+                    {pendingRequestsCount > 0
+                      ? `${pendingRequestsCount} new mentorship request(s) waiting for review`
+                      : 'Department mentorship channel active'}
+                  </p>
+                  <p className="text-[11px] text-purple-700/80 mt-0.5">
+                    {pendingRequestsCount > 0
+                      ? 'Review incoming requests to accept students into your mentee cohort.'
+                      : 'Guide student resumes, endorse top talent, and coordinate campus placement shortlists.'}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setSearchParams({ tab: 'requests' })}
+                  className="text-xs font-bold px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white shadow-xs shrink-0"
+                >
+                  {pendingRequestsCount > 0 ? 'Review Requests' : 'View Mentees'} &rarr;
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Key Stat Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {facultyStatCards.map((stat) => (
