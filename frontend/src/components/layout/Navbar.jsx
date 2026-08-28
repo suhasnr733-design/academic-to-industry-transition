@@ -13,6 +13,7 @@ import {
   UserGroupIcon
 } from '@heroicons/react/outline'
 import { RecommendedActionsDropdown } from './RecommendedActionsDropdown'
+import { TransitionLogo } from '../common/TransitionLogo'
 
 export const Navbar = ({ onMenuClick }) => {
   const { isAuthenticated, user, logout } = useAuth()
@@ -46,8 +47,8 @@ export const Navbar = ({ onMenuClick }) => {
   const homeHref = isFaculty ? '/faculty' : isAdmin ? '/admin' : '/dashboard'
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800 sticky top-0 z-50">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo & Portal Branding */}
           <div className="flex items-center space-x-3">
@@ -60,22 +61,16 @@ export const Navbar = ({ onMenuClick }) => {
                 <MenuIcon className="h-6 w-6" />
               </button>
             )}
-            <Link to={isAuthenticated ? homeHref : "/"} className="flex items-center space-x-2.5">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-sm text-white font-bold text-sm ${
-                isFaculty 
-                  ? 'bg-gradient-to-tr from-purple-600 to-indigo-600' 
-                  : isAdmin
-                  ? 'bg-gradient-to-tr from-red-600 to-orange-600'
-                  : 'bg-gradient-to-tr from-primary-600 to-secondary-600'
-              }`}>
-                {isFaculty ? 'FC' : isAdmin ? 'AD' : 'AI'}
+            <Link to={isAuthenticated ? homeHref : "/"} className="flex items-center space-x-2.5 group">
+              <div className="flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
+                <TransitionLogo className="w-9 h-9 drop-shadow-sm" />
               </div>
               <div>
-                <span className="text-lg font-bold text-gray-900 leading-none block">
-                  TransitionAI
+                <span className="text-xl font-bold text-gray-900 dark:text-white leading-none block tracking-tight">
+                  Transition<span className="text-primary-600 dark:text-primary-400">AI</span>
                 </span>
                 {isAuthenticated && !isAuthPage && (
-                  <span className="text-[11px] font-medium text-gray-500 block leading-tight">
+                  <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 block leading-tight">
                     {isFaculty ? 'Faculty Portal' : isAdmin ? 'Admin Console' : 'Student Portal'}
                   </span>
                 )}
@@ -217,21 +212,27 @@ export const Navbar = ({ onMenuClick }) => {
                 </div>
               </>
             ) : (
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
+              <div className="flex items-center space-x-1.5 p-1 bg-gray-50/80 dark:bg-gray-800 rounded-xl border border-gray-200/60 dark:border-gray-700">
+                <button
                   onClick={() => navigate('/login')}
+                  className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
+                    location.pathname === '/login' || location.pathname === '/register'
+                      ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 font-semibold shadow-xs'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
                 >
-                  Student Login
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
+                  Student Portal
+                </button>
+                <button
                   onClick={() => navigate('/faculty/login')}
+                  className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
+                    location.pathname === '/faculty/login' || location.pathname === '/faculty/register'
+                      ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 font-semibold shadow-xs'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
                 >
-                  Faculty Login
-                </Button>
+                  Faculty Portal
+                </button>
               </div>
             )}
           </div>

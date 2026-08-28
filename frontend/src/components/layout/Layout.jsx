@@ -27,9 +27,14 @@ export const Layout = ({ children }) => {
 
   if (isAuthPage) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50/60 via-slate-50 to-secondary-50/60 flex flex-col justify-between">
+      <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex flex-col justify-between relative overflow-hidden">
+        {/* Ambient background glows */}
+        <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 bg-primary-400/15 rounded-full blur-3xl -z-0" />
+        <div className="pointer-events-none absolute top-1/3 -right-24 w-96 h-96 bg-indigo-400/15 rounded-full blur-3xl -z-0" />
+        <div className="pointer-events-none absolute -bottom-24 left-1/4 w-80 h-80 bg-purple-400/15 rounded-full blur-3xl -z-0" />
+
         <Navbar onMenuClick={toggleSidebar} />
-        <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-auto">
+        <main className="flex-1 flex items-center justify-center px-4 py-4 sm:py-6 my-auto relative z-10">
           {children}
         </main>
         <Footer />
