@@ -82,19 +82,9 @@ export const Navbar = ({ onMenuClick }) => {
           <div className="flex items-center space-x-3 sm:space-x-4">
             {isAuthenticated && !isAuthPage ? (
               <>
-                {/* Recommended Actions Top Bar Menu (Students Only) */}
-                {isStudent && (
+                {/* Recommended Actions Top Bar Menu (Students & Faculty) */}
+                {(isStudent || isFaculty) && (
                   <RecommendedActionsDropdown />
-                )}
-
-                {/* Faculty Quick Portal Link */}
-                {isFaculty && (
-                  <div className="hidden sm:flex items-center space-x-2">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">
-                      <AcademicCapIcon className="h-3.5 w-3.5 mr-1 text-purple-600" />
-                      Faculty Advisor
-                    </span>
-                  </div>
                 )}
 
                 <div className="relative">

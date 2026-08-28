@@ -11,8 +11,13 @@ export const useRecommendedActions = () => {
   const [assessmentCompleted, setAssessmentCompleted] = useState(false)
   const [assessmentScore, setAssessmentScore] = useState(null)
 
+  const role = user?.role || 'student'
+  const isFaculty = role === 'faculty'
+
   useEffect(() => {
-    // Check assessment status strictly scoped to active resumes
+    // Only check resume-based assessment for student accounts
+    if (isFaculty) return
+
     const checkAssessment = async () => {
       // If no resumes uploaded, assessment cannot be completed
       if (!resumes || resumes.length === 0) {
@@ -67,29 +72,58 @@ export const useRecommendedActions = () => {
     // Listen for storage updates
     window.addEventListener('storage', checkAssessment)
     return () => window.removeEventListener('storage', checkAssessment)
-  }, [user, resumes])
+  }, [user, resumes, isFaculty])
 
-  // Profile completion calculation
+  // Profile completion calculation (Role aware)
   const profileDetails = useMemo(() => {
-    if (!user) return { percentage: 0, isComplete: false }
+    if (!user) return { percentage: 0, isComplete: false, missingHint: '' }
 
-    const fields = [
-      user.full_name,
-      user.email,
-      user.department,
-      user.year_of_study,
-      user.college,
-      user.phone,
-      user.bio
+    if (isFaculty) {
+      const facultyFields = [
+        { key: 'full_name', name: 'name' },
+        { key: 'email', name: 'email' },
+        { key: 'department', name: 'department' },
+        { key: 'college', name: 'institution' },
+        { key: 'phone', name: 'office contact' },
+        { key: 'bio', name: 'mentorship bio' }
+      ]
+      const filled = facultyFields.filter(f => user[f.key] && String(user[f.key]).trim().length > 0)
+      const missing = facultyFields.filter(f => !user[f.key] || String(user[f.key]).trim().length === 0)
+      const percentage = Math.round((filled.length / facultyFields.length) * 100)
+      const isComplete = percentage >= 80 || Boolean(user.department && user.college && user.phone)
+
+      let missingHint = ''
+      if (missing.length > 0) {
+        missingHint = `add ${missing.slice(0, 2).map(m => m.name).join(' & ')}`
+      }
+
+      return { percentage, isComplete, missingHint }
+    }
+
+    // Student fields
+    const studentFields = [
+      { key: 'full_name', name: 'name' },
+      { key: 'email', name: 'email' },
+      { key: 'department', name: 'department' },
+      { key: 'year_of_study', name: 'year of study' },
+      { key: 'college', name: 'college' },
+      { key: 'phone', name: 'phone' },
+      { key: 'bio', name: 'bio' }
     ]
-    const filledCount = fields.filter(val => val && String(val).trim().length > 0).length
-    const percentage = Math.round((filledCount / fields.length) * 100)
+    const filled = studentFields.filter(f => user[f.key] && String(user[f.key]).trim().length > 0)
+    const missing = studentFields.filter(f => !user[f.key] || String(user[f.key]).trim().length === 0)
+    const percentage = Math.round((filled.length / studentFields.length) * 100)
     const isComplete = percentage >= 70 || Boolean(user.department && user.college)
 
-    return { percentage, isComplete }
-  }, [user])
+    let missingHint = ''
+    if (missing.length > 0) {
+      missingHint = `add ${missing.slice(0, 2).map(m => m.name).join(' & ')}`
+    }
 
-  // Resume completion calculation
+    return { percentage, isComplete, missingHint }
+  }, [user, isFaculty])
+
+  // Resume completion calculation (Students)
   const resumeDetails = useMemo(() => {
     const count = resumes ? resumes.length : 0
     return {
@@ -98,15 +132,55 @@ export const useRecommendedActions = () => {
     }
   }, [resumes])
 
-  // Core recommended actions list
+  // Core recommended actions list (Role aware)
   const actions = useMemo(() => {
-    const items = [
+    if (isFaculty) {
+      return [
+        {
+          id: 'profile',
+          title: 'Complete Faculty Profile',
+          description: profileDetails.isComplete
+            ? `Faculty profile active (${profileDetails.percentage}% complete)`
+            : `${profileDetails.percentage}% complete - ${profileDetails.missingHint || 'add department & college'}`,
+          isCompleted: profileDetails.isComplete,
+          link: '/profile',
+          badge: profileDetails.isComplete ? 'Complete' : 'Pending',
+          actionLabel: profileDetails.isComplete ? 'Edit Profile' : 'Complete Profile',
+          category: 'onboarding'
+        },
+        {
+          id: 'mentorship',
+          title: 'Connect with Student Mentees',
+          description: Boolean(user?.department)
+            ? `Department (${user?.department}) mentorship channel open`
+            : 'Set your department to receive student mentorship requests',
+          isCompleted: Boolean(user?.department && (user?.college || user?.bio)),
+          link: '/faculty?tab=requests',
+          badge: Boolean(user?.department) ? 'Ready' : 'Setup Required',
+          actionLabel: 'Mentorship Requests',
+          category: 'onboarding'
+        },
+        {
+          id: 'drives',
+          title: 'Coordinate Campus Placement Drives',
+          description: 'Inspect company drives, student attendees, and shortlist candidates',
+          isCompleted: Boolean(user?.department && user?.college),
+          link: '/faculty?tab=drives',
+          badge: Boolean(user?.college) ? 'Active' : 'Institution Required',
+          actionLabel: 'Campus Drives',
+          category: 'onboarding'
+        }
+      ]
+    }
+
+    // Student Actions
+    return [
       {
         id: 'profile',
         title: 'Complete your profile',
         description: profileDetails.isComplete 
           ? `Profile active (${profileDetails.percentage}% complete)` 
-          : `${profileDetails.percentage}% complete - add college & department`,
+          : `${profileDetails.percentage}% complete - ${profileDetails.missingHint || 'add college & department'}`,
         isCompleted: profileDetails.isComplete,
         link: '/profile',
         badge: profileDetails.isComplete ? 'Complete' : 'Pending',
@@ -140,12 +214,36 @@ export const useRecommendedActions = () => {
         category: 'onboarding'
       }
     ]
-
-    return items
-  }, [profileDetails, resumeDetails, assessmentCompleted, assessmentScore])
+  }, [isFaculty, user, profileDetails, resumeDetails, assessmentCompleted, assessmentScore])
 
   // Advanced / next step recommendations when core onboarding is satisfied
   const advancedRecommendations = useMemo(() => {
+    if (isFaculty) {
+      return [
+        {
+          id: 'analytics',
+          title: 'Cohort Skill Gap Analytics',
+          description: 'Discover real-time technical skill deficits across student cohorts',
+          link: '/faculty?tab=analytics',
+          actionLabel: 'View Analytics'
+        },
+        {
+          id: 'shortlist',
+          title: 'Placement Shortlist & Bundle Export',
+          description: 'Filter high-readiness candidates and export resume zip bundles',
+          link: '/faculty?tab=shortlist',
+          actionLabel: 'Shortlist Candidates'
+        },
+        {
+          id: 'students',
+          title: 'Department Student Directory',
+          description: 'Track verified student resumes and live placement status',
+          link: '/faculty?tab=students',
+          actionLabel: 'Student Directory'
+        }
+      ]
+    }
+
     return [
       {
         id: 'jobs',
@@ -169,7 +267,7 @@ export const useRecommendedActions = () => {
         actionLabel: 'Start Learning'
       }
     ]
-  }, [])
+  }, [isFaculty])
 
   const completedCount = Array.isArray(actions) ? actions.filter(a => a?.isCompleted).length : 0
   const totalCount = Array.isArray(actions) && actions.length > 0 ? actions.length : 3
@@ -198,6 +296,9 @@ export const useRecommendedActions = () => {
     resumeDetails,
     assessmentCompleted,
     assessmentScore,
-    markAssessmentDone
+    markAssessmentDone,
+    isFaculty
   }
 }
+
+export default useRecommendedActions
