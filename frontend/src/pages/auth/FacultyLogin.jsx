@@ -13,6 +13,7 @@ import { getApiBaseUrl } from '../../config/apiConfig'
 const facultyLoginSchema = yup.object({
   username: yup.string().required('Faculty ID / Email is required'),
   password: yup.string().required('Password is required'),
+  rememberMe: yup.boolean().default(false),
 })
 
 export const FacultyLogin = () => {
@@ -22,12 +23,15 @@ export const FacultyLogin = () => {
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(facultyLoginSchema),
+    defaultValues: {
+      rememberMe: true,
+    }
   })
 
   const onSubmit = async (data) => {
     try {
       setIsLoading(true)
-      const user = await login(data)
+      const user = await login(data, !!data.rememberMe)
 
       // Role check: Only faculty or admin are permitted
       if (user.role !== 'faculty' && user.role !== 'admin') {
@@ -100,7 +104,17 @@ export const FacultyLogin = () => {
           error={errors.password?.message}
         />
 
-        <div className="flex items-center justify-end text-xs pt-0.5">
+        <div className="flex items-center justify-between text-xs pt-0.5">
+          <label className="flex items-center text-gray-600 dark:text-gray-400 cursor-pointer select-none">
+            <input
+              id="faculty-remember-me"
+              type="checkbox"
+              {...register('rememberMe')}
+              className="h-3.5 w-3.5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer"
+            />
+            <span className="ml-2">Remember me</span>
+          </label>
+
           <Link to="/forgot-password?role=faculty" className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 font-medium hover:underline">
             Forgot password?
           </Link>

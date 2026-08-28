@@ -1,7 +1,5 @@
-// src/context/AuthContext.jsx
-
 import React, { createContext, useState, useContext, useEffect } from 'react'
-import { api } from '../services/api'
+import { api, getAuthToken, clearAuthTokens } from '../services/api'
 import toast from 'react-hot-toast'
 
 const AuthContext = createContext(null)
@@ -12,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token')
+    const token = getAuthToken()
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`
       fetchUser()
@@ -28,8 +26,7 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true)
       return response.data
     } catch (error) {
-      localStorage.removeItem('access_token')
-      localStorage.removeItem('refresh_token')
+      clearAuthTokens()
       delete api.defaults.headers.common['Authorization']
       return null
     } finally {
@@ -37,12 +34,18 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const login = async (credentials) => {
+  const login = async (credentials, rememberMe = false) => {
     const response = await api.post('/auth/login', credentials)
     const { access_token, refresh_token, user } = response.data
     
-    localStorage.setItem('access_token', access_token)
-    localStorage.setItem('refresh_token', refresh_token)
+    // 1. Clear any existing tokens across storages
+    clearAuthTokens()
+
+    // 2. Save tokens to localStorage if Remember Me is checked, otherwise sessionStorage
+    const storage = rememberMe ? localStorage : sessionStorage
+    storage.setItem('access_token', access_token)
+    storage.setItem('refresh_token', refresh_token)
+    
     api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
     
     setUser(user)
@@ -56,6 +59,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   const handleOAuthLogin = async (accessToken, refreshToken) => {
+    clearAuthTokens()
     localStorage.setItem('access_token', accessToken)
     if (refreshToken) {
       localStorage.setItem('refresh_token', refreshToken)
@@ -66,8 +70,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   const logout = () => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
+    clearAuthTokens()
     delete api.defaults.headers.common['Authorization']
     setUser(null)
     setIsAuthenticated(false)

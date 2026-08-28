@@ -13,6 +13,7 @@ import { getApiBaseUrl } from '../../config/apiConfig'
 const loginSchema = yup.object({
   username: yup.string().required('Username is required'),
   password: yup.string().required('Password is required'),
+  rememberMe: yup.boolean().default(false),
 })
 
 export const Login = () => {
@@ -22,12 +23,15 @@ export const Login = () => {
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(loginSchema),
+    defaultValues: {
+      rememberMe: true,
+    }
   })
 
   const onSubmit = async (data) => {
     try {
       setIsLoading(true)
-      const user = await login(data)
+      const user = await login(data, !!data.rememberMe)
       sessionStorage.setItem('just_logged_in', 'true')
       toast.success(`Welcome back, ${user?.full_name || user?.username || 'User'}!`)
       if (user?.role === 'faculty') {
@@ -104,8 +108,8 @@ export const Login = () => {
           <label className="flex items-center text-gray-600 dark:text-gray-400 cursor-pointer select-none">
             <input
               id="remember-me"
-              name="remember-me"
               type="checkbox"
+              {...register('rememberMe')}
               className="h-3.5 w-3.5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer"
             />
             <span className="ml-2">Remember me</span>

@@ -7,6 +7,22 @@ import { getApiBaseUrl } from '../config/apiConfig'
 
 const baseURL = getApiBaseUrl()
 
+// Helper to retrieve access/refresh tokens from localStorage or sessionStorage
+export const getAuthToken = () => {
+  return localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
+}
+
+export const getRefreshToken = () => {
+  return localStorage.getItem('refresh_token') || sessionStorage.getItem('refresh_token')
+}
+
+export const clearAuthTokens = () => {
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('refresh_token')
+  sessionStorage.removeItem('access_token')
+  sessionStorage.removeItem('refresh_token')
+}
+
 // 1. Create standard Axios instance for direct REST calls across the application
 const axiosInstance = axios.create({
   baseURL,
@@ -18,7 +34,7 @@ const axiosInstance = axios.create({
 // Request interceptor to automatically attach JWT token & handle FormData
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token')
+    const token = getAuthToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -40,7 +56,7 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true
 
       try {
-        const refreshToken = localStorage.getItem('refresh_token')
+        const refreshToken = getRefreshToken()
         if (refreshToken) {
           const response = await axios.post(
             `${baseURL}/auth/refresh`,
@@ -49,15 +65,18 @@ axiosInstance.interceptors.response.use(
           )
           
           const { access_token } = response.data
-          localStorage.setItem('access_token', access_token)
+          if (localStorage.getItem('refresh_token')) {
+            localStorage.setItem('access_token', access_token)
+          } else {
+            sessionStorage.setItem('access_token', access_token)
+          }
           axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
           
           originalRequest.headers.Authorization = `Bearer ${access_token}`
           return axiosInstance(originalRequest)
         }
       } catch (refreshError) {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('refresh_token')
+        clearAuthTokens()
         if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
           window.location.href = '/login'
         }
@@ -81,7 +100,7 @@ export const rtkApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: baseURL,
     prepareHeaders: (headers) => {
-      const token = localStorage.getItem('access_token')
+      const token = getAuthToken()
       if (token) {
         headers.set('Authorization', `Bearer ${token}`)
       }
