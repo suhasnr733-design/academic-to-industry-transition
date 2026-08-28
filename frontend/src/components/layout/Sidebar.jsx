@@ -1,7 +1,7 @@
 // src/components/layout/Sidebar.jsx
 
 import React, { useState, useEffect } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { cn } from '../../utils/helpers'
 import { useAuth } from '../../hooks/useAuth'
 import { api } from '../../services/api'
@@ -35,6 +35,8 @@ const facultyNavigation = [
   { name: 'Faculty Overview', href: '/faculty', icon: HomeIcon },
   { name: 'Student Directory', href: '/faculty?tab=students', icon: UserGroupIcon },
   { name: 'Cohort Analytics', href: '/faculty?tab=analytics', icon: ChartBarIcon },
+  { name: 'Campus Drives', href: '/faculty?tab=drives', icon: OfficeBuildingIcon },
+  { name: 'Placement Shortlist', href: '/faculty?tab=shortlist', icon: BriefcaseIcon },
   { name: 'Profile Settings', href: '/profile', icon: UserCircleIcon },
   { name: 'Settings', href: '/settings', icon: CogIcon },
 ]
@@ -95,6 +97,22 @@ export const Sidebar = ({ isOpen, onClose }) => {
     ? 'bg-red-100 text-red-700 border-red-200'
     : 'bg-primary-50 text-primary-700 border-primary-200'
 
+  const location = useLocation()
+  const currentUrl = `${location.pathname}${location.search}`
+
+  const isItemActive = (href) => {
+    if (href === '/faculty') {
+      return location.pathname === '/faculty' && (!location.search || location.search === '?tab=overview')
+    }
+    if (href === '/dashboard') {
+      return location.pathname === '/dashboard'
+    }
+    if (href.includes('?')) {
+      return currentUrl === href
+    }
+    return location.pathname === href
+  }
+
   return (
     <>
       {/* Mobile overlay */}
@@ -128,31 +146,36 @@ export const Sidebar = ({ isOpen, onClose }) => {
             {role === 'faculty' ? 'Faculty Portal' : role === 'admin' ? 'Admin Portal' : 'Student Career Suite'}
           </div>
           <nav className="space-y-1.5">
-            {navigation.map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                className={({ isActive }) =>
-                  cn(
+            {navigation.map((item) => {
+              const active = isItemActive(item.href)
+              return (
+                <NavLink
+                  key={item.name}
+                  to={item.href}
+                  className={cn(
                     'flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group',
-                    isActive
-                      ? 'bg-primary-50 text-primary-700 font-semibold shadow-sm'
+                    active
+                      ? role === 'faculty'
+                        ? 'bg-purple-50 text-purple-700 font-semibold shadow-xs'
+                        : role === 'admin'
+                        ? 'bg-red-50 text-red-700 font-semibold shadow-xs'
+                        : 'bg-primary-50 text-primary-700 font-semibold shadow-xs'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  )
-                }
-                onClick={() => onClose()}
-              >
-                <div className="flex items-center min-w-0">
-                  <item.icon className="h-5 w-5 mr-3 flex-shrink-0" />
-                  <span className="truncate">{item.name}</span>
-                </div>
-                {item.badgeKey === 'placement' && pendingPlacementsCount > 0 && (
-                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-extrabold bg-amber-500 text-white rounded-full shadow-sm animate-pulse ml-2 flex-shrink-0">
-                    {pendingPlacementsCount}
-                  </span>
-                )}
-              </NavLink>
-            ))}
+                  )}
+                  onClick={() => onClose()}
+                >
+                  <div className="flex items-center min-w-0">
+                    <item.icon className="h-5 w-5 mr-3 flex-shrink-0" />
+                    <span className="truncate">{item.name}</span>
+                  </div>
+                  {item.badgeKey === 'placement' && pendingPlacementsCount > 0 && (
+                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-extrabold bg-amber-500 text-white rounded-full shadow-sm animate-pulse ml-2 flex-shrink-0">
+                      {pendingPlacementsCount}
+                    </span>
+                  )}
+                </NavLink>
+              )
+            })}
           </nav>
         </div>
 
