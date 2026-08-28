@@ -19,7 +19,7 @@ export const Input = forwardRef(({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 tracking-wide">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -29,11 +29,11 @@ export const Input = forwardRef(({
           ref={ref}
           type={effectiveType}
           className={cn(
-            'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent',
-            'outline-none transition-all duration-200',
+            'w-full px-3.5 py-2.5 bg-white dark:bg-gray-800 border rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400',
+            'focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 outline-none shadow-sm',
             'disabled:bg-gray-100 disabled:cursor-not-allowed',
             isPassword && 'pr-11',
-            error ? 'border-red-500' : 'border-gray-300',
+            error ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300',
             className
           )}
           {...props}

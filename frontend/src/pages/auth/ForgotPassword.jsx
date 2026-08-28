@@ -49,19 +49,15 @@ export const ForgotPassword = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-md border border-gray-100">
-        <div>
-          <div className={`mx-auto h-12 w-12 rounded-xl bg-gradient-to-tr ${isFaculty ? 'from-indigo-600 to-purple-600' : 'from-primary-600 to-indigo-500'} flex items-center justify-center text-white font-bold text-xl shadow-md`}>
-            AI
-          </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            {isFaculty ? 'Faculty Password Reset' : 'Reset Password'}
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your {isFaculty ? 'faculty ' : ''}email address and we'll send you instructions to reset your password.
-          </p>
-        </div>
+    <div className="w-full max-w-[420px] mx-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl p-5 sm:p-7 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200/70 dark:border-gray-700/80 transition-all">
+      <div className="text-center mb-5">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+          {isFaculty ? 'Faculty Password Reset' : 'Reset Password'}
+        </h2>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          Enter your {isFaculty ? 'faculty ' : ''}email address to receive reset instructions
+        </p>
+      </div>
 
         {notRegisteredError && (
           <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3 text-left animate-in fade-in duration-200">
@@ -142,7 +138,6 @@ export const ForgotPassword = () => {
           </form>
         )}
       </div>
-    </div>
   )
 }
 
