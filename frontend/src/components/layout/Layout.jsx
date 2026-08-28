@@ -52,7 +52,7 @@ export const Layout = ({ children }) => {
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           )}
           
-          <main className={`flex-1 transition-all duration-300 ${isAuthenticated ? 'lg:ml-64' : ''} p-4 md:p-6 lg:p-8`}>
+          <main className={`flex-1 transition-all duration-300 ${isAuthenticated ? 'lg:ml-64' : ''} p-3 sm:p-4 md:p-5`}>
             {children}
           </main>
         </div>

@@ -33,7 +33,13 @@ def main():
     # 2. Generate Synthetic Student Data
     np.random.seed(42)
     departments = ['Computer Science', 'Information Science', 'Electronics', 'Mechanical', 'Civil', 'Electrical']
-    skills_pool = ['Python', 'Java', 'C++', 'SQL', 'HTML', 'CSS', 'JavaScript', 'React', 'Node.js', 'Machine Learning', 'Deep Learning', 'NLP', 'AWS', 'Docker', 'Git', 'Linux', 'MySQL', 'MongoDB', 'Django']
+    skills_pool = [
+        'Python', 'Java', 'C++', 'SQL', 'HTML', 'CSS', 'JavaScript', 'TypeScript',
+        'React', 'Node.js', 'Machine Learning', 'Deep Learning', 'NLP', 'AWS', 'Azure',
+        'GCP', 'Docker', 'Kubernetes', 'Git', 'Linux', 'MySQL', 'MongoDB', 'Django',
+        'FastAPI', 'Flutter', 'Kotlin', 'Swift', 'Selenium', 'Postman', 'Solidity',
+        'Unity', 'Embedded C', 'Jira', 'Power BI', 'Tableau', 'Spark', 'Kafka', 'Figma'
+    ]
 
     data = []
     for i in range(1000):
@@ -152,15 +158,40 @@ def main():
 
     print(f"Stacking Ensemble Accuracy: {acc:.4f}, F1 Score: {f1:.4f}")
 
-    # 5. Export Model Artifacts
+    # 5. Train & Export 6-Pillar Calibrated Employability Regressor
+    from sklearn.ensemble import RandomForestRegressor
+    print("Training 6-Pillar Employability Regressor (30% Calibrated Base)...")
+    
+    # Calculate continuous 6-pillar employability ground truth
+    df_feat['employability_score'] = (
+        30.0 + 
+        np.minimum(df_feat['skill_count'] * 2.5, 25.0) + 
+        np.minimum(df_feat['projects'] * 6.0, 18.0) + 
+        (df_feat['cgpa_normalized'] * 10.0) + 
+        np.minimum(df_feat['internship_months'] * 2.5, 10.0) + 
+        np.minimum(df_feat['certifications'] * 2.5, 5.0)
+    )
+    df_feat['employability_score'] = np.clip(df_feat['employability_score'], 30.0, 98.0)
+
+    y_reg = df_feat['employability_score']
+    rf_reg = RandomForestRegressor(n_estimators=100, max_depth=8, random_state=42)
+    rf_reg.fit(X_train_scaled, y_reg.iloc[X_train.index])
+    
+    # 6. Export Model Artifacts
     models_dir = os.path.join(root_dir, 'data/models')
+    backend_ml_dir = os.path.join(root_dir, 'backend/app/ml_models')
+    os.makedirs(backend_ml_dir, exist_ok=True)
+
     joblib.dump(stacking_model, os.path.join(models_dir, 'ensemble_model.pkl'))
     joblib.dump(scaler, os.path.join(models_dir, 'scaler.pkl'))
     joblib.dump(feature_columns, os.path.join(models_dir, 'feature_columns.pkl'))
     joblib.dump(rf, os.path.join(models_dir, 'best_rf.pkl'))
     joblib.dump(gb, os.path.join(models_dir, 'best_xgb.pkl'))
+    joblib.dump(rf_reg, os.path.join(models_dir, 'employability_model.pkl'))
+    joblib.dump(rf_reg, os.path.join(backend_ml_dir, 'employability_model.pkl'))
+    joblib.dump(scaler, os.path.join(backend_ml_dir, 'scaler.pkl'))
 
-    print("Model artifacts successfully saved to data/models/")
+    print("Model artifacts successfully saved to data/models/ and backend/app/ml_models/")
     print("SUCCESS: Model training and pipeline export complete!")
 
 if __name__ == '__main__':

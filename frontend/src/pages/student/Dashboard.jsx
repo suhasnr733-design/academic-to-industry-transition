@@ -1,6 +1,4 @@
-// src/pages/student/Dashboard.jsx
-
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useResume } from '../../hooks/useResume'
@@ -64,7 +62,36 @@ export const Dashboard = () => {
   const latestResume = resumes?.[0]
   const completedResume = resumes?.find((r) => r.status === 'completed') || latestResume
 
-  // 3. Automatically trigger processing for pending resumes & poll status
+  // Filter and sort top matched tech jobs for dashboard
+  const topMatchedJobs = useMemo(() => {
+    if (!jobs || jobs.length === 0) return []
+
+    const userSkills = (completedResume?.skills || []).map(s => String(s).toLowerCase().trim())
+    const nonTechList = [
+      'account executive', 'account manager', 'sales', 'marketing', 'business development',
+      'bdr', 'sdr', 'recruiter', 'talent acquisition', 'human resources', 'customer success',
+      'customer support', 'client success', 'operations manager', 'copywriter', 'content writer',
+      'tax preparer', 'tax accountant', 'tax manager', 'cpa', 'accounting', 'bookkeeper',
+      'gardener', 'landscaping', 'chiropract', 'housekeeping', 'cashier', 'store associate',
+      'now hiring', 'delivery driver', 'warehouse worker', 'nurse', 'nursing', 'medical', 'cook'
+    ]
+
+    const techOnly = jobs.filter(j => {
+      const title = (j.title || '').toLowerCase()
+      return !nonTechList.some(nt => title.includes(nt))
+    })
+
+    return [...techOnly].sort((a, b) => {
+      const skillsA = (a.required_skills || []).map(s => String(s).toLowerCase())
+      const skillsB = (b.required_skills || []).map(s => String(s).toLowerCase())
+
+      const matchA = skillsA.filter(s => userSkills.some(u => u.includes(s) || s.includes(u))).length
+      const matchB = skillsB.filter(s => userSkills.some(u => u.includes(s) || s.includes(u))).length
+
+      return matchB - matchA
+    }).slice(0, 3)
+  }, [jobs, completedResume?.skills])
+
   useEffect(() => {
     if (!latestResume) return
 
@@ -716,9 +743,9 @@ export const Dashboard = () => {
               </Button>
             </div>
 
-            {jobs && jobs.length > 0 ? (
+            {topMatchedJobs && topMatchedJobs.length > 0 ? (
               <div className="space-y-3">
-                {jobs.slice(0, 3).map((job) => (
+                {topMatchedJobs.map((job) => (
                   <div
                     key={job.id}
                     onClick={() => navigate(`/jobs/${job.id}`)}

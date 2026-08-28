@@ -47,12 +47,39 @@ class ResumeProcessor:
             resume.experience = parsed_data.get('experience', {})
             resume.projects = parsed_data.get('projects', [])
             
-            # Employability calculation based on skills, education, and projects
-            skill_count = len(resume.skills or [])
-            project_count = len(resume.projects or [])
-            base_score = 60.0 + (skill_count * 2.0) + (project_count * 5.0)
-            score = min(max(base_score, 50.0), 96.0)
-            resume.employability_score = round(score, 1)
+            # Calibrated Multi-Dimensional Employability Calculation (Base: 30%)
+            skills = resume.skills or []
+            projects = resume.projects or []
+            education_text = str(resume.education or []).lower()
+            experience_text = str(resume.experience or {}).lower()
+            certifications = getattr(resume, 'certifications', []) or []
+
+            # 1. Base Score (30.0 pts)
+            score = 30.0
+
+            # 2. Technical Skills (Up to +25.0 pts)
+            score += min(len(skills) * 2.5, 25.0)
+
+            # 3. Hands-on Projects (Up to +18.0 pts)
+            score += min(len(projects) * 6.0, 18.0)
+
+            # 4. Academic Engineering Degree (+10.0 pts)
+            if any(deg in education_text for deg in ['b.e', 'b.tech', 'bachelor', 'engineering', 'mca', 'm.tech']):
+                score += 10.0
+            else:
+                score += 5.0
+
+            # 5. Internship / Work Exposure (+10.0 pts)
+            if any(term in experience_text for term in ['intern', 'internship', 'trainee', 'developer', 'engineer', 'freelance']):
+                score += 10.0
+
+            # 6. Certifications & Competitive Profiles (+5.0 pts)
+            if len(certifications) > 0 or any(c in str(skills).lower() for c in ['aws', 'hackerrank', 'leetcode', 'coursera', 'certified']):
+                score += 5.0
+
+            # Clamped between 30.0% and 98.0%
+            final_score = min(max(score, 30.0), 98.0)
+            resume.employability_score = round(final_score, 1)
             
             # Skill gaps and recommended roles
             try:
@@ -61,7 +88,13 @@ class ResumeProcessor:
             except Exception:
                 resume.skill_gaps = []
                 
-            resume.recommended_roles = ['Software Engineer', 'Full Stack Developer', 'Data Analyst']
+            # Dynamically recommend top best-fitting roles from the 25+ benchmarks
+            try:
+                top_roles = self.analyzer.predict_top_roles(resume.skills, top_n=3)
+                resume.recommended_roles = top_roles if top_roles else ['Software Engineer', 'Full Stack Developer', 'Data Analyst']
+            except Exception:
+                resume.recommended_roles = ['Software Engineer', 'Full Stack Developer', 'Data Analyst']
+
             resume.status = 'completed'
             
             db.session.commit()

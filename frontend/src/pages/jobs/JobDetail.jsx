@@ -17,7 +17,8 @@ import {
   UserGroupIcon,
   AcademicCapIcon,
   ArrowRightIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  ClockIcon
 } from '@heroicons/react/outline'
 import { BookmarkIcon as BookmarkSolidIcon, StarIcon as StarSolidIcon } from '@heroicons/react/solid'
 import toast from 'react-hot-toast'
@@ -172,6 +173,78 @@ export const JobDetail = () => {
             </div>
           </div>
         )}
+
+        {/* Application Deadline Countdown Banner */}
+        {job.expires_at && (() => {
+          try {
+            const exp = new Date(job.expires_at)
+            const now = new Date()
+            const diffDays = Math.ceil((exp - now) / (1000 * 60 * 60 * 24))
+
+            if (diffDays === 1) {
+              return (
+                <div className="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-between animate-pulse">
+                  <div className="flex items-center space-x-3 text-rose-800">
+                    <ClockIcon className="h-6 w-6 text-rose-600 shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold">🚨 Urgent: 1 day left to apply!</p>
+                      <p className="text-xs text-rose-600">Application portal closes on {exp.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                    </div>
+                  </div>
+                  <span className="px-3 py-1 bg-rose-600 text-white rounded-lg text-xs font-bold shadow-xs">
+                    1 Day Left
+                  </span>
+                </div>
+              )
+            } else if (diffDays === 2) {
+              return (
+                <div className="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between">
+                  <div className="flex items-center space-x-3 text-amber-900">
+                    <ClockIcon className="h-6 w-6 text-amber-600 shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold">⚡ Closing Soon: 2 days left to apply!</p>
+                      <p className="text-xs text-amber-700">Application deadline: {exp.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                    </div>
+                  </div>
+                  <span className="px-3 py-1 bg-amber-600 text-white rounded-lg text-xs font-bold shadow-xs">
+                    2 Days Left
+                  </span>
+                </div>
+              )
+            } else if (diffDays > 2 && diffDays <= 7) {
+              return (
+                <div className="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between">
+                  <div className="flex items-center space-x-3 text-amber-900">
+                    <ClockIcon className="h-5 w-5 text-amber-600 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold">⏰ {diffDays} days left to apply</p>
+                      <p className="text-xs text-amber-700">Deadline: {exp.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-md text-xs font-semibold">
+                    {diffDays} Days Left
+                  </span>
+                </div>
+              )
+            } else if (diffDays > 7) {
+              return (
+                <div className="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                  <div className="flex items-center space-x-3 text-slate-800">
+                    <ClockIcon className="h-5 w-5 text-slate-500 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold">Application Deadline</p>
+                      <p className="text-xs text-slate-500">Apply before {exp.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} ({diffDays} days remaining)</p>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md text-xs font-semibold">
+                    {diffDays} Days Remaining
+                  </span>
+                </div>
+              )
+            }
+            return null
+          } catch (e) { return null }
+        })()}
 
         {/* Description */}
         <div className="p-6 md:p-8">

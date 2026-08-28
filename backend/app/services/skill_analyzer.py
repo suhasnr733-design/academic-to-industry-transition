@@ -36,9 +36,73 @@ class SkillAnalyzer:
             'APIs': ['RESTful API Design & Architecture', 'API Development & Testing with Postman', 'Microservices & REST APIs'],
             'PyTorch': ['Deep Learning with PyTorch', 'PyTorch for Deep Learning Bootcamp', 'Practical Neural Networks with PyTorch'],
             'Statistics': ['Practical Statistics for Data Science', 'Inferential Statistics Specialization', 'Probability & Statistics for ML'],
-            'Data Visualization': ['Data Visualization with Python & Matplotlib', 'Tableau & PowerBI Data Storytelling', 'Interactive Visualizations with D3.js']
+            'Data Visualization': ['Data Visualization with Python & Matplotlib', 'Tableau & PowerBI Data Storytelling', 'Interactive Visualizations with D3.js'],
+            'Flutter': ['Flutter & Dart Complete Guide', 'Mobile App Development with Flutter', 'Cross-Platform Mobile Mastery'],
+            'Kotlin': ['Kotlin for Android Development', 'Android App Development Masterclass', 'Advanced Kotlin Programming'],
+            'Swift': ['iOS App Development with Swift', 'SwiftUI Masterclass', 'Advanced iOS Architecture'],
+            'FastAPI': ['FastAPI Modern Python Web APIs', 'Building High-Performance APIs with FastAPI', 'Microservices with FastAPI'],
+            'GraphQL': ['GraphQL Full-Stack Masterclass', 'Building Modern APIs with GraphQL', 'Apollo Client & GraphQL APIs'],
+            'Redis': ['Redis In-Memory Database Mastery', 'High-Performance Caching with Redis', 'System Design with Redis'],
+            'Kafka': ['Apache Kafka for Event-Driven Architecture', 'Kafka Real-Time Streaming', 'Distributed Messaging with Kafka'],
+            'Selenium': ['Selenium WebDriver with Java & Python', 'Automated Software Testing Mastery', 'SDET Automation Bootcamp'],
+            'Figma': ['UI/UX Design with Figma', 'Figma to Code Masterclass', 'Design Systems in Figma'],
+            'Solidity': ['Solidity & Ethereum Smart Contracts', 'Web3 & Blockchain Development', 'Decentralized Apps (DApps) Masterclass'],
+            'Unity': ['Unity Game Development Masterclass', 'C# Game Programming with Unity', '3D Game Physics & Design']
         }
         self._lower_course_mapping = {k.lower(): v for k, v in self.course_mapping.items()}
+
+        # 25+ Comprehensive Industry Job Role Benchmarks
+        self.skill_map = {
+            # 1. Core Software Engineering
+            'Full Stack Developer': ['JavaScript', 'React', 'Node.js', 'Python', 'SQL', 'Git', 'HTML', 'CSS', 'REST APIs', 'MongoDB'],
+            'Software Engineer': ['Python', 'Java', 'SQL', 'Data Structures', 'Algorithms', 'Git', 'OOP', 'DBMS'],
+            'Frontend Developer': ['JavaScript', 'React', 'HTML', 'CSS', 'Tailwind', 'Redux', 'TypeScript', 'Git'],
+            'Backend Developer': ['Python', 'Java', 'SQL', 'Node.js', 'Django', 'FastAPI', 'Microservices', 'Git', 'Redis'],
+            'Mobile App Developer (Android/iOS)': ['Flutter', 'React Native', 'Kotlin', 'Swift', 'Java', 'REST APIs', 'Git'],
+            'C++ / Systems Developer': ['C++', 'C', 'Data Structures', 'Algorithms', 'Linux', 'Multithreading', 'Git'],
+
+            # 2. Cloud, DevOps & Infrastructure
+            'DevOps Engineer': ['Linux', 'Docker', 'Kubernetes', 'AWS', 'CI/CD', 'Jenkins', 'Terraform', 'Git'],
+            'Cloud Engineer (AWS/Azure/GCP)': ['AWS', 'Azure', 'GCP', 'Linux', 'Terraform', 'Docker', 'Python'],
+            'Site Reliability Engineer (SRE)': ['Linux', 'Python', 'Kubernetes', 'Docker', 'CI/CD', 'Prometheus', 'Grafana'],
+            'Database Administrator (DBA)': ['SQL', 'PostgreSQL', 'MySQL', 'MongoDB', 'Database Tuning', 'Linux'],
+            'Infrastructure Engineer': ['Linux', 'Terraform', 'Ansible', 'Kubernetes', 'Docker', 'Git'],
+
+            # 3. Data Science, AI & Big Data
+            'Data Scientist': ['Python', 'Machine Learning', 'SQL', 'Statistics', 'Pandas', 'Data Visualization', 'Deep Learning'],
+            'Data Analyst': ['SQL', 'Python', 'Excel', 'Power BI', 'Tableau', 'Statistics', 'Data Visualization'],
+            'Data Engineer / Big Data': ['Python', 'SQL', 'Spark', 'Kafka', 'Hadoop', 'Data Pipelines', 'ETL', 'AWS'],
+            'ML Engineer': ['Python', 'Machine Learning', 'Deep Learning', 'PyTorch', 'TensorFlow', 'SQL', 'Docker', 'AWS'],
+            'AI / NLP Engineer': ['Python', 'NLP', 'Transformers', 'HuggingFace', 'PyTorch', 'Deep Learning', 'SQL'],
+            'Computer Vision Engineer': ['Python', 'OpenCV', 'PyTorch', 'TensorFlow', 'Image Processing', 'Deep Learning', 'C++'],
+
+            # 4. Cybersecurity & Networks
+            'Cybersecurity Analyst': ['Network Security', 'Linux', 'Ethical Hacking', 'SIEM', 'Cryptography', 'Python'],
+            'Information Security Engineer': ['Firewalls', 'Cloud Security', 'Linux', 'Penetration Testing', 'Python'],
+            'Network Engineer': ['TCP/IP', 'Routing & Switching', 'Cisco', 'DNS', 'DHCP', 'Linux', 'Wireshark'],
+
+            # 5. QA, Embedded & Emerging Tech
+            'QA Automation Engineer (SDET)': ['Selenium', 'Java', 'Python', 'JUnit', 'PyTest', 'Postman', 'CI/CD', 'Git'],
+            'UI/UX Developer': ['Figma', 'HTML', 'CSS', 'JavaScript', 'React', 'Tailwind', 'Responsive Design'],
+            'Technical Product Manager': ['Agile', 'Scrum', 'Jira', 'SQL', 'Product Roadmapping', 'User Stories'],
+            'Blockchain Developer': ['Solidity', 'Ethereum', 'Smart Contracts', 'Web3.js', 'Node.js', 'Git'],
+            'Embedded Systems Engineer': ['Embedded C', 'Microcontrollers', 'RTOS', 'ARM', 'IoT', 'C++', 'Linux'],
+            'Game Developer': ['Unity', 'C#', 'Unreal Engine', 'C++', '3D Math', 'Physics', 'Git']
+        }
+    
+    def predict_top_roles(self, current_skills, top_n=3):
+        """Dynamically ranks student skills against all 25+ roles and returns top fits"""
+        student_set = {str(s).strip().lower() for s in (current_skills or [])}
+        scored = []
+
+        for role_name, req_skills in self.skill_map.items():
+            req_set = {r.strip().lower() for r in req_skills}
+            matched = [s for s in req_set if any(u in s or s in u for u in student_set)]
+            ratio = (len(matched) / len(req_set)) if req_set else 0
+            scored.append((role_name, ratio))
+
+        scored.sort(key=lambda x: x[1], reverse=True)
+        return [r[0] for r in scored[:top_n]]
     
     def analyze_gaps(self, current_skills, target_role=None, domain=None):
         """Analyze skill gaps for a target role"""
@@ -99,7 +163,10 @@ class SkillAnalyzer:
             'target_skills': target_skills,
             'matching_skills': matching,
             'missing_skills': missing,
-            'gap_categories': {
+            'critical_gaps': critical_gaps,
+            'important_gaps': important_gaps,
+            'nice_to_have': nice_to_have,
+            'gaps_by_category': {
                 'critical': critical_gaps,
                 'important': important_gaps,
                 'nice_to_have': nice_to_have
@@ -109,19 +176,15 @@ class SkillAnalyzer:
         }
     
     def _get_target_skills(self, target_role, domain):
-        """Get target skills for a role/domain"""
-        skill_map = {
-            'Data Scientist': ['Python', 'Machine Learning', 'SQL', 'Statistics', 'Data Visualization', 'Deep Learning'],
-            'Data Analyst': ['Python', 'SQL', 'Excel', 'Power BI', 'Tableau', 'Statistics', 'Data Visualization'],
-            'Software Engineer': ['Python', 'Java', 'SQL', 'Data Structures', 'Algorithms', 'Git'],
-            'DevOps Engineer': ['Linux', 'Docker', 'Kubernetes', 'AWS', 'Jenkins', 'Git'],
-            'Frontend Developer': ['JavaScript', 'React', 'HTML', 'CSS', 'Git', 'Redux'],
-            'Backend Developer': ['Python', 'Java', 'SQL', 'Node.js', 'Django', 'APIs', 'Git'],
-            'ML Engineer': ['Python', 'Machine Learning', 'Deep Learning', 'SQL', 'PyTorch', 'AWS']
-        }
+        """Get target skills for a role/domain across 25+ roles"""
+        if target_role and target_role in self.skill_map:
+            return self.skill_map[target_role]
         
-        if target_role in skill_map:
-            return skill_map[target_role]
+        # Check case-insensitive match
+        if target_role:
+            for k, v in self.skill_map.items():
+                if k.lower() == target_role.lower():
+                    return v
         
         # Default skills by domain
         domain_map = {

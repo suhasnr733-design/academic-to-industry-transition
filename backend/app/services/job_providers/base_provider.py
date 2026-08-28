@@ -110,16 +110,72 @@ class BaseJobProvider(ABC):
         if len(t_clean) < 5 and t_lower not in ['qa', 'sre', 'dba', 'sdr', 'dev']:
             return False
 
-        # 3. Excluded retail and non-tech terms (English + Portuguese + German)
+        # 3. Excluded non-tech, retail, sales, business development, and trade categories
         excluded_keywords = [
-            'sales advisor', 'store associate', 'cashier', 'retail sales',
-            'retail assistant', 'shop assistant', 'security guard', 'delivery driver',
-            'warehouse worker', 'housekeeping', 'tobacco', 'giftbox', 'counter staff',
-            'offline merchant qr', 'varejo', 'vendedor', 'atendente', 'einzelhandel'
+            'account executive', 'account manager', 'sales manager', 'sales representative',
+            'sales advisor', 'store associate', 'cashier', 'retail sales', 'retail assistant',
+            'business development', ' bdr ', ' sdr ', 'recruiter', 'talent acquisition',
+            'human resources', 'customer success', 'customer support', 'client success',
+            'copywriter', 'content writer', 'tax preparer', 'tax accountant', 'tax manager',
+            ' cpa ', 'cpa firm', 'gardener', 'landscaping', 'groundskeeping', 'chiropract',
+            'security guard', 'delivery driver', 'warehouse worker', 'housekeeping',
+            'tobacco', 'giftbox', 'counter staff', 'offline merchant qr', 'now hiring',
+            'tmt bar', 'facility services', 'medical assistant', 'dental', 'nurse',
+            'nursing', 'caregiver', 'cook', 'chef', 'plumber', 'welder', 'carpenter',
+            'real estate agent', 'insurance agent', 'bookkeeper', 'paralegal', 'legal assistant'
         ]
 
-        if any(bad in t_lower or bad in d_lower[:300] for bad in excluded_keywords):
+        if any(bad in t_lower or bad in d_lower[:350] for bad in excluded_keywords):
             return False
+
+        # 4. Filter out closed/expired postings
+        if not BaseJobProvider.is_job_active(t_clean, d_lower):
+            return False
+
+        return True
+
+    @staticmethod
+    def is_job_active(title: Optional[str], description: Optional[str] = '', posted_date: Any = None) -> bool:
+        """
+        Validates whether a job posting is actively accepting applications.
+        Filters out closed listings, expired deadlines, and posts older than 30 days.
+        """
+        t_lower = (title or '').lower()
+        d_lower = (description or '').lower()
+        
+        # 1. Reject explicit closed status markers
+        closed_markers = [
+            'applications closed', 'application closed', 'no longer accepting applications',
+            'position has been filled', 'position filled', 'job expired', 'listing expired',
+            'deadline has passed', 'deadline passed', 'hiring closed', 'no longer available',
+            'offer expired', 'this job is closed', 'not accepting new applicants', 'opportunity closed'
+        ]
+        if any(marker in t_lower or marker in d_lower[:400] for marker in closed_markers):
+            return False
+
+        # 2. 30-Day Freshness Filter
+        if posted_date:
+            try:
+                from datetime import datetime, timezone, timedelta
+                now = datetime.now(timezone.utc)
+                parsed_dt = None
+
+                if isinstance(posted_date, (int, float)):
+                    parsed_dt = datetime.fromtimestamp(posted_date, tz=timezone.utc)
+                elif isinstance(posted_date, str):
+                    cleaned_str = posted_date.replace('Z', '+00:00')
+                    try:
+                        parsed_dt = datetime.fromisoformat(cleaned_str)
+                    except Exception:
+                        pass
+
+                if parsed_dt:
+                    if parsed_dt.tzinfo is None:
+                        parsed_dt = parsed_dt.replace(tzinfo=timezone.utc)
+                    if now - parsed_dt > timedelta(days=30):
+                        return False
+            except Exception:
+                pass
 
         return True
 
