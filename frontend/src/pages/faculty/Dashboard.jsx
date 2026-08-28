@@ -383,36 +383,6 @@ export const FacultyDashboard = () => {
           <SparklesIcon className="h-4 w-4" />
           Cohort Skill Gap Analytics
         </button>
-
-        <button
-          onClick={() => setSearchParams({ tab: 'drives' })}
-          className={`pb-3 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 relative ${
-            activeTab === 'drives'
-              ? 'border-purple-600 text-purple-600 font-semibold'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          <OfficeBuildingIcon className="h-4 w-4" />
-          Campus Drives
-          <span className="px-1.5 py-0.5 text-[10px] uppercase font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-            Attendees
-          </span>
-        </button>
-
-        <button
-          onClick={() => setSearchParams({ tab: 'shortlist' })}
-          className={`pb-3 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 relative ${
-            activeTab === 'shortlist'
-              ? 'border-purple-600 text-purple-600 font-semibold'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          <BriefcaseIcon className="h-4 w-4" />
-          Placement Shortlist & Bundle Export
-          <span className="px-1.5 py-0.5 text-[10px] uppercase font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-300">
-            Drive Tool
-          </span>
-        </button>
       </div>
 
       {/* Tab 1: Overview */}
