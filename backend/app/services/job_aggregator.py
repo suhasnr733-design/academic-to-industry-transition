@@ -112,6 +112,10 @@ class JobAggregatorService:
             if not BaseJobProvider.is_domain_relevant(
                 job.get('title', ''),
                 job.get('description', '')
+            ) or not BaseJobProvider.is_job_active(
+                job.get('title', ''),
+                job.get('description', ''),
+                job.get('posted_date')
             ):
                 continue
 
@@ -132,6 +136,18 @@ class JobAggregatorService:
                 job['academic_tags'] = fit_info['tags']
                 job['research_skills'] = fit_info['research_skills']
                 job['industry_gap_skills'] = fit_info['gap_skills']
+
+                # Ensure expires_at is always provided for countdown
+                if not job.get('expires_at'):
+                    from datetime import datetime, timedelta
+                    raw_posted = job.get('posted_date')
+                    dt_posted = datetime.utcnow()
+                    if raw_posted and isinstance(raw_posted, str):
+                        try:
+                            dt_posted = datetime.fromisoformat(raw_posted.replace('Z', '+00:00'))
+                        except Exception:
+                            pass
+                    job['expires_at'] = (dt_posted + timedelta(days=21)).isoformat()
                 
                 deduped_jobs.append(job)
 
@@ -266,31 +282,89 @@ class JobAggregatorService:
         )
 
     def _calculate_academic_fit(self, title: str, description: str, skills: List[str]) -> Dict[str, Any]:
-        """Calculates academic-to-industry transition relevance, tags, and gap skills"""
-        score = 55
-        tags = []
+        """Calculates academic-to-industry transition candidate fit score using 6-pillar model"""
+        title_lower = (title or '').lower()
         text = (title + " " + description).lower()
-        
-        if any(w in text for w in ['phd', 'doctorate', 'postdoc', 'post-doc']):
-            score += 25
-            tags.append('PhD Preferred')
-        if any(w in text for w in ['research scientist', 'research engineer', 'applied scientist', 'r&d']):
-            score += 20
-            tags.append('R&D / Research')
-        if any(w in text for w in ['publication', 'publications', 'patents', 'peer-reviewed']):
-            score += 15
-            tags.append('Publication Track Record')
-        if any(w in text for w in ['statistical modeling', 'deep learning', 'quantitative', 'machine learning']):
-            score += 10
-            tags.append('Quantitative Methods')
+        tags = []
 
+        # Gatekeeper: Verify role is genuine engineering/software/data/tech
+        tech_indicators = [
+            'developer', 'engineer', 'architect', 'scientist', 'analyst', 'programmer',
+            'devops', 'sre', 'dba', 'qa', 'sdet', 'cloud', 'data', 'software', 'frontend',
+            'backend', 'fullstack', 'full stack', 'mobile', 'android', 'ios', 'system',
+            'network', 'security', 'machine learning', 'artificial intelligence', 'nlp', 'vision',
+            'intern', 'trainee', 'technical', 'technology', 'web', 'ui/ux'
+        ]
+        non_tech_markers = [
+            'tax preparer', 'tax accountant', 'gardener', 'landscaping', 'chiropract',
+            'client success manager', 'sales executive', 'housekeeping', 'cashier', 'store associate'
+        ]
+
+        if any(nt in title_lower for nt in non_tech_markers) or (not any(ti in title_lower for ti in tech_indicators) and len(skills) == 0):
+            return {
+                'score': 25,
+                'tags': ['Non-Tech / Divergent'],
+                'research_skills': [],
+                'gap_skills': ['Software Engineering Fundamentals']
+            }
+
+        score = 0
+        
+        # Pillar 1: Base & Technical Stack Signals (+30 Pts)
+        score += 30
+        
+        # Pillar 2: Hands-on / Practical Focus (+15 Pts)
+        if any(w in text for w in ['hands-on', 'projects', 'problem solving', 'data structures', 'dsa', 'system design']):
+            score += 15
+            tags.append('Practical CS Focus')
+        else:
+            score += 8
+
+        # Pillar 3: B.E. / Engineering Graduate Friendly (+15 Pts)
+        if any(w in text for w in ['b.e', 'b.tech', 'bachelor', 'graduate', 'entry level', '0-2 years', 'fresher', 'junior', 'associate']):
+            score += 15
+            tags.append('B.E. Graduate Friendly')
+        elif any(w in text for w in ['phd', 'doctorate', 'postdoc', 'research scientist']):
+            score += 12
+            tags.append('R&D Track')
+        else:
+            score += 8
+
+        # Pillar 4: Industry Bridge & Tooling Readiness (+15 Pts)
+        industry_tools = [
+            'git', 'github', 'gitlab', 'docker', 'kubernetes', 'aws', 'azure', 'gcp', 
+            'ci/cd', 'rest api', 'graphql', 'fastapi', 'microservices', 'linux', 
+            'redis', 'kafka', 'unit testing', 'jest', 'pytest'
+        ]
+        matched_industry = [t for t in industry_tools if t in text or any(t in s.lower() for s in skills)]
+        if len(matched_industry) >= 3:
+            score += 15
+            tags.append('Production Tooling')
+        elif len(matched_industry) >= 1:
+            score += 10
+            tags.append('Core Tooling')
+        else:
+            score += 5
+
+        # Pillar 5: Internship / Industry Exposure (+15 Pts)
+        if any(w in text for w in ['internship', 'intern', 'trainee', 'startup']):
+            score += 15
+        else:
+            score += 8
+
+        # Pillar 6: Location & Work Mode Fit (+10 Pts)
+        if any(w in text for w in ['remote', 'hybrid', 'bangalore', 'hyderabad', 'pune', 'delhi', 'chennai', 'mumbai']):
+            score += 10
+            tags.append('Location Flexible')
+        else:
+            score += 6
+
+        # Gap Skills extraction for transition guidance
         research_set = {'python', 'r', 'pytorch', 'tensorflow', 'statistics', 'nlp', 'deep learning', 'computer vision', 'data science', 'matlab', 'c++', 'latex'}
         matched_research = [s for s in skills if s.lower() in research_set]
+        gap_skills = [t for t in industry_tools if t in text and t not in [s.lower() for s in skills]]
 
-        industry_bridge_set = {'docker', 'kubernetes', 'aws', 'gcp', 'ci/cd', 'microservices', 'git', 'fastapi', 'terraform', 'kafka'}
-        gap_skills = [s for s in industry_bridge_set if s in text and s not in [r.lower() for r in matched_research]]
-
-        final_score = min(max(score, 40), 98)
+        final_score = min(max(score, 45), 98)
         if not tags:
             tags.append('Industry Direct')
 
@@ -326,6 +400,38 @@ class JobAggregatorService:
                         existing = Job.query.filter_by(title=title, company=company).first()
 
                     if not existing:
+                        # Preserve real external posted_date if available
+                        raw_posted = job_data.get('posted_date')
+                        parsed_posted_date = datetime.utcnow()
+                        if raw_posted:
+                            try:
+                                if isinstance(raw_posted, datetime):
+                                    parsed_posted_date = raw_posted
+                                elif isinstance(raw_posted, (int, float)):
+                                    parsed_posted_date = datetime.fromtimestamp(raw_posted)
+                                elif isinstance(raw_posted, str):
+                                    cleaned_str = raw_posted.replace('Z', '+00:00')
+                                    parsed_posted_date = datetime.fromisoformat(cleaned_str)
+                            except Exception:
+                                pass
+
+                        raw_expires = job_data.get('expires_at')
+                        parsed_expires = None
+                        if raw_expires:
+                            try:
+                                if isinstance(raw_expires, datetime):
+                                    parsed_expires = raw_expires
+                                elif isinstance(raw_expires, (int, float)):
+                                    parsed_expires = datetime.fromtimestamp(raw_expires)
+                                elif isinstance(raw_expires, str):
+                                    cleaned_exp = raw_expires.replace('Z', '+00:00')
+                                    parsed_expires = datetime.fromisoformat(cleaned_exp)
+                            except Exception:
+                                pass
+                        if not parsed_expires:
+                            from datetime import timedelta
+                            parsed_expires = parsed_posted_date + timedelta(days=21)
+
                         new_job = Job(
                             title=title,
                             company=company,
@@ -340,10 +446,16 @@ class JobAggregatorService:
                             apply_url=job_data.get('apply_url'),
                             is_live=True,
                             is_active=True,
-                            posted_date=datetime.utcnow(),
+                            posted_date=parsed_posted_date,
+                            expires_at=parsed_expires,
                             raw_data=job_data
                         )
                         db.session.add(new_job)
+
+                # Automatically expire stale live jobs older than 30 days
+                from datetime import timedelta
+                cutoff = datetime.utcnow() - timedelta(days=30)
+                Job.query.filter(Job.is_live == True, Job.posted_date < cutoff).update({'is_active': False})
 
                 db.session.commit()
                 logger.debug(f"Successfully cached {len(jobs)} live jobs to local DB")

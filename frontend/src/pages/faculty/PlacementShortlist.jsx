@@ -20,7 +20,8 @@ import {
   CheckIcon,
   TrashIcon,
   InformationCircleIcon,
-  OfficeBuildingIcon
+  OfficeBuildingIcon,
+  XIcon
 } from '@heroicons/react/outline'
 
 const POPULAR_SKILLS = [
@@ -44,6 +45,7 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all' }) =
   // Criteria states
   const [companyName, setCompanyName] = useState('Google Campus Hiring')
   const [selectedSkills, setSelectedSkills] = useState(['Python', 'SQL'])
+  const [popularSkillsList, setPopularSkillsList] = useState(POPULAR_SKILLS)
   const [customSkillInput, setCustomSkillInput] = useState('')
   const [selectedDept, setSelectedDept] = useState('all')
   const [selectedYear, setSelectedYear] = useState('all')
@@ -131,10 +133,13 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all' }) =
 
   // Add a skill to required list
   const handleAddSkill = (skill) => {
-    const clean = skill.trim()
+    const clean = (skill || '').trim()
     if (!clean) return
     if (!selectedSkills.some((s) => s.toLowerCase() === clean.toLowerCase())) {
       setSelectedSkills([...selectedSkills, clean])
+    }
+    if (!popularSkillsList.some((s) => s.toLowerCase() === clean.toLowerCase())) {
+      setPopularSkillsList([...popularSkillsList, clean])
     }
     setCustomSkillInput('')
   }
@@ -539,28 +544,28 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all' }) =
           </div>
         </div>
 
-        {/* Row 3: Required Skills Builder */}
-        <div className="space-y-3 pt-2">
+        {/* Row 3: Required Technical Skills Builder */}
+        <div className="space-y-2.5 pt-2">
           <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
             Required Technical Skills for this Drive
           </label>
 
           {/* Selected Skills Badges */}
-          <div className="flex flex-wrap items-center gap-2 min-h-[38px] p-2.5 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="flex flex-wrap items-center gap-2 min-h-[44px] p-2.5 bg-gray-50 rounded-xl border border-gray-200">
             {selectedSkills.length > 0 ? (
               selectedSkills.map((skill) => (
                 <span
                   key={skill}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-purple-600 text-white shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-purple-600 text-white shadow-xs"
                 >
-                  <TagIcon className="h-3.5 w-3.5" />
+                  <TagIcon className="h-3 w-3" />
                   {skill}
                   <button
                     type="button"
                     onClick={() => handleRemoveSkill(skill)}
-                    className="ml-1 hover:text-rose-200 focus:outline-none"
+                    className="hover:bg-purple-700 p-0.5 rounded transition-colors focus:outline-none ml-0.5"
                   >
-                    &times;
+                    <XIcon className="h-3.5 w-3.5" />
                   </button>
                 </span>
               ))
@@ -574,20 +579,20 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all' }) =
           {/* Quick-add popular skills */}
           <div className="flex flex-wrap items-center gap-1.5 pt-1">
             <span className="text-xs text-gray-500 font-medium mr-1">Quick Add:</span>
-            {POPULAR_SKILLS.map((skill) => {
+            {popularSkillsList.map((skill) => {
               const isSelected = selectedSkills.some((s) => s.toLowerCase() === skill.toLowerCase())
               return (
                 <button
                   key={skill}
                   type="button"
                   onClick={() => (isSelected ? handleRemoveSkill(skill) : handleAddSkill(skill))}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${
                     isSelected
-                      ? 'bg-purple-100 text-purple-800 border border-purple-300'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:border-purple-400 hover:text-purple-700'
+                      ? 'bg-purple-100 text-purple-800 border border-purple-300 font-bold shadow-xs'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:border-purple-400 hover:text-purple-700 shadow-xs'
                   }`}
                 >
-                  {isSelected && <CheckIcon className="h-3 w-3 inline mr-1 text-purple-600" />}
+                  {isSelected && <CheckIcon className="h-3 w-3 text-purple-600" />}
                   {skill}
                 </button>
               )
@@ -607,13 +612,14 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all' }) =
                 }
               }}
               placeholder="Type custom skill (e.g. Kubernetes, Golang, PyTorch) and press Enter"
-              className="flex-1 px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="flex-1 px-3.5 py-2 text-xs border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none bg-white text-gray-900"
             />
             <Button
               size="sm"
               variant="outline"
+              disabled={!customSkillInput.trim()}
               onClick={() => handleAddSkill(customSkillInput)}
-              className="text-xs"
+              className="text-xs font-semibold rounded-xl px-4 py-2"
             >
               Add Skill
             </Button>

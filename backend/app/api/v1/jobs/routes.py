@@ -14,6 +14,7 @@ def get_jobs():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
     domain = request.args.get('domain')
+    location = request.args.get('location')
     job_type = request.args.get('job_type')
     search = request.args.get('search')
     source = request.args.get('source')
@@ -22,15 +23,26 @@ def get_jobs():
     
     if domain:
         query = query.filter(Job.domain == domain)
+    if location:
+        query = query.filter(Job.location.ilike(f"%{location}%"))
     if job_type:
         query = query.filter(Job.job_type == job_type)
     if source and source != 'all':
         query = query.filter(Job.source == source)
     if search:
-        query = query.filter(
-            Job.title.contains(search) | 
-            Job.company.contains(search)
-        )
+        search_terms = [t.strip() for t in search.strip().split() if t.strip()]
+        for term in search_terms:
+            term_pat = f"%{term}%"
+            query = query.filter(
+                db.or_(
+                    Job.title.ilike(term_pat),
+                    Job.company.ilike(term_pat),
+                    Job.location.ilike(term_pat),
+                    Job.domain.ilike(term_pat),
+                    Job.description.ilike(term_pat),
+                    db.cast(Job.required_skills, db.String).ilike(term_pat)
+                )
+            )
     
     pagination = query.order_by(Job.posted_date.desc()).paginate(page=page, per_page=per_page)
     
