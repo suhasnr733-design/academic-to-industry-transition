@@ -155,13 +155,32 @@ def get_skill_gap(resume_id=None):
         gap_data = skill_analyzer.analyze_gaps(skills, target_role=target_role, domain=domain)
         rec_data = skill_analyzer.get_recommendations(skills, gap_data.get('missing_skills', []))
         
-        available_roles = ['Software Engineer', 'DevOps Engineer', 'Frontend Developer', 'Backend Developer', 'Data Scientist', 'ML Engineer']
-        
+        # Dynamic available roles from analyzer benchmark library
+        if hasattr(skill_analyzer, 'skill_map') and skill_analyzer.skill_map:
+            available_roles = list(skill_analyzer.skill_map.keys())
+        else:
+            available_roles = [
+                'Full Stack Developer', 'Software Engineer', 'Frontend Developer',
+                'Backend Developer', 'DevOps Engineer', 'Cloud Engineer (AWS/Azure/GCP)',
+                'Data Scientist', 'Data Analyst', 'ML Engineer', 'Cybersecurity Analyst',
+                'Mobile App Developer (Android/iOS)', 'QA Automation Engineer (SDET)'
+            ]
+
+        # Top AI-matched recommended roles for student quick-selection
+        rec_roles = []
+        if resume.recommended_roles and isinstance(resume.recommended_roles, list):
+            for r in resume.recommended_roles:
+                if r and r not in rec_roles:
+                    rec_roles.append(r)
+        if not rec_roles:
+            rec_roles = ['Full Stack Developer', 'Software Engineer', 'Frontend Developer']
+
         return jsonify({
             'resume_id': resume.id,
             'filename': resume.filename,
             'candidate_name': resume.user.full_name if resume.user else None,
             'target_role': target_role,
+            'recommended_roles': rec_roles[:4],
             'available_roles': available_roles,
             'current_skills': skills,
             'target_skills': gap_data.get('target_skills', []),

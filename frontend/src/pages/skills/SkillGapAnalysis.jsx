@@ -10,7 +10,8 @@ import {
   XCircleIcon,
   ExternalLinkIcon,
   DocumentTextIcon,
-  BriefcaseIcon
+  BriefcaseIcon,
+  SparklesIcon
 } from '@heroicons/react/outline'
 import { getPlatformUrl, getCourseUrl, getPlatformBadgeConfig } from '../../utils/courseUrls'
 
@@ -94,7 +95,13 @@ export const SkillGapAnalysis = () => {
   const currentSkills = analysis?.current_skills || []
   const recommendations = analysis?.recommendations || []
   const learningPath = analysis?.learning_path || []
+  const recommendedRoles = analysis?.recommended_roles || [
+    'Full Stack Developer',
+    'Software Engineer',
+    'Frontend Developer'
+  ]
   const availableRoles = analysis?.available_roles || [
+    'Full Stack Developer',
     'Software Engineer',
     'DevOps Engineer',
     'Frontend Developer',
@@ -107,7 +114,7 @@ export const SkillGapAnalysis = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="bg-white rounded-2xl shadow-lg p-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-6 pb-6 border-b border-gray-100">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-4 pb-6 border-b border-gray-100">
           <div>
             <Heading level={2}>Skill Gap Analysis</Heading>
             <div className="flex flex-wrap items-center gap-3 mt-3">
@@ -140,6 +147,35 @@ export const SkillGapAnalysis = () => {
             <div className="text-xs font-semibold uppercase tracking-wider text-gray-500">Overall Match</div>
           </div>
         </div>
+
+        {/* AI Recommended Role Quick Pills (Option 3) */}
+        {recommendedRoles && recommendedRoles.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-6 p-3 bg-gradient-to-r from-primary-50/70 via-indigo-50/40 to-transparent rounded-xl border border-primary-100/90">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-primary-800 mr-1">
+              <SparklesIcon className="w-4 h-4 text-primary-600 animate-pulse" />
+              <span>Top AI Recommendations:</span>
+            </div>
+            {recommendedRoles.map((role) => {
+              const currentActiveRole = selectedRole || analysis?.target_role
+              const isSelected = currentActiveRole === role
+              return (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => handleRoleChange(role)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+                    isSelected
+                      ? 'bg-primary-600 text-white shadow-xs ring-2 ring-primary-300'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-primary-700 border border-gray-200 hover:border-primary-300'
+                  }`}
+                >
+                  <span>{role}</span>
+                  {isSelected && <span className="text-white text-xs">✓</span>}
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         {/* Match Progress Bar */}
         <div className="mb-8">
