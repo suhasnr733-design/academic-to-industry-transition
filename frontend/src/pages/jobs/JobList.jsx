@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useJobs } from '../../hooks/useJobs'
 import { useResume } from '../../hooks/useResume'
 import { Button } from '../../components/common/Button'
+import { getJobDeadlineStatus } from '../../utils/jobDateUtils'
 import { 
   BriefcaseIcon, 
   LocationMarkerIcon as MapPinIcon, 
@@ -98,10 +99,10 @@ export const JobList = () => {
     }
 
     let score = 0
-    const jobSkills = (job.required_skills || []).map(s => String(s).toLowerCase().trim())
-    const eduText = JSON.stringify(activeResume.education || []).toLowerCase()
-    const projText = JSON.stringify(activeResume.projects || []).toLowerCase()
-    const expText = JSON.stringify(activeResume.experience || {}).toLowerCase()
+    const jobSkills = (job.required_skills || []).map(s => String(s || '').toLowerCase().trim())
+    const eduText = JSON.stringify(activeResume?.education || []).toLowerCase()
+    const projText = JSON.stringify(activeResume?.projects || []).toLowerCase()
+    const expText = JSON.stringify(activeResume?.experience || {}).toLowerCase()
 
     // -------------------------------------------------------------
     // Pillar 1: Technical Core Skills Match (35 Points)
@@ -176,7 +177,7 @@ export const JobList = () => {
     // Pillar 6: Location & Work Mode Alignment (10 Points)
     // -------------------------------------------------------------
     const jobLoc = (job.location || '').toLowerCase()
-    const userLoc = (activeResume.location || 'bangalore').toLowerCase()
+    const userLoc = (activeResume?.location || 'bangalore').toLowerCase()
     if (!jobLoc || jobLoc.includes('remote') || jobLoc.includes('campus') || jobLoc.includes(userLoc) || userLoc.includes(jobLoc)) {
       score += 10
     } else {
@@ -198,6 +199,7 @@ export const JobList = () => {
     isLoading, 
     domains, 
     total, 
+    totalPages,
     isLiveMode, 
     setIsLiveMode, 
     fetchJobs, 
@@ -207,23 +209,79 @@ export const JobList = () => {
     isJobInterested
   } = useJobs()
 
+  const urlDomain = searchParams.get('domain') || ''
+  const urlLocation = searchParams.get('location') || ''
+  const urlSearch = searchParams.get('search') || searchParams.get('q') || ''
+
   const [campusTab, setCampusTab] = useState('all') // 'all' | 'interested'
-  const [customAddedTags, setCustomAddedTags] = useState([])
-  const [selectedTags, setSelectedTags] = useState([])
-  const [customInput, setCustomInput] = useState('')
-
-  const [filters, setFilters] = useState({
-    domain: searchParams.get('domain') || '',
-    location: searchParams.get('location') || '',
-    search: searchParams.get('search') || '',
+  const [customAddedTags, setCustomAddedTags] = useState(() => {
+    const custom = []
+    if (urlDomain && !CAMPUS_PRESET_TAGS.includes(urlDomain) && !LIVE_PRESET_TAGS.includes(urlDomain)) custom.push(urlDomain)
+    if (urlLocation && !CAMPUS_PRESET_TAGS.includes(urlLocation) && !LIVE_PRESET_TAGS.includes(urlLocation)) custom.push(urlLocation)
+    if (urlSearch && !CAMPUS_PRESET_TAGS.includes(urlSearch) && !LIVE_PRESET_TAGS.includes(urlSearch)) custom.push(urlSearch)
+    return custom
   })
+  const [selectedTags, setSelectedTags] = useState(() => {
+    const initial = []
+    if (urlDomain) initial.push(urlDomain)
+    if (urlLocation && !initial.some(t => t.toLowerCase() === urlLocation.toLowerCase())) initial.push(urlLocation)
+    if (urlSearch && !initial.some(t => t.toLowerCase() === urlSearch.toLowerCase())) initial.push(urlSearch)
+    return initial
+  })
+  const [customInput, setCustomInput] = useState('')
+  const [livePage, setLivePage] = useState(1)
+  const [campusPage, setCampusPage] = useState(1)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasMoreLive, setHasMoreLive] = useState(true)
 
-  // Dynamic quick-add presets based on current tab mode
+  const handleLoadMore = async () => {
+    setIsLoadingMore(true)
+    const query = selectedTags.join(' ')
+    if (isLiveMode) {
+      const nextPage = livePage + 1
+      const result = await fetchLiveJobs({ search: query || 'Software', page: nextPage, limit: 25 }, true)
+      setLivePage(nextPage)
+      if (result && typeof result === 'object' && 'has_more' in result) {
+        setHasMoreLive(Boolean(result.has_more))
+      }
+    } else {
+      const nextPage = campusPage + 1
+      await fetchJobs({ 
+        search: query || undefined, 
+        domain: urlDomain || undefined, 
+        location: urlLocation || undefined, 
+        page: nextPage, 
+        per_page: 20 
+      }, true)
+      setCampusPage(nextPage)
+    }
+    setIsLoadingMore(false)
+  }
+
+  useEffect(() => {
+    const query = selectedTags.join(' ') || urlSearch || undefined
+    fetchJobs({ 
+      page: 1, 
+      per_page: 20,
+      domain: urlDomain || undefined,
+      location: urlLocation || undefined,
+      search: query
+    })
+  }, [fetchJobs])
+
+  // Dynamic quick-add presets based on current tab mode and backend domains
   const activePresetTags = useMemo(() => {
     const base = isLiveMode ? LIVE_PRESET_TAGS : CAMPUS_PRESET_TAGS
-    const customOnly = customAddedTags.filter(t => !base.some(b => b.toLowerCase() === t.toLowerCase()))
-    return [...base, ...customOnly]
-  }, [isLiveMode, customAddedTags])
+    const dynamicDomains = (domains || []).filter(
+      d => d && !base.some(b => b.toLowerCase() === d.toLowerCase())
+    )
+    const customOnly = customAddedTags.filter(
+      t => t && 
+        !base.some(b => b.toLowerCase() === t.toLowerCase()) && 
+        !dynamicDomains.some(d => d.toLowerCase() === t.toLowerCase())
+    )
+    return [...base, ...dynamicDomains, ...customOnly]
+  }, [isLiveMode, domains, customAddedTags])
 
   const handleToggleTag = (tag) => {
     const isSelected = selectedTags.some(t => t.toLowerCase() === tag.toLowerCase())
@@ -232,18 +290,28 @@ export const JobList = () => {
       : [...selectedTags, tag]
 
     setSelectedTags(updated)
+    setLivePage(1)
+    setCampusPage(1)
+    setHasMoreLive(true)
 
     if (isLiveMode) {
-      fetchLiveJobs({ search: updated.join(' ') })
+      fetchLiveJobs({ search: updated.join(' '), page: 1 })
+    } else {
+      fetchJobs({ search: updated.join(' '), page: 1, per_page: 20 })
     }
   }
 
   const handleRemoveTag = (tagToRemove) => {
     const updated = selectedTags.filter(t => t.toLowerCase() !== tagToRemove.toLowerCase())
     setSelectedTags(updated)
+    setLivePage(1)
+    setCampusPage(1)
+    setHasMoreLive(true)
 
     if (isLiveMode) {
-      fetchLiveJobs({ search: updated.join(' ') })
+      fetchLiveJobs({ search: updated.join(' '), page: 1 })
+    } else {
+      fetchJobs({ search: updated.join(' '), page: 1, per_page: 20 })
     }
   }
 
@@ -271,21 +339,27 @@ export const JobList = () => {
   const clearFilters = () => {
     setSelectedTags([])
     setCustomInput('')
-    setFilters({ domain: '', location: '', search: '' })
+    setLivePage(1)
+    setCampusPage(1)
+    setHasMoreLive(true)
+    setSearchParams({})
     if (isLiveMode) {
-      fetchLiveJobs({ search: '' })
+      fetchLiveJobs({ search: '', page: 1 })
     } else {
-      fetchJobs()
+      fetchJobs({ page: 1, per_page: 20 })
     }
   }
 
   const toggleLiveMode = (enableLive) => {
     setIsLiveMode(enableLive)
     setCampusTab('all')
+    setLivePage(1)
+    setHasMoreLive(true)
     const query = selectedTags.join(' ')
     if (enableLive) {
       fetchLiveJobs({
-        search: query || 'Software'
+        search: query || 'Software',
+        page: 1
       })
     } else {
       fetchJobs()
@@ -340,96 +414,145 @@ export const JobList = () => {
     }
   }
 
+  const formatSalaryDisplay = (salaryRaw, description = '', title = '', location = '') => {
+    let s = String(salaryRaw || '').trim()
+
+    // 1. If salaryRaw is missing or 'Competitive', scan description for embedded salary
+    if (!s || s.toLowerCase().includes('competitive')) {
+      const descText = String(description || '')
+      
+      // Look for patterns like "Salary: 65,000-75,000" or "$90-$150/hr" or "€50,000 - €70,000"
+      const descHourlyMatch = descText.match(/(?:salary|pay|rate|compensation)?[:\s]*\$(\d+)\s*(?:-|to)\s*\$?(\d+)\s*(?:\/|\s+per\s+)?(?:hr|hour)/i)
+      if (descHourlyMatch) {
+        s = `$${descHourlyMatch[1]} - $${descHourlyMatch[2]} / hr`
+      } else {
+        const descSalaryMatch = descText.match(/(?:salary|pay|compensation)?[:\s]*\$?(\d{2,3}[,\d]*)\s*(?:-|to)\s*\$?(\d{2,3}[,\d]*)/i)
+        if (descSalaryMatch) {
+          const num1 = descSalaryMatch[1].replace(/,/g, '')
+          const num2 = descSalaryMatch[2].replace(/,/g, '')
+          if (parseInt(num1, 10) >= 10000 && parseInt(num2, 10) >= 10000) {
+            s = `$${descSalaryMatch[1]} - $${descSalaryMatch[2]}`
+          }
+        }
+      }
+    }
+
+    // 2. If a concrete numeric salary exists, convert to LPA / Cr
+    if (s && !s.toLowerCase().includes('competitive')) {
+      // If already formatted in INR (₹ or LPA)
+      if (s.includes('₹') || s.toLowerCase().includes('lpa') || s.toLowerCase().includes('inr')) {
+        return s
+      }
+
+      // Handle Hourly Rates (e.g. "$90 - $150 / hr" or "$50/hr")
+      const hourlyMatch = s.match(/\$?(\d+)(?:\s*(?:-|to)\s*\$?(\d+))?\s*(?:\/|\s+per\s+)?(?:hr|hour)/i)
+      if (hourlyMatch) {
+        const minHourly = parseInt(hourlyMatch[1], 10)
+        const maxHourly = hourlyMatch[2] ? parseInt(hourlyMatch[2], 10) : minHourly
+        const minINRInCr = ((minHourly * 2000 * 85) / 10000000).toFixed(1)
+        const maxINRInCr = ((maxHourly * 2000 * 85) / 10000000).toFixed(1)
+        
+        if (minHourly === maxHourly) {
+          return `$${minHourly}/hr (~₹${minINRInCr} Cr/yr)`
+        }
+        return `$${minHourly} - $${maxHourly}/hr (~₹${minINRInCr} - ${maxINRInCr} Cr/yr)`
+      }
+
+      // Handle Annual USD Rates (e.g. "$80,000 - $120,000" or "$80k - $120k" or "65,000-75,000")
+      const annualUSDMatch = s.match(/\$?(\d+[\d,]*)(?:k)?\s*(?:-|to)\s*\$?(\d+[\d,]*)(?:k)?/i)
+      if (annualUSDMatch) {
+        let minUSD = parseInt(annualUSDMatch[1].replace(/,/g, ''), 10)
+        let maxUSD = parseInt(annualUSDMatch[2].replace(/,/g, ''), 10)
+        if (minUSD < 1000) minUSD *= 1000
+        if (maxUSD < 1000) maxUSD *= 1000
+
+        if (minUSD >= 10000) {
+          const minLPA = ((minUSD * 85) / 100000).toFixed(1)
+          const maxLPA = ((maxUSD * 85) / 100000).toFixed(1)
+          return `$${(minUSD/1000).toFixed(0)}k - $${(maxUSD/1000).toFixed(0)}k / yr (~₹${minLPA} - ${maxLPA} LPA)`
+        }
+      }
+
+      // Handle single annual figure (e.g. "$120,000 / year")
+      const singleMatch = s.match(/\$?(\d+[\d,]*)(?:k)?\s*(?:\/|\s+per\s+)?(?:yr|year)?/i)
+      if (singleMatch) {
+        let val = parseInt(singleMatch[1].replace(/,/g, ''), 10)
+        if (val < 1000) val *= 1000
+        if (val >= 10000) {
+          const lpa = ((val * 85) / 100000).toFixed(1)
+          return `$${(val/1000).toFixed(0)}k/yr (~₹${lpa} LPA)`
+        }
+      }
+    }
+
+    // 3. Fallback: Compute Realistic Market Benchmark based on Role & Seniority
+    const t = (title || '').toLowerCase()
+    const loc = (location || '').toLowerCase()
+    const isGlobalOrRemote = loc.includes('remote') || loc.includes('global') || loc.includes('london') || loc.includes('us') || loc.includes('uk') || loc.includes('europe') || loc.includes('germany') || loc.includes('munich') || loc.includes('berlin')
+
+    if (t.includes('staff') || t.includes('principal') || t.includes('architect') || t.includes('director') || t.includes('head')) {
+      return isGlobalOrRemote ? '₹35,00,000 - ₹65,00,000 / yr (Market Est.)' : '₹25,00,000 - ₹45,00,000 / yr (Market Est.)'
+    }
+    if (t.includes('senior') || t.includes('sr.') || t.includes('lead') || t.includes('expert')) {
+      return isGlobalOrRemote ? '₹22,00,000 - ₹42,00,000 / yr (Market Est.)' : '₹16,00,000 - ₹30,00,000 / yr (Market Est.)'
+    }
+    if (t.includes('intern') || t.includes('trainee')) {
+      return '₹25,000 - ₹60,000 / mo (Stipend Est.)'
+    }
+    if (t.includes('associate') || t.includes('junior') || t.includes('support') || t.includes('fresher')) {
+      return '₹4,50,000 - ₹9,00,000 / yr (Market Est.)'
+    }
+    if (t.includes('developer') || t.includes('engineer') || t.includes('scientist') || t.includes('devops') || t.includes('cloud') || t.includes('security')) {
+      return isGlobalOrRemote ? '₹14,00,000 - ₹28,00,000 / yr (Market Est.)' : '₹9,00,000 - ₹18,00,000 / yr (Market Est.)'
+    }
+
+    return '₹6,00,000 - ₹12,00,000 / yr (Market Est.)'
+  }
+
   const renderDateBadges = (job) => {
-    // 1. If explicit deadline/expiration date is known (expires_at column)
-    if (job.expires_at) {
-      try {
-        const exp = new Date(job.expires_at)
-        const now = new Date()
-        const diffDays = Math.ceil((exp - now) / (1000 * 60 * 60 * 24))
+    const status = getJobDeadlineStatus(job)
 
-        if (diffDays === 1) {
-          return (
-            <span className="inline-flex items-center text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-300 shadow-2xs animate-pulse">
-              <ClockIcon className="h-3 w-3 mr-1 text-rose-600" />
-              🚨 1 day left to apply
-            </span>
-          )
-        } else if (diffDays === 2) {
-          return (
-            <span className="inline-flex items-center text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-300 shadow-2xs">
-              <ClockIcon className="h-3 w-3 mr-1 text-amber-600" />
-              ⚡ 2 days left to apply
-            </span>
-          )
-        } else if (diffDays > 2 && diffDays <= 7) {
-          return (
-            <span className="inline-flex items-center text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-              <ClockIcon className="h-3 w-3 mr-1 text-amber-500" />
-              ⏰ {diffDays} days left to apply
-            </span>
-          )
-        } else if (diffDays > 7) {
-          return (
-            <span className="inline-flex items-center text-[10px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 shadow-2xs">
-              <ClockIcon className="h-3 w-3 mr-1 text-rose-500" />
-              Apply by: {exp.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} ({diffDays}d left)
-            </span>
-          )
-        } else {
-          return (
-            <span className="inline-flex items-center text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-              <ClockIcon className="h-3 w-3 mr-1 text-slate-400" />
-              Application Closed
-            </span>
-          )
-        }
-      } catch (e) {}
+    if (status.type === 'CLOSED') {
+      return (
+        <span className="inline-flex items-center text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+          <ClockIcon className="h-3 w-3 mr-1 text-slate-400" />
+          {status.label}
+        </span>
+      )
     }
 
-    // 2. Extract embedded date from description if available (e.g. "Date Posted: 2026-08-18")
-    const descDateMatch = (job.description || '').match(/Date Posted[:\s]+(\d{4}-\d{2}-\d{2})/i)
-    let effectiveDate = job.posted_date
-    if (descDateMatch && descDateMatch[1]) {
-      effectiveDate = descDateMatch[1]
+    if (status.type === 'CLOSING_TODAY' || status.type === 'URGENT_1_DAY') {
+      return (
+        <span className="inline-flex items-center text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-300 shadow-2xs animate-pulse">
+          <ClockIcon className="h-3 w-3 mr-1 text-rose-600" />
+          {status.label}
+        </span>
+      )
     }
 
-    if (effectiveDate) {
-      try {
-        const posted = new Date(effectiveDate)
-        const now = new Date()
-        const diffDays = Math.floor((now - posted) / (1000 * 60 * 60 * 24))
-
-        if (diffDays === 0) {
-          return (
-            <span className="inline-flex items-center text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              <SparklesIcon className="h-3 w-3 mr-1 text-emerald-500 animate-pulse" />
-              Fresh Opening
-            </span>
-          )
-        } else if (diffDays >= 1 && diffDays <= 7) {
-          return (
-            <span className="inline-flex items-center text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
-              <CalendarIcon className="h-3 w-3 mr-1 text-teal-500" />
-              Posted {diffDays}d ago
-            </span>
-          )
-        } else if (diffDays > 7 && diffDays <= 30) {
-          return (
-            <span className="inline-flex items-center text-[10px] font-medium text-slate-600 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
-              <CalendarIcon className="h-3 w-3 mr-1 text-slate-400" />
-              Posted {posted.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-            </span>
-          )
-        }
-      } catch (e) {}
+    if (status.type === 'CLOSING_SOON') {
+      return (
+        <span className="inline-flex items-center text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-300 shadow-2xs">
+          <ClockIcon className="h-3 w-3 mr-1 text-amber-600" />
+          {status.label}
+        </span>
+      )
     }
 
-    // 3. Verified Live Opening Badge
+    if (status.type === 'ACTIVE_DEADLINE') {
+      return (
+        <span className="inline-flex items-center text-[10px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 shadow-2xs">
+          <ClockIcon className="h-3 w-3 mr-1 text-rose-500" />
+          {status.label}
+        </span>
+      )
+    }
+
+    // Rolling admissions
     return (
-      <span className="inline-flex items-center text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse" />
-        Actively Hiring
+      <span className="inline-flex items-center text-[10px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
+        {status.label}
       </span>
     )
   }
@@ -469,7 +592,7 @@ export const JobList = () => {
         const description = (job.description || '').toLowerCase()
         const skills = (job.required_skills || []).map(s => String(s).toLowerCase())
 
-        return selectedTags.some((tag) => {
+        return selectedTags.every((tag) => {
           const t = tag.toLowerCase().trim()
           return (
             title.includes(t) ||
@@ -494,7 +617,7 @@ export const JobList = () => {
   const hasActiveFilters = selectedTags.length > 0
 
   return (
-    <div className="w-full space-y-3">
+    <div data-testid="job-list" className="w-full space-y-3">
       {/* Compact Slim Hero Header */}
       <div className="relative rounded-xl bg-gradient-to-r from-slate-900 via-indigo-950 to-primary-950 py-3.5 px-5 text-white shadow-xs overflow-hidden border border-white/10">
         <div className="absolute -top-12 -right-12 w-48 h-48 bg-primary-500/15 rounded-full blur-xl pointer-events-none" />
@@ -646,7 +769,7 @@ export const JobList = () => {
                   key={tag}
                   type="button"
                   onClick={() => handleToggleTag(tag)}
-                  className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-all flex items-center gap-1 ${
+                  className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-all flex items-center gap-1 cursor-pointer ${
                     isSelected
                       ? 'bg-primary-100 text-primary-800 border border-primary-300 font-bold shadow-xs'
                       : 'bg-white text-slate-600 border border-slate-200 hover:border-primary-400 hover:text-primary-700 shadow-xs'
@@ -659,6 +782,7 @@ export const JobList = () => {
             })}
           </div>
 
+          {/* Batch & Fresher Eligibility Filter Bar */}
           {/* Universal Custom Input Bar */}
           <form onSubmit={handleAddCustomTag} className="flex gap-1.5 pt-0.5">
             <input
@@ -670,34 +794,22 @@ export const JobList = () => {
             />
             <button
               type="submit"
-              disabled={!customInput.trim()}
-              className="px-3.5 py-1.5 bg-white border border-primary-600 text-primary-600 hover:bg-primary-50 active:scale-95 disabled:opacity-40 disabled:pointer-events-none rounded-lg text-xs font-semibold transition-all"
+              className="px-3 py-1.5 bg-primary-600 hover:bg-primary-700 active:scale-95 text-white text-xs font-semibold rounded-lg transition-all flex items-center gap-1 shadow-xs cursor-pointer"
             >
               Add Filter
             </button>
           </form>
-
         </div>
       )}
 
-      {/* Job Listings Area */}
+      {/* Jobs Grid */}
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-12 bg-white rounded-xl shadow-xs border border-slate-100">
-          <div className="relative">
-            <div className="w-10 h-10 rounded-full border-2 border-primary-100 border-t-primary-600 animate-spin" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <SparklesIcon className="h-3.5 w-3.5 text-primary-600 animate-pulse" />
-            </div>
-          </div>
-          <h3 className="mt-2.5 text-xs font-bold text-slate-800">
-            {isLiveMode ? 'Scanning Live Web Portals...' : 'Loading Campus Opportunities...'}
-          </h3>
-          <p className="text-slate-400 text-[11px] mt-0.5">
-            Matching skills and computing AI alignment
-          </p>
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
+          <p className="mt-3 text-xs text-slate-500 font-medium">Aggregating matching opportunities...</p>
         </div>
-      ) : displayItems?.length > 0 ? (
-        <div className="grid grid-cols-1 gap-2.5">
+      ) : displayItems.length > 0 ? (
+        <div className="space-y-3">
           {displayItems.map((job) => {
             const isSaved = isJobInterested(job)
             const matchScore = calculateMatchScore(job)
@@ -717,7 +829,13 @@ export const JobList = () => {
                   <div className="flex-1 space-y-1.5">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-primary-600 transition-colors">
-                        {job.title}
+                        <Link 
+                          to={`/jobs/${job.id || job.external_id}`} 
+                          state={{ matchScore }}
+                          className="hover:underline hover:text-primary-600 transition-colors"
+                        >
+                          {job.title}
+                        </Link>
                       </h3>
                       {getSourceBadge(job.source, job.is_live)}
                       {job.is_interested_item && getStatusBadge(job.status)}
@@ -740,12 +858,10 @@ export const JobList = () => {
                         <MapPinIcon className="h-3.5 w-3.5 mr-1 text-slate-400" />
                         {job.location || 'Remote / Campus'}
                       </span>
-                      {job.salary_range && (
-                        <span className="flex items-center text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 text-xs">
-                          <CurrencyRupeeIcon className="h-3 w-3 mr-1 text-emerald-600" />
-                          {job.salary_range}
-                        </span>
-                      )}
+                      <span className="flex items-center text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 text-xs">
+                        <CurrencyRupeeIcon className="h-3 w-3 mr-1 text-emerald-600" />
+                        {formatSalaryDisplay(job.salary_range, job.description, job.title, job.location)}
+                      </span>
                       {renderDateBadges(job)}
                       {job.campus_interest_count > 0 && (
                         <span className="flex items-center text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
@@ -765,7 +881,11 @@ export const JobList = () => {
                     {job.required_skills && job.required_skills.length > 0 && (
                       <div className="flex flex-wrap items-center gap-1 pt-0.5">
                         {job.required_skills.slice(0, 6).map((skill, idx) => {
-                          const isSkillMatched = userSkills.some(u => u.includes(skill.toLowerCase()) || skill.toLowerCase().includes(u))
+                          const skillStr = String(skill || '').toLowerCase().trim()
+                          const isSkillMatched = skillStr && userSkills.some(u => {
+                            const uStr = String(u || '').toLowerCase().trim()
+                            return uStr && (uStr.includes(skillStr) || skillStr.includes(uStr))
+                          })
                           return (
                             <span 
                               key={idx} 
@@ -776,7 +896,7 @@ export const JobList = () => {
                               }`}
                             >
                               {isSkillMatched && <CheckCircleIcon className="h-2.5 w-2.5 mr-1 text-emerald-600" />}
-                              {skill}
+                              {String(skill)}
                             </span>
                           )
                         })}
@@ -845,23 +965,32 @@ export const JobList = () => {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-1 w-full lg:w-auto">
-                      {job.apply_url ? (
-                        <a
-                          href={job.apply_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-1 inline-flex items-center justify-center px-3 py-1 bg-primary-600 hover:bg-primary-700 active:scale-95 text-white text-xs font-semibold rounded-lg shadow-xs transition-all"
-                        >
-                          Apply
-                          <ExternalLinkIcon className="h-3 w-3 ml-1" />
-                        </a>
-                      ) : (
-                        <Link to={`/jobs/${job.id}`} className="flex-1 lg:w-full">
-                          <Button variant="outline" size="sm" className="w-full text-xs font-semibold rounded-lg py-1 px-2.5">
-                            Details
-                          </Button>
-                        </Link>
+                    <div className="flex items-center gap-1.5 w-full lg:w-auto">
+                      <Link 
+                        to={`/jobs/${job.id || job.external_id}`} 
+                        state={{ matchScore }}
+                        className="flex-1 lg:flex-none"
+                      >
+                        <Button variant="outline" size="sm" className="w-full text-xs font-semibold rounded-lg py-1 px-2.5 hover:bg-slate-50">
+                          Details
+                        </Button>
+                      </Link>
+                      {job.apply_url && (
+                        job.is_closed || job.status === 'closed' ? (
+                          <span className="flex-1 lg:flex-none inline-flex items-center justify-center px-3 py-1 bg-slate-100 text-slate-400 text-xs font-semibold rounded-lg border border-slate-200 cursor-not-allowed">
+                            Closed
+                          </span>
+                        ) : (
+                          <a
+                            href={job.apply_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 lg:flex-none inline-flex items-center justify-center px-3 py-1 bg-primary-600 hover:bg-primary-700 active:scale-95 text-white text-xs font-semibold rounded-lg shadow-xs transition-all"
+                          >
+                            Apply
+                            <ExternalLinkIcon className="h-3 w-3 ml-1" />
+                          </a>
+                        )
                       )}
                     </div>
                   </div>
@@ -869,6 +998,30 @@ export const JobList = () => {
               </div>
             )
           })}
+
+          {/* Pagination for Live Web Mode & Campus Drives */}
+          {displayItems.length > 0 && ((isLiveMode && hasMoreLive) || (!isLiveMode && campusTab === 'all' && campusPage < totalPages)) && (
+            <div className="flex justify-center pt-4 pb-2">
+              <button
+                type="button"
+                onClick={handleLoadMore}
+                disabled={isLoadingMore}
+                className="px-6 py-2.5 bg-white border border-primary-500 text-primary-600 hover:bg-primary-50 active:scale-95 disabled:opacity-50 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+              >
+                {isLoadingMore ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+                    <span>Loading More {isLiveMode ? 'Opportunities' : 'Campus Drives'}...</span>
+                  </>
+                ) : (
+                  <>
+                    {isLiveMode ? <GlobeIcon className="h-3.5 w-3.5 text-primary-500" /> : <AcademicCapIcon className="h-3.5 w-3.5 text-primary-500" />}
+                    <span>Load More {isLiveMode ? 'Opportunities (+25)' : 'Campus Drives (+20)'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         /* Actionable Compact Empty State with 1-Click Live Web Bridge */

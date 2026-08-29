@@ -14,16 +14,15 @@ import {
 import storage from 'redux-persist/lib/storage'
 import authReducer from './slices/authSlice'
 import resumeReducer from './slices/resumeSlice'
-import jobReducer from './slices/jobSlice'
 import notificationReducer from './slices/notificationSlice'
 import uiReducer from './slices/uiSlice'
 import analyticsReducer from './slices/analyticsSlice'
 
 // 1. Combine reducers into a single root reducer
+// Note: Job state is canonically managed by frontend/src/hooks/useJobs.js
 const rootReducer = combineReducers({
   auth: authReducer,
   resume: resumeReducer,
-  job: jobReducer,
   notification: notificationReducer,
   ui: uiReducer,
   analytics: analyticsReducer,

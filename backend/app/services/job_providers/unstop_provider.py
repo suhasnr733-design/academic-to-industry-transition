@@ -66,20 +66,59 @@ class UnstopProvider(BaseJobProvider):
                 else:
                     apply_url = 'https://unstop.com/jobs'
                 
-                # Eligibility / Filters
+                # Check registration and expiration status
+                regn_req = item.get('regnRequirements') or {}
+                reg_status = str(regn_req.get('reg_status') or item.get('reg_status') or '').upper()
+                remain_days = str(regn_req.get('remain_days') or '').lower()
+                remaining_time = regn_req.get('remaining_time')
+
+                is_closed = (
+                    reg_status == 'FINISHED' or 
+                    remain_days == 'ended' or 
+                    (remaining_time is not None and isinstance(remaining_time, (int, float)) and remaining_time <= 0)
+                )
+
+                deadline_raw = item.get('end_date') or regn_req.get('end_regn_dt') or item.get('regn_end_date')
+                deadline_iso = None
+                if deadline_raw:
+                    try:
+                        from datetime import datetime
+                        dt_end = datetime.fromisoformat(str(deadline_raw).replace('Z', '+00:00'))
+                        deadline_iso = dt_end.isoformat()
+                        if dt_end.timestamp() < datetime.now(dt_end.tzinfo).timestamp():
+                            is_closed = True
+                    except Exception:
+                        deadline_iso = str(deadline_raw)
+
+                # Skip expired or closed opportunities so students only see open, active roles
+                if is_closed:
+                    continue
+
+                # Candidate Eligibility / Target Cohort (e.g. 'Experienced Professionals', 'Engineering Students')
                 filters = item.get('filters', []) or []
-                eligible_degrees = []
+                eligibility_list = []
                 for f in filters:
                     if isinstance(f, dict) and f.get('name'):
-                        eligible_degrees.append(f.get('name'))
+                        eligibility_list.append(f.get('name'))
                 
-                req_skills = item.get('required_skills') or []
-                if isinstance(req_skills, list):
-                    for s in req_skills:
+                # Real Technical Skills extraction (Unstop uses 'skill' / 'skill_name' keys)
+                tech_skills = []
+                raw_req_skills = item.get('required_skills') or []
+                if isinstance(raw_req_skills, list):
+                    for s in raw_req_skills:
+                        if isinstance(s, dict):
+                            s_name = s.get('skill') or s.get('skill_name') or s.get('name')
+                            if s_name and str(s_name).strip() not in tech_skills:
+                                tech_skills.append(str(s_name).strip())
+                        elif isinstance(s, str) and s.strip() not in tech_skills:
+                            tech_skills.append(s.strip())
+
+                if not tech_skills:
+                    for s in item.get('skills', []) or []:
                         if isinstance(s, dict) and s.get('name'):
-                            eligible_degrees.append(s.get('name'))
+                            tech_skills.append(s.get('name'))
                         elif isinstance(s, str):
-                            eligible_degrees.append(s)
+                            tech_skills.append(s)
 
                 # Salary / CTC
                 sal = item.get('jobDetail') or item.get('job_detail') or {}
@@ -110,6 +149,15 @@ class UnstopProvider(BaseJobProvider):
                 desc_str = re.sub(r'<[^>]+>', ' ', desc_str)
                 desc_str = re.sub(r'\s+', ' ', desc_str).strip()
 
+                # If tech skills are still missing, scan description for concrete technical competencies
+                if not tech_skills:
+                    COMMON_TECH = ['Automation Testing', 'Selenium', 'Playwright', 'Appium', 'Python', 'Java', 'JavaScript', 'TypeScript', 'React', 'Node.js', 'SQL', 'AWS', 'Docker', 'Git', 'CI/CD', 'Manual Testing', 'SDET']
+                    found = [t for t in COMMON_TECH if re.search(r'\b' + re.escape(t) + r'\b', desc_str, re.IGNORECASE)]
+                    if found:
+                        tech_skills = found[:6]
+                    else:
+                        tech_skills = ['Software Development']
+
                 normalized = self.normalize_job(
                     external_id=str(item.get('id') or hash(title + company)),
                     title=str(title),
@@ -118,7 +166,7 @@ class UnstopProvider(BaseJobProvider):
                     apply_url=apply_url,
                     source='unstop',
                     location=loc_str,
-                    required_skills=eligible_degrees[:5] or ['Fresher / Graduate', 'B.Tech/M.Tech/PhD'],
+                    required_skills=tech_skills,
                     salary_range=salary_range,
                     salary_min=float(salary_min) if salary_min else None,
                     salary_max=float(salary_max) if salary_max else None,
@@ -126,9 +174,15 @@ class UnstopProvider(BaseJobProvider):
                     job_type='Full-time' if item.get('type') != 'internship' else 'Internship',
                     domain='Competitions & Jobs',
                     posted_date=str(item.get('start_date') or item.get('created_at') or ''),
+                    expires_at=deadline_iso,
+                    is_active=not is_closed,
+                    is_closed=is_closed,
+                    eligibility=eligibility_list,
                     raw_data={
                         'views_count': item.get('viewsCount'),
-                        'banner_image': item.get('logoUrl2') or item.get('thumb')
+                        'banner_image': item.get('logoUrl2') or item.get('thumb'),
+                        'eligibility': eligibility_list,
+                        'deadline': deadline_iso
                     }
                 )
                 jobs.append(normalized)

@@ -46,15 +46,16 @@ class JobAggregatorService:
 
     def search_all_jobs(
         self,
-        query: str,
+        query: Optional[str] = None,
         location: Optional[str] = None,
         sources: Optional[List[str]] = None,
         limit_per_source: int = 10,
-        total_limit: int = 35,
+        total_limit: int = 25,
+        page: int = 1,
         auto_cache: bool = True
     ) -> List[Dict[str, Any]]:
         """
-        Query all active providers in parallel and return deduplicated jobs with Academic Fit scoring.
+        Query all active providers in parallel and return deduplicated jobs with Academic Fit scoring and pagination.
         """
         provider_map = {
             'remotive': self.remotive,
@@ -68,17 +69,23 @@ class JobAggregatorService:
             'naukri': self.naukri
         }
 
+        # Note: 'naukri' is excluded from default pool to prevent synthetic placeholder jobs from being presented as live listings
+        DEFAULT_ACTIVE_SOURCES = ['remotive', 'arbeitnow', 'jsearch', 'adzuna', 'weworkremotely', 'remoteok', 'unstop', 'internshala']
+
         if not sources or 'all' in sources:
-            active_providers = list(provider_map.values())
+            active_providers = [provider_map[s] for s in DEFAULT_ACTIVE_SOURCES if s in provider_map]
         else:
             active_providers = [provider_map[s] for s in sources if s in provider_map]
 
         all_jobs: List[Dict[str, Any]] = []
         
+        # Calculate dynamic provider fetch limit based on requested page
+        effective_limit_per_source = max(limit_per_source, (total_limit * page) // max(len(active_providers), 1) + 5)
+        
         # Parallel fetch across providers for sub-second response times
         with ThreadPoolExecutor(max_workers=len(active_providers) or 1) as executor:
             future_to_provider = {
-                executor.submit(p.search, query, location, limit_per_source): p.name
+                executor.submit(p.search, query, location, effective_limit_per_source): p.name
                 for p in active_providers
             }
             for future in as_completed(future_to_provider):
@@ -116,7 +123,7 @@ class JobAggregatorService:
                 job.get('title', ''),
                 job.get('description', ''),
                 job.get('posted_date')
-            ):
+            ) or job.get('is_closed') or (job.get('is_active') is False):
                 continue
 
             c_norm = (job.get('company') or '').strip().lower()
@@ -137,17 +144,21 @@ class JobAggregatorService:
                 job['research_skills'] = fit_info['research_skills']
                 job['industry_gap_skills'] = fit_info['gap_skills']
 
-                # Ensure expires_at is always provided for countdown
-                if not job.get('expires_at'):
-                    from datetime import datetime, timedelta
-                    raw_posted = job.get('posted_date')
-                    dt_posted = datetime.utcnow()
-                    if raw_posted and isinstance(raw_posted, str):
-                        try:
-                            dt_posted = datetime.fromisoformat(raw_posted.replace('Z', '+00:00'))
-                        except Exception:
-                            pass
-                    job['expires_at'] = (dt_posted + timedelta(days=21)).isoformat()
+                # Validate real expiration dates provided by source providers
+                raw_expires = job.get('expires_at')
+                if raw_expires:
+                    try:
+                        from datetime import datetime
+                        dt_exp = datetime.fromisoformat(str(raw_expires).replace('Z', '+00:00'))
+                        # If deadline is in the past, mark closed
+                        if dt_exp.timestamp() < datetime.now(dt_exp.tzinfo).timestamp():
+                            job['is_closed'] = True
+                            job['is_active'] = False
+                    except Exception:
+                        pass
+                else:
+                    # Explicitly None to signify rolling admissions / open until filled
+                    job['expires_at'] = None
                 
                 deduped_jobs.append(job)
 
@@ -165,24 +176,30 @@ class JobAggregatorService:
         interleaved_jobs = []
         max_source_len = max(len(v) for v in jobs_by_source.values()) if jobs_by_source else 0
 
+        target_total = total_limit * page
         for i in range(max_source_len):
             for src_name, src_list in list(jobs_by_source.items()):
                 if i < len(src_list):
                     interleaved_jobs.append(src_list[i])
-                    if len(interleaved_jobs) >= total_limit:
+                    if len(interleaved_jobs) >= target_total:
                         break
-            if len(interleaved_jobs) >= total_limit:
+            if len(interleaved_jobs) >= target_total:
                 break
 
-        final_jobs = interleaved_jobs if interleaved_jobs else deduped_jobs[:total_limit]
+        full_list = interleaved_jobs if interleaved_jobs else deduped_jobs
+        
+        # Apply pagination slicing
+        start_idx = (page - 1) * total_limit
+        end_idx = start_idx + total_limit
+        paginated_jobs = full_list[start_idx:end_idx]
 
-        logger.info(f"JobAggregator: aggregated {len(final_jobs)} unique live jobs for query '{query}' across {list(jobs_by_source.keys())}")
+        logger.info(f"JobAggregator: aggregated {len(paginated_jobs)} jobs for query '{query}' (page {page}, offset {start_idx}-{end_idx})")
 
         # Asynchronously cache newly found jobs to DB in the background
-        if auto_cache and final_jobs:
-            threading.Thread(target=self._async_cache_to_db, args=(final_jobs,), daemon=True).start()
+        if auto_cache and paginated_jobs:
+            threading.Thread(target=self._async_cache_to_db, args=(paginated_jobs,), daemon=True).start()
 
-        return final_jobs
+        return paginated_jobs
 
     def match_live_jobs_with_student(
         self,
@@ -452,10 +469,26 @@ class JobAggregatorService:
                         )
                         db.session.add(new_job)
 
-                # Automatically expire stale live jobs older than 30 days
+                # Lifecycle management: expire past-deadline jobs and stale rolling jobs
                 from datetime import timedelta
-                cutoff = datetime.utcnow() - timedelta(days=30)
-                Job.query.filter(Job.is_live == True, Job.posted_date < cutoff).update({'is_active': False})
+                now = datetime.utcnow()
+
+                # 1. Past explicit deadline
+                Job.query.filter(
+                    Job.is_live == True,
+                    Job.expires_at != None,
+                    Job.expires_at < now,
+                    Job.is_active == True
+                ).update({'is_active': False})
+
+                # 2. Rolling recruitment older than 45 days
+                cutoff_rolling = now - timedelta(days=45)
+                Job.query.filter(
+                    Job.is_live == True,
+                    Job.expires_at == None,
+                    Job.posted_date < cutoff_rolling,
+                    Job.is_active == True
+                ).update({'is_active': False})
 
                 db.session.commit()
                 logger.debug(f"Successfully cached {len(jobs)} live jobs to local DB")

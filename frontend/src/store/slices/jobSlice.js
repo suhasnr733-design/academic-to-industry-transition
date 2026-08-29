@@ -1,4 +1,11 @@
 // frontend/src/store/slices/jobSlice.js
+/**
+ * DEPRECATION NOTICE:
+ * -------------------
+ * This Redux slice is decommissioned and no longer connected to the Redux store.
+ * Job state, live aggregator pagination, target role pipelines, and campus application
+ * submissions are canonically managed by `frontend/src/hooks/useJobs.js`.
+ */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import api from '../../services/api'

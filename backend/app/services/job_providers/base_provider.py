@@ -282,6 +282,20 @@ class BaseJobProvider(ABC):
 
         return s
 
+    @staticmethod
+    def extract_deadline_from_text(text: str) -> Optional[str]:
+        """Scan description for common closing notices like 'Apply before 2026-09-15'"""
+        if not text:
+            return None
+        match = re.search(
+            r'(?:apply\s+by|apply\s+before|deadline|closing\s+date)[\s:]+([0-9]{4}-[0-9]{2}-[0-9]{2})',
+            text,
+            re.IGNORECASE
+        )
+        if match:
+            return f"{match.group(1)}T23:59:59"
+        return None
+
     def normalize_job(
         self,
         external_id: str,
@@ -300,6 +314,10 @@ class BaseJobProvider(ABC):
         salary_max: Optional[float] = None,
         currency: Optional[str] = 'USD',
         posted_date: Optional[str] = None,
+        expires_at: Optional[str] = None,
+        is_active: Optional[bool] = True,
+        is_closed: Optional[bool] = False,
+        eligibility: Optional[List[str]] = None,
         raw_data: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
@@ -321,6 +339,11 @@ class BaseJobProvider(ABC):
         clean_loc = re.sub(r'^[,\s\-/|;]+|[,\s\-/|;]+$', '', raw_loc)
         clean_loc = re.sub(r',\s*,+', ',', clean_loc).strip()
         final_location = clean_loc if clean_loc else 'Remote'
+
+        # Fallback: if provider didn't send explicit expires_at, scan text for closing notices
+        final_expires_at = expires_at
+        if not final_expires_at and clean_desc:
+            final_expires_at = self.extract_deadline_from_text(clean_desc)
 
         # Clean, format, and deduplicate skill tags
         clean_skills = []
@@ -355,6 +378,10 @@ class BaseJobProvider(ABC):
             'source': source,
             'apply_url': apply_url,
             'is_live': True,
+            'is_active': is_active if is_active is not None else True,
+            'is_closed': is_closed if is_closed is not None else False,
             'posted_date': posted_date,
+            'expires_at': final_expires_at,
+            'eligibility': eligibility or [],
             'raw_data': raw_data or {}
         }

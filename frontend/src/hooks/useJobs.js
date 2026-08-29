@@ -15,38 +15,68 @@ export const useJobs = () => {
   const [domains, setDomains] = useState([])
   const [isLiveMode, setIsLiveMode] = useState(false)
 
-  const fetchJobs = useCallback(async (params = {}) => {
+  const fetchJobs = useCallback(async (params = {}, append = false) => {
     try {
-      setIsLoading(true)
+      if (!append) {
+        setIsLoading(true)
+      }
       setError(null)
       const res = await api.get('/jobs', { params })
       const jobList = res.data.jobs || []
-      setJobs(jobList)
-      setTotalPages(res.data.pages || 1)
+      if (append) {
+        setJobs(prev => {
+          const existingIds = new Set(prev.map(j => j.id || `${j.company}-${j.title}`))
+          const uniqueNew = jobList.filter(j => !existingIds.has(j.id || `${j.company}-${j.title}`))
+          return [...prev, ...uniqueNew]
+        })
+      } else {
+        setJobs(jobList)
+      }
+      const pages = res.data.pages || 1
+      const curPage = res.data.page || params.page || 1
+      setTotalPages(pages)
       setTotal(res.data.total || jobList.length)
+      return { jobs: jobList, totalPages: pages, page: curPage, has_more: curPage < pages }
     } catch (err) {
       console.log('Error fetching jobs:', err)
       setError(err.response?.data?.error || 'Failed to fetch jobs')
+      return { jobs: [], totalPages: 1, page: 1, has_more: false }
     } finally {
       setIsLoading(false)
     }
   }, [])
 
-  const fetchLiveJobs = useCallback(async (params = {}) => {
+  const fetchLiveJobs = useCallback(async (params = {}, append = false) => {
     try {
-      setIsLoading(true)
+      if (!append) {
+        setIsLoading(true)
+      }
       setError(null)
       setIsLiveMode(true)
-      const res = await api.get('/jobs/live', { params })
+      const res = await api.get('/jobs/live', { params: { limit: 25, ...params } })
       const liveList = res.data.jobs || []
-      setJobs(liveList)
-      setTotal(liveList.length)
+      const hasMoreFromBackend = res.data.has_more ?? (liveList.length >= 25)
+
+      let newlyAddedCount = 0
+      if (append) {
+        setJobs(prev => {
+          const existingIds = new Set(prev.map(j => j.id || j.external_id || `${j.company}-${j.title}`))
+          const uniqueNew = liveList.filter(j => !existingIds.has(j.id || j.external_id || `${j.company}-${j.title}`))
+          newlyAddedCount = uniqueNew.length
+          setTotal(prev.length + uniqueNew.length)
+          return [...prev, ...uniqueNew]
+        })
+      } else {
+        setJobs(liveList)
+        setTotal(liveList.length)
+      }
       setTotalPages(1)
-      return liveList
+      const effectiveHasMore = hasMoreFromBackend && (!append || newlyAddedCount > 0)
+      return { jobs: liveList, has_more: effectiveHasMore }
     } catch (err) {
       console.log('Error fetching live jobs:', err)
       setError(err.response?.data?.error || 'Failed to fetch live jobs')
-      return []
+      return { jobs: [], has_more: false }
     } finally {
       setIsLoading(false)
     }
@@ -163,22 +193,45 @@ export const useJobs = () => {
   const getJobById = useCallback(async (id) => {
     try {
       setIsLoading(true)
-      // Check if it's already in the currently loaded live jobs
+      setError(null)
+      // 1. Check if it's already in the currently loaded jobs
       const cached = jobs.find(j => String(j.id) === String(id) || String(j.external_id) === String(id))
       if (cached) {
         setSelectedJob(cached)
         return cached
       }
       
+      // 2. Check if it's in saved pipeline (interestedJobs)
+      const pipelineCached = interestedJobs.find(
+        j => String(j.job_id) === String(id) || String(j.external_job_id) === String(id)
+      )
+      if (pipelineCached && pipelineCached.job_data) {
+        const fullJob = {
+          id,
+          external_id: id,
+          title: pipelineCached.job_title,
+          company: pipelineCached.company,
+          status: pipelineCached.status,
+          ...pipelineCached.job_data
+        }
+        setSelectedJob(fullJob)
+        return fullJob
+      }
+
+      // 3. Query backend
       const res = await api.get(`/jobs/${id}`)
       setSelectedJob(res.data)
       return res.data
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to fetch job')
+      console.log('Error fetching job:', err)
+      const errorMsg = err.response?.data?.error || 'Opportunity not found or has expired'
+      setError(errorMsg)
+      setSelectedJob(null)
+      return null
     } finally {
       setIsLoading(false)
     }
-  }, [jobs])
+  }, [jobs, interestedJobs])
 
   const fetchDomains = useCallback(async () => {
     try {
@@ -190,10 +243,10 @@ export const useJobs = () => {
   }, [])
 
   useEffect(() => {
-    fetchJobs()
+    // Note: fetchJobs is driven explicitly by consuming components (e.g. JobList) with custom parameters.
     fetchDomains()
     fetchInterestedJobs()
-  }, [fetchJobs, fetchDomains, fetchInterestedJobs])
+  }, [fetchDomains, fetchInterestedJobs])
 
   return {
     jobs,
