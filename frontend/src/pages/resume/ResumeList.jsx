@@ -155,7 +155,7 @@ export const ResumeList = () => {
 
   const employabilityScore = Math.round(activeResumeDetails?.employability_score || activeResume?.employability_score || 74)
 
-  // Categorize extracted skills into 4 core domain strength cards
+  // Categorize extracted skills into 4 core domain strength cards based on actual parsed skills
   const categorizedStrengths = useMemo(() => {
     const rawSkills = (activeResumeDetails?.skills || activeResume?.skills || []).map(s => 
       typeof s === 'string' ? s : (s?.name || s?.skill || '')
@@ -171,57 +171,115 @@ export const ResumeList = () => {
         id: 'backend',
         title: 'Backend & Architecture',
         icon: '⚙️',
-        bg: 'bg-blue-50/70 border-blue-100/80',
-        text: 'text-blue-900',
-        badge: 'bg-blue-100/80 text-blue-700',
-        score: backend.length > 0 ? Math.min(65 + backend.length * 8, 95) : 85,
-        skills: backend.length > 0 ? backend : ['Python', 'Flask', 'REST APIs'],
-        desc: 'API services, core logic & server structure'
+        bg: backend.length > 0 ? 'bg-blue-50/70 border-blue-100/80' : 'bg-gray-50 border-gray-200/70',
+        text: backend.length > 0 ? 'text-blue-900' : 'text-gray-600',
+        badge: backend.length > 0 ? 'bg-blue-100/80 text-blue-700' : 'bg-gray-200 text-gray-700',
+        score: backend.length > 0 ? Math.min(55 + backend.length * 8, 95) : 0,
+        skills: backend.length > 0 ? backend : ['No backend skills detected'],
+        hasSkills: backend.length > 0,
+        desc: backend.length > 0 ? 'API services, core logic & server structure' : 'Add Python, Node.js, or Java to build backend readiness'
       },
       {
         id: 'databases',
         title: 'Databases & Storage',
         icon: '🗄️',
-        bg: 'bg-amber-50/70 border-amber-100/80',
-        text: 'text-amber-900',
-        badge: 'bg-amber-100/80 text-amber-800',
-        score: databases.length > 0 ? Math.min(65 + databases.length * 8, 95) : 80,
-        skills: databases.length > 0 ? databases : ['PostgreSQL', 'SQL', 'Data Modeling'],
-        desc: 'Relational querying & structured data persistence'
+        bg: databases.length > 0 ? 'bg-amber-50/70 border-amber-100/80' : 'bg-gray-50 border-gray-200/70',
+        text: databases.length > 0 ? 'text-amber-900' : 'text-gray-600',
+        badge: databases.length > 0 ? 'bg-amber-100/80 text-amber-800' : 'bg-gray-200 text-gray-700',
+        score: databases.length > 0 ? Math.min(55 + databases.length * 10, 95) : 0,
+        skills: databases.length > 0 ? databases : ['No database skills detected'],
+        hasSkills: databases.length > 0,
+        desc: databases.length > 0 ? 'Relational querying & structured data persistence' : 'Add SQL or MongoDB to qualify for data-driven roles'
       },
       {
         id: 'aiml',
         title: 'AI, ML & NLP',
         icon: '🧠',
-        bg: 'bg-purple-50/70 border-purple-100/80',
-        text: 'text-purple-900',
-        badge: 'bg-purple-100/80 text-purple-700',
-        score: aiml.length > 0 ? Math.min(65 + aiml.length * 8, 95) : 75,
-        skills: aiml.length > 0 ? aiml : ['NLP', 'Tokenization', 'Text Mining'],
-        desc: 'Intelligent extraction & algorithm engineering'
+        bg: aiml.length > 0 ? 'bg-purple-50/70 border-purple-100/80' : 'bg-gray-50 border-gray-200/70',
+        text: aiml.length > 0 ? 'text-purple-900' : 'text-gray-600',
+        badge: aiml.length > 0 ? 'bg-purple-100/80 text-purple-700' : 'bg-gray-200 text-gray-700',
+        score: aiml.length > 0 ? Math.min(55 + aiml.length * 9, 95) : 0,
+        skills: aiml.length > 0 ? aiml : ['No AI/ML skills detected'],
+        hasSkills: aiml.length > 0,
+        desc: aiml.length > 0 ? 'Intelligent extraction & algorithm engineering' : 'Explore scikit-learn, PyTorch, or NLP to open AI roles'
       },
       {
         id: 'cloud',
         title: 'Cloud & Tooling',
         icon: '☁️',
-        bg: 'bg-sky-50/70 border-sky-100/80',
-        text: 'text-sky-900',
-        badge: 'bg-sky-100/80 text-sky-700',
-        score: cloud.length > 0 ? Math.min(65 + cloud.length * 8, 95) : 70,
-        skills: cloud.length > 0 ? cloud : ['Docker', 'Git', 'Linux'],
-        desc: 'Containerization, versioning & deployment readiness'
+        bg: cloud.length > 0 ? 'bg-sky-50/70 border-sky-100/80' : 'bg-gray-50 border-gray-200/70',
+        text: cloud.length > 0 ? 'text-sky-900' : 'text-gray-600',
+        badge: cloud.length > 0 ? 'bg-sky-100/80 text-sky-700' : 'bg-gray-200 text-gray-700',
+        score: cloud.length > 0 ? Math.min(55 + cloud.length * 8, 95) : 0,
+        skills: cloud.length > 0 ? cloud : ['No cloud skills detected'],
+        hasSkills: cloud.length > 0,
+        desc: cloud.length > 0 ? 'Containerization, versioning & deployment readiness' : 'Add Docker, Git, or AWS to demonstrate DevOps capabilities'
       }
     ]
   }, [activeResumeDetails, activeResume])
 
-  // Multi-dimensional ATS Health Metrics
-  const healthMetrics = [
-    { name: 'ATS Formatting & Structure', score: 92, status: 'Excellent', color: 'bg-emerald-500' },
-    { name: 'Keyword Density & Role Alignment', score: 84, status: 'Strong', color: 'bg-blue-500' },
-    { name: 'Project Complexity & Tech Stack', score: 78, status: 'Good', color: 'bg-indigo-500' },
-    { name: 'Readability & Section Balance', score: 88, status: 'High', color: 'bg-teal-500' },
-    { name: 'Quantified Impact & Metrics', score: 65, status: 'Needs Impact KPIs', color: 'bg-amber-500' },
-  ]
+  // Multi-dimensional ATS Health Metrics computed dynamically from genuine resume content
+  const healthMetrics = useMemo(() => {
+    const details = activeResumeDetails || activeResume || {}
+    const skillsList = details.skills || []
+    const educationList = details.education || []
+    const projectsList = details.projects || []
+    const hasExp = Boolean(details.experience && (Array.isArray(details.experience) ? details.experience.length > 0 : Object.keys(details.experience).length > 0))
+
+    // 1. Structure & Section Completeness
+    let sectionScore = 40
+    if (skillsList.length > 0) sectionScore += 15
+    if (educationList.length > 0) sectionScore += 15
+    if (projectsList.length > 0) sectionScore += 15
+    if (hasExp) sectionScore += 15
+    sectionScore = Math.min(sectionScore, 95)
+
+    // 2. Keyword Density & Role Alignment
+    const keywordScore = skillsList.length >= 10 ? 92 : skillsList.length >= 6 ? 82 : skillsList.length >= 3 ? 68 : Math.max(35, skillsList.length * 15)
+
+    // 3. Project Complexity & Portfolio
+    const projectScore = projectsList.length >= 3 ? 88 : projectsList.length >= 2 ? 78 : projectsList.length === 1 ? 65 : 35
+
+    // 4. Academic & Credentials Strength
+    const academicScore = educationList.length >= 2 ? 90 : educationList.length === 1 ? 82 : 40
+
+    // 5. Quantified Impact & Measurability
+    const baseImpact = (projectsList.length > 0 || hasExp) ? 65 : 35
+    const impactScore = Math.min(baseImpact + (projectsList.length * 5), 85)
+
+    return [
+      {
+        name: 'ATS Formatting & Structure',
+        score: sectionScore,
+        status: sectionScore >= 85 ? 'Excellent' : sectionScore >= 70 ? 'Good' : 'Needs Sections',
+        color: sectionScore >= 85 ? 'bg-emerald-500' : sectionScore >= 70 ? 'bg-blue-500' : 'bg-amber-500'
+      },
+      {
+        name: 'Keyword Density & Role Alignment',
+        score: keywordScore,
+        status: keywordScore >= 85 ? 'Strong' : keywordScore >= 70 ? 'Moderate' : 'Low Density',
+        color: keywordScore >= 85 ? 'bg-emerald-500' : keywordScore >= 70 ? 'bg-blue-500' : 'bg-amber-500'
+      },
+      {
+        name: 'Project Complexity & Portfolio',
+        score: projectScore,
+        status: projectScore >= 80 ? 'Robust Portfolio' : projectScore >= 60 ? 'Good' : 'Add Projects',
+        color: projectScore >= 80 ? 'bg-emerald-500' : projectScore >= 60 ? 'bg-indigo-500' : 'bg-amber-500'
+      },
+      {
+        name: 'Readability & Section Balance',
+        score: academicScore,
+        status: academicScore >= 80 ? 'High' : 'Needs Credentials',
+        color: academicScore >= 80 ? 'bg-teal-500' : 'bg-amber-500'
+      },
+      {
+        name: 'Quantified Impact & Metrics',
+        score: impactScore,
+        status: impactScore >= 75 ? 'Strong KPIs' : 'Needs Impact KPIs',
+        color: impactScore >= 75 ? 'bg-emerald-500' : 'bg-amber-500'
+      }
+    ]
+  }, [activeResumeDetails, activeResume])
 
   if (isLoading && (!resumes || resumes.length === 0)) {
     return <div className="flex justify-center py-24"><div className="spinner" /></div>
@@ -508,7 +566,13 @@ export const ResumeList = () => {
                 <div>
                   <strong className="text-emerald-950 font-bold block">Strong Core Tech Alignment:</strong>
                   <span className="text-emerald-900">
-                    High keyword density for Python, Flask, and relational SQL architectures matching modern entry-level and junior software engineer requisitions.
+                    {(activeResumeDetails?.skills || activeResume?.skills || []).length > 0
+                      ? `Verified skill markers found for ${(activeResumeDetails?.skills || activeResume?.skills || [])
+                          .slice(0, 4)
+                          .map(s => typeof s === 'string' ? s : (s?.name || s?.skill || ''))
+                          .join(', ')} aligning with entry-level and junior industry requisitions.`
+                      : 'Upload an updated resume with technical coursework and project stacks to increase recruiter match rates.'
+                    }
                   </span>
                 </div>
               </div>
@@ -518,7 +582,7 @@ export const ResumeList = () => {
                 <div>
                   <strong className="text-blue-950 font-bold block">Clean Single-Column Structure:</strong>
                   <span className="text-blue-900">
-                    Document passes ATS optical and text hierarchy parsers with 0 unreadable tables or floating glyphs.
+                    Document passes ATS optical and text hierarchy parsers with readable structure and standard section headers.
                   </span>
                 </div>
               </div>
@@ -528,7 +592,7 @@ export const ResumeList = () => {
                 <div>
                   <strong className="text-amber-950 font-bold block">Recommendation to reach 90%+ Score:</strong>
                   <span className="text-amber-900">
-                    Add 2-3 measurable achievement metrics in your project bullets (e.g. <em>"reduced query execution latency by 25%"</em> or <em>"served 500+ daily queries"</em>).
+                    Add 2-3 measurable achievement metrics in your project bullets (e.g. <em>"reduced query latency by 25%"</em> or <em>"served 500+ daily queries"</em>).
                   </span>
                 </div>
               </div>
@@ -550,12 +614,19 @@ export const ResumeList = () => {
             </div>
 
             <div>
-              <h4 className="text-xl font-bold text-white tracking-tight">Software Engineer</h4>
-              <p className="text-xs text-gray-300 mt-1">Based on full-stack web and database capabilities</p>
+              <h4 className="text-xl font-bold text-white tracking-tight">
+                {activeResumeDetails?.recommended_roles?.[0] || activeResume?.recommended_roles?.[0] || 'Software Engineer'}
+              </h4>
+              <p className="text-xs text-gray-300 mt-1">
+                {(activeResumeDetails?.recommended_roles || activeResume?.recommended_roles || []).length > 1
+                  ? `Aligned with ${(activeResumeDetails?.recommended_roles || activeResume?.recommended_roles || []).slice(0, 2).join(' & ')} competencies`
+                  : 'Based on extracted technical competencies and project portfolio'
+                }
+              </p>
             </div>
 
             <div className="pt-2 border-t border-white/10 flex items-center justify-between">
-              <span className="text-xs text-gray-300">Role Affinity: <strong>82%</strong></span>
+              <span className="text-xs text-gray-300">Role Affinity: <strong>{employabilityScore}%</strong></span>
               <button
                 onClick={() => navigate('/skills')}
                 className="text-xs font-bold text-purple-300 hover:text-white flex items-center gap-1 transition-colors"

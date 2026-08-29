@@ -28,7 +28,7 @@ import toast from 'react-hot-toast'
 
 export const Assessment = () => {
   const navigate = useNavigate()
-  const { startAssessment, submitAssessment } = useAssessments()
+  const { startAssessment, submitAssessment, getLatestAssessment } = useAssessments()
   const { resumes, isLoading: resumesLoading, uploadResume } = useResume()
 
   const [session, setSession] = useState(null)
@@ -45,7 +45,7 @@ export const Assessment = () => {
   const timerRef = useRef(null)
   const fileInputRef = useRef(null)
 
-  // Initialize fresh assessment for the user's uploaded resume
+  // Initialize assessment or restore verified server-side test results
   useEffect(() => {
     const init = async () => {
       setIsLoading(true)
@@ -57,6 +57,16 @@ export const Assessment = () => {
           return
         }
 
+        // 1. Check if student already has a verified assessment attempt stored on the server
+        const latestData = await getLatestAssessment()
+        if (latestData?.has_assessment && latestData?.result) {
+          setResult(latestData.result)
+          setViewMode('results')
+          setIsLoading(false)
+          return
+        }
+
+        // 2. If no previous assessment found, initialize fresh session
         await handleStartNewAssessment()
       } catch (err) {
         console.error('Assessment initialization error:', err)
@@ -73,7 +83,7 @@ export const Assessment = () => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [resumes, resumesLoading])
+  }, [resumes, resumesLoading, getLatestAssessment])
 
   // Timer runner during active quiz
   useEffect(() => {

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useResume } from '../../hooks/useResume'
 import { useJobs } from '../../hooks/useJobs'
+import { useRecommendedActions } from '../../hooks/useRecommendedActions'
 import { api } from '../../services/api'
 import { Button } from '../../components/common/Button'
 import { WelcomeActionsModal } from '../../components/dashboard/WelcomeActionsModal'
@@ -20,6 +21,7 @@ import {
   UserGroupIcon,
   CheckCircleIcon,
   ClockIcon,
+  TrendingUpIcon,
   XIcon,
   MailIcon
 } from '@heroicons/react/outline'
@@ -32,6 +34,8 @@ export const Dashboard = () => {
 
   const [jobCount, setJobCount] = useState(0)
   const [skillGapCount, setSkillGapCount] = useState(0)
+  const [targetRoleMatch, setTargetRoleMatch] = useState(0)
+  const [targetRoleTitle, setTargetRoleTitle] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
 
   const jobsSectionRef = React.useRef(null)
@@ -53,10 +57,9 @@ export const Dashboard = () => {
   const [declineTargetNomination, setDeclineTargetNomination] = useState(null)
   const [declineReason, setDeclineReason] = useState('')
 
-  // 1. Compute dynamic profile completeness
-  const profileFields = ['full_name', 'email', 'department', 'year_of_study']
-  const filledFields = profileFields.filter((f) => Boolean(user?.[f]))
-  const profilePercentage = Math.round((filledFields.length / profileFields.length) * 100)
+  // 1. Compute dynamic profile completeness (Synchronized with Career Readiness Actions)
+  const { profileDetails } = useRecommendedActions()
+  const profilePercentage = profileDetails?.percentage ?? 0
 
   // 2. Determine active resume
   const latestResume = resumes?.[0]
@@ -128,13 +131,27 @@ export const Dashboard = () => {
       setJobCount(jobsList.length)
 
       if (completedResume && completedResume.status === 'completed') {
-        if (completedResume.skills && completedResume.skills.length > 0) {
-          const missing = Math.max(1, 8 - completedResume.skills.length)
-          setSkillGapCount(completedResume.skill_gaps?.length || missing)
-        } else {
-          setSkillGapCount(0)
+        try {
+          const gapRes = await api.get('/prediction/skill-gap/latest')
+          if (gapRes.data && gapRes.data.match_percentage !== undefined) {
+            setTargetRoleMatch(Math.round(gapRes.data.match_percentage))
+            setTargetRoleTitle(gapRes.data.target_role || completedResume.recommended_roles?.[0] || 'Software Engineer')
+            setSkillGapCount(gapRes.data.missing_skills?.length || 0)
+            return
+          }
+        } catch (gapErr) {
+          console.warn('Skill gap endpoint fetch notice:', gapErr)
         }
+
+        // Dynamic fallback based on verified skills count and recommended role
+        const userSkills = completedResume.skills || []
+        const calculatedScore = userSkills.length > 0 ? Math.min(45 + userSkills.length * 6, 92) : 0
+        setTargetRoleMatch(calculatedScore)
+        setTargetRoleTitle(completedResume.recommended_roles?.[0] || 'Software Engineer')
+        setSkillGapCount(completedResume.skill_gaps?.length || 0)
       } else {
+        setTargetRoleMatch(0)
+        setTargetRoleTitle('')
         setSkillGapCount(0)
       }
     } catch (err) {
@@ -288,11 +305,17 @@ export const Dashboard = () => {
     },
     {
       name: 'Target Role Match',
-      value: extractedSkills.length > 0 ? '67%' : '0%',
+      value: completedResume
+        ? completedResume.status === 'completed'
+          ? `${targetRoleMatch}%`
+          : completedResume.status === 'processing'
+          ? 'Calculating...'
+          : 'Pending'
+        : '0%',
       icon: SparklesIcon,
-      color: 'text-purple-600',
-      bg: 'bg-purple-50',
-      description: completedResume?.recommended_roles?.[0] || 'Software Engineer',
+      color: targetRoleMatch >= 75 ? 'text-emerald-600' : targetRoleMatch >= 50 ? 'text-purple-600' : 'text-amber-600',
+      bg: targetRoleMatch >= 75 ? 'bg-emerald-50' : targetRoleMatch >= 50 ? 'bg-purple-50' : 'bg-amber-50',
+      description: targetRoleTitle || completedResume?.recommended_roles?.[0] || (completedResume ? 'Software Engineer' : 'Upload resume to calculate'),
       actionText: 'Analyze Gaps →',
       onClick: () => {
         navigate('/skills')
@@ -347,7 +370,16 @@ export const Dashboard = () => {
               Track your employability insights, resume updates, and top industry job matches.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm font-semibold flex items-center gap-1.5 shadow-2xs"
+              onClick={() => navigate('/dashboard/advanced')}
+            >
+              <TrendingUpIcon className="h-4 w-4" />
+              Career Analytics
+            </Button>
             {resumes?.length > 0 && (
               <Button
                 variant="secondary"
@@ -424,7 +456,9 @@ export const Dashboard = () => {
             </div>
             <p className="text-xs text-gray-500 mt-3">
               {profilePercentage < 100
-                ? 'Complete remaining profile information for higher job match relevance.'
+                ? (profileDetails?.missingHint
+                    ? `Complete your profile — ${profileDetails.missingHint} for higher relevance.`
+                    : 'Complete remaining profile information for higher job match relevance.')
                 : 'Your profile is fully configured!'}
             </p>
           </div>
