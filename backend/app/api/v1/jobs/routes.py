@@ -46,8 +46,24 @@ def get_jobs():
     
     pagination = query.order_by(Job.posted_date.desc()).paginate(page=page, per_page=per_page)
     
+    # Compute aggregate campus interest counts for this page batch
+    job_ids = [j.id for j in pagination.items if j.id]
+    interest_counts = {}
+    if job_ids:
+        counts = db.session.query(
+            JobInterest.job_id,
+            db.func.count(JobInterest.id)
+        ).filter(JobInterest.job_id.in_(job_ids)).group_by(JobInterest.job_id).all()
+        interest_counts = {cid: cnt for cid, cnt in counts}
+
+    results = []
+    for j in pagination.items:
+        d = j.to_dict()
+        d['campus_interest_count'] = interest_counts.get(j.id, 0)
+        results.append(d)
+
     return jsonify({
-        'jobs': [j.to_dict() for j in pagination.items],
+        'jobs': results,
         'total': pagination.total,
         'page': page,
         'pages': pagination.pages
@@ -219,7 +235,10 @@ def get_live_jobs():
     """Fetch live real-time jobs on-demand from Remotive, Arbeitnow, and JSearch"""
     search = request.args.get('search', 'Software Engineer')
     location = request.args.get('location')
-    limit = request.args.get('limit', 20, type=int)
+    page = request.args.get('page', 1, type=int)
+    if not page or page < 1:
+        page = 1
+    limit = request.args.get('limit', 25, type=int)
     sources = request.args.getlist('source') or ['all']
 
     aggregator = JobAggregatorService()
@@ -227,12 +246,15 @@ def get_live_jobs():
         query=search,
         location=location,
         sources=sources,
-        total_limit=limit
+        total_limit=limit,
+        page=page
     )
 
     return jsonify({
         'status': 'success',
         'count': len(live_jobs),
+        'page': page,
+        'has_more': len(live_jobs) >= limit,
         'is_live': True,
         'jobs': live_jobs
     }), 200
@@ -289,16 +311,37 @@ def get_domains():
         'domains': [d[0] for d in domains if d[0]]
     }), 200
 
-@jobs_bp.route('/<int:job_id>', methods=['GET'])
+@jobs_bp.route('/<string:job_id>', methods=['GET'])
 def get_job(job_id):
-    """Get job details by ID"""
-    job = db.session.get(Job, job_id)
+    """Get job details by internal ID, external provider ID, or saved pipeline snapshot"""
+    job = None
+    if job_id.isdigit():
+        job = db.session.get(Job, int(job_id))
     if not job:
-        return jsonify({'error': 'Job not found'}), 404
-    return jsonify(job.to_dict()), 200
+        job = Job.query.filter_by(external_id=job_id).first()
+    if not job:
+        job = Job.query.filter(Job.external_id.ilike(f"%{job_id}%")).first()
+    
+    if job:
+        return jsonify(job.to_dict()), 200
+
+    # Fallback: Check JobInterest pipeline for saved snapshot of this live job
+    interest = JobInterest.query.filter(
+        (JobInterest.external_job_id == job_id) | (JobInterest.external_job_id.ilike(f"%{job_id}%"))
+    ).first()
+    if interest and interest.job_data:
+        data = dict(interest.job_data)
+        data['id'] = job_id
+        data['external_id'] = job_id
+        data['title'] = interest.job_title
+        data['company'] = interest.company
+        data['is_live'] = True
+        return jsonify(data), 200
+
+    return jsonify({'error': 'Opportunity not found or has expired'}), 404
 
 
-@jobs_bp.route('/<int:job_id>/interested-mentees', methods=['GET'])
+@jobs_bp.route('/<string:job_id>/interested-mentees', methods=['GET'])
 @jwt_required()
 def get_job_interested_mentees(job_id):
     """Get accepted mentees of the authenticated faculty member who are interested in this job"""
@@ -309,7 +352,11 @@ def get_job_interested_mentees(job_id):
         if not faculty or faculty.role not in ['faculty', 'admin']:
             return jsonify({'error': 'Faculty access required'}), 403
 
-        job = db.session.get(Job, job_id)
+        job = None
+        if job_id.isdigit():
+            job = db.session.get(Job, int(job_id))
+        if not job:
+            job = Job.query.filter_by(external_id=job_id).first()
         if not job:
             return jsonify({'error': 'Job not found'}), 404
 

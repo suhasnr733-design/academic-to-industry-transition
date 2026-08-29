@@ -9,6 +9,7 @@ import { useAuth } from '../../hooks/useAuth'
 
 export const Layout = ({ children }) => {
   const { isAuthenticated } = useAuth()
+  const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
   const authPaths = [
     '/login',

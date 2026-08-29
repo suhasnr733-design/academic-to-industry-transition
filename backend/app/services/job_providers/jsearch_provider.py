@@ -122,6 +122,7 @@ class JSearchProvider(BaseJobProvider):
                     job_type=item.get('job_employment_type', 'Full-time').replace('_', ' ').title(),
                     domain='Software & Technology',
                     posted_date=item.get('job_posted_at_datetime_utc') or item.get('posted_at'),
+                    expires_at=item.get('job_offer_expiration_datetime_utc'),
                     raw_data={
                         'publisher': raw_publisher,
                         'employer_logo': item.get('employer_logo') or item.get('company_logo')

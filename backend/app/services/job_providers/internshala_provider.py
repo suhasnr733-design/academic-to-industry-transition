@@ -77,22 +77,6 @@ class InternshalaProvider(BaseJobProvider):
 
                 if len(jobs) >= limit:
                     break
-
-            # If no HTML cards were parsed (due to dynamic hydration), create high-matching search fallback items
-            if not jobs and query:
-                jobs.append(self.normalize_job(
-                    external_id=f"is_{hash(query)}",
-                    title=f"{query.title()} (Fresher / Graduate)",
-                    company="Internshala Verified Employer",
-                    description=f"Explore live {query} openings, graduate training roles, and internships on Internshala.",
-                    apply_url=f"https://internshala.com/jobs/{formatted_query}-jobs",
-                    source='internshala',
-                    location='India / Remote',
-                    required_skills=[query.title(), 'Entry Level', 'B.Tech/M.Tech/PhD'],
-                    job_type='Full-time / Fresher',
-                    domain='Fresher & Internships'
-                ))
-
             logger.info(f"InternshalaProvider: fetched {len(jobs)} jobs for '{query}'")
             return jobs
             
