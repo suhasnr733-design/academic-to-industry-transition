@@ -411,7 +411,7 @@ export const LearningPath = () => {
 
                 const videoMap = {
                   'Problem Solving': { title: 'Problem Solving & Algorithmic Thinking Masterclass', embed_url: 'https://www.youtube.com/embed/0IAPZzGSbME' },
-                  'Data Structures': { title: 'Data Structures Complete Masterclass', embed_url: 'https://www.youtube.com/embed/bbT_bV0Cc-0' },
+                  'Data Structures': { title: 'Data Structures Complete Masterclass', embed_url: 'https://www.youtube.com/embed/0IAPZzGSbME' },
                   'Algorithms': { title: 'Algorithms & Data Structures Masterclass', embed_url: 'https://www.youtube.com/embed/0IAPZzGSbME' },
                   'Java': { title: 'Java Tutorial for Beginners - Full Course', embed_url: 'https://www.youtube.com/embed/eIrMbAQSU34' },
                   'Python': { title: 'Python for Beginners - Full Course', embed_url: 'https://www.youtube.com/embed/rfscVS0vtbw' },
@@ -474,7 +474,7 @@ export const LearningPath = () => {
                     // Curated direct YouTube video embed mapping
                     const videoMap = {
                       'Problem Solving': { title: 'Problem Solving & Algorithmic Thinking Masterclass', embed_url: 'https://www.youtube.com/embed/0IAPZzGSbME' },
-                      'Data Structures': { title: 'Data Structures Complete Masterclass', embed_url: 'https://www.youtube.com/embed/bbT_bV0Cc-0' },
+                      'Data Structures': { title: 'Data Structures Complete Masterclass', embed_url: 'https://www.youtube.com/embed/0IAPZzGSbME' },
                       'Algorithms': { title: 'Algorithms & Data Structures Masterclass', embed_url: 'https://www.youtube.com/embed/0IAPZzGSbME' },
                       'Java': { title: 'Java Tutorial for Beginners - Full Course', embed_url: 'https://www.youtube.com/embed/eIrMbAQSU34' },
                       'Python': { title: 'Python for Beginners - Full Course', embed_url: 'https://www.youtube.com/embed/rfscVS0vtbw' },
@@ -518,6 +518,46 @@ export const LearningPath = () => {
               setActiveSkillId(id)
               const sk = roadmapData.skills.find(s => s.id === id)
               if (sk) setAiSkillTarget(sk.skill_name)
+            }}
+            onOpenRevision={(sk) => setVideoRevisionModal(sk)}
+            onStartLesson={(sk) => {
+              const savedSecs = localStorage.getItem(`video_ts_${sk.skill_name}`) || (sk.skill_name === 'Data Structures' ? 870 : (sk.skill_name === 'CSS' ? 420 : (sk.skill_name === 'SQL' ? 1250 : 0)))
+              const startSecs = parseInt(savedSecs, 10) || 0
+              setVideoStartTime(startSecs)
+              setActiveChapterIndex(startSecs >= 1515 ? 2 : (startSecs >= 750 ? 1 : 0))
+
+              const videoMap = {
+                'Problem Solving': { title: 'Problem Solving & Algorithmic Thinking Masterclass', embed_url: 'https://www.youtube.com/embed/0IAPZzGSbME' },
+                'Data Structures': { title: 'Data Structures Complete Masterclass', embed_url: 'https://www.youtube.com/embed/bbT_bV0Cc-0' },
+                'Algorithms': { title: 'Algorithms & Data Structures Masterclass', embed_url: 'https://www.youtube.com/embed/0IAPZzGSbME' },
+                'Java': { title: 'Java Tutorial for Beginners - Full Course', embed_url: 'https://www.youtube.com/embed/eIrMbAQSU34' },
+                'Python': { title: 'Python for Beginners - Full Course', embed_url: 'https://www.youtube.com/embed/rfscVS0vtbw' },
+                'C++': { title: 'C++ Programming Tutorial for Beginners', embed_url: 'https://www.youtube.com/embed/vLnPwxZdW4Y' },
+                'C#': { title: 'C# Tutorial for Beginners', embed_url: 'https://www.youtube.com/embed/gfkTfcpWqAY' },
+                'JavaScript': { title: 'JavaScript Tutorial for Beginners', embed_url: 'https://www.youtube.com/embed/W6NZfCO5SIk' },
+                'HTML': { title: 'HTML Full Course for Beginners', embed_url: 'https://www.youtube.com/embed/pQN-pnXPaVg' },
+                'CSS': { title: 'CSS Flexbox & Responsive Design Masterclass', embed_url: 'https://www.youtube.com/embed/1Rs2ND1ryYc' },
+                'SQL': { title: 'SQL & Relational Databases Masterclass', embed_url: 'https://www.youtube.com/embed/HXV3zeQKqGY' },
+                'Git': { title: 'Git Version Control & Workflow Masterclass', embed_url: 'https://www.youtube.com/embed/8JJ101D3knE' },
+                'React.js': { title: 'React.js Complete Masterclass', embed_url: 'https://www.youtube.com/embed/bMknfKXIFA8' },
+                'React': { title: 'React.js Complete Masterclass', embed_url: 'https://www.youtube.com/embed/bMknfKXIFA8' },
+                'System Design': { title: 'System Design Fundamentals', embed_url: 'https://www.youtube.com/embed/m8Icp_Cid5o' },
+                'OOP': { title: 'Object-Oriented Programming Masterclass', embed_url: 'https://www.youtube.com/embed/pTB0EiLXUC8' },
+                'Object-Oriented Programming': { title: 'Object-Oriented Programming Masterclass', embed_url: 'https://www.youtube.com/embed/pTB0EiLXUC8' },
+                'DBMS': { title: 'Database Management Systems Masterclass', embed_url: 'https://www.youtube.com/embed/HXV3zeQKqGY' },
+                'Web Development': { title: 'Full-Stack Web Development Course', embed_url: 'https://www.youtube.com/embed/nu_pCVPKzTk' }
+              }
+
+              const sName = sk.skill_name
+              const vid = videoMap[sName] || (sk.youtube_videos?.[0]?.embed_url ? sk.youtube_videos[0] : {
+                title: `${sName} Complete Masterclass`,
+                embed_url: 'https://www.youtube.com/embed/0IAPZzGSbME'
+              })
+
+              setQuickVideoModal({
+                skillName: sName,
+                ...vid
+              })
             }}
           />
 

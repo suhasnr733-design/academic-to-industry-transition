@@ -1,6 +1,7 @@
 // src/components/learning/YourSkillsLearningSection.jsx
 
 import React, { useState } from 'react'
+import { SkillBrandLogo } from './SkillBrandLogo'
 import { 
   CheckCircleIcon, 
   ExclamationCircleIcon, 
@@ -35,7 +36,27 @@ const CATEGORY_COLORS = {
   'Other': 'bg-gray-50 text-gray-700 border-gray-200'
 }
 
-export const YourSkillsLearningSection = ({ skills, activeSkillId, onSelectSkill }) => {
+const SKILL_BRAND_ICONS = {
+  'Data Structures': '🏗️',
+  'Algorithms': '⚡',
+  'Git': '🐙',
+  'Java': '☕',
+  'Python': '🐍',
+  'C++': '⚙️',
+  'C#': '🎯',
+  'JavaScript': '🟨',
+  'HTML': '🌐',
+  'CSS': '🎨',
+  'SQL': '🗄️',
+  'React': '⚛️',
+  'React.js': '⚛️',
+  'Problem Solving': '🧩',
+  'System Design': '🏛️',
+  'DBMS': '💾',
+  'Web Development': '💻'
+}
+
+export const YourSkillsLearningSection = ({ skills, activeSkillId, onSelectSkill, onOpenRevision, onStartLesson }) => {
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [statusFilter, setStatusFilter] = useState('all') // all, matching, missing
 
@@ -155,64 +176,114 @@ export const YourSkillsLearningSection = ({ skills, activeSkillId, onSelectSkill
             const isExisting = skillItem.is_existing || skillItem.status === 'matching'
             const IconComp = CATEGORY_ICONS[skillItem.category] || FolderIcon
             const catBadgeClass = CATEGORY_COLORS[skillItem.category] || 'bg-gray-50 text-gray-700 border-gray-200'
+            const brandIcon = SKILL_BRAND_ICONS[skillItem.skill_name] || '💡'
 
             return (
               <div
                 key={skillItem.id}
                 onClick={() => onSelectSkill(skillItem.id)}
-                className={`p-4 rounded-xl border cursor-pointer transition-all transform hover:-translate-y-0.5 ${
+                className={`group relative p-4 rounded-2xl border cursor-pointer transition-all duration-300 transform hover:-translate-y-1 overflow-hidden flex flex-col justify-between ${
                   isActive
-                    ? 'bg-gradient-to-br from-indigo-50/90 to-blue-50 border-indigo-400 shadow-md ring-2 ring-indigo-400/30'
-                    : 'bg-white border-gray-200 hover:border-indigo-300 hover:shadow-sm'
+                    ? 'bg-gradient-to-br from-indigo-50/90 via-white to-blue-50/60 border-indigo-500 shadow-lg ring-2 ring-indigo-500/30'
+                    : isExisting
+                    ? 'bg-gradient-to-b from-emerald-50/15 via-white to-white border-emerald-200 hover:border-emerald-400 hover:shadow-md hover:shadow-emerald-500/10'
+                    : 'bg-gradient-to-b from-amber-50/20 via-white to-white border-amber-300/80 hover:border-amber-400 hover:shadow-md hover:shadow-amber-500/10'
                 }`}
               >
-                {/* Card Header: Category & Status */}
-                <div className="flex items-center justify-between gap-2 mb-2.5">
-                  <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md border flex items-center gap-1 ${catBadgeClass}`}>
-                    <IconComp className="w-3 h-3" />
-                    {skillItem.category || 'Other'}
-                  </span>
+                <div>
+                  {/* Top Glowing Accent Bar */}
+                  <div
+                    className={`absolute top-0 left-0 right-0 h-1 transition-all ${
+                      isActive
+                        ? 'bg-indigo-600'
+                        : isExisting
+                        ? 'bg-emerald-400 group-hover:bg-emerald-500'
+                        : 'bg-amber-400 group-hover:bg-amber-500'
+                    }`}
+                  />
 
-                  {isExisting ? (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-800 flex items-center gap-0.5">
-                      <CheckCircleIcon className="w-3 h-3" />
-                      Existing Skill
+                  {/* Card Header: Category & Status */}
+                  <div className="flex items-center justify-between gap-2 mb-3 pt-1">
+                    <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md border flex items-center gap-1.5 ${catBadgeClass}`}>
+                      <IconComp className="w-3 h-3" />
+                      {skillItem.category || 'Other'}
                     </span>
-                  ) : (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 flex items-center gap-0.5">
-                      <ExclamationCircleIcon className="w-3 h-3" />
-                      Priority Gap
-                    </span>
-                  )}
-                </div>
 
-                {/* Skill Name */}
-                <h4 className="font-extrabold text-base text-gray-900 flex items-center justify-between">
-                  <span>{skillItem.skill_name}</span>
-                  {isActive && <SparklesIcon className="w-4 h-4 text-indigo-600 animate-pulse" />}
-                </h4>
-
-                {/* Progress & Stage */}
-                <div className="mt-3 space-y-1.5">
-                  <div className="flex items-center justify-between text-xs font-semibold text-gray-600">
-                    <span className="capitalize text-[11px]">Stage: {skillItem.stage}</span>
-                    <span className="text-indigo-700 font-bold">{skillItem.progress_percent}%</span>
+                    {isExisting ? (
+                      <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100/90 text-emerald-900 border border-emerald-200 flex items-center gap-1 shadow-sm">
+                        <CheckCircleIcon className="w-3 h-3 text-emerald-700" />
+                        Existing Skill
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-100/90 text-amber-950 border border-amber-300/80 flex items-center gap-1 shadow-sm">
+                        <ExclamationCircleIcon className="w-3 h-3 text-amber-700" />
+                        Priority Gap
+                      </span>
+                    )}
                   </div>
 
-                  <div className="w-full bg-gray-200 rounded-full h-1.5">
-                    <div
-                      className={`h-1.5 rounded-full transition-all ${
-                        skillItem.is_completed ? 'bg-green-500' : 'bg-indigo-600'
-                      }`}
-                      style={{ width: `${skillItem.progress_percent}%` }}
-                    />
+                  {/* Skill Name & Tech Brand Icon */}
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="w-9 h-9 rounded-xl bg-slate-50 text-base flex items-center justify-center border border-slate-200/80 shadow-xs group-hover:scale-105 transition-transform p-1.5">
+                      <SkillBrandLogo skillName={skillItem.skill_name} className="w-5 h-5" />
+                    </div>
+                    <h4 className="font-extrabold text-base text-gray-900 flex-1 flex items-center justify-between">
+                      <span>{skillItem.skill_name}</span>
+                      {isActive && <SparklesIcon className="w-4 h-4 text-indigo-600 animate-pulse" />}
+                    </h4>
                   </div>
+
+                  {/* Progress & Stage */}
+                  <div className="mt-3 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs font-semibold text-gray-600">
+                      <span className="capitalize text-[11px] font-bold text-gray-500">Stage: {skillItem.stage}</span>
+                      <span className="text-indigo-700 font-extrabold">{skillItem.progress_percent}%</span>
+                    </div>
+
+                    <div className="w-full bg-gray-200/80 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className={`h-1.5 rounded-full transition-all duration-500 ${
+                          skillItem.is_completed
+                            ? 'bg-gradient-to-r from-emerald-500 to-green-500'
+                            : 'bg-gradient-to-r from-indigo-500 to-blue-600'
+                        }`}
+                        style={{ width: `${skillItem.progress_percent}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Personalized Rationale Snippet */}
+                  <p className="text-[11px] text-gray-500 line-clamp-2 mt-2.5 leading-relaxed font-medium">
+                    {skillItem.why_recommended}
+                  </p>
                 </div>
 
-                {/* Personalized Rationale Snippet */}
-                <p className="text-[11px] text-gray-500 line-clamp-2 mt-2.5 leading-relaxed">
-                  {skillItem.why_recommended}
-                </p>
+                {/* Glassmorphic 1-Click Action Footer Bar */}
+                <div className="mt-4 pt-3 border-t border-slate-100/90 flex items-center justify-between gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSelectSkill(skillItem.id)
+                      if (onOpenRevision) onOpenRevision(skillItem)
+                    }}
+                    className="flex-1 py-1.5 px-2 bg-indigo-50/90 hover:bg-indigo-100 text-indigo-700 font-extrabold text-[10px] rounded-xl border border-indigo-200/80 transition-all cursor-pointer shadow-2xs hover:shadow-xs flex items-center justify-center gap-1"
+                    title="Open 1-Page Revision Cheat-Sheet for this skill"
+                  >
+                    📄 Revision
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSelectSkill(skillItem.id)
+                      if (onStartLesson) onStartLesson(skillItem)
+                    }}
+                    className="flex-1 py-1.5 px-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[10px] rounded-xl shadow-2xs hover:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1"
+                    title="Stream tutorial video starting from saved timestamp"
+                  >
+                    ▶ Start Lesson
+                  </button>
+                </div>
               </div>
             )
           })}

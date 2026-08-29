@@ -1,6 +1,8 @@
 // src/components/learning/SkillLearningCard.jsx
 
 import React, { useState } from 'react'
+import { SkillBrandLogo } from './SkillBrandLogo'
+import { SkillQuizModal } from './SkillQuizModal'
 import { 
   CheckCircleIcon, 
   ClockIcon, 
@@ -27,21 +29,28 @@ export const SkillLearningCard = ({
   onOpenAiForSkill
 }) => {
   const [activeTab, setActiveTab] = useState('all') // all, youtube, courses, practice, project, assessment
+  const [showQuizModal, setShowQuizModal] = useState(false)
 
   if (!skill) return null
 
   const topCourse = skill.courses && skill.courses.length > 0 ? skill.courses[0] : null
   const otherCourses = skill.courses && skill.courses.length > 1 ? skill.courses.slice(1) : []
 
-  const handleStageClick = (stageName, nextState) => {
-    onUpdateStageProgress(skill.skill_name, stageName, nextState)
+  const handleStageClick = (stageKey, nextState) => {
+    onUpdateStageProgress(skill.skill_name, stageKey, nextState)
+    
+    if (stageKey === 'learn') setActiveTab('youtube')
+    else if (stageKey === 'practice') setActiveTab('practice')
+    else if (stageKey === 'build') setActiveTab('project')
+    else if (stageKey === 'assess') setActiveTab('assessment')
+    else if (stageKey === 'complete') setActiveTab('all')
   }
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-8 hover:border-indigo-200 transition-all">
       {/* Skill Card Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-5">
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             {skill.category && (
               <span className="px-2.5 py-0.5 text-xs rounded-md font-extrabold uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">
@@ -73,9 +82,15 @@ export const SkillLearningCard = ({
             </span>
           </div>
 
-          <h3 className="text-2xl font-extrabold text-gray-900">
-            {skill.skill_name}
-          </h3>
+          {/* Official Vector Brand Logo in Header Title */}
+          <div className="flex items-center gap-3 pt-0.5">
+            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center p-2 shadow-2xs shrink-0">
+              <SkillBrandLogo skillName={skill.skill_name} className="w-6 h-6" />
+            </div>
+            <h3 className="text-2xl font-extrabold text-gray-900">
+              {skill.skill_name}
+            </h3>
+          </div>
 
           <div className="bg-indigo-50/60 border border-indigo-100 p-2.5 rounded-xl text-xs text-indigo-900 font-medium">
             <span className="font-bold text-indigo-700 block mb-0.5">Why recommended for you:</span>
@@ -100,40 +115,8 @@ export const SkillLearningCard = ({
         </div>
       </div>
 
-      {/* 5-Stage Learning Cycle Tracker */}
-      <div className="my-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
-        <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">
-          Learning Cycle Stages:
-        </h4>
-
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-          {[
-            { key: 'learn', label: '1. Learn', done: skill.stages_status.learn },
-            { key: 'practice', label: '2. Practice', done: skill.stages_status.practice },
-            { key: 'build', label: '3. Build', done: skill.stages_status.build },
-            { key: 'assess', label: '4. Assess', done: skill.stages_status.assess },
-            { key: 'complete', label: '5. Complete', done: skill.is_completed }
-          ].map((stg) => (
-            <button
-              key={stg.key}
-              onClick={() => handleStageClick(stg.key, !stg.done)}
-              className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-between transition-all ${
-                stg.done
-                  ? 'bg-green-600 text-white border-green-700 shadow-sm'
-                  : skill.stage === stg.key
-                  ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-300'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-indigo-300'
-              }`}
-            >
-              <span>{stg.label}</span>
-              {stg.done && <CheckCircleIcon className="w-4 h-4 text-white" />}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Sub-resource Tabs Bar */}
-      <div className="flex items-center gap-1 overflow-x-auto border-b border-gray-200 mb-6 pb-2 text-xs">
+      <div className="flex items-center gap-1 overflow-x-auto border-b border-gray-200 my-6 pb-2 text-xs">
         {[
           { id: 'all', label: 'All Resources', icon: AcademicCapIcon },
           { id: 'youtube', label: '📺 YouTube', icon: PlayIcon },
@@ -168,8 +151,8 @@ export const SkillLearningCard = ({
           />
         )}
 
-        {/* Other Courses List */}
-        {(activeTab === 'all' || activeTab === 'courses') && otherCourses.length > 0 && (
+        {/* Other Courses List - Only in Courses Tab */}
+        {activeTab === 'courses' && otherCourses.length > 0 && (
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
               Additional Courses for {skill.skill_name}:
@@ -224,7 +207,7 @@ export const SkillLearningCard = ({
           />
         )}
 
-        {/* Assessment Section */}
+        {/* Assessment Section (10-Question Mastery Evaluation Quiz) */}
         {(activeTab === 'all' || activeTab === 'assessment') && (
           <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -235,23 +218,34 @@ export const SkillLearningCard = ({
                 {skill.skill_name} Mastery Evaluation Quiz
               </h4>
               <p className="text-xs text-gray-600 mt-0.5">
-                5 Questions • 10 Mins • Test your readiness before completing the skill.
+                10 Questions • 15 Mins • Test your readiness before completing the skill.
               </p>
             </div>
 
             <button
-              onClick={() => handleStageClick('assess', true)}
-              className={`px-5 py-2.5 font-bold text-xs rounded-xl shadow transition-all whitespace-nowrap ${
+              onClick={() => setShowQuizModal(true)}
+              className={`px-5 py-2.5 font-bold text-xs rounded-xl shadow transition-all whitespace-nowrap cursor-pointer ${
                 skill.stages_status.assess
-                  ? 'bg-green-600 text-white'
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                   : 'bg-purple-600 hover:bg-purple-700 text-white'
               }`}
             >
-              {skill.stages_status.assess ? '✓ Quiz Passed' : 'Take Quiz & Mark Complete'}
+              {skill.stages_status.assess ? '✓ Quiz Passed (Click to Retake)' : 'Take Quiz & Mark Complete'}
             </button>
           </div>
         )}
       </div>
+
+      {/* Interactive 10-Question Evaluation Quiz Modal */}
+      {showQuizModal && (
+        <SkillQuizModal 
+          skillName={skill.skill_name}
+          onClose={() => setShowQuizModal(false)}
+          onPassQuiz={() => {
+            handleStageClick('assess', true)
+          }}
+        />
+      )}
     </div>
   )
 }

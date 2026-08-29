@@ -1,6 +1,7 @@
 // src/components/learning/InteractiveRoadmap.jsx
 
 import React from 'react'
+import { SkillBrandLogo } from './SkillBrandLogo'
 import { CheckCircleIcon, ArrowRightIcon, LockClosedIcon, PlayIcon } from '@heroicons/react/solid'
 
 export const InteractiveRoadmap = ({ skills, activeSkillId, onSelectSkill }) => {
@@ -30,7 +31,7 @@ export const InteractiveRoadmap = ({ skills, activeSkillId, onSelectSkill }) => 
               {/* Roadmap Node Card */}
               <button
                 onClick={() => onSelectSkill(skillItem.id)}
-                className={`flex-1 min-w-[200px] p-4 rounded-xl text-left border transition-all transform hover:-translate-y-0.5 ${
+                className={`flex-1 min-w-[210px] p-4 rounded-xl text-left border transition-all transform hover:-translate-y-0.5 ${
                   isActive
                     ? 'bg-gradient-to-br from-indigo-500 to-blue-600 text-white border-indigo-600 shadow-md ring-2 ring-indigo-400/30'
                     : isCompleted
@@ -40,7 +41,7 @@ export const InteractiveRoadmap = ({ skills, activeSkillId, onSelectSkill }) => 
                     : 'bg-gray-50 border-gray-200 text-gray-700 opacity-70 hover:opacity-100'
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-2.5">
                   <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
                     isActive ? 'bg-white/20 text-white' :
                     isCompleted ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-700'
@@ -57,9 +58,17 @@ export const InteractiveRoadmap = ({ skills, activeSkillId, onSelectSkill }) => 
                   )}
                 </div>
 
-                <h4 className={`font-bold text-sm truncate ${isActive ? 'text-white' : 'text-gray-900'}`}>
-                  {skillItem.skill_name}
-                </h4>
+                {/* Skill Name & Vector Brand Logo */}
+                <div className="flex items-center gap-2 mb-1">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center p-1 shrink-0 ${
+                    isActive ? 'bg-white/20 border border-white/30' : 'bg-white border border-gray-200/80 shadow-2xs'
+                  }`}>
+                    <SkillBrandLogo skillName={skillItem.skill_name} className="w-4 h-4" />
+                  </div>
+                  <h4 className={`font-extrabold text-sm truncate ${isActive ? 'text-white' : 'text-gray-900'}`}>
+                    {skillItem.skill_name}
+                  </h4>
+                </div>
 
                 <div className="mt-3 flex items-center justify-between text-xs">
                   <span className={`capitalize text-[11px] ${isActive ? 'text-indigo-100' : 'text-gray-500'}`}>

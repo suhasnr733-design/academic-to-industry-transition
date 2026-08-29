@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { SkillBrandLogo } from './SkillBrandLogo'
 import {
   AcademicCapIcon,
   ChartBarIcon,
@@ -386,9 +387,14 @@ export const LearningDashboardHeader = ({
               {skills && skills.length > 0 ? (
                 skills.map((s, i) => (
                   <div key={s.id || i} className="p-3 bg-gray-50 hover:bg-indigo-50/50 rounded-xl border border-gray-200 flex items-center justify-between transition-colors">
-                    <div>
-                      <span className="font-extrabold text-xs text-gray-900 block">{i + 1}. {s.skill_name}</span>
-                      <span className="text-[10px] text-gray-500">{s.category || 'Technical Skill'} • Priority: {s.priority}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center p-1 shadow-2xs shrink-0">
+                        <SkillBrandLogo skillName={s.skill_name} className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="font-extrabold text-xs text-gray-900 block">{i + 1}. {s.skill_name}</span>
+                        <span className="text-[10px] text-gray-500">{s.category || 'Technical Skill'} • Priority: {s.priority}</span>
+                      </div>
                     </div>
 
                     <button
