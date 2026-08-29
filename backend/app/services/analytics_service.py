@@ -629,8 +629,154 @@ CONTENTS OF THIS BUNDLE:
 Generated via Academic-to-Industry Transition Platform (Faculty Command Center).
 =====================================================
 """
+
             zip_file.writestr("Company_Drive_Overview.txt", drive_overview)
 
         zip_buffer.seek(0)
         bundle_filename = f"{clean_company}_Placement_Shortlist.zip"
         return zip_buffer, bundle_filename
+
+    def get_student_progression_analytics(self, user_id):
+        """Get real-time career progression analytics for a specific student"""
+        from app.models import JobInterest, PlacementNomination, Resume
+
+        # 1. Fetch user's job interests and placement drives
+        interests = JobInterest.query.filter_by(user_id=user_id).all()
+        nominations = PlacementNomination.query.filter_by(student_id=user_id).all()
+        active_resume = (
+            Resume.query.filter_by(user_id=user_id)
+            .order_by(Resume.created_at.desc())
+            .first()
+        )
+
+        # 2. Compute 6-month monthly trends chronologically
+        now = datetime.utcnow()
+        months_data = []
+        for i in range(5, -1, -1):
+            m_date = (now.replace(day=1) - timedelta(days=i * 30)).replace(day=1)
+            month_name = m_date.strftime('%b')
+            month_year = (m_date.year, m_date.month)
+            months_data.append({
+                'name': month_name,
+                'year_month': month_year,
+                'applications': 0,
+                'interviews': 0,
+                'offers': 0
+            })
+
+        for item in interests:
+            created = item.created_at or now
+            ym = (created.year, created.month)
+            for m in months_data:
+                if m['year_month'] == ym:
+                    m['applications'] += 1
+                    status = (item.status or '').lower()
+                    if status in ['interviewing', 'shortlisted']:
+                        m['interviews'] += 1
+                    elif status == 'offer':
+                        m['offers'] += 1
+
+        for nom in nominations:
+            created = nom.created_at or now
+            ym = (created.year, created.month)
+            for m in months_data:
+                if m['year_month'] == ym:
+                    m['applications'] += 1
+                    status = (nom.status or '').lower()
+                    if status == 'confirmed_attending':
+                        m['interviews'] += 1
+                    elif status == 'placed':
+                        m['offers'] += 1
+
+        trend = [
+            {
+                'name': m['name'],
+                'applications': m['applications'],
+                'interviews': m['interviews'],
+                'offers': m['offers']
+            }
+            for m in months_data
+        ]
+
+        # 3. Compute Application Status Distribution
+        status_counts = {
+            'Applied': 0,
+            'Interviewing': 0,
+            'Offered': 0,
+            'Rejected': 0,
+            'Pending': 0
+        }
+        for item in interests:
+            s = (item.status or '').lower()
+            if s == 'applied':
+                status_counts['Applied'] += 1
+            elif s in ['interviewing', 'shortlisted']:
+                status_counts['Interviewing'] += 1
+            elif s == 'offer':
+                status_counts['Offered'] += 1
+            elif s == 'rejected':
+                status_counts['Rejected'] += 1
+            else:
+                status_counts['Pending'] += 1
+
+        for nom in nominations:
+            s = (nom.status or '').lower()
+            if s == 'confirmed_attending':
+                status_counts['Interviewing'] += 1
+            elif s == 'placed':
+                status_counts['Offered'] += 1
+            elif s == 'rejected':
+                status_counts['Rejected'] += 1
+            else:
+                status_counts['Pending'] += 1
+
+        status_distribution = [
+            {'name': k, 'value': v}
+            for k, v in status_counts.items()
+        ]
+
+        # 4. Skill Radar Analysis based on Active Resume
+        candidate_skills = []
+        if active_resume and active_resume.skills:
+            candidate_skills = [str(s).lower().strip() for s in active_resume.skills]
+
+        benchmark_skills = [
+            {'name': 'Python', 'req': 85},
+            {'name': 'SQL', 'req': 80},
+            {'name': 'React', 'req': 75},
+            {'name': 'Cloud / AWS', 'req': 70},
+            {'name': 'Git / DevOps', 'req': 75},
+            {'name': 'Algorithms', 'req': 80},
+        ]
+
+        skill_data = []
+        base_score = int(active_resume.employability_score) if (active_resume and active_resume.employability_score) else 75
+        for b in benchmark_skills:
+            b_low = b['name'].lower()
+            matched = any(
+                (b_low in cs) or (cs in b_low) or
+                ('cloud' in b_low and any(c in cs for c in ['aws', 'cloud', 'azure', 'docker', 'gcp'])) or
+                ('algorithms' in b_low and any(c in cs for c in ['algorithm', 'dsa', 'data structure', 'problem'])) or
+                ('git' in b_low and any(c in cs for c in ['git', 'ci/cd', 'devops', 'linux']))
+                for cs in candidate_skills
+            )
+            current_score = base_score if matched else (35 if candidate_skills else 15)
+            skill_data.append({
+                'name': b['name'],
+                'current': current_score,
+                'required': b['req']
+            })
+
+        total_applications = len(interests) + len(nominations)
+        total_interviews = sum(1 for item in interests if item.status in ['interviewing', 'shortlisted']) + sum(1 for nom in nominations if nom.status == 'confirmed_attending')
+        total_offers = sum(1 for item in interests if item.status == 'offer') + sum(1 for nom in nominations if nom.status == 'placed')
+
+        return {
+            'trend': trend,
+            'status_distribution': status_distribution,
+            'skill_data': skill_data,
+            'total_applications': total_applications,
+            'total_interviews': total_interviews,
+            'total_offers': total_offers,
+            'has_active_resume': bool(active_resume)
+        }

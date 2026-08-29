@@ -178,3 +178,12 @@ def export_placement_bundle():
         as_attachment=True,
         download_name=download_name
     )
+
+
+@analytics_bp.route('/student/progression', methods=['GET'])
+@jwt_required()
+def get_student_progression():
+    """Get real-time student progression analytics (application trends, funnel breakdown, skill radar)"""
+    current_user_id = int(get_jwt_identity())
+    data = analytics_service.get_student_progression_analytics(current_user_id)
+    return jsonify(data), 200

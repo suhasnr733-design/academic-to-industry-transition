@@ -412,7 +412,7 @@ def forgot_password():
         from datetime import timedelta
         reset_token = create_access_token(
             identity=str(user.id),
-            expires_delta=timedelta(minutes=5),
+            expires_delta=timedelta(minutes=10),
             additional_claims={'type': 'password_reset'}
         )
         
@@ -489,7 +489,7 @@ def forgot_password():
         
         <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 6px; margin-bottom: 24px;">
             <p style="margin: 0; font-size: 13px; color: #92400e; font-weight: 500;">
-                ⚠️ <strong>Security Notice:</strong> This link will expire in <strong>5 minutes</strong>.
+                ⚠️ <strong>Security Notice:</strong> This link will expire in <strong>10 minutes</strong>.
             </p>
         </div>
         

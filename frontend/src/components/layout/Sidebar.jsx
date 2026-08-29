@@ -16,11 +16,13 @@ import {
   OfficeBuildingIcon,
   UserCircleIcon,
   CogIcon,
+  TrendingUpIcon,
   XIcon
 } from '@heroicons/react/outline'
 
 const studentNavigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
+  { name: 'Career Analytics', href: '/dashboard/advanced', icon: TrendingUpIcon },
   { name: 'Placement Drives', href: '/placements', icon: OfficeBuildingIcon, badgeKey: 'placement' },
   { name: 'Resume', href: '/resume', icon: DocumentTextIcon },
   { name: 'Jobs', href: '/jobs', icon: BriefcaseIcon },
