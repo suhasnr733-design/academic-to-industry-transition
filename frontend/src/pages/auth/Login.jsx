@@ -57,7 +57,7 @@ export const Login = () => {
   }
 
   return (
-    <div className="w-full max-w-[420px] mx-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl p-5 sm:p-7 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200/70 dark:border-gray-700/80 transition-all">
+    <div className="w-full max-w-[420px] mx-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl p-5 sm:p-7 rounded-2xl shadow-xl shadow-blue-100/50 dark:shadow-none border-t-4 border-t-blue-600 border-x border-b border-slate-200/70 dark:border-gray-700/80 transition-all">
       
       {/* Role Switcher Pills */}
       <div className="flex p-1 bg-slate-100 dark:bg-gray-700/60 rounded-xl mb-5 border border-slate-200/50 dark:border-gray-600/50">
@@ -78,20 +78,24 @@ export const Login = () => {
         </button>
       </div>
 
-      {/* Header */}
+      {/* Header with Explicit Student Badge */}
       <div className="text-center mb-5">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-700/60 mb-2">
+          <UserIcon className="w-3.5 h-3.5" />
+          Student Career Portal
+        </span>
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
-          Welcome Back
+          Student Sign In
         </h2>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Sign in to your account to continue
+          Access your resume analysis, skill gaps, and verified job matches
         </p>
       </div>
 
       <form className="space-y-3.5" onSubmit={handleSubmit(onSubmit)}>
         <Input
           label="Username or Email"
-          placeholder="Enter your username or email"
+          placeholder="e.g. stu_alex or student@university.edu"
           {...register('username')}
           error={errors.username?.message}
         />

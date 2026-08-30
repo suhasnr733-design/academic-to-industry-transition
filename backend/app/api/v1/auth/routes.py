@@ -55,20 +55,27 @@ def register():
                 'message': 'Password must be at least 6 characters'
             }), 400
         
-        if User.query.filter_by(username=data['username']).first():
+        existing_user = User.query.filter_by(username=data['username']).first()
+        if existing_user:
+            role_label = "Student" if existing_user.role == "student" else "Faculty"
             return jsonify({
                 'error': 'Username already exists',
-                'message': f'Username "{data["username"]}" is already taken'
+                'message': f'The username "{data["username"]}" is already registered to an existing {role_label} account. Please sign in or choose another username.'
             }), 409
         
-        if User.query.filter_by(email=data['email']).first():
+        existing_email = User.query.filter_by(email=data['email']).first()
+        if existing_email:
+            role_label = "Student" if existing_email.role == "student" else "Faculty"
             return jsonify({
                 'error': 'Email already registered',
-                'message': f'Email "{data["email"]}" is already registered'
+                'message': f'The email "{data["email"]}" is already registered to an existing {role_label} account. Please sign in.'
             }), 409
         
         requested_role = data.get('role', 'student')
         role = requested_role if requested_role in ['student', 'faculty'] else 'student'
+
+        # Faculty accounts require administrator approval before activation
+        is_active_on_register = role != 'faculty'
 
         user = User(
             username=data['username'],
@@ -78,13 +85,22 @@ def register():
             year_of_study=data.get('year_of_study'),
             college=data.get('college'),
             role=role,
-            is_active=True,
-            is_email_verified=True
+            is_active=is_active_on_register,
+            is_email_verified=is_active_on_register
         )
         user.set_password(data['password'])
         
         db.session.add(user)
         db.session.commit()
+
+        # Faculty: return 202 Accepted (pending), not 201 Created with tokens
+        if role == 'faculty':
+            logger.info(f"Faculty registration pending approval: {user.username} (ID: {user.id})")
+            return jsonify({
+                'message': 'Faculty registration submitted for review.',
+                'detail': 'Your account is pending administrator approval. You will be notified once your account is activated.',
+                'pending': True
+            }), 202
         
         access_token = create_access_token(identity=str(user.id))
         refresh_token = create_refresh_token(identity=str(user.id))
@@ -143,6 +159,11 @@ def login():
             }), 401
         
         if not user.is_active:
+            if user.role == 'faculty':
+                return jsonify({
+                    'error': 'Account pending approval',
+                    'message': 'Your Faculty account is pending administrator approval. Please check back later or contact your institution\'s placement office.'
+                }), 403
             return jsonify({
                 'error': 'Account deactivated',
                 'message': 'Your account has been deactivated. Please contact support.'
@@ -430,7 +451,7 @@ def forgot_password():
             caller_origin = None
 
         frontend_url = caller_origin or current_app.config.get('FRONTEND_URL') or 'http://localhost:5173'
-        reset_link = f"{frontend_url}/reset-password?token={reset_token}"
+        reset_link = f"{frontend_url}/reset-password?token={reset_token}&role={user.role}"
         
         # Print to dev console for easy testing (ASCII-safe for Windows terminals)
         logger.info(f"Password reset link generated for {user.email}: {reset_link}")
@@ -443,20 +464,22 @@ def forgot_password():
             sender_email = (
                 current_app.config.get('MAIL_DEFAULT_SENDER') or 
                 current_app.config.get('MAIL_USERNAME') or 
-                'noreply@transitionalai.com'
+                'noreply@transitionai.com'
             )
             
+            display_name = user.full_name or user.username
+            
             msg = Message(
-                subject="Password Reset Request - TransitionalAI",
+                subject="Password Reset Request - TransitionAI",
                 sender=sender_email,
                 recipients=[user.email],
                 body=(
-                    f"Hello {user.username},\n\n"
+                    f"Hello {display_name},\n\n"
                     f"We received a request to reset your password. Click the link below to reset your password:\n\n"
                     f"{reset_link}\n\n"
-                    f"This link will expire in 5 minutes.\n\n"
+                    f"This link will expire in 10 minutes.\n\n"
                     f"If you did not request this, please ignore this email.\n\n"
-                    f"Best regards,\nTransitionalAI Team"
+                    f"Best regards,\nTransitionAI Team"
                 ),
                 html=f"""<!DOCTYPE html>
 <html>
@@ -464,44 +487,49 @@ def forgot_password():
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #1e293b;">
-    <div style="max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 32px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
+<body style="margin: 0; padding: 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #1e293b;">
+    <div style="max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 32px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
         <div style="text-align: center; margin-bottom: 24px;">
-            <div style="display: inline-block; width: 48px; height: 48px; line-height: 48px; border-radius: 12px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: #ffffff; font-weight: bold; font-size: 20px;">
-                AI
-            </div>
-            <h2 style="margin: 16px 0 4px; font-size: 22px; font-weight: 700; color: #0f172a;">Reset Your Password</h2>
-            <p style="margin: 0; color: #64748b; font-size: 14px;">Academic to Industry Transition Platform</p>
+            <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">
+                Transition<span style="color: #2563eb;">AI</span>
+            </h1>
+            <p style="margin: 4px 0 0; color: #64748b; font-size: 13px; font-weight: 500;">
+                Intelligent Career & Skill Matching Platform
+            </p>
         </div>
         
-        <p style="font-size: 15px; line-height: 24px; color: #334155; margin-bottom: 16px;">
-            Hello <strong>{user.username}</strong>,
+        <h2 style="margin: 20px 0 8px; font-size: 18px; font-weight: 700; color: #0f172a; text-align: center;">
+            Reset Your Password
+        </h2>
+        
+        <p style="font-size: 14px; line-height: 22px; color: #334155; margin-bottom: 12px;">
+            Hello <strong>{display_name}</strong>,
         </p>
-        <p style="font-size: 15px; line-height: 24px; color: #334155; margin-bottom: 24px;">
+        <p style="font-size: 14px; line-height: 22px; color: #334155; margin-bottom: 24px;">
             We received a request to reset your password. Click the button below to set a new password:
         </p>
         
-        <div style="text-align: center; margin: 32px 0;">
-            <a href="{reset_link}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);">
+        <div style="text-align: center; margin: 28px 0;">
+            <a href="{reset_link}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: #ffffff; text-decoration: none; padding: 12px 30px; border-radius: 10px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);">
                 Reset Password
             </a>
         </div>
         
         <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 6px; margin-bottom: 24px;">
-            <p style="margin: 0; font-size: 13px; color: #92400e; font-weight: 500;">
+            <p style="margin: 0; font-size: 12px; color: #92400e; font-weight: 500;">
                 ⚠️ <strong>Security Notice:</strong> This link will expire in <strong>10 minutes</strong>.
             </p>
         </div>
         
-        <p style="font-size: 13px; line-height: 20px; color: #64748b; margin-bottom: 24px;">
+        <p style="font-size: 13px; line-height: 20px; color: #64748b; margin-bottom: 20px;">
             If you did not request this password reset, no action is needed. Your account remains secure.
         </p>
         
-        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
         
         <p style="margin: 0; font-size: 12px; color: #94a3b8; text-align: center;">
             Best regards,<br>
-            <strong>TransitionalAI Team</strong>
+            <strong style="color: #475569;">TransitionAI Team</strong>
         </p>
     </div>
 </body>

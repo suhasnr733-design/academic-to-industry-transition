@@ -20,84 +20,122 @@ import {
   XIcon
 } from '@heroicons/react/outline'
 
-const studentNavigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'Career Analytics', href: '/dashboard/advanced', icon: TrendingUpIcon },
-  { name: 'Placement Drives', href: '/placements', icon: OfficeBuildingIcon, badgeKey: 'placement' },
-  { name: 'Resume', href: '/resume', icon: DocumentTextIcon },
-  { name: 'Jobs', href: '/jobs', icon: BriefcaseIcon },
-  { name: 'Skills', href: '/skills', icon: ChartBarIcon },
-  { name: 'Learning', href: '/learning', icon: AcademicCapIcon },
-  { name: 'Assessments', href: '/assessment', icon: ClipboardListIcon },
-  { name: 'Profile', href: '/profile', icon: UserCircleIcon },
-  { name: 'Settings', href: '/settings', icon: CogIcon },
+const studentSections = [
+  {
+    title: 'Main',
+    items: [
+      { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
+      { name: 'Career Analytics', href: '/dashboard/advanced', icon: TrendingUpIcon },
+    ]
+  },
+  {
+    title: 'Career Opportunities',
+    items: [
+      { name: 'Job Matches', href: '/jobs', icon: BriefcaseIcon, badgeKey: 'jobs' },
+      { name: 'Placement Drives', href: '/placements', icon: OfficeBuildingIcon, badgeKey: 'placement' },
+      { name: 'Resume Hub', href: '/resume', icon: DocumentTextIcon },
+    ]
+  },
+  {
+    title: 'Skill & Learning',
+    items: [
+      { name: 'Skill Gap Analysis', href: '/skills', icon: ChartBarIcon },
+      { name: 'Learning Roadmap', href: '/learning', icon: AcademicCapIcon },
+      { name: 'Assessments', href: '/assessment', icon: ClipboardListIcon },
+    ]
+  },
+  {
+    title: 'Preferences',
+    items: [
+      { name: 'Profile & Settings', href: '/profile', icon: UserCircleIcon },
+    ]
+  }
 ]
 
-const facultyNavigation = [
-  { name: 'Faculty Overview', href: '/faculty', icon: HomeIcon },
-  { name: 'Student Directory', href: '/faculty?tab=students', icon: UserGroupIcon },
-  { name: 'Cohort Analytics', href: '/faculty?tab=analytics', icon: ChartBarIcon },
-  { name: 'Campus Drives', href: '/faculty?tab=drives', icon: OfficeBuildingIcon },
-  { name: 'Placement Shortlist', href: '/faculty?tab=shortlist', icon: BriefcaseIcon },
-  { name: 'Profile Settings', href: '/profile', icon: UserCircleIcon },
-  { name: 'Settings', href: '/settings', icon: CogIcon },
+const facultySections = [
+  {
+    title: 'Overview',
+    items: [
+      { name: 'Faculty Overview', href: '/faculty', icon: HomeIcon },
+      { name: 'Cohort Analytics', href: '/faculty?tab=analytics', icon: ChartBarIcon },
+    ]
+  },
+  {
+    title: 'Mentorship & Drives',
+    items: [
+      { name: 'Student Directory', href: '/faculty?tab=students', icon: UserGroupIcon },
+      { name: 'Campus Drives', href: '/faculty?tab=drives', icon: OfficeBuildingIcon },
+      { name: 'Placement Shortlist', href: '/faculty?tab=shortlist', icon: BriefcaseIcon },
+    ]
+  },
+  {
+    title: 'Preferences',
+    items: [
+      { name: 'Profile Settings', href: '/profile', icon: UserCircleIcon },
+      { name: 'Settings', href: '/settings', icon: CogIcon },
+    ]
+  }
 ]
 
-const adminNavigation = [
-  { name: 'Admin Dashboard', href: '/admin', icon: HomeIcon },
-  { name: 'Faculty Overview', href: '/faculty', icon: UserGroupIcon },
-  { name: 'Profile Settings', href: '/profile', icon: UserCircleIcon },
-  { name: 'Settings', href: '/settings', icon: CogIcon },
+const adminSections = [
+  {
+    title: 'Administration',
+    items: [
+      { name: 'Admin Dashboard', href: '/admin', icon: HomeIcon },
+      { name: 'Faculty Overview', href: '/faculty', icon: UserGroupIcon },
+    ]
+  },
+  {
+    title: 'Preferences',
+    items: [
+      { name: 'Profile Settings', href: '/profile', icon: UserCircleIcon },
+      { name: 'Settings', href: '/settings', icon: CogIcon },
+    ]
+  }
 ]
 
-export const Sidebar = ({ isOpen, onClose }) => {
+export const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }) => {
   const { user } = useAuth()
   const [pendingPlacementsCount, setPendingPlacementsCount] = useState(0)
+  const [jobCount, setJobCount] = useState(0)
 
   const role = user?.role || 'student'
-  const navigation = role === 'admin' 
-    ? adminNavigation 
+  const sections = role === 'admin' 
+    ? adminSections 
     : role === 'faculty' 
-    ? facultyNavigation 
-    : studentNavigation
+    ? facultySections 
+    : studentSections
 
-  // Fetch pending placement drive notifications for student badge
+  // Fetch pending placement drives and available job count for student badges
   useEffect(() => {
     if (role === 'student' && user) {
-      const fetchPending = async () => {
+      const fetchStudentBadgeData = async () => {
         try {
-          const res = await api.get('/placement/my-nominations')
-          const noms = res.data?.nominations || []
-          const pending = noms.filter(n => n.status === 'pending').length
-          setPendingPlacementsCount(pending)
+          const [placementsRes, jobsRes] = await Promise.allSettled([
+            api.get('/placement/my-nominations'),
+            api.get('/jobs')
+          ])
+
+          if (placementsRes.status === 'fulfilled') {
+            const noms = placementsRes.value.data?.nominations || []
+            const pending = noms.filter(n => n.status === 'pending').length
+            setPendingPlacementsCount(pending)
+          }
+
+          if (jobsRes.status === 'fulfilled') {
+            const list = jobsRes.value.data?.jobs || []
+            setJobCount(list.length)
+          }
         } catch (e) {
           // ignore background errors
         }
       }
 
-      fetchPending()
-      const interval = setInterval(fetchPending, 25000)
+      fetchStudentBadgeData()
+      const interval = setInterval(fetchStudentBadgeData, 25000)
       return () => clearInterval(interval)
     }
   }, [role, user])
-
-  const roleLabel = role === 'faculty' 
-    ? 'Faculty' 
-    : role === 'admin' 
-    ? 'Administrator' 
-    : 'Student'
-
-  const roleSubtext = role === 'faculty'
-    ? (user?.department ? `${user.department}` : 'Department Mentor')
-    : role === 'admin'
-    ? 'Platform Admin'
-    : (user?.department ? `${user.department} ${user?.year_of_study ? `• Yr ${user.year_of_study}` : ''}` : 'Candidate')
-
-  const roleBadgeColor = role === 'faculty'
-    ? 'bg-purple-100 text-purple-700 border-purple-200'
-    : role === 'admin'
-    ? 'bg-red-100 text-red-700 border-red-200'
-    : 'bg-primary-50 text-primary-700 border-primary-200'
 
   const location = useLocation()
   const currentUrl = `${location.pathname}${location.search}`
@@ -125,10 +163,11 @@ export const Sidebar = ({ isOpen, onClose }) => {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar Container */}
       <aside
         className={cn(
-          'fixed top-16 left-0 z-40 w-64 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 flex flex-col justify-between shadow-sm transform transition-transform duration-300',
+          'fixed top-16 left-0 z-40 h-[calc(100vh-4rem)] bg-white dark:bg-gray-900 border-r border-slate-200/80 dark:border-gray-800 flex flex-col justify-between shadow-sm transition-all duration-300',
+          isCollapsed ? 'w-64 lg:w-20' : 'w-64',
           'lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
@@ -142,76 +181,121 @@ export const Sidebar = ({ isOpen, onClose }) => {
           <XIcon className="h-6 w-6" />
         </button>
 
-        {/* Navigation items */}
-        <div className="p-4 overflow-y-auto flex-1">
-          <div className="px-3 py-2 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-            {role === 'faculty' ? 'Faculty Portal' : role === 'admin' ? 'Admin Portal' : 'Student Career Suite'}
-          </div>
-          <nav className="space-y-1.5">
-            {navigation.map((item) => {
-              const active = isItemActive(item.href)
-              return (
-                <NavLink
-                  key={item.name}
-                  to={item.href}
-                  className={cn(
-                    'flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group',
-                    active
-                      ? role === 'faculty'
-                        ? 'bg-purple-50 text-purple-700 font-semibold shadow-xs'
-                        : role === 'admin'
-                        ? 'bg-red-50 text-red-700 font-semibold shadow-xs'
-                        : 'bg-primary-50 text-primary-700 font-semibold shadow-xs'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  )}
-                  onClick={() => onClose()}
-                >
-                  <div className="flex items-center min-w-0">
-                    <item.icon className="h-5 w-5 mr-3 flex-shrink-0" />
-                    <span className="truncate">{item.name}</span>
-                  </div>
-                  {item.badgeKey === 'placement' && pendingPlacementsCount > 0 && (
-                    <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-extrabold bg-amber-500 text-white rounded-full shadow-sm animate-pulse ml-2 flex-shrink-0">
-                      {pendingPlacementsCount}
-                    </span>
-                  )}
-                </NavLink>
-              )
-            })}
-          </nav>
+        {/* Categorized Navigation Sections */}
+        <div className="p-3 overflow-y-auto flex-1 space-y-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          {sections.map((section) => (
+            <div key={section.title} className="space-y-1">
+              {/* Section title hidden when collapsed on desktop */}
+              <div className={cn(
+                "text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest transition-all duration-200",
+                isCollapsed ? "px-3 lg:hidden" : "px-3"
+              )}>
+                {section.title}
+              </div>
+
+              <nav className="space-y-1">
+                {section.items.map((item) => {
+                  const active = isItemActive(item.href)
+                  return (
+                    <NavLink
+                      key={item.name}
+                      to={item.href}
+                      className={cn(
+                        'flex items-center rounded-xl text-xs font-medium transition-all duration-150 group relative',
+                        isCollapsed
+                          ? 'justify-between px-3 py-2 lg:justify-center lg:px-0 lg:py-2.5'
+                          : 'justify-between px-3 py-2',
+                        active
+                          ? role === 'faculty'
+                            ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-bold border-l-2 border-purple-600 shadow-xs'
+                            : role === 'admin'
+                            ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 font-bold border-l-2 border-red-600 shadow-xs'
+                            : 'bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 font-bold border-l-2 border-primary-600 shadow-xs'
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800/60 hover:text-gray-900 dark:hover:text-gray-200'
+                      )}
+                      onClick={() => onClose()}
+                      title={item.name}
+                    >
+                      <div className={cn(
+                        "flex items-center min-w-0",
+                        isCollapsed ? "lg:justify-center" : ""
+                      )}>
+                        <item.icon className={cn(
+                          "h-5 w-5 flex-shrink-0 transition-transform duration-150 group-hover:scale-110",
+                          isCollapsed ? "mr-2.5 lg:mr-0" : "mr-2.5",
+                          active
+                            ? role === 'faculty'
+                              ? "text-purple-600 dark:text-purple-400"
+                              : role === 'admin'
+                              ? "text-red-600 dark:text-red-400"
+                              : "text-primary-600 dark:text-primary-400"
+                            : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"
+                        )} />
+                        
+                        {/* Text label */}
+                        <span className={cn(
+                          "truncate transition-all duration-200",
+                          isCollapsed ? "inline lg:hidden" : "inline"
+                        )}>
+                          {item.name}
+                        </span>
+                      </div>
+
+                      {/* Full Live Badges (when expanded) */}
+                      <div className={cn(isCollapsed ? "lg:hidden" : "inline-flex")}>
+                        {item.badgeKey === 'placement' && pendingPlacementsCount > 0 && (
+                          <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-extrabold bg-amber-500 text-white rounded-full shadow-xs animate-pulse ml-2 flex-shrink-0">
+                            {pendingPlacementsCount} Action
+                          </span>
+                        )}
+                        {item.badgeKey === 'jobs' && jobCount > 0 && (
+                          <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-md ml-2 flex-shrink-0">
+                            {jobCount}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Mini Badge Dots (when collapsed on desktop) */}
+                      {isCollapsed && item.badgeKey === 'placement' && pendingPlacementsCount > 0 && (
+                        <span className="hidden lg:block absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white dark:ring-gray-900 animate-pulse" />
+                      )}
+                      {isCollapsed && item.badgeKey === 'jobs' && jobCount > 0 && (
+                        <span className="hidden lg:block absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-gray-900" />
+                      )}
+                    </NavLink>
+                  )
+                })}
+              </nav>
+            </div>
+          ))}
         </div>
 
-        {/* User info at bottom */}
-        <div className="p-4 border-t border-gray-100 bg-gray-50/70">
-          <div className="flex items-center space-x-3">
-            <div className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm flex-shrink-0",
-              role === 'faculty' 
-                ? 'bg-gradient-to-tr from-purple-600 to-indigo-600' 
-                : role === 'admin'
-                ? 'bg-gradient-to-tr from-red-600 to-orange-600'
-                : 'bg-gradient-to-tr from-primary-600 to-secondary-600'
+        {/* Clean Sidebar Footer */}
+        <div className={cn(
+          "p-3 border-t border-slate-100 dark:border-gray-800 bg-slate-50/70 dark:bg-gray-800/40 flex items-center transition-all duration-300",
+          isCollapsed ? "justify-between lg:justify-center" : "justify-between"
+        )}>
+          <div className="flex items-center space-x-2 min-w-0">
+            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+              role === 'faculty' ? 'bg-purple-500' : role === 'admin' ? 'bg-red-500' : 'bg-emerald-500'
+            } animate-pulse`} title={role === 'faculty' ? 'Faculty Portal' : role === 'admin' ? 'Admin Console' : 'Student Portal'} />
+            <span className={cn(
+              "text-[11px] font-semibold text-gray-600 dark:text-gray-400 truncate",
+              isCollapsed ? "inline lg:hidden" : "inline"
             )}>
-              {user?.full_name?.[0] || user?.username?.[0] || 'U'}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-900 truncate">
-                  {user?.full_name || user?.username || 'User'}
-                </p>
-              </div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className={cn('text-[10px] font-semibold px-1.5 py-0.5 rounded border uppercase tracking-wider', roleBadgeColor)}>
-                  {roleLabel}
-                </span>
-                <span className="text-xs text-gray-500 truncate" title={roleSubtext}>
-                  {roleSubtext}
-                </span>
-              </div>
-            </div>
+              {role === 'faculty' ? 'Faculty Portal' : role === 'admin' ? 'Admin Console' : 'Student Portal'}
+            </span>
           </div>
+          <span className={cn(
+            "text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider ml-2 flex-shrink-0",
+            isCollapsed ? "inline lg:hidden" : "inline"
+          )}>
+            v1.0
+          </span>
         </div>
       </aside>
     </>
   )
-}
+}
+
+export default Sidebar

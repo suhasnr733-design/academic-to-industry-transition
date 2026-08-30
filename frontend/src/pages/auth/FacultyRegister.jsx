@@ -20,7 +20,7 @@ const facultyRegisterSchema = yup.object({
     .matches(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
   email: yup.string()
     .required('Faculty Email is required')
-    .email('Invalid email address'),
+    .email('Please enter a valid email address'),
   department: yup.string()
     .required('Academic Department is required'),
   college: yup.string()
@@ -42,7 +42,7 @@ export const FacultyRegister = () => {
   const { register: registerUser } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors, touchedFields } } = useForm({
     resolver: yupResolver(facultyRegisterSchema),
   })
 
@@ -59,8 +59,17 @@ export const FacultyRegister = () => {
         role: 'faculty'
       }
 
-      await registerUser(payload)
-      toast.success('Faculty account created successfully! Please sign in.')
+      const result = await registerUser(payload)
+
+      // Backend returns 202 for faculty (pending approval), 201 for students
+      if (result?.pending) {
+        toast.success(
+          'Your Faculty account has been submitted for review. An administrator will activate your account shortly.',
+          { duration: 7000 }
+        )
+      } else {
+        toast.success('Faculty account created successfully! Please sign in.')
+      }
       navigate('/faculty/login')
     } catch (error) {
       toast.error(error.response?.data?.error || error.response?.data?.message || error.message || 'Faculty registration failed')
@@ -78,7 +87,7 @@ export const FacultyRegister = () => {
   }
 
   return (
-    <div className="w-full max-w-lg mx-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl p-5 sm:p-7 rounded-2xl shadow-xl shadow-indigo-100/50 dark:shadow-none border border-indigo-100/80 dark:border-gray-700/80 transition-all">
+    <div className="w-full max-w-lg mx-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl p-5 sm:p-7 rounded-2xl shadow-xl shadow-purple-100/50 dark:shadow-none border-t-4 border-t-purple-600 border-x border-b border-purple-100/80 dark:border-gray-700/80 transition-all">
       
       {/* Role Switcher Pills */}
       <div className="flex p-1 bg-slate-100 dark:bg-gray-700/60 rounded-xl mb-4 border border-slate-200/50 dark:border-gray-600/50">
@@ -99,8 +108,12 @@ export const FacultyRegister = () => {
         </button>
       </div>
 
-      {/* Header */}
+      {/* Header with Explicit Faculty Badge */}
       <div className="text-center mb-4">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-700/60 mb-2">
+          <AcademicCapIcon className="w-3.5 h-3.5" />
+          Academic & Faculty Advisor
+        </span>
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
           Faculty Registration
         </h2>
@@ -120,20 +133,25 @@ export const FacultyRegister = () => {
             />
           </div>
 
-          <Input
-            label="Faculty ID / Username"
-            placeholder="e.g. jsmith_faculty"
-            {...register('username')}
-            error={errors.username?.message}
-          />
+          <div className="sm:col-span-2">
+            <Input
+              label="Faculty ID / Username"
+              placeholder="e.g. jsmith_faculty"
+              {...register('username')}
+              error={errors.username?.message}
+            />
+          </div>
 
-          <Input
-            label="Faculty Email"
-            type="email"
-            placeholder="faculty@university.edu"
-            {...register('email')}
-            error={errors.email?.message}
-          />
+          {/* Email is full-width so its hint stays in the same column */}
+          <div className="sm:col-span-2">
+            <Input
+              label="Faculty Email"
+              type="email"
+              placeholder="e.g. professor@college.edu or faculty@rediffmail.com"
+              {...register('email')}
+              error={errors.email?.message}
+            />
+          </div>
 
           <Input
             label="Department"
@@ -186,7 +204,7 @@ export const FacultyRegister = () => {
       <div className="mt-4 pt-3 border-t border-slate-100 dark:border-gray-700/60">
         <div className="relative mb-3 text-center">
           <span className="px-2 text-[11px] uppercase tracking-wider text-gray-400 dark:text-gray-500 font-medium">
-            Or register with institutional SSO
+            Or continue with
           </span>
         </div>
 
@@ -194,7 +212,7 @@ export const FacultyRegister = () => {
           <button
             type="button"
             onClick={handleGoogleFacultyAuth}
-            className="w-full inline-flex justify-center items-center py-2 px-3 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xs bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-700 hover:border-slate-300 transition-all"
+            className="w-full inline-flex justify-center items-center py-2 px-3 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xs bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 hover:border-[#4285F4] hover:text-[#4285F4] hover:bg-blue-50/40 transition-all"
           >
             <svg className="w-3.5 h-3.5 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -207,7 +225,7 @@ export const FacultyRegister = () => {
           <button
             type="button"
             onClick={handleLinkedInFacultyAuth}
-            className="w-full inline-flex justify-center items-center py-2 px-3 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xs bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-700 hover:border-slate-300 transition-all"
+            className="w-full inline-flex justify-center items-center py-2 px-3 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xs bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 hover:border-[#0A66C2] hover:text-[#0A66C2] hover:bg-blue-50/40 transition-all"
           >
             <svg className="w-3.5 h-3.5 mr-2" fill="#0A66C2" viewBox="0 0 24 24">
               <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.77a1.47 1.47 0 1 0 0 2.94 1.47 1.47 0 0 0 0-2.94Z"/>

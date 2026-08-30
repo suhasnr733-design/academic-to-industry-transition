@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { cn } from '../../utils/helpers'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../common/Button'
 import { 
@@ -15,7 +16,7 @@ import {
 import { RecommendedActionsDropdown } from './RecommendedActionsDropdown'
 import { TransitionLogo } from '../common/TransitionLogo'
 
-export const Navbar = ({ onMenuClick }) => {
+export const Navbar = ({ onMenuClick, isCollapsed = false, onToggleCollapse }) => {
   const { isAuthenticated, user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -36,6 +37,7 @@ export const Navbar = ({ onMenuClick }) => {
 
   const handleLogout = () => {
     logout()
+    setShowDropdown(false)
     navigate('/login')
   }
 
@@ -48,38 +50,60 @@ export const Navbar = ({ onMenuClick }) => {
 
   return (
     <nav className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800 sticky top-0 z-50">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
+      <div className="w-full">
         <div className="flex justify-between items-center h-16">
-          {/* Logo & Portal Branding */}
-          <div className="flex items-center space-x-3">
+          {/* Logo & Portal Branding (Collapsible with smooth animation on desktop) */}
+          <div className={cn(
+            "flex items-center h-16 transition-all duration-300",
+            isAuthenticated && !isAuthPage
+              ? isCollapsed
+                ? "lg:w-20 lg:px-4 lg:justify-center lg:border-r lg:border-gray-200/80 dark:lg:border-gray-800 flex-shrink-0"
+                : "lg:w-64 lg:px-4 lg:border-r lg:border-gray-200/80 dark:lg:border-gray-800 flex-shrink-0"
+              : "px-4 sm:px-6 lg:px-8"
+          )}>
             {isAuthenticated && (
               <button
                 onClick={onMenuClick}
-                className="lg:hidden p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                className="lg:hidden p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 mr-2"
                 aria-label="Toggle Navigation"
               >
                 <MenuIcon className="h-6 w-6" />
               </button>
             )}
-            <Link to={isAuthenticated ? homeHref : "/"} className="flex items-center space-x-2.5 group">
+
+            <div 
+              onClick={isAuthenticated && !isAuthPage && onToggleCollapse ? onToggleCollapse : undefined}
+              className={cn(
+                "flex items-center space-x-2.5 group select-none",
+                isAuthenticated && !isAuthPage ? "cursor-pointer" : ""
+              )}
+              title={isAuthenticated && !isAuthPage ? (isCollapsed ? "Click logo to expand sidebar" : "Click logo to collapse sidebar") : undefined}
+            >
               <div className="flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
-                <TransitionLogo className="w-9 h-9 drop-shadow-sm" />
+                <TransitionLogo className="w-8 h-8 drop-shadow-sm" />
               </div>
-              <div>
-                <span className="text-xl font-bold text-gray-900 dark:text-white leading-none block tracking-tight">
-                  Transition<span className="text-primary-600 dark:text-primary-400">AI</span>
+
+              {/* Text label with smooth width and opacity transition */}
+              <div className={cn(
+                "transition-all duration-300 overflow-hidden whitespace-nowrap",
+                isAuthenticated && !isAuthPage && isCollapsed
+                  ? "lg:w-0 lg:opacity-0"
+                  : "w-auto opacity-100"
+              )}>
+                <span className="text-lg font-bold text-gray-900 dark:text-white leading-none block tracking-tight">
+                  Transition<span className="text-primary-600 dark:text-primary-400 font-extrabold tracking-wider ml-0.5">AI</span>
                 </span>
                 {isAuthenticated && !isAuthPage && (
-                  <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 block leading-tight">
+                  <span className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 block leading-tight mt-0.5 uppercase tracking-wider">
                     {isFaculty ? 'Faculty Portal' : isAdmin ? 'Admin Console' : 'Student Portal'}
                   </span>
                 )}
               </div>
-            </Link>
+            </div>
           </div>
 
-          {/* Right side */}
-          <div className="flex items-center space-x-3 sm:space-x-4">
+          {/* Right side items */}
+          <div className="flex items-center justify-end space-x-3 sm:space-x-4 flex-1 px-4 sm:px-6 lg:px-8">
             {isAuthenticated && !isAuthPage ? (
               <>
                 {/* Recommended Actions Top Bar Menu (Students & Faculty) */}
@@ -202,27 +226,42 @@ export const Navbar = ({ onMenuClick }) => {
                 </div>
               </>
             ) : (
-              <div className="flex items-center space-x-1.5 p-1 bg-gray-50/80 dark:bg-gray-800 rounded-xl border border-gray-200/60 dark:border-gray-700">
-                <button
-                  onClick={() => navigate('/login')}
-                  className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
-                    location.pathname === '/login' || location.pathname === '/register'
-                      ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 font-semibold shadow-xs'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                  }`}
-                >
-                  Student Portal
-                </button>
-                <button
-                  onClick={() => navigate('/faculty/login')}
-                  className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
-                    location.pathname === '/faculty/login' || location.pathname === '/faculty/register'
-                      ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 font-semibold shadow-xs'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                  }`}
-                >
-                  Faculty Portal
-                </button>
+              <div className="flex items-center space-x-3 text-xs">
+                {location.pathname === '/login' || location.pathname === '/faculty/login' ? (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-500 dark:text-gray-400 hidden sm:inline">New to TransitionAI?</span>
+                    <button
+                      onClick={() => navigate(location.pathname === '/faculty/login' ? '/faculty/register' : '/register')}
+                      className="font-semibold px-3 py-1.5 rounded-lg bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors shadow-xs"
+                    >
+                      Create Account
+                    </button>
+                  </div>
+                ) : location.pathname === '/register' || location.pathname === '/faculty/register' ? (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-500 dark:text-gray-400 hidden sm:inline">Already registered?</span>
+                    <button
+                      onClick={() => navigate(location.pathname === '/faculty/register' ? '/faculty/login' : '/login')}
+                      className="font-semibold px-3 py-1.5 rounded-lg bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors shadow-xs"
+                    >
+                      Sign In
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-500 dark:text-gray-400 hidden sm:inline">Remember your password?</span>
+                    <button
+                      onClick={() => {
+                        const searchParams = new URLSearchParams(location.search)
+                        const isFacultyForgot = searchParams.get('role') === 'faculty' || location.pathname.includes('/faculty')
+                        navigate(isFacultyForgot ? '/faculty/login' : '/login')
+                      }}
+                      className="font-semibold px-3 py-1.5 rounded-lg bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors shadow-xs"
+                    >
+                      Sign In
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -100,8 +100,26 @@ export const InteractiveLineChart = ({ data = [], xKey = 'name', lines = [], hei
 
 export const InteractivePieChart = ({ data = [], height = 300 }) => {
   const [activeIndex, setActiveIndex] = useState(null)
-  
   const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899']
+
+  const totalValue = data.reduce((acc, curr) => acc + (curr.value || 0), 0)
+
+  if (totalValue === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-4 text-center h-[300px]">
+        <div className="p-3.5 bg-slate-50 text-slate-400 rounded-2xl mb-3 border border-slate-100">
+          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+          </svg>
+        </div>
+        <p className="text-sm font-bold text-gray-800">No Application Data Yet</p>
+        <p className="text-xs text-gray-500 max-w-xs mt-1">
+          Apply to jobs or RSVP to placement drives to populate your conversion funnel.
+        </p>
+      </div>
+    )
+  }
   
   const onPieEnter = (_, index) => {
     setActiveIndex(index)
@@ -115,7 +133,7 @@ export const InteractivePieChart = ({ data = [], height = 300 }) => {
     <ResponsiveContainer width="100%" height={height}>
       <PieChart>
         <Pie
-          data={data}
+          data={data.filter(d => d.value > 0)}
           cx="50%"
           cy="50%"
           labelLine={false}
@@ -125,7 +143,7 @@ export const InteractivePieChart = ({ data = [], height = 300 }) => {
           onMouseEnter={onPieEnter}
           onMouseLeave={onPieLeave}
         >
-          {data.map((entry, index) => (
+          {data.filter(d => d.value > 0).map((entry, index) => (
             <Cell
               key={`cell-${index}`}
               fill={colors[index % colors.length]}
@@ -142,30 +160,44 @@ export const InteractivePieChart = ({ data = [], height = 300 }) => {
             border: '1px solid #e2e8f0',
           }}
         />
+        <Legend />
       </PieChart>
     </ResponsiveContainer>
   )
 }
 
-export const InteractiveRadarChart = ({ data = [], keys = [], height = 300 }) => {
-  const colors = ['#3b82f6', '#8b5cf6']
-  
+export const InteractiveRadarChart = ({ data = [], keys = ['current', 'required'], height = 320 }) => {
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <RadarChart data={data}>
-        <PolarGrid stroke="#e2e8f0" />
-        <PolarAngleAxis dataKey="name" stroke="#64748b" />
-        <PolarRadiusAxis stroke="#64748b" />
-        {keys.map((key, index) => (
-          <Radar
-            key={key}
-            name={key}
-            dataKey={key}
-            stroke={colors[index % colors.length]}
-            fill={colors[index % colors.length]}
-            fillOpacity={0.6}
-          />
-        ))}
+      <RadarChart data={data} cx="50%" cy="50%" outerRadius="75%">
+        <PolarGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+        <PolarAngleAxis 
+          dataKey="name" 
+          tick={{ fill: '#475569', fontSize: 11, fontWeight: 600 }} 
+        />
+        <PolarRadiusAxis 
+          angle={30} 
+          domain={[0, 100]} 
+          stroke="#cbd5e1" 
+          tick={{ fontSize: 10, fill: '#94a3b8' }} 
+        />
+        <Radar
+          name="Your Skill Level"
+          dataKey="current"
+          stroke="#2563eb"
+          fill="#3b82f6"
+          fillOpacity={0.3}
+          strokeWidth={2}
+        />
+        <Radar
+          name="Industry Benchmark"
+          dataKey="required"
+          stroke="#9333ea"
+          fill="#a855f7"
+          fillOpacity={0.12}
+          strokeDasharray="4 4"
+          strokeWidth={2}
+        />
         <Tooltip
           contentStyle={{
             backgroundColor: '#ffffff',
@@ -174,7 +206,7 @@ export const InteractiveRadarChart = ({ data = [], keys = [], height = 300 }) =>
             border: '1px solid #e2e8f0',
           }}
         />
-        <Legend />
+        <Legend verticalAlign="bottom" height={36} />
       </RadarChart>
     </ResponsiveContainer>
   )

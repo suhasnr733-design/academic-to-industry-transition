@@ -84,6 +84,11 @@ export const Dashboard = () => {
       return !nonTechList.some(nt => title.includes(nt))
     })
 
+    // If no resume uploaded, fallback to displaying top active tech openings
+    if (!completedResume?.skills || completedResume.skills.length === 0) {
+      return techOnly.slice(0, 3)
+    }
+
     return [...techOnly].sort((a, b) => {
       const skillsA = (a.required_skills || []).map(s => String(s).toLowerCase())
       const skillsB = (b.required_skills || []).map(s => String(s).toLowerCase())
@@ -278,7 +283,7 @@ export const Dashboard = () => {
       color: 'text-blue-600',
       bg: 'bg-blue-50',
       description: completedResume?.status === 'completed' ? 'Calculated from AI parsing' : 'Upload or process resume',
-      actionText: 'View Analysis →',
+      actionText: 'View Analysis',
       onClick: () => {
         if (completedResume?.id) {
           navigate(`/resume/${completedResume.id}`)
@@ -294,7 +299,7 @@ export const Dashboard = () => {
       color: 'text-amber-600',
       bg: 'bg-amber-50',
       description: extractedSkills.length ? 'Extracted from active resume' : 'No skills extracted yet',
-      actionText: 'View Skills →',
+      actionText: 'View Skills',
       onClick: () => {
         if (extractedSkills.length > 0) {
           setShowSkillsModal(true)
@@ -316,7 +321,7 @@ export const Dashboard = () => {
       color: targetRoleMatch >= 75 ? 'text-emerald-600' : targetRoleMatch >= 50 ? 'text-purple-600' : 'text-amber-600',
       bg: targetRoleMatch >= 75 ? 'bg-emerald-50' : targetRoleMatch >= 50 ? 'bg-purple-50' : 'bg-amber-50',
       description: targetRoleTitle || completedResume?.recommended_roles?.[0] || (completedResume ? 'Software Engineer' : 'Upload resume to calculate'),
-      actionText: 'Analyze Gaps →',
+      actionText: 'Analyze Gaps',
       onClick: () => {
         navigate('/skills')
       }
@@ -328,7 +333,7 @@ export const Dashboard = () => {
       color: 'text-emerald-600',
       bg: 'bg-emerald-50',
       description: 'Active matching openings',
-      actionText: 'Scroll to Jobs ↓',
+      actionText: 'Scroll to Jobs',
       onClick: () => {
         if (jobsSectionRef.current) {
           jobsSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -555,7 +560,7 @@ export const Dashboard = () => {
             <Button
               size="sm"
               onClick={handleOpenAdvisorModal}
-              className="bg-purple-600 hover:bg-purple-700 text-white text-xs"
+              className="bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white text-xs font-semibold shadow-xs"
             >
               <UserGroupIcon className="h-4 w-4 mr-1.5" />
               {advisorData.has_advisor ? 'View Faculty Directory' : 'Find Faculty Advisor'}
