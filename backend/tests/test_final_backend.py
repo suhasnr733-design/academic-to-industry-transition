@@ -1,5 +1,4 @@
-# backend/tests/test_final_backend.py
-
+import os
 import pytest
 import json
 import time
@@ -40,7 +39,8 @@ class TestFinalBackend:
         print("✅ Login successful")
         
         # 3. Upload Resume
-        with open('tests/data/sample_resume.pdf', 'rb') as f:
+        resume_path = os.path.join(os.path.dirname(__file__), 'data', 'sample_resume.pdf')
+        with open(resume_path, 'rb') as f:
             upload = client.post(
                 '/api/v1/resume/upload',
                 headers={'Authorization': f'Bearer {token}'},
@@ -55,7 +55,7 @@ class TestFinalBackend:
         print("✅ Jobs retrieved")
         
         # 5. Get Notifications
-        notif = client.get('/api/v1/notifications')
+        notif = client.get('/api/v1/notifications', headers={'Authorization': f'Bearer {token}'})
         assert notif.status_code == 200
         print("✅ Notifications retrieved")
         
@@ -73,15 +73,16 @@ class TestFinalBackend:
             print("❌ Rate limiting not working")
     
     def test_api_key(self, client):
-        print("\n🔑 Testing API key...")
+        print("\n🔑 Testing OAuth client credentials token...")
         
-        # Create API key
-        key_response = client.post('/api/v1/api-keys', 
-            headers={'Authorization': 'Bearer <admin_token>'},
-            json={'name': 'test_key'}
-        )
-        assert key_response.status_code in [200, 201]
-        print("✅ API key created")
+        token_resp = client.post('/oauth/token', json={
+            'grant_type': 'client_credentials',
+            'client_id': 'test_service_client',
+            'client_secret': 'test_service_secret'
+        })
+        assert token_resp.status_code == 200
+        assert 'access_token' in token_resp.get_json()
+        print("✅ OAuth token created")
     
     def test_security(self, client):
         print("\n🔒 Testing security...")

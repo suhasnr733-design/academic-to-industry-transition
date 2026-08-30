@@ -701,7 +701,7 @@ def google_auth():
     """Initiate Google OAuth authentication flow with role context"""
     client_id = current_app.config.get('GOOGLE_CLIENT_ID')
     redirect_uri = current_app.config.get('GOOGLE_REDIRECT_URI')
-    frontend_url = current_app.config.get('FRONTEND_URL')
+    frontend_url = current_app.config.get('FRONTEND_URL') or 'http://localhost:5173'
 
     if not client_id or not current_app.config.get('GOOGLE_CLIENT_SECRET'):
         logger.warning("Google OAuth credentials missing in configuration.")
@@ -723,7 +723,7 @@ def google_auth():
 @auth_bp.route('/google/callback', methods=['GET'])
 def google_callback():
     """Google OAuth callback handler"""
-    frontend_url = current_app.config.get('FRONTEND_URL')
+    frontend_url = current_app.config.get('FRONTEND_URL') or 'http://localhost:5173'
     error = request.args.get('error')
     code = request.args.get('code')
     state = request.args.get('state', '')
@@ -800,7 +800,7 @@ def linkedin_auth():
     """Initiate LinkedIn OAuth OpenID Connect flow with role context"""
     client_id = current_app.config.get('LINKEDIN_CLIENT_ID')
     redirect_uri = current_app.config.get('LINKEDIN_REDIRECT_URI')
-    frontend_url = current_app.config.get('FRONTEND_URL')
+    frontend_url = current_app.config.get('FRONTEND_URL') or 'http://localhost:5173'
 
     if not client_id or not current_app.config.get('LINKEDIN_CLIENT_SECRET'):
         logger.warning("LinkedIn OAuth credentials missing in configuration.")
@@ -821,7 +821,7 @@ def linkedin_auth():
 @auth_bp.route('/linkedin/callback', methods=['GET'])
 def linkedin_callback():
     """LinkedIn OAuth callback handler"""
-    frontend_url = current_app.config.get('FRONTEND_URL')
+    frontend_url = current_app.config.get('FRONTEND_URL') or 'http://localhost:5173'
     error = request.args.get('error')
     code = request.args.get('code')
     state = request.args.get('state', '')

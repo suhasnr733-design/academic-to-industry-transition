@@ -1,5 +1,6 @@
 # backend/tests/test_final_integration.py
 
+import os
 import pytest
 import json
 from app import create_app
@@ -39,7 +40,8 @@ class TestFinalIntegration:
         print("✅ Login successful")
         
         # 3. Upload Resume
-        with open('tests/data/sample_resume.pdf', 'rb') as f:
+        resume_path = os.path.join(os.path.dirname(__file__), 'data', 'sample_resume.pdf')
+        with open(resume_path, 'rb') as f:
             upload = client.post(
                 '/api/v1/resume/upload',
                 headers={'Authorization': f'Bearer {token}'},

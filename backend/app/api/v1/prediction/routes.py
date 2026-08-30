@@ -1,5 +1,5 @@
-# backend/app/api/v1/prediction/routes.py
-
+import os
+import logging
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
@@ -9,6 +9,8 @@ from app.services.prediction_service import PredictionService
 from app.services.recommendation_service import RecommendationService
 
 from app.services.skill_analyzer import SkillAnalyzer
+
+logger = logging.getLogger(__name__)
 
 prediction_service = PredictionService()
 rec_service = RecommendationService()

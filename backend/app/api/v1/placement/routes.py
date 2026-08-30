@@ -24,7 +24,7 @@ def nominate_students():
     """Faculty or Admin selects candidate(s) for a company placement drive"""
     try:
         current_user_id = int(get_jwt_identity())
-        faculty = User.query.get(current_user_id)
+        faculty = db.session.get(User, current_user_id)
         if not faculty:
             return jsonify({'error': 'Faculty user not found'}), 404
 
@@ -57,7 +57,7 @@ def nominate_students():
             except (ValueError, TypeError):
                 continue
 
-            student = User.query.get(sid_int)
+            student = db.session.get(User, sid_int)
             if not student or student.role != 'student':
                 continue
 
@@ -139,7 +139,7 @@ def get_my_nominations():
     """Get active and past company drive nominations for current student"""
     try:
         current_user_id = int(get_jwt_identity())
-        student = User.query.get(current_user_id)
+        student = db.session.get(User, current_user_id)
         if not student:
             return jsonify({'error': 'User not found'}), 404
 
@@ -165,11 +165,11 @@ def respond_to_nomination(nomination_id):
     """Student accepts or rejects a company placement nomination"""
     try:
         current_user_id = int(get_jwt_identity())
-        student = User.query.get(current_user_id)
+        student = db.session.get(User, current_user_id)
         if not student:
             return jsonify({'error': 'User not found'}), 404
 
-        nomination = PlacementNomination.query.get(nomination_id)
+        nomination = db.session.get(PlacementNomination, nomination_id)
         if not nomination:
             return jsonify({'error': 'Nomination not found'}), 404
 
@@ -183,7 +183,7 @@ def respond_to_nomination(nomination_id):
         if action not in ['accept', 'reject']:
             return jsonify({'error': 'Invalid action. Must be "accept" or "reject"'}), 400
 
-        faculty = User.query.get(nomination.faculty_id)
+        faculty = db.session.get(User, nomination.faculty_id)
 
         if action == 'accept':
             nomination.status = 'confirmed_attending'
@@ -269,11 +269,11 @@ def respond_to_nomination(nomination_id):
 def mark_nomination_hired(nomination_id):
     """Faculty marks student as officially placed/hired by the company after interviews"""
     try:
-        nomination = PlacementNomination.query.get(nomination_id)
+        nomination = db.session.get(PlacementNomination, nomination_id)
         if not nomination:
             return jsonify({'error': 'Nomination not found'}), 404
 
-        student = User.query.get(nomination.student_id)
+        student = db.session.get(User, nomination.student_id)
         if not student:
             return jsonify({'error': 'Student not found'}), 404
 
@@ -393,7 +393,7 @@ def get_campus_drives_summary():
                 continue
 
             if comp_key not in drives_map:
-                faculty_user = User.query.get(nom.faculty_id) if nom.faculty_id else None
+                faculty_user = db.session.get(User, nom.faculty_id) if nom.faculty_id else None
                 drives_map[comp_key] = {
                     'company_name': comp_key,
                     'job_role': nom.job_role or 'Software Engineer',
@@ -465,7 +465,7 @@ def get_drive_attendees(company_name):
 
         attendees = []
         for nom in nominations:
-            student = User.query.get(nom.student_id)
+            student = db.session.get(User, nom.student_id)
             if not student:
                 continue
 

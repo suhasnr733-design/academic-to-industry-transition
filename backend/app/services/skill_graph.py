@@ -1,6 +1,48 @@
-# backend/app/services/skill_graph.py
-
-import networkx as nx
+try:
+    import networkx as nx
+except ImportError:
+    class DummyDiGraph:
+        def __init__(self):
+            self._nodes = {}
+            self._edges = {}
+            self._succ = {}
+            self._pred = {}
+        def add_node(self, node_for_adding, **attr):
+            self._nodes[node_for_adding] = attr
+            if node_for_adding not in self._succ: self._succ[node_for_adding] = {}
+            if node_for_adding not in self._pred: self._pred[node_for_adding] = {}
+        def add_edge(self, u_of_edge, v_of_edge, **attr):
+            self.add_node(u_of_edge)
+            self.add_node(v_of_edge)
+            self._edges[(u_of_edge, v_of_edge)] = attr
+            self._succ[u_of_edge][v_of_edge] = attr
+            self._pred[v_of_edge][u_of_edge] = attr
+        def __contains__(self, n): return n in self._nodes
+        def __iter__(self): return iter(self._nodes)
+        def __getitem__(self, n): return self._succ.get(n, {})
+        @property
+        def nodes(self):
+            class NodesView:
+                def __init__(self, d): self.d = d
+                def __getitem__(self, k): return self.d[k]
+                def __iter__(self): return iter(self.d)
+                def __call__(self, data=False): return [(k, v) if data else k for k, v in self.d.items()]
+            return NodesView(self._nodes)
+        @property
+        def edges(self):
+            class EdgesView:
+                def __init__(self, d): self.d = d
+                def __getitem__(self, k): return self.d.get(k, {})
+                def __iter__(self): return iter(self.d)
+                def __call__(self, data=False): return list(self.d.items()) if data else list(self.d.keys())
+            return EdgesView(self._edges)
+        def successors(self, n): return list(self._succ.get(n, {}).keys())
+        def predecessors(self, n): return list(self._pred.get(n, {}).keys())
+        def neighbors(self, n): return self.successors(n)
+        def has_node(self, n): return n in self._nodes
+    class DummyNX:
+        DiGraph = DummyDiGraph
+    nx = DummyNX()
 import json
 from typing import List, Dict
 

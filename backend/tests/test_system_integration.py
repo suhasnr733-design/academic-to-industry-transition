@@ -1,5 +1,6 @@
 # backend/tests/test_system_integration.py
 
+import os
 import pytest
 import time
 from app import create_app
@@ -19,7 +20,7 @@ class TestSystemIntegration:
     def test_complete_workflow(self, client):
         print("\n🚀 Testing complete workflow...")
         
-        # 1. Register
+        # 1. Register & Login
         reg = client.post('/api/v1/auth/register', json={
             'username': 'testuser',
             'email': 'test@example.com',
@@ -27,11 +28,18 @@ class TestSystemIntegration:
             'full_name': 'Test User'
         })
         assert reg.status_code == 201
-        token = reg.get_json()['access_token']
-        print("✅ Registration successful")
+        
+        login = client.post('/api/v1/auth/login', json={
+            'username': 'testuser',
+            'password': 'TestPass123!'
+        })
+        assert login.status_code == 200
+        token = login.get_json()['access_token']
+        print("✅ Registration and login successful")
         
         # 2. Upload Resume
-        with open('tests/data/sample_resume.pdf', 'rb') as f:
+        resume_path = os.path.join(os.path.dirname(__file__), 'data', 'sample_resume.pdf')
+        with open(resume_path, 'rb') as f:
             upload = client.post(
                 '/api/v1/resume/upload',
                 headers={'Authorization': f'Bearer {token}'},

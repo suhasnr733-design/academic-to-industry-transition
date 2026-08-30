@@ -127,7 +127,7 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
         }
       }
 
-      const res = await api.post('/analytics/placement/export-zip', payload, {
+      const res = await api.post('/analytics/placement/export-bundle', payload, {
         responseType: 'blob'
       })
 

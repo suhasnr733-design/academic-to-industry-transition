@@ -21,7 +21,7 @@ class TestABTesting:
             {'name': 'control', 'weight': 50, 'config': {'model': 'v1'}},
             {'name': 'treatment', 'weight': 50, 'config': {'model': 'v2'}}
         ]
-        # ab_service.create_test('test_model', variants)
+        ab_service.create_test('test_model', variants)
         
         variant = ab_service.get_variant('test_model', 'user123')
         assert variant is not None

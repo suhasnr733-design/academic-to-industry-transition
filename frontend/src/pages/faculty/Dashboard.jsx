@@ -194,6 +194,9 @@ export const FacultyDashboard = () => {
     }
   }
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
+
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
       const name = (student.full_name || student.username || '').toLowerCase()
@@ -209,6 +212,17 @@ export const FacultyDashboard = () => {
       return matchesSearch && matchesDept && matchesYear
     })
   }, [students, searchQuery, selectedDept, selectedYear])
+
+  // Reset pagination when filter criteria change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, selectedDept, selectedYear, directoryScope])
+
+  const totalPages = Math.ceil(filteredStudents.length / pageSize) || 1
+  const paginatedStudents = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredStudents.slice(start, start + pageSize)
+  }, [filteredStudents, currentPage, pageSize])
 
   const departments = useMemo(() => {
     const depts = new Set(students.map(s => s.department || 'General').filter(Boolean))
@@ -733,8 +747,8 @@ export const FacultyDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-sm">
-                  {filteredStudents.map((student, idx) => (
-                    <tr key={idx} className="hover:bg-purple-50/30 transition-colors">
+                  {paginatedStudents.map((student, idx) => (
+                    <tr key={student.id || idx} className="hover:bg-purple-50/30 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary-500 to-indigo-500 text-white font-bold text-xs flex items-center justify-center">
@@ -802,6 +816,46 @@ export const FacultyDashboard = () => {
                   ))}
                 </tbody>
               </table>
+
+              {/* Client-side Pagination Controls */}
+              {filteredStudents.length > pageSize && (
+                <div className="px-6 py-4 bg-gray-50/70 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <p className="text-xs text-gray-500">
+                    Showing <span className="font-semibold text-gray-800">{(currentPage - 1) * pageSize + 1}</span> to{' '}
+                    <span className="font-semibold text-gray-800">{Math.min(currentPage * pageSize, filteredStudents.length)}</span> of{' '}
+                    <span className="font-semibold text-gray-800">{filteredStudents.length}</span> students
+                  </p>
+                  <div className="flex items-center space-x-1.5">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-2.5 py-1 text-xs rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+                    >
+                      Previous
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
+                      <button
+                        key={pg}
+                        onClick={() => setCurrentPage(pg)}
+                        className={`px-2.5 py-1 text-xs rounded-lg font-semibold transition-colors ${
+                          currentPage === pg
+                            ? 'bg-purple-600 text-white shadow-xs'
+                            : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pg}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-2.5 py-1 text-xs rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-16 text-gray-500 text-sm">
@@ -893,6 +947,7 @@ export const FacultyDashboard = () => {
         <PlacementShortlist
           departments={departments}
           initialScope={directoryScope}
+          onNavigateToDrives={() => setSearchParams({ tab: 'drives' })}
         />
       )}
 
@@ -937,6 +992,51 @@ export const FacultyDashboard = () => {
                   {selectedStudent.year_of_study ? `Year ${selectedStudent.year_of_study}` : 'Not Specified'}
                 </span>
               </div>
+            </div>
+
+            {/* Resume Access / Preview */}
+            <div className="p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-100 flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <DocumentTextIcon className="h-5 w-5 text-indigo-600 shrink-0" />
+                <div>
+                  <span className="text-xs font-bold text-gray-900 block">
+                    {selectedStudent.has_resume ? 'Verified Student Resume' : 'Resume Status'}
+                  </span>
+                  <span className="text-[11px] text-gray-500 block">
+                    {selectedStudent.has_resume ? 'AI skill verified & parsed' : 'No verified resume PDF uploaded yet'}
+                  </span>
+                </div>
+              </div>
+              {selectedStudent.has_resume && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      toast.loading('Fetching student resume...', { id: 'modal-resume-dl' })
+                      const res = await api.post('/analytics/placement/export-bundle', {
+                        student_ids: [selectedStudent.id]
+                      }, {
+                        responseType: 'blob'
+                      })
+                      const blobUrl = window.URL.createObjectURL(new Blob([res.data], { type: 'application/zip' }))
+                      const link = document.createElement('a')
+                      link.href = blobUrl
+                      link.setAttribute('download', `${selectedStudent.username || 'student'}_resume_bundle.zip`)
+                      document.body.appendChild(link)
+                      link.click()
+                      link.remove()
+                      window.URL.revokeObjectURL(blobUrl)
+                      toast.success('Resume bundle ready!', { id: 'modal-resume-dl' })
+                    } catch (err) {
+                      toast.error('Resume bundle unavailable for export', { id: 'modal-resume-dl' })
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors shrink-0"
+                >
+                  <DownloadIcon className="h-3.5 w-3.5" />
+                  Download Resume
+                </button>
+              )}
             </div>
 
             {/* Student's Target Companies & Job Applications */}

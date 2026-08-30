@@ -37,9 +37,10 @@ class AnalyticsService:
         }
 
     def get_faculty_placement_stats(self, faculty_id=None, filter_type='mentees', department=None):
-        """Get placement stats for faculty dashboard"""
+        """Get placement stats for faculty dashboard scoped to the faculty institution"""
         from app.models import MentorshipRequest
         mentee_ids = []
+        faculty = db.session.get(User, int(faculty_id)) if faculty_id else None
         if faculty_id:
             mentees = MentorshipRequest.query.filter_by(
                 faculty_id=faculty_id,
@@ -49,6 +50,8 @@ class AnalyticsService:
 
         if filter_type == 'all':
             student_query = User.query.filter_by(role='student')
+            if faculty and faculty.college:
+                student_query = student_query.filter((User.college == faculty.college) | (User.college.is_(None)))
         else:
             if mentee_ids:
                 student_query = User.query.filter(User.id.in_(mentee_ids))
@@ -84,67 +87,17 @@ class AnalyticsService:
             'activeJobs': active_jobs,
             'hasAssignedMentees': len(mentee_ids) > 0
         }
+
     def get_faculty_dashboard_data(self, faculty_id=None, filter_type='mentees', department=None):
-        """Get detailed placement statistics for faculty dashboard"""
-        from app.models import MentorshipRequest
-
-        mentee_records = MentorshipRequest.query.filter_by(
-            faculty_id=faculty_id,
-            status='accepted'
-        ).all() if faculty_id else []
-
-        mentee_ids = [m.student_id for m in mentee_records]
-
-        if filter_type == 'all':
-            student_query = User.query.filter_by(role='student')
-        else:
-            if mentee_ids:
-                student_query = User.query.filter(User.id.in_(mentee_ids))
-            else:
-                student_query = None
-
-        if student_query is not None:
-            if department and department.lower() != 'all':
-                student_query = student_query.filter(
-                    User.department.ilike(f"%{department}%")
-                )
-
-            total_students = student_query.count()
-            placed_students = student_query.filter(
-                User.placement_status == 'placed'
-            ).count()
-
-            student_ids = [s.id for s in student_query.all()]
-            resumes_processed = Resume.query.filter(
-                Resume.user_id.in_(student_ids),
-                Resume.status == 'completed'
-            ).count() if student_ids else 0
-        else:
-            total_students = 0
-            placed_students = 0
-            resumes_processed = 0
-
-        placement_rate = (
-            f"{round((placed_students / total_students) * 100)}%"
-            if total_students > 0 else "0%"
-        )
-
-        active_jobs = Job.query.filter_by(is_active=True).count()
-
-        return {
-            'totalStudents': total_students,
-            'assignedMenteesCount': len(mentee_ids),
-            'placedStudents': placed_students,
-            'resumesProcessed': resumes_processed,
-            'placementRate': placement_rate,
-            'activeJobs': active_jobs,
-            'hasAssignedMentees': len(mentee_ids) > 0
-        }
+        """Get detailed placement statistics for faculty dashboard (delegates to get_faculty_placement_stats)"""
+        return self.get_faculty_placement_stats(faculty_id=faculty_id, filter_type=filter_type, department=department)
 
     def get_faculty_students(self, faculty_id=None, filter_type='mentees', department=None):
-        """Get student list for faculty directory (mentees vs all department students) with target job interests"""
+        """Get student list for faculty directory (mentees vs all department students) with target job interests and institution isolation"""
         from app.models import MentorshipRequest, JobInterest
         
+        faculty = db.session.get(User, int(faculty_id)) if faculty_id else None
+
         if filter_type == 'mentees' and faculty_id:
             mentee_records = MentorshipRequest.query.filter_by(
                 faculty_id=faculty_id, 
@@ -156,6 +109,8 @@ class AnalyticsService:
             query = User.query.filter(User.id.in_(mentee_ids))
         else:
             query = User.query.filter_by(role='student')
+            if faculty and faculty.college:
+                query = query.filter((User.college == faculty.college) | (User.college.is_(None)))
 
         if department and department.lower() != 'all':
             query = query.filter(User.department.ilike(f"%{department}%"))
@@ -167,6 +122,13 @@ class AnalyticsService:
             data = s.to_dict()
             interests = JobInterest.query.filter_by(user_id=s.id).order_by(JobInterest.created_at.desc()).all()
             data['job_interests'] = [i.to_dict() for i in interests]
+            
+            # Check for student's uploaded resume
+            latest_resume = Resume.query.filter_by(user_id=s.id).order_by(Resume.id.desc()).first()
+            data['has_resume'] = bool(latest_resume)
+            data['resume_id'] = latest_resume.id if latest_resume else None
+            data['resume_filename'] = latest_resume.filename if latest_resume else None
+            
             results.append(data)
 
         return results
@@ -361,6 +323,7 @@ class AnalyticsService:
         faculty_id = criteria.get('faculty_id')
 
         # Base student query
+        faculty = db.session.get(User, int(faculty_id)) if faculty_id else None
         if filter_scope == 'mentees' and faculty_id:
             from app.models import MentorshipRequest
             mentee_records = MentorshipRequest.query.filter_by(
@@ -373,6 +336,8 @@ class AnalyticsService:
             query = User.query.filter(User.id.in_(mentee_ids), User.role == 'student')
         else:
             query = User.query.filter_by(role='student')
+            if faculty and faculty.college:
+                query = query.filter((User.college == faculty.college) | (User.college.is_(None)))
 
         # Filter by department
         if department and department.lower() != 'all':

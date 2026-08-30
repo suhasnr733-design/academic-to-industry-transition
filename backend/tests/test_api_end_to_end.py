@@ -1,5 +1,6 @@
 # backend/tests/test_api_end_to_end.py
 
+import os
 import pytest
 import json
 import time
@@ -40,7 +41,8 @@ class TestAPIEndToEnd:
         print("✅ Login successful")
         
         # 3. Upload Resume
-        with open('tests/data/sample_resume.pdf', 'rb') as f:
+        resume_path = os.path.join(os.path.dirname(__file__), 'data', 'sample_resume.pdf')
+        with open(resume_path, 'rb') as f:
             upload = client.post(
                 '/api/v1/resume/upload',
                 headers={'Authorization': f'Bearer {token}'},
@@ -55,7 +57,7 @@ class TestAPIEndToEnd:
         print("✅ Jobs retrieved")
         
         # 5. Get Notifications
-        notif = client.get('/api/v1/notifications')
+        notif = client.get('/api/v1/notifications', headers={'Authorization': f'Bearer {token}'})
         assert notif.status_code == 200
         print("✅ Notifications retrieved")
         

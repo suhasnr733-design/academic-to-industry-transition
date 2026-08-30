@@ -4,6 +4,7 @@ from functools import wraps
 from flask import jsonify
 from flask_jwt_extended import get_jwt_identity
 from app.models import User
+from app.extensions import db
 
 def role_required(allowed_roles):
     """Decorator to check if user has required role"""
@@ -12,9 +13,9 @@ def role_required(allowed_roles):
         def decorated_function(*args, **kwargs):
             current_user_id = get_jwt_identity()
             try:
-                user = User.query.get(int(current_user_id)) if current_user_id is not None else None
+                user = db.session.get(User, int(current_user_id)) if current_user_id is not None else None
             except (ValueError, TypeError):
-                user = User.query.get(current_user_id)
+                user = db.session.get(User, current_user_id)
             
             if not user:
                 return jsonify({'error': 'User not found'}), 404

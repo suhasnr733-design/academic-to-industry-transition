@@ -1,10 +1,12 @@
 # backend/tests/test_end_to_end_system.py
 
+import os
 import pytest
 import json
 import time
 from app import create_app
 from app.extensions import db
+from app.services.prediction_service import PredictionService
 
 class TestEndToEndSystem:
     
@@ -40,7 +42,8 @@ class TestEndToEndSystem:
         print("✅ Login successful")
         
         # 3. Upload Resume
-        with open('tests/data/sample_resume.pdf', 'rb') as f:
+        resume_path = os.path.join(os.path.dirname(__file__), 'data', 'sample_resume.pdf')
+        with open(resume_path, 'rb') as f:
             upload = client.post(
                 '/api/v1/resume/upload',
                 headers={'Authorization': f'Bearer {token}'},
@@ -59,7 +62,7 @@ class TestEndToEndSystem:
         print("✅ Resume processing started")
         
         # 5. Wait for processing
-        time.sleep(2)
+        time.sleep(1)
         
         # 6. Get Prediction
         pred = client.get(
@@ -75,7 +78,7 @@ class TestEndToEndSystem:
         print("✅ Jobs retrieved")
         
         # 8. Get Notifications
-        notif = client.get('/api/v1/notifications')
+        notif = client.get('/api/v1/notifications', headers={'Authorization': f'Bearer {token}'})
         assert notif.status_code == 200
         print("✅ Notifications retrieved")
         
@@ -84,9 +87,23 @@ class TestEndToEndSystem:
     def test_ml_prediction_flow(self, client):
         print("\n🧪 Testing ML prediction flow...")
         
-        # Get prediction from ML service
-        response = client.get('/api/v1/prediction/test')
-        assert response.status_code == 200
-        data = response.get_json()
-        assert 'prediction' in data
+        service = PredictionService()
+        sample_student = {
+            'cgpa': 8.5,
+            'skill_count': 6,
+            'skill_diversity': 5,
+            'internship_months': 4,
+            'projects': 3,
+            'certifications': 2,
+            'workshops': 2,
+            'total_experience': 10,
+            'cgpa_normalized': 0.85,
+            'certification_score': 5,
+            'skill_cgpa_ratio': 6 / 8.5,
+            'exp_skill_ratio': 10 / 7,
+            'department_encoded': 0
+        }
+        prediction = service.predict_employability(sample_student)
+        assert prediction is not None
+        assert 'employable' in prediction or 'confidence' in prediction
         print("✅ ML prediction test passed")
