@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useResume } from '../../hooks/useResume'
 import { api } from '../../services/api'
 import { Button } from '../../components/common/Button'
+import { cn } from '../../utils/helpers'
 import toast from 'react-hot-toast'
 import {
   OfficeBuildingIcon,
@@ -267,76 +268,113 @@ export const PlacementDrives = () => {
       </div>
 
       {/* Filter Tabs & Search Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-3 rounded-2xl border border-gray-200 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xs">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
           <button
             onClick={() => setActiveTab('all')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+            className={cn(
+              "px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5",
               activeTab === 'all'
-                ? 'bg-primary-600 text-white shadow-sm'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-            }`}
+                ? 'bg-primary-600 text-white shadow-xs'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+            )}
           >
-            All Drives ({nominations.length})
+            <span>All Drives</span>
+            <span className={cn(
+              "px-1.5 py-0.2 rounded-full text-[10px]",
+              activeTab === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+            )}>
+              {nominations.length}
+            </span>
           </button>
+          
           <button
             onClick={() => setActiveTab('pending')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            className={cn(
+              "px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5",
               activeTab === 'pending'
-                ? 'bg-amber-500 text-white shadow-sm'
-                : 'text-gray-600 hover:bg-amber-50 hover:text-amber-800'
-            }`}
+                ? 'bg-amber-500 text-white shadow-xs'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-800 dark:hover:text-amber-400'
+            )}
           >
             <span>⚡ Action Required</span>
-            {pendingList.length > 0 && (
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                activeTab === 'pending' ? 'bg-white text-amber-800 font-extrabold' : 'bg-amber-100 text-amber-900'
-              }`}>
-                {pendingList.length}
-              </span>
-            )}
+            <span className={cn(
+              "px-1.5 py-0.2 rounded-full text-[10px]",
+              activeTab === 'pending'
+                ? 'bg-white text-amber-800 font-extrabold'
+                : pendingList.length > 0
+                ? 'bg-amber-500 text-white font-extrabold animate-pulse'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+            )}>
+              {pendingList.length}
+            </span>
           </button>
+
           <button
             onClick={() => setActiveTab('confirmed')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            className={cn(
+              "px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5",
               activeTab === 'confirmed'
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-800'
-            }`}
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-800 dark:hover:text-emerald-400'
+            )}
           >
-            <span>✅ Attending ({confirmedList.length})</span>
+            <span>✅ Attending</span>
+            <span className={cn(
+              "px-1.5 py-0.2 rounded-full text-[10px]",
+              activeTab === 'confirmed' ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+            )}>
+              {confirmedList.length}
+            </span>
           </button>
+
           <button
             onClick={() => setActiveTab('placed')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+            className={cn(
+              "px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5",
               activeTab === 'placed'
-                ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-gray-600 hover:bg-purple-50 hover:text-purple-800'
-            }`}
+                ? 'bg-purple-600 text-white shadow-xs'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-800 dark:hover:text-purple-400'
+            )}
           >
-            <span>🏆 Hired ({placedList.length})</span>
+            <span>🏆 Hired</span>
+            <span className={cn(
+              "px-1.5 py-0.2 rounded-full text-[10px]",
+              activeTab === 'placed' ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+            )}>
+              {placedList.length}
+            </span>
           </button>
+
           <button
             onClick={() => setActiveTab('rejected')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+            className={cn(
+              "px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5",
               activeTab === 'rejected'
-                ? 'bg-gray-700 text-white shadow-sm'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-            }`}
+                ? 'bg-gray-700 text-white shadow-xs'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+            )}
           >
-            Declined ({rejectedList.length})
+            <span>Declined</span>
+            <span className={cn(
+              "px-1.5 py-0.2 rounded-full text-[10px]",
+              activeTab === 'rejected' ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+            )}>
+              {rejectedList.length}
+            </span>
           </button>
         </div>
 
-        {/* Search */}
+        {/* Search Input */}
         <div className="relative min-w-[220px]">
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             value={searchQuery}
+            disabled={nominations.length === 0}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by company or role..."
-            className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+            placeholder={nominations.length === 0 ? "Search enabled when invitations arrive..." : "Search by company or role..."}
+            className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400 disabled:cursor-not-allowed"
           />
           {searchQuery && (
             <button
@@ -357,12 +395,12 @@ export const PlacementDrives = () => {
             <p className="text-sm font-semibold text-gray-700">Loading placement drive notifications...</p>
           </div>
         ) : filteredNominations.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 shadow-sm space-y-4">
-            <div className="w-16 h-16 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 sm:p-12 text-center border border-gray-200 dark:border-gray-700 shadow-sm space-y-4">
+            <div className="w-16 h-16 bg-primary-50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
               <OfficeBuildingIcon className="h-8 w-8" />
             </div>
             <div className="max-w-md mx-auto">
-              <h3 className="text-base font-bold text-gray-900">
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">
                 {searchQuery
                   ? 'No drives match your search query'
                   : activeTab === 'pending'
@@ -371,33 +409,50 @@ export const PlacementDrives = () => {
                   ? 'No confirmed drives yet'
                   : activeTab === 'placed'
                   ? 'No hired / placement records yet'
+                  : !completedResume
+                  ? 'Resume Required for Campus Drive Shortlisting'
                   : 'No placement drive invitations yet'}
               </h3>
-              <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed">
                 {nominations.length === 0
-                  ? 'Your department faculty and placement coordinators will shortlist and invite you for matching campus hiring drives based on your profile, resume, and skills.'
+                  ? !completedResume
+                    ? 'Upload your resume so department faculty and placement coordinators can verify your technical skills and shortlist you for upcoming campus recruitment drives.'
+                    : 'Your profile and resume are active. Department coordinators will shortlist and invite you for matching campus hiring drives based on company requisitions.'
                   : 'Try selecting a different filter tab above or clearing your search keywords.'}
               </p>
             </div>
+
             {nominations.length === 0 && (
-              <div className="pt-2 flex justify-center gap-3">
+              <div className="pt-2 flex flex-wrap justify-center gap-3">
                 <Button
                   size="sm"
-                  onClick={() => navigate('/resume/upload')}
-                  className="bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs"
+                  onClick={() => navigate('/jobs')}
+                  className="bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm"
                 >
-                  Enhance Resume
+                  <BriefcaseIcon className="h-4 w-4" />
+                  Explore 20 Live Job Openings &rarr;
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate('/assessment')}
-                  className="text-xs"
+                  onClick={() => navigate('/resume/upload')}
+                  className="text-xs flex items-center gap-1.5"
                 >
-                  Take Skill Assessment
+                  <DocumentTextIcon className="h-4 w-4 text-gray-500" />
+                  {completedResume ? 'Update Resume' : 'Upload Resume'}
                 </Button>
               </div>
             )}
+
+            <div className="text-xs text-gray-500 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-center gap-1">
+              <span>Have questions about campus drive eligibility?</span>
+              <button 
+                onClick={() => navigate('/dashboard')}
+                className="font-bold text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-0.5"
+              >
+                Connect with your Faculty Advisor &rarr;
+              </button>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
@@ -610,43 +665,79 @@ export const PlacementDrives = () => {
               Ensure you are 100% prepared for online assessments and in-person interviews during placement season.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+              {/* Resume Card */}
               <div 
                 onClick={() => navigate('/resume')}
-                className="cursor-pointer bg-white p-3 rounded-xl border border-gray-200/80 hover:border-primary-400 transition-colors shadow-xs"
+                className="cursor-pointer bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-200/80 dark:border-gray-700 hover:border-primary-400 hover:shadow-xs transition-all flex flex-col justify-between group"
               >
-                <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
-                  <DocumentTextIcon className="h-4 w-4 text-primary-600" />
-                  Update Latest Resume
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5 group-hover:text-primary-600 transition-colors">
+                      <DocumentTextIcon className="h-4 w-4 text-primary-600" />
+                      Update Latest Resume
+                    </span>
+                    <span className={cn(
+                      "text-[10px] font-bold px-1.5 py-0.5 rounded-full border",
+                      completedResume ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
+                    )}>
+                      {completedResume ? "Ready" : "Pending"}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                    Keep ATS score high and highlight key tech projects.
+                  </p>
+                </div>
+                <span className="text-[11px] font-semibold text-primary-600 group-hover:text-primary-700 mt-2 flex items-center gap-1">
+                  Manage Resume &rarr;
                 </span>
-                <p className="text-[11px] text-gray-500 mt-1">
-                  Keep ATS score high and highlight key tech projects.
-                </p>
               </div>
 
+              {/* Skill Gap Card */}
               <div 
                 onClick={() => navigate('/skills')}
-                className="cursor-pointer bg-white p-3 rounded-xl border border-gray-200/80 hover:border-primary-400 transition-colors shadow-xs"
+                className="cursor-pointer bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-200/80 dark:border-gray-700 hover:border-emerald-400 hover:shadow-xs transition-all flex flex-col justify-between group"
               >
-                <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
-                  <AcademicCapIcon className="h-4 w-4 text-emerald-600" />
-                  Review Skill Gaps
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5 group-hover:text-emerald-600 transition-colors">
+                      <AcademicCapIcon className="h-4 w-4 text-emerald-600" />
+                      Review Skill Gaps
+                    </span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                      AI Benchmark
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                    Target high-frequency interview topics & libraries.
+                  </p>
+                </div>
+                <span className="text-[11px] font-semibold text-emerald-600 group-hover:text-emerald-700 mt-2 flex items-center gap-1">
+                  Analyze Gaps &rarr;
                 </span>
-                <p className="text-[11px] text-gray-500 mt-1">
-                  Target high-frequency interview topics & libraries.
-                </p>
               </div>
 
+              {/* Assessment Card */}
               <div 
                 onClick={() => navigate('/assessment')}
-                className="cursor-pointer bg-white p-3 rounded-xl border border-gray-200/80 hover:border-primary-400 transition-colors shadow-xs"
+                className="cursor-pointer bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-200/80 dark:border-gray-700 hover:border-amber-400 hover:shadow-xs transition-all flex flex-col justify-between group"
               >
-                <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
-                  <SparklesIcon className="h-4 w-4 text-amber-500" />
-                  Practice Assessments
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5 group-hover:text-amber-600 transition-colors">
+                      <SparklesIcon className="h-4 w-4 text-amber-500" />
+                      Practice Assessments
+                    </span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                      Adaptive Test
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                    Take adaptive multiple-choice technical practice tests.
+                  </p>
+                </div>
+                <span className="text-[11px] font-semibold text-amber-600 group-hover:text-amber-700 mt-2 flex items-center gap-1">
+                  Start Test &rarr;
                 </span>
-                <p className="text-[11px] text-gray-500 mt-1">
-                  Take adaptive multiple-choice practice tests.
-                </p>
               </div>
             </div>
           </div>

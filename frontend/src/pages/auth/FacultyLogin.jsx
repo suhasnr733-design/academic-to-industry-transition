@@ -33,15 +33,21 @@ export const FacultyLogin = () => {
       setIsLoading(true)
       const user = await login(data, !!data.rememberMe)
 
-      // Role check: Only faculty or admin are permitted
-      if (user.role !== 'faculty' && user.role !== 'admin') {
-        logout()
-        toast.error('Access Denied: This account is not registered as Faculty.')
-        return
+      // Role-aware navigation:
+      if (user?.role === 'faculty') {
+        toast.success(`Welcome back, Professor ${user.full_name || user.username}!`)
+        navigate('/faculty')
+      } else if (user?.role === 'admin') {
+        toast.success(`Welcome back, Administrator ${user.full_name || user.username}!`)
+        navigate('/admin')
+      } else {
+        // Valid student credentials entered on faculty portal
+        toast(`Signed in successfully as a Student! Redirecting to your Student Portal...`, {
+          icon: '🎓',
+          duration: 4000,
+        })
+        navigate('/dashboard')
       }
-
-      toast.success(`Welcome back, Professor ${user.full_name || user.username}!`)
-      navigate('/faculty')
     } catch (error) {
       toast.error(error.response?.data?.error || error.response?.data?.message || error.message || 'Login failed')
     } finally {
@@ -58,7 +64,7 @@ export const FacultyLogin = () => {
   }
 
   return (
-    <div className="w-full max-w-[420px] mx-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl p-5 sm:p-7 rounded-2xl shadow-xl shadow-indigo-100/50 dark:shadow-none border border-indigo-100/80 dark:border-gray-700/80 transition-all">
+    <div className="w-full max-w-[420px] mx-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl p-5 sm:p-7 rounded-2xl shadow-xl shadow-purple-100/50 dark:shadow-none border-t-4 border-t-purple-600 border-x border-b border-purple-100/80 dark:border-gray-700/80 transition-all">
       
       {/* Role Switcher Pills */}
       <div className="flex p-1 bg-slate-100 dark:bg-gray-700/60 rounded-xl mb-5 border border-slate-200/50 dark:border-gray-600/50">
@@ -79,20 +85,24 @@ export const FacultyLogin = () => {
         </button>
       </div>
 
-      {/* Header */}
+      {/* Header with Explicit Faculty Badge */}
       <div className="text-center mb-5">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-700/60 mb-2">
+          <AcademicCapIcon className="w-3.5 h-3.5" />
+          Academic & Faculty Advisor
+        </span>
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
-          Faculty Portal
+          Faculty Sign In
         </h2>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Sign in to manage student placements & analytics
+          Manage assigned mentees, campus drives, and cohort analytics
         </p>
       </div>
 
       <form className="space-y-3.5" onSubmit={handleSubmit(onSubmit)}>
         <Input
           label="Faculty Email or Username"
-          placeholder="faculty@university.edu"
+          placeholder="e.g. prof_miller or faculty@university.edu"
           {...register('username')}
           error={errors.username?.message}
         />

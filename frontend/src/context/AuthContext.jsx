@@ -55,7 +55,20 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     const response = await api.post('/auth/register', userData)
-    return response.data
+    const data = response.data
+
+    // If backend returns tokens (student 201), auto-authenticate immediately
+    if (data.access_token && data.refresh_token && data.user) {
+      clearAuthTokens()
+      // Use sessionStorage by default (equivalent to no "Remember Me" on sign-up)
+      sessionStorage.setItem('access_token', data.access_token)
+      sessionStorage.setItem('refresh_token', data.refresh_token)
+      api.defaults.headers.common['Authorization'] = `Bearer ${data.access_token}`
+      setUser(data.user)
+      setIsAuthenticated(true)
+    }
+
+    return data
   }
 
   const handleOAuthLogin = async (accessToken, refreshToken) => {

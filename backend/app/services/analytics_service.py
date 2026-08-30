@@ -736,36 +736,24 @@ Generated via Academic-to-Industry Transition Platform (Faculty Command Center).
         ]
 
         # 4. Skill Radar Analysis based on Active Resume
-        candidate_skills = []
-        if active_resume and active_resume.skills:
-            candidate_skills = [str(s).lower().strip() for s in active_resume.skills]
-
-        benchmark_skills = [
-            {'name': 'Python', 'req': 85},
-            {'name': 'SQL', 'req': 80},
-            {'name': 'React', 'req': 75},
-            {'name': 'Cloud / AWS', 'req': 70},
-            {'name': 'Git / DevOps', 'req': 75},
-            {'name': 'Algorithms', 'req': 80},
-        ]
-
         skill_data = []
-        base_score = int(active_resume.employability_score) if (active_resume and active_resume.employability_score) else 75
-        for b in benchmark_skills:
-            b_low = b['name'].lower()
-            matched = any(
-                (b_low in cs) or (cs in b_low) or
-                ('cloud' in b_low and any(c in cs for c in ['aws', 'cloud', 'azure', 'docker', 'gcp'])) or
-                ('algorithms' in b_low and any(c in cs for c in ['algorithm', 'dsa', 'data structure', 'problem'])) or
-                ('git' in b_low and any(c in cs for c in ['git', 'ci/cd', 'devops', 'linux']))
-                for cs in candidate_skills
-            )
-            current_score = base_score if matched else (35 if candidate_skills else 15)
-            skill_data.append({
-                'name': b['name'],
-                'current': current_score,
-                'required': b['req']
-            })
+        if active_resume and active_resume.skills and len(active_resume.skills) > 0:
+            candidate_raw = [str(s).strip() for s in active_resume.skills if str(s).strip()]
+            base_score = int(active_resume.employability_score) if active_resume.employability_score else 75
+            
+            # Use candidate's top extracted skills (up to 6)
+            top_skills = candidate_raw[:6] if len(candidate_raw) >= 4 else (candidate_raw + ['Problem Solving', 'Data Structures', 'Git', 'System Design'])[:6]
+            
+            for s_name in top_skills:
+                # Capitalize cleanly
+                display_name = s_name.title() if len(s_name) > 3 else s_name.upper()
+                is_extracted = any(s_name.lower() in cs.lower() for cs in candidate_raw)
+                score = base_score if is_extracted else max(30, base_score - 35)
+                skill_data.append({
+                    'name': display_name,
+                    'current': score,
+                    'required': 85
+                })
 
         total_applications = len(interests) + len(nominations)
         total_interviews = sum(1 for item in interests if item.status in ['interviewing', 'shortlisted']) + sum(1 for nom in nominations if nom.status == 'confirmed_attending')

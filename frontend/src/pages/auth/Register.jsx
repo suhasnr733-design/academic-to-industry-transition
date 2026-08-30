@@ -32,11 +32,12 @@ const registerSchema = yup.object({
     .oneOf([yup.ref('password'), null], 'Passwords must match')
     .required('Confirm password is required'),
   department: yup.string().required('Department is required'),
+  college: yup.string().required('College / University is required'),
   year_of_study: yup.number()
     .typeError('Year of study must be a number')
     .required('Year of study is required')
-    .min(1, 'Year must be between 1 and 4')
-    .max(4, 'Year must be between 1 and 4'),
+    .min(1, 'Please select your academic year')
+    .max(6, 'Year must be between 1 and 6'),
 })
 
 export const Register = () => {
@@ -57,8 +58,11 @@ export const Register = () => {
     try {
       setIsLoading(true)
       await registerUser({ ...data, role: 'student' })
-      toast.success('Registration successful! Please login.')
-      navigate('/login')
+
+      // Tokens are now stored in AuthContext.register() — navigate directly to dashboard
+      const firstName = data.full_name?.split(' ')[0] || data.username
+      toast.success(`🎉 Welcome to TransitionAI, ${firstName}! Your account is ready.`, { duration: 5000 })
+      navigate('/dashboard')
     } catch (error) {
       toast.error(error.response?.data?.error || error.response?.data?.message || error.message || 'Registration failed')
     } finally {
@@ -75,7 +79,7 @@ export const Register = () => {
   }
 
   return (
-    <div className="w-full max-w-lg mx-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl p-5 sm:p-7 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200/70 dark:border-gray-700/80 transition-all">
+    <div className="w-full max-w-lg mx-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl p-5 sm:p-7 rounded-2xl shadow-xl shadow-blue-100/50 dark:shadow-none border-t-4 border-t-blue-600 border-x border-b border-slate-200/70 dark:border-gray-700/80 transition-all">
       
       {/* Role Switcher Pills */}
       <div className="flex p-1 bg-slate-100 dark:bg-gray-700/60 rounded-xl mb-4 border border-slate-200/50 dark:border-gray-600/50">
@@ -96,8 +100,12 @@ export const Register = () => {
         </button>
       </div>
 
-      {/* Header */}
+      {/* Header with Explicit Student Badge */}
       <div className="text-center mb-4">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-700/60 mb-2">
+          <UserIcon className="w-3.5 h-3.5" />
+          Student Career Portal
+        </span>
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
           Create Student Account
         </h2>
@@ -138,19 +146,28 @@ export const Register = () => {
             {...register('department')}
             error={errors.department?.message}
           />
+
+          <Input
+            label="College / University"
+            placeholder="e.g. IIT Bombay, VIT, MIT"
+            {...register('college')}
+            error={errors.college?.message}
+          />
           
-          <div className="w-full">
+          <div className="w-full sm:col-span-2">
             <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 tracking-wide">
-              Year of Study
+              Year / Academic Stage
             </label>
-            <div className={`grid grid-cols-4 gap-1 p-1 bg-slate-100 dark:bg-gray-700/60 rounded-xl border ${
+            <div className={`grid grid-cols-3 gap-1.5 p-1 bg-slate-100 dark:bg-gray-700/60 rounded-xl border ${
               errors.year_of_study ? 'border-red-500 ring-1 ring-red-500' : 'border-slate-200/80 dark:border-gray-600/60'
-            } h-[42px] items-center`}>
+            } items-center`}>
               {[
                 { val: 1, label: '1st' },
                 { val: 2, label: '2nd' },
                 { val: 3, label: '3rd' },
                 { val: 4, label: '4th' },
+                { val: 5, label: "Master's" },
+                { val: 6, label: 'PhD' },
               ].map((item) => {
                 const isSelected = Number(selectedYear) === item.val
                 return (
@@ -158,7 +175,7 @@ export const Register = () => {
                     key={item.val}
                     type="button"
                     onClick={() => setValue('year_of_study', item.val, { shouldValidate: true })}
-                    className={`h-full flex items-center justify-center text-xs font-semibold rounded-lg transition-all ${
+                    className={`py-2 flex items-center justify-center text-xs font-semibold rounded-lg transition-all ${
                       isSelected
                         ? 'bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm border border-slate-200/60 dark:border-gray-600/60'
                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
@@ -219,7 +236,7 @@ export const Register = () => {
           <button
             type="button"
             onClick={handleGoogleStudentAuth}
-            className="w-full inline-flex justify-center items-center py-2 px-3 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xs bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-700 hover:border-slate-300 transition-all"
+            className="w-full inline-flex justify-center items-center py-2 px-3 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xs bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 hover:border-[#4285F4] hover:text-[#4285F4] hover:bg-blue-50/40 transition-all"
           >
             <svg className="w-3.5 h-3.5 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -232,7 +249,7 @@ export const Register = () => {
           <button
             type="button"
             onClick={handleLinkedInStudentAuth}
-            className="w-full inline-flex justify-center items-center py-2 px-3 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xs bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-700 hover:border-slate-300 transition-all"
+            className="w-full inline-flex justify-center items-center py-2 px-3 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xs bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 hover:border-[#0A66C2] hover:text-[#0A66C2] hover:bg-blue-50/40 transition-all"
           >
             <svg className="w-3.5 h-3.5 mr-2" fill="#0A66C2" viewBox="0 0 24 24">
               <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.77a1.47 1.47 0 1 0 0 2.94 1.47 1.47 0 0 0 0-2.94Z"/>

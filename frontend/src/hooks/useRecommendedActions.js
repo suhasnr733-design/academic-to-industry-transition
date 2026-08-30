@@ -100,24 +100,35 @@ export const useRecommendedActions = () => {
       return { percentage, isComplete, missingHint }
     }
 
-    // Student fields
-    const studentFields = [
+    // Student fields: Core academic fields account for up to 70%, optional contact & bio for up to 30%
+    const coreFields = [
       { key: 'full_name', name: 'name' },
       { key: 'email', name: 'email' },
       { key: 'department', name: 'department' },
       { key: 'year_of_study', name: 'year of study' },
-      { key: 'college', name: 'college' },
-      { key: 'phone', name: 'phone' },
-      { key: 'bio', name: 'bio' }
+      { key: 'college', name: 'college' }
     ]
-    const filled = studentFields.filter(f => user[f.key] && String(user[f.key]).trim().length > 0)
-    const missing = studentFields.filter(f => !user[f.key] || String(user[f.key]).trim().length === 0)
-    const percentage = Math.round((filled.length / studentFields.length) * 100)
-    const isComplete = percentage >= 70 || Boolean(user.department && user.college)
+    const optionalFields = [
+      { key: 'phone', name: 'contact number' },
+      { key: 'bio', name: 'career bio' }
+    ]
+
+    const filledCore = coreFields.filter(f => user[f.key] && String(user[f.key]).trim().length > 0)
+    const filledOptional = optionalFields.filter(f => user[f.key] && String(user[f.key]).trim().length > 0)
+
+    const coreScore = (filledCore.length / coreFields.length) * 70
+    const optionalScore = (filledOptional.length / optionalFields.length) * 30
+    const percentage = Math.min(100, Math.round(coreScore + optionalScore))
+    const isComplete = percentage >= 70
+
+    const missingCore = coreFields.filter(f => !user[f.key] || String(user[f.key]).trim().length === 0)
+    const missingOptional = optionalFields.filter(f => !user[f.key] || String(user[f.key]).trim().length === 0)
 
     let missingHint = ''
-    if (missing.length > 0) {
-      missingHint = `add ${missing.slice(0, 2).map(m => m.name).join(' & ')}`
+    if (missingCore.length > 0) {
+      missingHint = `add ${missingCore.slice(0, 2).map(m => m.name).join(' & ')}`
+    } else if (missingOptional.length > 0) {
+      missingHint = `add ${missingOptional.map(m => m.name).join(' & ')}`
     }
 
     return { percentage, isComplete, missingHint }

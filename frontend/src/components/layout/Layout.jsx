@@ -1,6 +1,6 @@
 // frontend/src/components/layout/Layout.jsx
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Navbar } from './Navbar'
 import { Sidebar } from './Sidebar'
@@ -10,7 +10,11 @@ import { useAuth } from '../../hooks/useAuth'
 export const Layout = ({ children }) => {
   const { isAuthenticated } = useAuth()
   const location = useLocation()
-  const [sidebarOpen, setSidebarOpen] = React.useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    return localStorage.getItem('sidebar_collapsed') === 'true'
+  })
+
   const authPaths = [
     '/login',
     '/register',
@@ -25,17 +29,29 @@ export const Layout = ({ children }) => {
   const isAuthPage = authPaths.includes(location.pathname) || location.pathname.startsWith('/reset-password/')
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
+  
+  const toggleCollapse = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev
+      localStorage.setItem('sidebar_collapsed', String(next))
+      return next
+    })
+  }
 
   if (isAuthPage) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex flex-col justify-between relative overflow-hidden">
-        {/* Ambient background glows */}
-        <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 bg-primary-400/15 rounded-full blur-3xl -z-0" />
-        <div className="pointer-events-none absolute top-1/3 -right-24 w-96 h-96 bg-indigo-400/15 rounded-full blur-3xl -z-0" />
-        <div className="pointer-events-none absolute -bottom-24 left-1/4 w-80 h-80 bg-purple-400/15 rounded-full blur-3xl -z-0" />
+      <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex flex-col relative overflow-x-hidden overflow-y-auto">
+        {/* Ambient background glows — fixed so they stay anchored while page scrolls */}
+        <div className="pointer-events-none fixed -top-24 -left-24 w-96 h-96 bg-primary-400/15 rounded-full blur-3xl -z-0" />
+        <div className="pointer-events-none fixed top-1/3 -right-24 w-96 h-96 bg-indigo-400/15 rounded-full blur-3xl -z-0" />
+        <div className="pointer-events-none fixed -bottom-24 left-1/4 w-80 h-80 bg-purple-400/15 rounded-full blur-3xl -z-0" />
 
-        <Navbar onMenuClick={toggleSidebar} />
-        <main className="flex-1 flex items-center justify-center px-4 py-4 sm:py-6 my-auto relative z-10">
+        <Navbar 
+          onMenuClick={toggleSidebar} 
+          isCollapsed={false}
+          onToggleCollapse={() => {}}
+        />
+        <main className="flex-1 flex items-start justify-center px-4 py-6 sm:py-8 relative z-10">
           {children}
         </main>
         <Footer />
@@ -46,14 +62,25 @@ export const Layout = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-between">
       <div>
-        <Navbar onMenuClick={toggleSidebar} />
+        <Navbar 
+          onMenuClick={toggleSidebar} 
+          isCollapsed={isCollapsed}
+          onToggleCollapse={toggleCollapse}
+        />
         
         <div className="flex">
           {isAuthenticated && (
-            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            <Sidebar 
+              isOpen={sidebarOpen} 
+              onClose={() => setSidebarOpen(false)} 
+              isCollapsed={isCollapsed}
+              onToggleCollapse={toggleCollapse}
+            />
           )}
           
-          <main className={`flex-1 transition-all duration-300 ${isAuthenticated ? 'lg:ml-64' : ''} p-3 sm:p-4 md:p-5`}>
+          <main className={`flex-1 transition-all duration-300 ${
+            isAuthenticated ? (isCollapsed ? 'lg:ml-20' : 'lg:ml-64') : ''
+          } p-3 sm:p-4 md:p-5`}>
             {children}
           </main>
         </div>
@@ -64,4 +91,4 @@ export const Layout = ({ children }) => {
   )
 }
 
-export default Layout
+export default Layout
