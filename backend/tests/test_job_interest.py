@@ -27,7 +27,7 @@ def client(app):
     return app.test_client()
 
 @pytest.fixture
-def student_user(app):
+def auth_headers(app):
     with app.app_context():
         user = User.query.filter_by(email='student_interest@test.com').first()
         if not user:
@@ -41,12 +41,7 @@ def student_user(app):
             user.set_password('password123')
             db.session.add(user)
             db.session.commit()
-        return user
-
-@pytest.fixture
-def auth_headers(app, student_user):
-    with app.app_context():
-        token = create_access_token(identity=str(student_user.id))
+        token = create_access_token(identity=str(user.id))
         return {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
 
 @pytest.fixture
@@ -64,12 +59,12 @@ def sample_job(app):
             )
             db.session.add(job)
             db.session.commit()
-        return job
+        return {'id': job.id, 'title': job.title, 'company': job.company}
 
 def test_add_job_interest_internal(client, auth_headers, sample_job):
     """Test student marking an internal campus job as interested"""
     payload = {
-        'job_id': sample_job.id,
+        'job_id': sample_job['id'],
         'status': 'interested',
         'notes': 'Excited about this campus drive'
     }
@@ -103,7 +98,7 @@ def test_add_job_interest_external(client, auth_headers):
 
 def test_get_interested_jobs(client, auth_headers, sample_job):
     """Test retrieving student interested jobs"""
-    client.post('/api/v1/jobs/interested', headers=auth_headers, data=json.dumps({'job_id': sample_job.id}))
+    client.post('/api/v1/jobs/interested', headers=auth_headers, data=json.dumps({'job_id': sample_job['id']}))
 
     response = client.get('/api/v1/jobs/interested', headers=auth_headers)
     assert response.status_code == 200
@@ -114,7 +109,7 @@ def test_get_interested_jobs(client, auth_headers, sample_job):
 
 def test_update_interest_status(client, auth_headers, sample_job):
     """Test advancing application stage: interested -> applied"""
-    res_post = client.post('/api/v1/jobs/interested', headers=auth_headers, data=json.dumps({'job_id': sample_job.id}))
+    res_post = client.post('/api/v1/jobs/interested', headers=auth_headers, data=json.dumps({'job_id': sample_job['id']}))
     interest_id = res_post.get_json()['interest']['id']
 
     patch_res = client.patch(
@@ -129,20 +124,20 @@ def test_update_interest_status(client, auth_headers, sample_job):
 
 def test_campus_board_aggregation(client, sample_job, auth_headers):
     """Test public campus board API returns jobs with campus_interest_count"""
-    client.post('/api/v1/jobs/interested', headers=auth_headers, data=json.dumps({'job_id': sample_job.id}))
+    client.post('/api/v1/jobs/interested', headers=auth_headers, data=json.dumps({'job_id': sample_job['id']}))
 
     response = client.get('/api/v1/jobs/campus-board')
     assert response.status_code == 200
     data = response.get_json()
     assert data['status'] == 'success'
     assert 'campus_jobs' in data
-    matched = [j for j in data['campus_jobs'] if j['id'] == sample_job.id]
+    matched = [j for j in data['campus_jobs'] if j['id'] == sample_job['id']]
     assert len(matched) == 1
     assert matched[0]['campus_interest_count'] >= 1
 
 def test_remove_job_interest(client, auth_headers, sample_job):
     """Test removing a job from interested campus board"""
-    res_post = client.post('/api/v1/jobs/interested', headers=auth_headers, data=json.dumps({'job_id': sample_job.id}))
+    res_post = client.post('/api/v1/jobs/interested', headers=auth_headers, data=json.dumps({'job_id': sample_job['id']}))
     interest_id = res_post.get_json()['interest']['id']
 
     del_res = client.delete(f'/api/v1/jobs/interested/{interest_id}', headers=auth_headers)

@@ -12,7 +12,8 @@ class PredictionService:
     """Prediction service supporting both microservice call and direct local ensemble model inference"""
     
     def __init__(self):
-        self.ml_service_url = os.environ.get('ML_SERVICE_URL', 'http://localhost:8000')
+        self.ml_service_url = os.environ.get('ML_SERVICE_URL')
+        self._microservice_available = bool(self.ml_service_url)
         self.model = None
         self.scaler = None
         self.features = None
@@ -44,16 +45,17 @@ class PredictionService:
     
     def predict_employability(self, student_data):
         """Predict employability score using ML microservice or local model fallback"""
-        try:
-            response = requests.post(
-                f'{self.ml_service_url}/predict',
-                json=student_data,
-                timeout=2
-            )
-            if response.status_code == 200:
-                return response.json()
-        except Exception:
-            pass
+        if self._microservice_available and self.ml_service_url:
+            try:
+                response = requests.post(
+                    f'{self.ml_service_url}/predict',
+                    json=student_data,
+                    timeout=0.5
+                )
+                if response.status_code == 200:
+                    return response.json()
+            except Exception:
+                self._microservice_available = False
         
         # Fallback to local model inference if microservice is offline
         if self.model and self.scaler and self.features:

@@ -157,6 +157,7 @@ def get_placement_shortlist():
 
 
 @analytics_bp.route('/placement/export-bundle', methods=['POST'])
+@analytics_bp.route('/placement/export-zip', methods=['POST'])
 @jwt_required()
 @faculty_or_admin_required
 def export_placement_bundle():

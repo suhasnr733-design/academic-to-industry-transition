@@ -41,7 +41,7 @@ const POPULAR_SKILLS = [
   'Data Structures'
 ]
 
-export const PlacementShortlist = ({ departments = [], initialScope = 'all' }) => {
+export const PlacementShortlist = ({ departments = [], initialScope = 'all', onNavigateToDrives }) => {
   // Criteria states
   const [companyName, setCompanyName] = useState('Google Campus Hiring')
   const [selectedSkills, setSelectedSkills] = useState(['Python', 'SQL'])
@@ -646,10 +646,13 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all' }) =
         <button
           type="button"
           onClick={() => {
-            const url = new URL(window.location.href)
-            url.searchParams.set('tab', 'drives')
-            window.history.pushState({}, '', url)
-            window.dispatchEvent(new PopStateEvent('popstate'))
+            if (onNavigateToDrives) {
+              onNavigateToDrives()
+            } else {
+              const url = new URL(window.location.href)
+              url.searchParams.set('tab', 'drives')
+              window.location.href = url.toString()
+            }
           }}
           className="text-xs font-bold text-purple-700 hover:text-purple-900 bg-white hover:bg-purple-50 border border-purple-300 px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 self-start sm:self-auto shadow-sm"
         >

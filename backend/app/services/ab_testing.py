@@ -23,6 +23,8 @@ class ABTesting:
         logger.info(f"✅ Experiment created: {name}")
         return experiment
     
+    create_test = create_experiment
+    
     def get_variant(self, experiment_name, user_id):
         experiment = self.experiments.get(experiment_name)
         if not experiment or not experiment['active']:
