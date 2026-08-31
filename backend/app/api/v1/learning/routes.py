@@ -159,6 +159,115 @@ def delete_bookmark(bookmark_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@learning_bp.route('/projects/submit', methods=['POST'])
+@jwt_required()
+def submit_project():
+    """Submit completed mini-project GitHub repository URL and complete build stage"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        data = request.get_json() or {}
+
+        resume_id = data.get('resume_id')
+        skill_name = data.get('skill_name')
+        github_url = (data.get('github_url') or '').strip()
+
+        if not resume_id or not skill_name or not github_url:
+            return jsonify({'error': 'resume_id, skill_name, and github_url are required'}), 400
+
+        if not github_url.startswith('http'):
+            return jsonify({'error': 'Please provide a valid repository URL (e.g. https://github.com/username/repo)'}), 400
+
+        # Mark project stage 'build' as completed
+        result = learning_service.update_skill_progress(
+            user_id=current_user_id,
+            resume_id=int(resume_id),
+            skill_name=skill_name,
+            stage='build',
+            is_completed=True
+        )
+
+        # Log activity
+        activity = LearningActivity(
+            user_id=current_user_id,
+            resume_id=int(resume_id),
+            skill_name=skill_name,
+            activity_type='project_submitted',
+            details=f"Submitted portfolio project repository: {github_url}"
+        )
+        db.session.add(activity)
+        db.session.commit()
+
+        return jsonify({
+            'message': f'Portfolio project for {skill_name} submitted successfully!',
+            'progress': result,
+            'github_url': github_url
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@learning_bp.route('/projects/evaluate-solution', methods=['POST'])
+@jwt_required()
+def evaluate_project_solution():
+    """Evaluate GitHub repository against skill gap real-world problem statement"""
+    try:
+        from app.services.problem_evaluator import ProblemEvaluator
+        current_user_id = int(get_jwt_identity())
+        data = request.get_json() or {}
+
+        resume_id = data.get('resume_id')
+        skill_name = data.get('skill_name')
+        github_url = (data.get('github_url') or '').strip()
+        problem_statement = data.get('problem_statement', '')
+        criteria = data.get('criteria', [])
+
+        if not resume_id or not skill_name or not github_url:
+            return jsonify({'error': 'resume_id, skill_name, and github_url are required'}), 400
+
+        evaluator = ProblemEvaluator()
+        result = evaluator.evaluate_github_solution(
+            skill_name=skill_name,
+            problem_statement=problem_statement,
+            criteria=criteria,
+            github_url=github_url
+        )
+
+        if 'error' in result:
+            return jsonify({'error': result['error']}), 400
+
+        is_solved = result.get('is_problem_solved', False)
+
+        # If problem solved (score >= 70%), mark stage build as completed
+        if is_solved:
+            learning_service.update_skill_progress(
+                user_id=current_user_id,
+                resume_id=int(resume_id),
+                skill_name=skill_name,
+                stage='build',
+                is_completed=True
+            )
+
+            # Log milestone activity
+            activity = LearningActivity(
+                user_id=current_user_id,
+                resume_id=int(resume_id),
+                skill_name=skill_name,
+                activity_type='problem_challenge_passed',
+                details=f"Passed real-world problem evaluation for {skill_name} (Score: {result.get('solution_score', 0)}%)"
+            )
+            db.session.add(activity)
+            db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'evaluation': result
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @learning_bp.route('/youtube', methods=['GET'])
 @jwt_required()
 def get_youtube_resources():
@@ -186,6 +295,9 @@ def get_youtube_resources():
 def ai_learning_assistant():
     """Contextual AI Learning Assistant endpoint"""
     try:
+        from app.services.llm_service import LLMService
+        llm_service = LLMService()
+
         data = request.get_json() or {}
         skill = data.get('skill', 'SQL')
         target_role = data.get('target_role', 'Software Engineer')
@@ -200,7 +312,20 @@ def ai_learning_assistant():
             'project': f"**Mini-Project Idea**: Build a **{skill} Student Placement Tracker** with search filters, CSV exports, and performance stats dashboard."
         }
 
-        response_text = custom_prompt if custom_prompt else responses.get(prompt_type, responses['explain'])
+        if custom_prompt and custom_prompt.strip():
+            # Query LLM service if available
+            try:
+                ai_answer = llm_service.ask_ai_question(skill, custom_prompt, target_role)
+                if ai_answer and isinstance(ai_answer, dict) and ai_answer.get('answer'):
+                    response_text = ai_answer['answer']
+                elif isinstance(ai_answer, str) and ai_answer.strip():
+                    response_text = ai_answer
+                else:
+                    response_text = f"Here is key guidance for **{skill}** ({target_role} path) regarding '{custom_prompt}':\n\nFocus on mastering core architecture, transaction boundaries, and automated unit testing for {skill} to excel in production systems."
+            except Exception:
+                response_text = f"Regarding **{skill}** for {target_role}s ({custom_prompt}):\n\nMake sure to understand core data models, error handling, and performance optimization techniques for {skill}."
+        else:
+            response_text = responses.get(prompt_type, responses['explain'])
 
         return jsonify({
             'skill': skill,

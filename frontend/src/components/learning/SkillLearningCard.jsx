@@ -24,6 +24,7 @@ import { ProjectRecommendations } from './ProjectRecommendations'
 export const SkillLearningCard = ({ 
   skill, 
   targetRole, 
+  resumeId,
   onUpdateStageProgress,
   onBookmark,
   onOpenAiForSkill
@@ -98,56 +99,95 @@ export const SkillLearningCard = ({
           </div>
         </div>
 
-        {/* Progress & AI Helper Button */}
-        <div className="flex items-center gap-3">
+        {/* Progress & Quick Actions */}
+        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between gap-3 shrink-0">
           <div className="text-right">
-            <span className="text-xs text-gray-500 font-medium block">Progress</span>
-            <span className="text-lg font-bold text-indigo-700">{skill.progress_percent}%</span>
+            <span className="text-xs text-gray-500 font-semibold block">Progress</span>
+            <span className="text-2xl font-black text-indigo-600">
+              {skill.progress_percent || 0}%
+            </span>
           </div>
 
-          <button
-            onClick={() => onOpenAiForSkill(skill.skill_name)}
-            className="p-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl border border-indigo-200 transition-colors"
-            title="Ask AI Assistant about this skill"
-          >
-            <SparklesIcon className="w-5 h-5" />
-          </button>
+          {onOpenAiForSkill && (
+            <button
+              onClick={() => onOpenAiForSkill(skill.skill_name)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-xs font-bold transition-colors border border-purple-200"
+            >
+              <SparklesIcon className="w-4 h-4 text-purple-600" />
+              Ask AI Assistant
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Sub-resource Tabs Bar */}
-      <div className="flex items-center gap-1 overflow-x-auto border-b border-gray-200 my-6 pb-2 text-xs">
-        {[
-          { id: 'all', label: 'All Resources', icon: AcademicCapIcon },
-          { id: 'youtube', label: '📺 YouTube', icon: PlayIcon },
-          { id: 'courses', label: '🎓 Courses', icon: AcademicCapIcon },
-          { id: 'practice', label: '💻 Practice', icon: CodeIcon },
-          { id: 'project', label: '🚀 Mini Project', icon: LightningBoltIcon },
-          { id: 'assessment', label: '📝 Assessment', icon: ClipboardCheckIcon }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-3.5 py-2 rounded-xl font-bold whitespace-nowrap transition-all ${
-              activeTab === tab.id
-                ? 'bg-indigo-600 text-white shadow'
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* Stage Progression Tabs (Learn -> Practice -> Build -> Assess -> Complete) */}
+      <div className="flex items-center justify-between border-b border-gray-100 my-4 overflow-x-auto py-2">
+        <div className="flex items-center space-x-1">
+          {[
+            { id: 'all', label: 'All Resources', icon: AcademicCapIcon },
+            { id: 'youtube', label: 'YouTube', icon: PlayIcon },
+            { id: 'courses', label: 'Courses', icon: AcademicCapIcon },
+            { id: 'practice', label: 'Practice', icon: CodeIcon },
+            { id: 'project', label: 'Mini Project', icon: LightningBoltIcon },
+            { id: 'assessment', label: 'Assessment', icon: ClipboardCheckIcon }
+          ].map(tab => {
+            const Icon = tab.icon
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg flex items-center space-x-1.5 transition-all cursor-pointer ${
+                  isActive 
+                    ? 'bg-indigo-600 text-white shadow-xs' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{tab.label}</span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
-      {/* Resource Contents */}
+      {/* Main Learning Content Area */}
       <div className="space-y-6">
-        {/* Highlighted Top Recommendation */}
+        {/* Recommended Top Course Highlight */}
         {(activeTab === 'all' || activeTab === 'courses') && topCourse && (
           <RecommendedResourceHighlight 
-            course={topCourse}
+            course={topCourse} 
             skillName={skill.skill_name}
-            targetRole={targetRole}
             onBookmark={onBookmark}
+          />
+        )}
+
+        {/* YouTube Video Resources */}
+        {(activeTab === 'all' || activeTab === 'youtube') && (
+          <YouTubeResourceList 
+            videos={skill.youtube_videos} 
+            skillName={skill.skill_name}
+            onBookmark={onBookmark}
+          />
+        )}
+
+        {/* Practice Questions Section */}
+        {(activeTab === 'all' || activeTab === 'practice') && (
+          <PracticeSection 
+            questions={skill.practice_questions} 
+            skillName={skill.skill_name}
+            onCompletePractice={() => handleStageClick('practice', true)}
+          />
+        )}
+
+        {/* Project Section */}
+        {(activeTab === 'all' || activeTab === 'project') && (
+          <ProjectRecommendations 
+            project={skill.project}
+            skillName={skill.skill_name}
+            resumeId={resumeId}
+            onBookmark={onBookmark}
+            onSuccess={(sk, st, val) => onUpdateStageProgress(sk, st, val)}
           />
         )}
 

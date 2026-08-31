@@ -28,7 +28,7 @@ class WebSocketService {
     const baseURL = getWebSocketUrl()
     this.socket = io(baseURL, {
       query: { token },
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: this.maxReconnectAttempts,
       reconnectionDelay: this.reconnectDelay,

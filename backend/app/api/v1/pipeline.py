@@ -4,24 +4,31 @@ from flask import Blueprint, jsonify, request
 import logging
 import pandas as pd
 
-from data_pipeline.monitoring.pipeline_monitor import pipeline_monitor
-from data_pipeline.monitoring.quality_dashboard import quality_dashboard
-from data_pipeline.monitoring.alerts import pipeline_alerts
-from data_pipeline.etl.automated_etl import etl_automation
-from data_pipeline.validators.auto_validator import auto_validator
-from data_pipeline.optimization.performance_optimizer import performance_optimizer
-from data_pipeline.optimization.cache_manager import cache_manager
-from data_pipeline.optimization.query_optimizer import query_optimizer
-from data_pipeline.quality.automated_quality import automated_quality
-from data_pipeline.quality.anomaly_detection import anomaly_detector
-from data_pipeline.resilience.fault_tolerance import fault_tolerance
-from data_pipeline.resilience.data_recovery import data_recovery
-from data_pipeline.production.final_optimizer import final_optimizer
-from data_pipeline.production.health_checks import health_check
-from scripts.cleanup_pipeline import pipeline_cleanup
-
-
 logger = logging.getLogger(__name__)
+
+try:
+    from data_pipeline.monitoring.pipeline_monitor import pipeline_monitor
+    from data_pipeline.monitoring.quality_dashboard import quality_dashboard
+    from data_pipeline.monitoring.alerts import pipeline_alerts
+    from data_pipeline.etl.automated_etl import etl_automation
+    from data_pipeline.validators.auto_validator import auto_validator
+    from data_pipeline.optimization.performance_optimizer import performance_optimizer
+    from data_pipeline.optimization.cache_manager import cache_manager
+    from data_pipeline.optimization.query_optimizer import query_optimizer
+    from data_pipeline.quality.automated_quality import automated_quality
+    from data_pipeline.quality.anomaly_detection import anomaly_detector
+    from data_pipeline.resilience.fault_tolerance import fault_tolerance
+    from data_pipeline.resilience.data_recovery import data_recovery
+    from data_pipeline.production.final_optimizer import final_optimizer
+    from data_pipeline.production.health_checks import health_check
+except Exception as _dp_err:
+    logger.warning(f"Data pipeline imports partially unavailable: {_dp_err}")
+
+try:
+    from scripts.cleanup_pipeline import pipeline_cleanup
+except Exception as _cl_err:
+    logger.warning(f"Cleanup pipeline import unavailable: {_cl_err}")
+
 
 pipeline_bp = Blueprint('pipeline', __name__)
 
