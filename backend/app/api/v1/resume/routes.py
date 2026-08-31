@@ -129,8 +129,16 @@ def get_resume(resume_id):
         if not resume:
             return jsonify({'error': 'Resume not found'}), 404
         
-        # On-demand processing if resume is still pending or has no skills yet
-        if resume.status == 'pending' or (not resume.skills and resume.file_path and os.path.exists(resume.file_path)):
+        # On-demand processing if resume is pending, has no projects, or missing raw_text / certifications / ats_breakdown
+        needs_reprocess = (
+            resume.status == 'pending' or
+            not resume.skills or
+            not resume.projects or
+            not resume.ats_breakdown or
+            not isinstance(resume.experience, dict) or
+            not resume.experience.get('raw_text')
+        )
+        if needs_reprocess and resume.file_path and os.path.exists(resume.file_path):
             try:
                 processor = ResumeProcessor()
                 processor.process_resume(resume.id)
@@ -138,7 +146,16 @@ def get_resume(resume_id):
             except Exception as proc_err:
                 logger.error(f"On-demand processing error for resume {resume.id}: {proc_err}")
                 
-        return jsonify(resume.to_dict()), 200
+        data = resume.to_dict()
+        if not data.get('raw_text') and resume.file_path and os.path.exists(resume.file_path):
+            try:
+                parser = ResumeProcessor().parser
+                file_ext = resume.filename.rsplit('.', 1)[1].lower() if '.' in resume.filename else 'pdf'
+                data['raw_text'] = parser.extract_text(resume.file_path, file_ext)
+            except Exception as txt_err:
+                logger.warning(f"Could not extract raw text: {txt_err}")
+
+        return jsonify(data), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -218,6 +235,7 @@ def get_processing_status(resume_id):
             'status': resume.status,
             'progress': progress,
             'employability_score': resume.employability_score,
+            'ats_breakdown': resume.ats_breakdown or {},
             'error_message': resume.error_message,
             'created_at': resume.created_at.isoformat()
         }), 200
@@ -235,11 +253,17 @@ def get_resume_data(resume_id):
             return jsonify({'error': 'Resume not found'}), 404
         
         return jsonify({
+            'personal_info': resume.personal_info or {},
+            'links': resume.links or {},
+            'summary': resume.summary or '',
             'skills': resume.skills or [],
             'education': resume.education or [],
             'experience': resume.experience or {},
             'projects': resume.projects or [],
             'certifications': resume.certifications or [],
+            'achievements': resume.achievements or [],
+            'publications': resume.publications or [],
+            'ats_breakdown': resume.ats_breakdown or {},
             'employability_score': resume.employability_score,
             'recommended_roles': resume.recommended_roles or [],
             'skill_gaps': resume.skill_gaps or []
