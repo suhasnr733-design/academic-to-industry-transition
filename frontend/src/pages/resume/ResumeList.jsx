@@ -21,7 +21,10 @@ import {
   ChevronRightIcon,
   LightningBoltIcon,
   ChartBarIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  FolderIcon,
+  LightBulbIcon,
+  BriefcaseIcon
 } from '@heroicons/react/outline'
 import toast from 'react-hot-toast'
 
@@ -85,6 +88,7 @@ export const ResumeList = () => {
         await deleteResume(activeResume.id)
         setActiveResumeDetails(null)
         setPdfBlobUrl(null)
+        toast.success('Resume deleted successfully')
       } finally {
         setDeleting(false)
       }
@@ -141,30 +145,50 @@ export const ResumeList = () => {
     }
   }
 
+  // Refined Candidate Name derivation: extracted name > clean filename > profile name
   const candidateName = useMemo(() => {
-    if (activeResumeDetails?.candidate_name) return activeResumeDetails.candidate_name
-    if (user?.full_name) return user.full_name
+    if (activeResumeDetails?.candidate_name && typeof activeResumeDetails.candidate_name === 'string' && activeResumeDetails.candidate_name.trim().length > 1) {
+      return activeResumeDetails.candidate_name.trim()
+    }
     if (activeResume?.filename) {
-      return activeResume.filename
+      const clean = activeResume.filename
         .replace(/\.[^/.]+$/, '')
         .replace(/[-_]/g, ' ')
+        .replace(/\b(resume|cv|profile|doc|final|latest)\b/gi, '')
+        .trim()
         .replace(/\b\w/g, c => c.toUpperCase())
+      if (clean.length >= 2) return clean
     }
+    if (user?.full_name) return user.full_name
     return 'Candidate Resume'
-  }, [activeResumeDetails, user, activeResume])
+  }, [activeResumeDetails, activeResume, user])
 
   const employabilityScore = Math.round(activeResumeDetails?.employability_score || activeResume?.employability_score || 74)
 
-  // Categorize extracted skills into 4 core domain strength cards based on actual parsed skills
+  // Calibrated progressive score helper to avoid artificial 95% ceiling
+  const calculateDomainScore = (skillsList) => {
+    if (!skillsList || skillsList.length === 0) return 0
+    const count = skillsList.length
+    if (count === 1) return 55
+    if (count === 2) return 68
+    if (count === 3) return 78
+    if (count === 4) return 86
+    if (count === 5) return 92
+    return Math.min(92 + (count - 5) * 2, 96)
+  }
+
+  // Categorize extracted skills into 4 core domain strength cards
+  // Uses strict regex word boundaries (\b) so HTML is NEVER misclassified into AI/ML
   const categorizedStrengths = useMemo(() => {
     const rawSkills = (activeResumeDetails?.skills || activeResume?.skills || []).map(s => 
       typeof s === 'string' ? s : (s?.name || s?.skill || '')
-    )
+    ).filter(Boolean)
     
-    const backend = rawSkills.filter(s => /python|flask|django|node|express|fastapi|java|c\+\+|golang|rust|php|ruby|rest|api|oop/i.test(s))
-    const databases = rawSkills.filter(s => /sql|postgres|mysql|mongo|sqlite|redis|database|dbms|oracle/i.test(s))
-    const aiml = rawSkills.filter(s => /nlp|ai|ml|machine learning|deep learning|data science|tensorflow|pytorch|scikit|pandas|numpy/i.test(s))
-    const cloud = rawSkills.filter(s => /docker|git|k8s|kubernetes|aws|azure|gcp|linux|ci\/cd|devops|jenkins|terraform/i.test(s))
+    const backend = rawSkills.filter(s => /\b(python|flask|django|node|nodejs|express|expressjs|fastapi|java|c\+\+|golang|go|rust|php|ruby|rest|apis|oop|dsa|system design)\b/i.test(s))
+    const databases = rawSkills.filter(s => /\b(sql|postgres|postgresql|mysql|mongo|mongodb|sqlite|redis|database|dbms|oracle|firebase|cassandra)\b/i.test(s))
+    // Strict word boundary ensures HTML (ends in ml) does not match AI/ML!
+    const aiml = rawSkills.filter(s => /\b(nlp|ai|ml|machine learning|deep learning|data science|tensorflow|pytorch|keras|scikit|scikit-learn|pandas|numpy|opencv|generative ai|llm|genai)\b/i.test(s))
+    const cloud = rawSkills.filter(s => /\b(docker|git|github|gitlab|k8s|kubernetes|aws|azure|gcp|linux|ci\/cd|devops|jenkins|terraform|postman)\b/i.test(s))
 
     return [
       {
@@ -174,7 +198,7 @@ export const ResumeList = () => {
         bg: backend.length > 0 ? 'bg-blue-50/70 border-blue-100/80' : 'bg-gray-50 border-gray-200/70',
         text: backend.length > 0 ? 'text-blue-900' : 'text-gray-600',
         badge: backend.length > 0 ? 'bg-blue-100/80 text-blue-700' : 'bg-gray-200 text-gray-700',
-        score: backend.length > 0 ? Math.min(55 + backend.length * 8, 95) : 0,
+        score: calculateDomainScore(backend),
         skills: backend.length > 0 ? backend : ['No backend skills detected'],
         hasSkills: backend.length > 0,
         desc: backend.length > 0 ? 'API services, core logic & server structure' : 'Add Python, Node.js, or Java to build backend readiness'
@@ -186,7 +210,7 @@ export const ResumeList = () => {
         bg: databases.length > 0 ? 'bg-amber-50/70 border-amber-100/80' : 'bg-gray-50 border-gray-200/70',
         text: databases.length > 0 ? 'text-amber-900' : 'text-gray-600',
         badge: databases.length > 0 ? 'bg-amber-100/80 text-amber-800' : 'bg-gray-200 text-gray-700',
-        score: databases.length > 0 ? Math.min(55 + databases.length * 10, 95) : 0,
+        score: calculateDomainScore(databases),
         skills: databases.length > 0 ? databases : ['No database skills detected'],
         hasSkills: databases.length > 0,
         desc: databases.length > 0 ? 'Relational querying & structured data persistence' : 'Add SQL or MongoDB to qualify for data-driven roles'
@@ -198,7 +222,7 @@ export const ResumeList = () => {
         bg: aiml.length > 0 ? 'bg-purple-50/70 border-purple-100/80' : 'bg-gray-50 border-gray-200/70',
         text: aiml.length > 0 ? 'text-purple-900' : 'text-gray-600',
         badge: aiml.length > 0 ? 'bg-purple-100/80 text-purple-700' : 'bg-gray-200 text-gray-700',
-        score: aiml.length > 0 ? Math.min(55 + aiml.length * 9, 95) : 0,
+        score: calculateDomainScore(aiml),
         skills: aiml.length > 0 ? aiml : ['No AI/ML skills detected'],
         hasSkills: aiml.length > 0,
         desc: aiml.length > 0 ? 'Intelligent extraction & algorithm engineering' : 'Explore scikit-learn, PyTorch, or NLP to open AI roles'
@@ -210,7 +234,7 @@ export const ResumeList = () => {
         bg: cloud.length > 0 ? 'bg-sky-50/70 border-sky-100/80' : 'bg-gray-50 border-gray-200/70',
         text: cloud.length > 0 ? 'text-sky-900' : 'text-gray-600',
         badge: cloud.length > 0 ? 'bg-sky-100/80 text-sky-700' : 'bg-gray-200 text-gray-700',
-        score: cloud.length > 0 ? Math.min(55 + cloud.length * 8, 95) : 0,
+        score: calculateDomainScore(cloud),
         skills: cloud.length > 0 ? cloud : ['No cloud skills detected'],
         hasSkills: cloud.length > 0,
         desc: cloud.length > 0 ? 'Containerization, versioning & deployment readiness' : 'Add Docker, Git, or AWS to demonstrate DevOps capabilities'
@@ -227,25 +251,26 @@ export const ResumeList = () => {
     const hasExp = Boolean(details.experience && (Array.isArray(details.experience) ? details.experience.length > 0 : Object.keys(details.experience).length > 0))
 
     // 1. Structure & Section Completeness
-    let sectionScore = 40
+    let sectionScore = 50
     if (skillsList.length > 0) sectionScore += 15
     if (educationList.length > 0) sectionScore += 15
     if (projectsList.length > 0) sectionScore += 15
-    if (hasExp) sectionScore += 15
-    sectionScore = Math.min(sectionScore, 95)
+    if (hasExp) sectionScore += 10
+    sectionScore = Math.min(sectionScore, 98)
 
     // 2. Keyword Density & Role Alignment
-    const keywordScore = skillsList.length >= 10 ? 92 : skillsList.length >= 6 ? 82 : skillsList.length >= 3 ? 68 : Math.max(35, skillsList.length * 15)
+    const keywordScore = skillsList.length >= 10 ? 94 : skillsList.length >= 6 ? 86 : skillsList.length >= 3 ? 75 : Math.max(40, skillsList.length * 15)
 
-    // 3. Project Complexity & Portfolio
-    const projectScore = projectsList.length >= 3 ? 88 : projectsList.length >= 2 ? 78 : projectsList.length === 1 ? 65 : 35
+    // 3. Project Complexity & Portfolio (Dynamic based on detected engineering projects)
+    const projectScore = projectsList.length >= 2 ? 90 : projectsList.length === 1 ? 75 : 40
 
     // 4. Academic & Credentials Strength
-    const academicScore = educationList.length >= 2 ? 90 : educationList.length === 1 ? 82 : 40
+    const academicScore = educationList.length >= 1 ? 92 : 65
 
-    // 5. Quantified Impact & Measurability
-    const baseImpact = (projectsList.length > 0 || hasExp) ? 65 : 35
-    const impactScore = Math.min(baseImpact + (projectsList.length * 5), 85)
+    // 5. Quantified Impact & Measurability (Detects genuine KPI percentages like 70%, 60%, 90%)
+    const hasQuantifiedKPIs = projectsList.some(p => p.metrics && p.metrics.length > 0) || 
+      (Boolean(details.raw_text) && /\b\d+%\b/.test(details.raw_text))
+    const impactScore = hasQuantifiedKPIs ? 88 : (projectsList.length > 0 || hasExp) ? 75 : 45
 
     return [
       {
@@ -269,7 +294,7 @@ export const ResumeList = () => {
       {
         name: 'Readability & Section Balance',
         score: academicScore,
-        status: academicScore >= 80 ? 'High' : 'Needs Credentials',
+        status: academicScore >= 80 ? 'High' : 'Moderate',
         color: academicScore >= 80 ? 'bg-teal-500' : 'bg-amber-500'
       },
       {
@@ -281,20 +306,114 @@ export const ResumeList = () => {
     ]
   }, [activeResumeDetails, activeResume])
 
+  // Dynamic AI Highlights & Recommendations
+  const dynamicHighlights = useMemo(() => {
+    const details = activeResumeDetails || activeResume || {}
+    const skillsList = details.skills || []
+    const projectsList = details.projects || []
+    const hasExp = Boolean(details.experience && (Array.isArray(details.experience) ? details.experience.length > 0 : Object.keys(details.experience).length > 0))
+    const hasQuantifiedKPIs = projectsList.some(p => p.metrics && p.metrics.length > 0) || 
+      (Boolean(details.raw_text) && /\b\d+%\b/.test(details.raw_text))
+    const highlights = []
+
+    // 1. Core Technical Skills Highlight
+    if (skillsList.length > 0) {
+      const topSkills = skillsList.slice(0, 5).map(s => typeof s === 'string' ? s : (s?.name || s?.skill || '')).join(', ')
+      highlights.push({
+        type: 'success',
+        title: 'Strong Core Tech Alignment:',
+        desc: `Verified skill markers found for ${topSkills}, aligning with entry-level and junior engineering requisitions.`
+      })
+    } else {
+      highlights.push({
+        type: 'warning',
+        title: 'Skill Extraction Needed:',
+        desc: 'Add technical coursework, programming languages, and framework proficiencies to enhance recruiter matching.'
+      })
+    }
+
+    // 2. Project Portfolio Highlight
+    if (projectsList.length >= 2) {
+      highlights.push({
+        type: 'info',
+        title: 'Project Portfolio Verified:',
+        desc: `Detected ${projectsList.length} distinct project implementations demonstrating practical software engineering capability.`
+      })
+    } else if (projectsList.length === 1) {
+      highlights.push({
+        type: 'warning',
+        title: 'Expand Project Portfolio:',
+        desc: 'Identified 1 project. Adding 1-2 additional full-stack or domain applications will increase your project rating to 80%+.'
+      })
+    } else {
+      highlights.push({
+        type: 'warning',
+        title: 'Include Technical Projects:',
+        desc: 'Add 2-3 structured project bullets with tech stacks and GitHub repository links to boost recruiter ranking.'
+      })
+    }
+
+    // 3. Impact & KPI Insight
+    if (hasQuantifiedKPIs) {
+      highlights.push({
+        type: 'success',
+        title: 'High-Impact Measurable KPIs:',
+        desc: 'Document includes quantified outcome metrics (such as performance and automation percentages), passing senior ATS filters.'
+      })
+    } else {
+      highlights.push({
+        type: 'tip',
+        title: 'Recommendation to reach 90%+ Score:',
+        desc: 'Add 2-3 measurable achievement metrics in your project bullets (e.g., "reduced query latency by 25%" or "served 500+ daily requests").'
+      })
+    }
+
+    return highlights
+  }, [activeResumeDetails, activeResume])
+
+  // Dynamic Education list with clean fallback
+  const educationTimeline = useMemo(() => {
+    const rawEdu = activeResumeDetails?.education || activeResume?.education || []
+    if (Array.isArray(rawEdu) && rawEdu.length > 0) {
+      return rawEdu
+    }
+    // Clean fallback to user profile details if resume parsing found no distinct education block
+    return [
+      {
+        degree: user?.department ? `Bachelor of Engineering in ${user.department}` : 'Bachelor of Engineering in Computer Science & Engineering',
+        institution: user?.college || 'Canara Engineering College',
+        year: 'Current Degree (Placement Ready)',
+        gpa: 'Academic Good Standing'
+      }
+    ]
+  }, [activeResumeDetails, activeResume, user])
+
+  // Extracted Projects
+  const extractedProjects = useMemo(() => {
+    const rawProj = activeResumeDetails?.projects || activeResume?.projects || []
+    return Array.isArray(rawProj) ? rawProj : []
+  }, [activeResumeDetails, activeResume])
+
+  // Extracted Certifications
+  const extractedCertifications = useMemo(() => {
+    const rawCerts = activeResumeDetails?.certifications || activeResume?.certifications || []
+    return Array.isArray(rawCerts) ? rawCerts : []
+  }, [activeResumeDetails, activeResume])
+
   if (isLoading && (!resumes || resumes.length === 0)) {
-    return <div className="flex justify-center py-24"><div className="spinner" /></div>
+    return <div className="flex justify-center py-20"><div className="spinner" /></div>
   }
 
-  // 1. If NO resume is uploaded, render direct Upload Dropzone
+  // 1. If NO resume is uploaded, render compact responsive Upload Dropzone
   if (!activeResume) {
     return (
-      <div className="max-w-3xl mx-auto space-y-6">
-        <div className="bg-white rounded-2xl shadow-sm p-10 text-center border border-gray-100">
-          <div className="p-4 bg-primary-50 text-primary-600 rounded-2xl w-20 h-20 mx-auto flex items-center justify-center mb-4">
-            <UploadIcon className="h-10 w-10" />
+      <div className="max-w-2xl mx-auto py-4">
+        <div className="bg-white rounded-2xl shadow-sm p-6 sm:p-8 text-center border border-gray-100">
+          <div className="p-3.5 bg-primary-50 text-primary-600 rounded-2xl w-16 h-16 mx-auto flex items-center justify-center mb-3">
+            <UploadIcon className="h-8 w-8" />
           </div>
-          <Heading level={2} className="text-gray-900 font-bold">Upload Your Placement Resume</Heading>
-          <p className="text-gray-500 mt-2 text-sm max-w-md mx-auto">
+          <Heading level={2} className="text-gray-900 font-bold text-xl sm:text-2xl">Upload Your Placement Resume</Heading>
+          <p className="text-gray-500 mt-1.5 text-xs sm:text-sm max-w-md mx-auto">
             Upload your resume in PDF, DOCX, or TXT format to open the AI Resume Analyzer, inspect section health, and compute placement readiness.
           </p>
 
@@ -311,18 +430,18 @@ export const ResumeList = () => {
             onDragOver={(e) => { e.preventDefault(); setIsDragActive(true) }}
             onDragLeave={() => setIsDragActive(false)}
             onDrop={handleDrop}
-            className={`mt-8 border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-200 ${
+            className={`mt-6 border-2 border-dashed rounded-2xl p-8 sm:p-10 text-center cursor-pointer transition-all duration-200 ${
               isDragActive ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:border-primary-400 hover:bg-gray-50'
             }`}
           >
-            <DocumentIcon className={`h-16 w-16 mx-auto ${isDragActive ? 'text-primary-500' : 'text-gray-400'}`} />
-            <p className="mt-4 text-gray-800 font-semibold text-base">
+            <DocumentIcon className={`h-12 w-12 mx-auto ${isDragActive ? 'text-primary-500' : 'text-gray-400'}`} />
+            <p className="mt-3 text-gray-800 font-semibold text-sm sm:text-base">
               {isUploading ? 'Uploading & Analyzing Resume...' : 'Drag & drop your resume here, or click to browse'}
             </p>
             <p className="mt-1 text-xs text-gray-400">PDF, DOCX, or TXT (Max size 10MB)</p>
             <Button
               type="button"
-              className="mt-6"
+              className="mt-4 text-xs font-semibold"
               size="sm"
               isLoading={isUploading}
               onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click() }}
@@ -339,7 +458,7 @@ export const ResumeList = () => {
   return (
     <div className="space-y-6 pb-8">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-1">
         <div>
           <div className="flex items-center gap-2.5">
             <Heading level={2} className="text-gray-900 font-bold tracking-tight">AI Resume Analyzer</Heading>
@@ -461,7 +580,7 @@ export const ResumeList = () => {
         </div>
       </div>
 
-      {/* 2. AI Resume Summary — 4 Core Strength Cards (Replaces duplicate chips) */}
+      {/* 2. AI Resume Summary — 4 Core Strength Cards */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
@@ -504,7 +623,7 @@ export const ResumeList = () => {
         </div>
       </div>
 
-      {/* Main 2-Column Grid: Left (Health Score & Highlights) | Right (Education Timeline) */}
+      {/* Main 2-Column Grid: Left (Health Score & Highlights) | Right (Role & Education) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Column (7 cols): ATS Health Meter & AI Highlights */}
@@ -561,43 +680,89 @@ export const ResumeList = () => {
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-100 flex items-start space-x-3">
-                <CheckCircleIcon className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-emerald-950 font-bold block">Strong Core Tech Alignment:</strong>
-                  <span className="text-emerald-900">
-                    {(activeResumeDetails?.skills || activeResume?.skills || []).length > 0
-                      ? `Verified skill markers found for ${(activeResumeDetails?.skills || activeResume?.skills || [])
-                          .slice(0, 4)
-                          .map(s => typeof s === 'string' ? s : (s?.name || s?.skill || ''))
-                          .join(', ')} aligning with entry-level and junior industry requisitions.`
-                      : 'Upload an updated resume with technical coursework and project stacks to increase recruiter match rates.'
-                    }
-                  </span>
+              {dynamicHighlights.map((hl, idx) => (
+                <div 
+                  key={idx} 
+                  className={`p-3 rounded-xl border flex items-start space-x-3 ${
+                    hl.type === 'success' 
+                      ? 'bg-emerald-50/60 border-emerald-100' 
+                      : hl.type === 'info'
+                      ? 'bg-blue-50/60 border-blue-100'
+                      : 'bg-amber-50/60 border-amber-100'
+                  }`}
+                >
+                  {hl.type === 'success' ? (
+                    <CheckCircleIcon className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                  ) : hl.type === 'info' ? (
+                    <CheckCircleIcon className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <InformationCircleIcon className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                  )}
+                  <div>
+                    <strong className={`font-bold block ${
+                      hl.type === 'success' ? 'text-emerald-950' : hl.type === 'info' ? 'text-blue-950' : 'text-amber-950'
+                    }`}>
+                      {hl.title}
+                    </strong>
+                    <span className={
+                      hl.type === 'success' ? 'text-emerald-900' : hl.type === 'info' ? 'text-blue-900' : 'text-amber-900'
+                    }>
+                      {hl.desc}
+                    </span>
+                  </div>
                 </div>
-              </div>
-
-              <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100 flex items-start space-x-3">
-                <CheckCircleIcon className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-blue-950 font-bold block">Clean Single-Column Structure:</strong>
-                  <span className="text-blue-900">
-                    Document passes ATS optical and text hierarchy parsers with readable structure and standard section headers.
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-100 flex items-start space-x-3">
-                <InformationCircleIcon className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-amber-950 font-bold block">Recommendation to reach 90%+ Score:</strong>
-                  <span className="text-amber-900">
-                    Add 2-3 measurable achievement metrics in your project bullets (e.g. <em>"reduced query latency by 25%"</em> or <em>"served 500+ daily queries"</em>).
-                  </span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
+
+          {/* 5. Extracted Projects & Portfolio Section */}
+          {extractedProjects.length > 0 && (
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200/80 space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                <div className="flex items-center space-x-2.5">
+                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <FolderIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-sm">Extracted Projects & Portfolio</h3>
+                    <p className="text-xs text-gray-400">Projects parsed by ATS text processor</p>
+                  </div>
+                </div>
+                <span className="text-xs font-bold px-2.5 py-0.5 bg-indigo-50 text-indigo-700 rounded-full border border-indigo-100">
+                  {extractedProjects.length} Detected
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {extractedProjects.map((proj, pIdx) => (
+                  <div key={pIdx} className="p-3.5 bg-gray-50/70 rounded-xl border border-gray-100 text-xs space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-gray-900 text-xs">
+                        {proj.title || `Project ${pIdx + 1}`}
+                      </h4>
+                      {proj.duration && (
+                        <span className="text-[10px] text-gray-400 font-medium">{proj.duration}</span>
+                      )}
+                    </div>
+                    {proj.description && (
+                      <p className="text-gray-600 text-[11px] leading-relaxed line-clamp-2">
+                        {proj.description}
+                      </p>
+                    )}
+                    {proj.technologies && proj.technologies.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {proj.technologies.map((t, tIdx) => (
+                          <span key={tIdx} className="text-[9px] font-bold bg-white text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-100">
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
         </div>
 
@@ -637,7 +802,7 @@ export const ResumeList = () => {
             </div>
           </div>
 
-          {/* Education Timeline */}
+          {/* Dynamic Academic Journey */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200/80 space-y-5">
             <div className="flex items-center space-x-2.5 pb-2 border-b border-gray-100">
               <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
@@ -649,50 +814,77 @@ export const ResumeList = () => {
               </div>
             </div>
 
-            {/* Vertical Timeline Nodes */}
+            {/* Dynamic Vertical Timeline Nodes */}
             <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-200">
-              
-              {/* Timeline Item 1: College Degree */}
-              <div className="relative group">
-                <div className="absolute -left-6 top-1.5 w-4 h-4 rounded-full bg-primary-600 border-2 border-white shadow-xs ring-4 ring-primary-100" />
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-primary-700 uppercase tracking-wider">2022 – 2026 (Present)</span>
-                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold rounded-full">
-                      Placement Ready
-                    </span>
+              {educationTimeline.map((edu, idx) => (
+                <div key={idx} className="relative group">
+                  <div className={`absolute -left-6 top-1.5 w-4 h-4 rounded-full border-2 border-white shadow-xs ${
+                    idx === 0 ? 'bg-primary-600 ring-4 ring-primary-100' : 'bg-gray-400 ring-4 ring-gray-100'
+                  }`} />
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-primary-700 uppercase tracking-wider">
+                        {edu.year || (idx === 0 ? 'Undergraduate Degree' : 'Secondary Education')}
+                      </span>
+                      {idx === 0 && (
+                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold rounded-full">
+                          Placement Ready
+                        </span>
+                      )}
+                    </div>
+                    <h4 className="text-xs font-bold text-gray-900 mt-1">
+                      {edu.degree || edu.institution || 'Engineering Degree'}
+                    </h4>
+                    {edu.institution && edu.degree && (
+                      <p className="text-xs text-gray-600 mt-0.5">{edu.institution}</p>
+                    )}
+                    {edu.gpa && (
+                      <p className="text-[11px] text-gray-400 mt-1">
+                        Academic Standing: {typeof edu.gpa === 'number' ? `CGPA: ${edu.gpa} / 10` : edu.gpa}
+                      </p>
+                    )}
                   </div>
-                  <h4 className="text-xs font-bold text-gray-900 mt-1">
-                    Bachelor of Engineering in {user?.department || 'Computer Science & Engineering'}
-                  </h4>
-                  <p className="text-xs text-gray-600 mt-0.5">
-                    {user?.college || 'Canara Engineering College'}
-                  </p>
-                  <p className="text-[11px] text-gray-400 mt-1">
-                    Year of Study: Final Year (Year 4) • CGPA: 8.5 / 10
-                  </p>
                 </div>
-              </div>
-
-              {/* Timeline Item 2: Pre-University / High School */}
-              <div className="relative group">
-                <div className="absolute -left-6 top-1.5 w-4 h-4 rounded-full bg-gray-400 border-2 border-white shadow-xs ring-4 ring-gray-100" />
-                <div>
-                  <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">2020 – 2022</span>
-                  <h4 className="text-xs font-bold text-gray-800 mt-1">
-                    Pre-University Course (Science / PCMB)
-                  </h4>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Department of Pre-University Education
-                  </p>
-                  <p className="text-[11px] text-gray-400 mt-1">
-                    Grade: Distinction (94.2%)
-                  </p>
-                </div>
-              </div>
-
+              ))}
             </div>
           </div>
+
+          {/* Dynamic Industry Certifications */}
+          {extractedCertifications.length > 0 && (
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200/80 space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                <div className="flex items-center space-x-2.5">
+                  <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                    <CheckCircleIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-sm">Industry Certifications</h3>
+                    <p className="text-xs text-gray-400">Verified credentials & badges</p>
+                  </div>
+                </div>
+                <span className="text-xs font-bold px-2.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100">
+                  {extractedCertifications.length} Verified
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-2.5">
+                {extractedCertifications.map((cert, cIdx) => (
+                  <div key={cIdx} className="p-3 bg-gray-50/70 hover:bg-emerald-50/40 transition-colors rounded-xl border border-gray-100 text-xs space-y-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <h4 className="font-bold text-gray-900 text-xs">
+                        {cert.name || cert.full_title}
+                      </h4>
+                      {cert.issuer && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 bg-white text-emerald-700 border border-emerald-100 rounded-md shrink-0">
+                          {cert.issuer}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
         </div>
 
@@ -775,8 +967,10 @@ export const ResumeList = () => {
                   className="w-full h-full border-0 bg-white"
                 />
               ) : (
-                <div className="w-full h-full overflow-y-auto p-8 bg-white font-mono text-xs text-gray-800 leading-relaxed whitespace-pre-wrap select-text">
-                  {activeResumeDetails?.raw_text || activeResumeDetails?.summary || 'Parsed text stream is being extracted from the document.'}
+                <div className="w-full h-full overflow-y-auto p-6 sm:p-8 bg-gray-950 text-gray-100 font-mono text-xs leading-relaxed whitespace-pre-wrap select-text selection:bg-primary-500 selection:text-white">
+                  {activeResumeDetails?.raw_text || (activeResumeDetails?.skills && activeResumeDetails.skills.length > 0 
+                    ? `=== ATS PARSED DOCUMENT STREAM ===\nCandidate: ${candidateName}\nFilename: ${activeResume?.filename || 'Resume.pdf'}\n\n[EXTRACTED SKILLS (${activeResumeDetails.skills.length})]\n${activeResumeDetails.skills.join(', ')}\n\n[EDUCATION TIMELINE]\n${JSON.stringify(activeResumeDetails.education, null, 2)}\n\n[EXPERIENCE & INTERNSHIPS]\n${JSON.stringify(activeResumeDetails.experience, null, 2)}\n\n[PROJECTS & ACHIEVEMENTS]\n${JSON.stringify(activeResumeDetails.projects, null, 2)}`
+                    : 'Loading parsed text stream from ATS engine...')}
                 </div>
               )}
             </div>

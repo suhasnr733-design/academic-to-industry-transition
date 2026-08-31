@@ -273,12 +273,12 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse
         {/* Clean Sidebar Footer */}
         <div className={cn(
           "p-3 border-t border-slate-100 dark:border-gray-800 bg-slate-50/70 dark:bg-gray-800/40 flex items-center transition-all duration-300",
-          isCollapsed ? "justify-between lg:justify-center" : "justify-between"
+          isCollapsed ? "justify-between lg:justify-center lg:px-0" : "justify-between"
         )}>
-          <div className="flex items-center space-x-2 min-w-0">
-            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-              role === 'faculty' ? 'bg-purple-500' : role === 'admin' ? 'bg-red-500' : 'bg-emerald-500'
-            } animate-pulse`} title={role === 'faculty' ? 'Faculty Portal' : role === 'admin' ? 'Admin Console' : 'Student Portal'} />
+          <div className="flex items-center space-x-2 min-w-0" title={role === 'faculty' ? 'Faculty Portal' : role === 'admin' ? 'Admin Console' : 'Student Portal'}>
+            <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+              role === 'faculty' ? 'bg-purple-500 ring-2 ring-purple-200 dark:ring-purple-900' : role === 'admin' ? 'bg-red-500 ring-2 ring-red-200 dark:ring-red-900' : 'bg-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900'
+            } animate-pulse`} />
             <span className={cn(
               "text-[11px] font-semibold text-gray-600 dark:text-gray-400 truncate",
               isCollapsed ? "inline lg:hidden" : "inline"

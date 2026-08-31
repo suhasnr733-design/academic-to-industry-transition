@@ -96,7 +96,7 @@ export const ResumeUpload = () => {
       const formData = new FormData()
       formData.append('file', file)
       
-      const result = await uploadResume(formData)
+      await uploadResume(formData)
       toast.success(activeResume ? 'Resume replaced successfully!' : 'Resume uploaded successfully!')
       
       // Invalidate legacy assessment caches for fresh evaluation
@@ -104,12 +104,7 @@ export const ResumeUpload = () => {
       localStorage.removeItem('latest_assessment_score')
       window.dispatchEvent(new Event('storage'))
 
-      const resumeId = result?.id || result?.resume_id || result?.resume?.id
-      if (resumeId) {
-        navigate(`/resume/${resumeId}`)
-      } else {
-        navigate('/resume')
-      }
+      navigate('/resume')
     } catch (error) {
       toast.error(error.message || 'Upload failed')
     }

@@ -20,6 +20,14 @@ class Resume(db.Model):
     projects = db.Column(db.JSON, default=list)
     certifications = db.Column(db.JSON, default=list)
     
+    # 11-Pillar Fields
+    personal_info = db.Column(db.JSON, default=dict)
+    links = db.Column(db.JSON, default=dict)
+    summary = db.Column(db.Text)
+    achievements = db.Column(db.JSON, default=list)
+    publications = db.Column(db.JSON, default=list)
+    ats_breakdown = db.Column(db.JSON, default=dict)
+    
     employability_score = db.Column(db.Float)
     recommended_roles = db.Column(db.JSON, default=list)
     skill_gaps = db.Column(db.JSON, default=list)
@@ -32,9 +40,10 @@ class Resume(db.Model):
     
     def __init__(self, user_id=None, filename=None, file_path=None, file_size=None,
                  file_type=None, skills=None, education=None, experience=None,
-                 projects=None, certifications=None, employability_score=None,
-                 recommended_roles=None, skill_gaps=None, status='pending',
-                 error_message=None, **kwargs):
+                 projects=None, certifications=None, personal_info=None, links=None,
+                 summary=None, achievements=None, publications=None, ats_breakdown=None,
+                 employability_score=None, recommended_roles=None, skill_gaps=None,
+                 status='pending', error_message=None, **kwargs):
         super().__init__(**kwargs)
         if user_id is not None:
             self.user_id = user_id
@@ -47,6 +56,12 @@ class Resume(db.Model):
         self.experience = experience if experience is not None else {}
         self.projects = projects if projects is not None else []
         self.certifications = certifications if certifications is not None else []
+        self.personal_info = personal_info if personal_info is not None else {}
+        self.links = links if links is not None else {}
+        self.summary = summary
+        self.achievements = achievements if achievements is not None else []
+        self.publications = publications if publications is not None else []
+        self.ats_breakdown = ats_breakdown if ats_breakdown is not None else {}
         self.employability_score = employability_score
         self.recommended_roles = recommended_roles if recommended_roles is not None else []
         self.skill_gaps = skill_gaps if skill_gaps is not None else []
@@ -56,22 +71,39 @@ class Resume(db.Model):
             setattr(self, k, v)
 
     def to_dict(self):
+        candidate_name = None
+        raw_text = None
+        if isinstance(self.experience, dict):
+            candidate_name = self.experience.get('candidate_name')
+            raw_text = self.experience.get('raw_text')
+        if not candidate_name and self.personal_info and self.personal_info.get('candidate_name'):
+            candidate_name = self.personal_info.get('candidate_name')
+        if not candidate_name and self.user:
+            candidate_name = self.user.full_name
+
         return {
             'id': self.id,
             'user_id': self.user_id,
-            'candidate_name': self.user.full_name if self.user else None,
+            'candidate_name': candidate_name,
             'user_email': self.user.email if self.user else None,
             'filename': self.filename,
             'file_size': self.file_size,
             'file_type': self.file_type,
+            'personal_info': self.personal_info or {},
+            'links': self.links or {},
+            'summary': self.summary or '',
             'skills': self.skills or [],
             'education': self.education or [],
             'experience': self.experience or {},
             'projects': self.projects or [],
             'certifications': self.certifications or [],
+            'achievements': self.achievements or [],
+            'publications': self.publications or [],
+            'ats_breakdown': self.ats_breakdown or {},
             'employability_score': self.employability_score,
             'recommended_roles': self.recommended_roles or [],
             'skill_gaps': self.skill_gaps or [],
+            'raw_text': raw_text,
             'status': self.status,
             'error_message': self.error_message,
             'created_at': self.created_at.isoformat() if self.created_at else None
