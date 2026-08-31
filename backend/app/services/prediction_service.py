@@ -5,6 +5,12 @@ import requests
 import joblib
 import numpy as np
 import logging
+import warnings
+from sklearn.exceptions import InconsistentVersionWarning
+
+# Suppress scikit-learn pickle version warnings during model loading
+warnings.filterwarnings("ignore", category=InconsistentVersionWarning)
+warnings.filterwarnings("ignore", message=".*InconsistentVersionWarning.*")
 
 logger = logging.getLogger(__name__)
 

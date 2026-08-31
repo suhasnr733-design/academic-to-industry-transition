@@ -443,60 +443,222 @@ class LearningService:
             return "3-5 weeks"
         return "2-3 weeks" if priority in ['High', 'Developing'] else "1-2 weeks"
 
-    def _get_project_recommendation(self, skill: str, target_role: str) -> Dict[str, Any]:
-        """Generate mini-project idea tailored to skill"""
+    def _get_project_recommendation(self, skill: str, target_role: str = 'Software Engineer') -> Dict[str, Any]:
+        """Generate real-world industry problem challenge tailored to skill gap"""
+        import urllib.parse
+        encoded_skill = urllib.parse.quote(f"{skill} starter template project")
+        github_search_url = f"https://github.com/search?q={encoded_skill}&type=repositories"
+
+        dbms_challenge = {
+            'title': 'E-Commerce Flash-Sale Concurrency & Inventory Race Condition',
+            'problem_statement': 'During peak flash sales, thousands of users buy remaining inventory simultaneously, leading to negative stock counts, duplicate orders, and database deadlocks.',
+            'description': 'Design a robust relational database schema with locking transactions (Optimistic or Pessimistic) to prevent negative inventory during high-concurrency order checkouts.',
+            'difficulty': 'Intermediate to Advanced',
+            'estimated_time': '6-10 Hours',
+            'github_url': 'https://github.com/topics/sql-database-design',
+            'search_url': github_search_url,
+            'learnings': ['ACID Transactions & Locking', 'Relational Schema Design', 'Database Indexing & Query Optimization'],
+            'criteria': [
+                'Database schema defines primary keys, foreign key constraints, and indices on product_id.',
+                'Order placement queries use transactional locking (FOR UPDATE or version checking) to prevent negative inventory.',
+                'Includes a test script verifying zero negative inventory balance during 50+ concurrent requests.'
+            ],
+            'steps': [
+                'Design relational tables (Users, Products, Orders, Inventory) with proper indices.',
+                'Implement atomic transaction SQL queries with FOR UPDATE row-level locking.',
+                'Write automated unit/integration tests verifying concurrent checkout isolation.'
+            ]
+        }
+
         projects_map = {
-            'SQL': {
-                'title': 'Student Placement & Performance Database System',
-                'description': 'Design relational tables, write complex JOIN queries, index fields, and optimize query speed.',
+            'sql': dbms_challenge,
+            'dbms': dbms_challenge,
+            'databases': dbms_challenge,
+            'aws': {
+                'title': 'High-Availability Asynchronous Media Processing Pipeline',
+                'description': 'Build an AWS serverless architecture that ingests media uploads asynchronously via S3, triggers Lambda processing, and updates DynamoDB status without blocking web servers.',
+                'problem_statement': 'Synchronous file uploads cause web servers to time out and crash during heavy user traffic spikes.',
                 'difficulty': 'Intermediate',
-                'estimated_time': '6-10 Hours',
-                'learnings': ['SQL Joins & Indexing', 'Schema Design', 'Data Aggregation']
+                'estimated_time': '6-8 Hours',
+                'github_url': 'https://github.com/aws-samples',
+                'search_url': github_search_url,
+                'learnings': ['AWS S3 & DynamoDB Integration', 'Serverless Lambda Functions', 'IAM Roles & Access Policies'],
+                'criteria': [
+                    'Uses AWS S3 bucket event notifications to trigger an asynchronous processing function.',
+                    'Stores image metadata and processing status records in AWS DynamoDB or database.',
+                    'Configures principle-of-least-privilege IAM policies for execution roles.'
+                ],
+                'steps': [
+                    'Configure S3 Bucket with CORS and event notification triggers.',
+                    'Create AWS Lambda function (or local mock) to resize images upon upload.',
+                    'Persist upload metadata to DynamoDB table and output public access URLs.'
+                ]
             },
-            'Python': {
-                'title': 'Automated Data Extraction & ETL Pipeline',
-                'description': 'Build an automated Python script to ingest, clean, and process structured datasets for business reporting.',
+            'python': {
+                'title': 'Production Data Pipeline & ETL Validation Engine',
+                'description': 'Build a resilient Python ETL pipeline that extracts raw messy datasets, validates schemas, handles exceptions, and stores cleaned records.',
+                'problem_statement': 'Upstream third-party APIs return corrupt JSON and missing fields, crashing downstream analytics reports.',
                 'difficulty': 'Intermediate',
                 'estimated_time': '8-12 Hours',
-                'learnings': ['Python Data Processing', 'File I/O', 'Error Handling & Automation']
+                'github_url': 'https://github.com/topics/python-pipeline',
+                'search_url': github_search_url,
+                'learnings': ['Python Data Pipelines', 'Robust Exception Handling', 'Automated Testing with pytest'],
+                'criteria': [
+                    'Defines data schema validation functions handling nulls, type mismatches, and corrupt fields.',
+                    'Implements custom Python exception classes and logging instead of silent crashes.',
+                    'Includes pytest test suite covering edge cases and error handling.'
+                ],
+                'steps': [
+                    'Set up virtual environment with dependency configuration (requirements.txt/Poetry).',
+                    'Build modular extraction, transformation, and load functions.',
+                    'Write comprehensive pytest test suite verifying edge cases.'
+                ]
             },
-            'Java': {
-                'title': 'Enterprise Banking & Account Management Microservice',
-                'description': 'Implement object-oriented domain models, Exception handling, and thread-safe transaction processing in Java.',
-                'difficulty': 'Intermediate',
-                'estimated_time': '10-14 Hours',
-                'learnings': ['OOP Design Patterns', 'Concurrency & Threads', 'Unit Testing']
-            },
-            'React': {
-                'title': 'Interactive Analytics & Learning Dashboard',
-                'description': 'Build a dynamic single-page web app with reusable stateful components, custom hooks, and API integration.',
+            'react': {
+                'title': 'High-Frequency Financial Dashboard & State Optimization',
+                'description': 'Build a responsive React analytics dashboard that handles fast-streaming WebSocket data feeds without page lag or UI memory leaks.',
+                'problem_statement': 'High-frequency WebSocket message updates cause non-stop React re-renders, causing browser UI freezes and memory leaks.',
                 'difficulty': 'Intermediate',
                 'estimated_time': '8-12 Hours',
-                'learnings': ['React State & Props', 'Component Lifecycle', 'API Fetching']
+                'github_url': 'https://github.com/topics/react-dashboard',
+                'search_url': github_search_url,
+                'learnings': ['React Component Memoization', 'Custom Hook Architecture', 'State Performance Throttling'],
+                'criteria': [
+                    'Uses React.memo, useMemo, or useCallback to prevent unneeded child component re-renders.',
+                    'Implements custom hooks for data fetching or WebSocket connection lifecycle.',
+                    'Implements message debouncing/throttling to batch UI updates efficiently.'
+                ],
+                'steps': [
+                    'Set up React Vite project with modular component hierarchy.',
+                    'Implement custom hook for state management and API stream handling.',
+                    'Apply React performance optimizations (useMemo/useCallback/React.memo).'
+                ]
             },
-            'Data Structures': {
-                'title': 'High-Performance Contact & Task Management System',
-                'description': 'Build a CLI/web task scheduler utilizing HashMaps, Trees, and Priority Queues for O(1) lookups.',
-                'difficulty': 'Beginner to Intermediate',
-                'estimated_time': '8-12 Hours',
-                'learnings': ['Binary Search Trees', 'HashMap Optimization', 'Time Complexity']
-            },
-            'Algorithms': {
-                'title': 'Optimal Route & Logistics Planner',
-                'description': 'Implement Dijkstra algorithm and Dynamic Programming to solve shortest path and knapsack problems.',
+            'go': {
+                'title': 'High-Concurrency Distributed Worker Pool & Network Scanner',
+                'problem_statement': 'Synchronous network pings cause latency bottlenecks. Build a concurrent Go worker pool using Goroutines and Channels.',
+                'description': 'Implement concurrent worker pools, channel communication, and context timeout controls in Go.',
                 'difficulty': 'Intermediate',
+                'estimated_time': '8-12 Hours',
+                'github_url': 'https://github.com/topics/golang-worker-pool',
+                'search_url': github_search_url,
+                'learnings': ['Goroutines & Channels', 'Context Timeout Control', 'Concurrent Memory Safety'],
+                'criteria': [
+                    'Uses Goroutines and buffered Channels to distribute network tasks across workers.',
+                    'Implements context.WithTimeout to cancel slow workers gracefully.',
+                    'Includes Go unit tests (testing package) verifying race conditions (go test -race).'
+                ],
+                'steps': [
+                    'Create a Go module with worker pool channel architecture.',
+                    'Implement context cancellation and channel select statements.',
+                    'Write benchmark and race condition unit tests.'
+                ]
+            },
+            'golang': {
+                'title': 'High-Concurrency Distributed Worker Pool & Network Scanner',
+                'problem_statement': 'Synchronous network pings cause latency bottlenecks. Build a concurrent Go worker pool using Goroutines and Channels.',
+                'description': 'Implement concurrent worker pools, channel communication, and context timeout controls in Go.',
+                'difficulty': 'Intermediate',
+                'estimated_time': '8-12 Hours',
+                'github_url': 'https://github.com/topics/golang-worker-pool',
+                'search_url': github_search_url,
+                'learnings': ['Goroutines & Channels', 'Context Timeout Control', 'Concurrent Memory Safety'],
+                'criteria': [
+                    'Uses Goroutines and buffered Channels to distribute network tasks across workers.',
+                    'Implements context.WithTimeout to cancel slow workers gracefully.',
+                    'Includes Go unit tests (testing package) verifying race conditions (go test -race).'
+                ],
+                'steps': [
+                    'Create a Go module with worker pool channel architecture.',
+                    'Implement context cancellation and channel select statements.',
+                    'Write benchmark and race condition unit tests.'
+                ]
+            },
+            'docker': {
+                'title': 'Zero-Downtime Microservice Containerization & Multi-Stage Builds',
+                'problem_statement': 'Bloated 2GB Docker images increase deployment times and cloud hosting costs.',
+                'description': 'Write optimized multi-stage Dockerfiles and docker-compose configurations for enterprise production deployments.',
+                'difficulty': 'Intermediate',
+                'estimated_time': '6-8 Hours',
+                'github_url': 'https://github.com/topics/docker-microservices',
+                'search_url': github_search_url,
+                'learnings': ['Multi-Stage Docker Builds', 'Docker Compose Networking', 'Container Security Best Practices'],
+                'criteria': [
+                    'Implements multi-stage Dockerfile reducing final image size under 150MB.',
+                    'Creates docker-compose.yml orchestrating app, database, and Redis container networks.',
+                    'Runs container under non-root USER security policies.'
+                ],
+                'steps': [
+                    'Write modular multi-stage Dockerfile for target application.',
+                    'Configure docker-compose.yml with health checks and volume mounts.',
+                    'Verify container startup, zero root privileges, and memory boundaries.'
+                ]
+            },
+            'graphql': {
+                'title': 'N+1 Database Query Resolution & Schema Federation',
+                'problem_statement': 'Nested GraphQL queries trigger hundreds of redundant database queries, causing severe server latency.',
+                'description': 'Implement DataLoader batching, GraphQL schema types, and query complexity limits in a production API.',
+                'difficulty': 'Intermediate to Advanced',
+                'estimated_time': '8-12 Hours',
+                'github_url': 'https://github.com/topics/graphql-api',
+                'search_url': github_search_url,
+                'learnings': ['DataLoader Batching', 'GraphQL Schema Definition', 'Query Complexity Throttling'],
+                'criteria': [
+                    'Defines strongly-typed GraphQL schema definitions and resolver functions.',
+                    'Integrates DataLoader batching to eliminate N+1 database queries.',
+                    'Implements query depth/complexity limits to prevent denial-of-service queries.'
+                ],
+                'steps': [
+                    'Define GraphQL schema types, queries, and mutations.',
+                    'Implement DataLoader batching functions for nested field resolvers.',
+                    'Write integration tests verifying single SQL batch execution.'
+                ]
+            },
+            'machine learning': {
+                'title': 'Real-Time Fraud Detection & Concept Drift Pipeline',
+                'problem_statement': 'E-Commerce transaction fraud patterns evolve dynamically, causing static ML models to fail over time.',
+                'description': 'Build an end-to-end machine learning pipeline with feature engineering, model evaluation, and automated drift detection.',
+                'difficulty': 'Advanced',
                 'estimated_time': '10-15 Hours',
-                'learnings': ['Graph Algorithms', 'Dynamic Programming', 'Big-O Analysis']
+                'github_url': 'https://github.com/topics/machine-learning-pipeline',
+                'search_url': github_search_url,
+                'learnings': ['Feature Engineering', 'Model Evaluation & ROC-AUC', 'Concept Drift Detection'],
+                'criteria': [
+                    'Preprocesses dataset with handling for missing values, scaling, and class imbalance (SMOTE/undersampling).',
+                    'Trains binary classifier evaluating Precision, Recall, and ROC-AUC metrics.',
+                    'Implements model persistence (joblib/pickle) and inference API endpoint.'
+                ],
+                'steps': [
+                    'Clean and engineer numerical/categorical dataset features.',
+                    'Train Scikit-Learn/XGBoost classification models with cross-validation.',
+                    'Save model artifacts and write automated API inference tests.'
+                ]
             }
         }
+
+        # Dynamic On-The-Fly Fallback Generator for any niche/unlisted skill
+        s_clean = skill.strip()
         fallback = {
-            'title': f"Real-World {skill} Application Module",
-            'description': f"Build a practical module demonstrating core concepts and best practices of {skill} for your {target_role} portfolio.",
+            'title': f"Real-World {s_clean} Enterprise Architecture Challenge",
+            'problem_statement': f"Legacy systems handling {s_clean} suffer from performance bottlenecks and lack automated test coverage under production load.",
+            'description': f"Build a production-grade module demonstrating core concepts, error boundaries, and design patterns of {s_clean} for your {target_role} portfolio.",
             'difficulty': 'Intermediate',
             'estimated_time': '6-8 Hours',
-            'learnings': [f"{skill} Fundamentals", "API / Data Integration", "Clean Architecture & Testing"]
+            'github_url': github_search_url,
+            'search_url': github_search_url,
+            'learnings': [f"{s_clean} Architecture & Patterns", "API / Data Integration", "Clean Code & Testing"],
+            'criteria': [
+                f"Repository contains valid source code files utilizing {s_clean} core concepts and design patterns.",
+                "Implements modular code structure, robust exception handling, and clean documentation.",
+                "Includes a detailed README.md explaining architecture, setup instructions, and execution steps."
+            ],
+            'steps': [
+                f"Set up a clean GitHub repository for {s_clean}",
+                f"Implement core logic and unit tests using {s_clean} best practices",
+                "Write a detailed README.md and push code to GitHub"
+            ]
         }
-        return projects_map.get(skill, fallback)
+        return projects_map.get(s_clean.lower(), fallback)
 
     def _get_practice_questions(self, skill: str) -> List[Dict[str, Any]]:
         """Generate interactive practice questions for skill"""
@@ -619,15 +781,18 @@ class LearningService:
             computed_mins = max(15, round((total_hours * 60) / days_remaining))
             est_mins = min(120, computed_mins)
 
-            if days_remaining <= 21:
+            if days_remaining <= 7:
+                pace_label = "🔥 Sprint Pace (Close Target Date)"
+                est_mins = max(60, min(180, computed_mins))
+            elif days_remaining <= 21:
                 pace_label = "⚡ Crash Course Pace"
-                est_mins = max(60, est_mins)
+                est_mins = max(45, min(120, computed_mins))
             elif days_remaining <= 60:
                 pace_label = "🎯 Standard Pace"
-                est_mins = min(55, max(35, est_mins))
+                est_mins = min(55, max(35, computed_mins))
             else:
                 pace_label = "☕ Relaxed Pace"
-                est_mins = min(30, est_mins)
+                est_mins = min(30, max(15, computed_mins))
 
         return {
             'skill_name': skill_name,

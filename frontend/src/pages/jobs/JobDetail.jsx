@@ -157,6 +157,10 @@ export const JobDetail = () => {
         }
       }
       toast.success(`🎉 Application submitted for ${job.title} at ${job.company}!`)
+      const externalUrl = job.apply_url || job.source_url
+      if (externalUrl) {
+        window.open(externalUrl, '_blank', 'noopener,noreferrer')
+      }
     } catch (err) {
       console.error('Error submitting campus application:', err)
       toast.error(err.response?.data?.error || 'Failed to submit campus application')

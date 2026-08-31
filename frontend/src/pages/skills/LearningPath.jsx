@@ -197,6 +197,32 @@ export const LearningPath = () => {
   const handleUpdateStageProgress = async (skillName, stage, isCompleted) => {
     if (!roadmapData || !roadmapData.resume_id) return
 
+    // Optimistic local state update
+    setRoadmapData(prev => {
+      if (!prev || !prev.skills) return prev
+      const updatedSkills = prev.skills.map(s => {
+        if (s.skill_name === skillName) {
+          const newStages = { ...s.stages_status, [stage]: isCompleted }
+          const completedCount = Object.values(newStages).filter(Boolean).length
+          const newPercent = Math.round((completedCount / 5) * 100)
+          return {
+            ...s,
+            stage: stage,
+            progress_percent: newPercent,
+            is_completed: isCompleted && stage === 'complete',
+            stages_status: newStages
+          }
+        }
+        return s
+      })
+      const totalProgress = Math.round(updatedSkills.reduce((acc, curr) => acc + (curr.progress_percent || 0), 0) / (updatedSkills.length || 1))
+      return {
+        ...prev,
+        learning_progress_percent: totalProgress,
+        skills: updatedSkills
+      }
+    })
+
     try {
       await api.post('/learning/progress', {
         resume_id: roadmapData.resume_id,
@@ -578,6 +604,7 @@ export const LearningPath = () => {
               <SkillLearningCard
                 skill={activeSkillObj}
                 targetRole={roadmapData.target_role}
+                resumeId={roadmapData.resume_id}
                 onUpdateStageProgress={handleUpdateStageProgress}
                 onBookmark={handleAddBookmark}
                 onOpenAiForSkill={(skillName) => {
