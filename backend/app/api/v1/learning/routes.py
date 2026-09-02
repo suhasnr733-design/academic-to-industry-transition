@@ -293,45 +293,50 @@ def get_youtube_resources():
 @learning_bp.route('/ai-assist', methods=['POST'])
 @jwt_required()
 def ai_learning_assistant():
-    """Contextual AI Learning Assistant endpoint"""
+    """Contextual AI Learning Assistant endpoint powered by Gemini & adaptive engine"""
     try:
         from app.services.llm_service import LLMService
         llm_service = LLMService()
 
         data = request.get_json() or {}
-        skill = data.get('skill', 'SQL')
-        target_role = data.get('target_role', 'Software Engineer')
-        prompt_type = data.get('prompt_type', 'explain')  # explain, example, practice, interview, project
+        skill = data.get('skill', 'JavaScript')
+        target_role = data.get('target_role', 'Full Stack Developer')
+        prompt_type = data.get('prompt_type', 'explain')  # explain, practice, interview, project
         custom_prompt = data.get('custom_prompt')
-
-        responses = {
-            'explain': f"**{skill} Overview for {target_role}s**:\n\n{skill} is essential for managing, querying, and structuring application data efficiently. Master key syntax, logical query execution order, and indexing to pass technical interviews and build production-ready applications.",
-            'example': f"**Code Example for {skill}**:\n\n```sql\n-- Retrieve top performing candidates\nSELECT student_id, name, cgpa \nFROM students \nWHERE cgpa >= 8.0 \nORDER BY cgpa DESC \nLIMIT 5;\n```",
-            'practice': f"**Practice Task for {skill}**:\n\nWrite a query or algorithm to find the 2nd highest salary or element without using hardcoded index values. Think about edge cases where duplicate values exist!",
-            'interview': f"**Top Interview Question for {skill}**:\n\n*Q: What is the difference between INNER JOIN and LEFT JOIN, and how does database indexing improve query execution time?*\n\n*Key Tip*: Explain that INDEX reduces disk read pages from O(N) full table scans to O(log N) B-Tree lookups.",
-            'project': f"**Mini-Project Idea**: Build a **{skill} Student Placement Tracker** with search filters, CSV exports, and performance stats dashboard."
-        }
+        stage = data.get('stage', 'Intermediate')
 
         if custom_prompt and custom_prompt.strip():
-            # Query LLM service if available
-            try:
-                ai_answer = llm_service.ask_ai_question(skill, custom_prompt, target_role)
-                if ai_answer and isinstance(ai_answer, dict) and ai_answer.get('answer'):
-                    response_text = ai_answer['answer']
-                elif isinstance(ai_answer, str) and ai_answer.strip():
-                    response_text = ai_answer
-                else:
-                    response_text = f"Here is key guidance for **{skill}** ({target_role} path) regarding '{custom_prompt}':\n\nFocus on mastering core architecture, transaction boundaries, and automated unit testing for {skill} to excel in production systems."
-            except Exception:
-                response_text = f"Regarding **{skill}** for {target_role}s ({custom_prompt}):\n\nMake sure to understand core data models, error handling, and performance optimization techniques for {skill}."
+            result = llm_service.ask_ai_question(
+                skill=skill,
+                question=custom_prompt.strip(),
+                target_role=target_role,
+                stage=stage
+            )
+            response_text = result.get('answer', '')
+            source = result.get('source', 'gemini')
         else:
-            response_text = responses.get(prompt_type, responses['explain'])
+            prompts_map = {
+                'explain': f"Explain core concepts and architectural significance of {skill} for a {target_role} in 2-3 clear paragraphs with key takeaways.",
+                'practice': f"Provide 2 hands-on coding or algorithmic practice questions for {skill} suitable for a {target_role} candidate with hints and edge cases.",
+                'interview': f"Provide 2 top technical interview questions and model answers asked by tech companies for {skill} ({target_role} path).",
+                'project': f"Suggest a high-impact portfolio mini-project using {skill} for a {target_role} resume with core feature list and tech stack."
+            }
+            query = prompts_map.get(prompt_type, prompts_map['explain'])
+            result = llm_service.ask_ai_question(
+                skill=skill,
+                question=query,
+                target_role=target_role,
+                stage=stage
+            )
+            response_text = result.get('answer', '')
+            source = result.get('source', 'contextual_engine')
 
         return jsonify({
             'skill': skill,
             'target_role': target_role,
             'prompt_type': prompt_type,
-            'response': response_text
+            'response': response_text,
+            'source': source
         }), 200
 
     except Exception as e:
