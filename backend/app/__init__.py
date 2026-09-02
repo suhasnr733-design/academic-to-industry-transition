@@ -284,6 +284,36 @@ def create_app(config_class='app.config.DevelopmentConfig'):
                         conn.execute(db.text("ALTER TABLE jobs ADD COLUMN expires_at DATETIME"))
                     if 'raw_data' not in job_columns:
                         conn.execute(db.text("ALTER TABLE jobs ADD COLUMN raw_data JSON"))
+
+                # Schema migration check for Resume columns
+                if 'resumes' in inspector.get_table_names():
+                    resume_columns = [c['name'] for c in inspector.get_columns('resumes')]
+                    resume_migrations = [
+                        ('file_size', 'INTEGER'),
+                        ('file_type', 'VARCHAR(10)'),
+                        ('skills', 'JSON'),
+                        ('education', 'JSON'),
+                        ('experience', 'JSON'),
+                        ('projects', 'JSON'),
+                        ('certifications', 'JSON'),
+                        ('personal_info', 'JSON'),
+                        ('links', 'JSON'),
+                        ('summary', 'TEXT'),
+                        ('achievements', 'JSON'),
+                        ('publications', 'JSON'),
+                        ('ats_breakdown', 'JSON'),
+                        ('employability_score', 'FLOAT'),
+                        ('recommended_roles', 'JSON'),
+                        ('skill_gaps', 'JSON'),
+                        ('status', "VARCHAR(20) DEFAULT 'pending'"),
+                        ('error_message', 'TEXT'),
+                        ('created_at', 'DATETIME'),
+                        ('updated_at', 'DATETIME')
+                    ]
+                    for col_name, col_type in resume_migrations:
+                        if col_name not in resume_columns:
+                            conn.execute(db.text(f"ALTER TABLE resumes ADD COLUMN {col_name} {col_type}"))
+
                 conn.commit()
         except Exception as e:
             logger.warning(f"Database columns auto-migration notice: {e}")

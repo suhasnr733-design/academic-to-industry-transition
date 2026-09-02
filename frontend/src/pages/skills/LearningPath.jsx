@@ -377,9 +377,11 @@ export const LearningPath = () => {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         filterStatus={filterStatus}
-        setFilterStatus={setFilterStatus}
-        onOpenAiAssistant={() => setIsAiOpen(true)}
-        resumes={resumes}
+        onOpenAiAssistant={() => {
+          const defaultSkill = activeSkillObj?.skill_name || (roadmapData?.skills && roadmapData.skills.length > 0 ? roadmapData.skills[0].skill_name : 'General')
+          setAiSkillTarget(defaultSkill)
+          setIsAiOpen(true)
+        }}
         activeResumeId={activeResumeId}
         onSelectResume={handleSelectResume}
         selectedLanguage={selectedLanguage}
