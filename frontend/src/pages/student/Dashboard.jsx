@@ -26,16 +26,31 @@ import {
   MailIcon
 } from '@heroicons/react/outline'
 
+const DASHBOARD_SWR_KEY = 'swr_student_dashboard_overview'
+
+const getCachedDashboardOverview = () => {
+  try {
+    const raw = sessionStorage.getItem(DASHBOARD_SWR_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
 export const Dashboard = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { resumes, fetchResumes } = useResume()
-  const { jobs, isLoading: jobsLoading } = useJobs()
+  // Optimization 1: Extract totalJobs alongside jobs from useJobs hook to avoid duplicate API calls
+  const { jobs, total: totalJobs, isLoading: jobsLoading } = useJobs()
 
-  const [jobCount, setJobCount] = useState(0)
-  const [skillGapCount, setSkillGapCount] = useState(0)
-  const [targetRoleMatch, setTargetRoleMatch] = useState(0)
-  const [targetRoleTitle, setTargetRoleTitle] = useState('')
+  // Optimization 3: Hydrate dashboard metrics from SWR session storage for instant 0.00s rendering
+  const cachedOverview = getCachedDashboardOverview()
+
+  const [jobCount, setJobCount] = useState(() => cachedOverview?.job_count || totalJobs || jobs?.length || 0)
+  const [skillGapCount, setSkillGapCount] = useState(() => cachedOverview?.skill_gap_count || 0)
+  const [targetRoleMatch, setTargetRoleMatch] = useState(() => cachedOverview?.target_role_match || 0)
+  const [targetRoleTitle, setTargetRoleTitle] = useState(() => cachedOverview?.target_role_title || '')
   const [isProcessing, setIsProcessing] = useState(false)
 
   const jobsSectionRef = React.useRef(null)
@@ -43,7 +58,7 @@ export const Dashboard = () => {
   const [showSkillsModal, setShowSkillsModal] = useState(false)
 
   // Mentorship & Advisor State
-  const [advisorData, setAdvisorData] = useState({ has_advisor: false, advisor: null, requests: [] })
+  const [advisorData, setAdvisorData] = useState(() => cachedOverview?.advisor_data || { has_advisor: false, advisor: null, requests: [] })
   const [facultyList, setFacultyList] = useState([])
   const [showAdvisorModal, setShowAdvisorModal] = useState(false)
   const [selectedFacultyForRequest, setSelectedFacultyForRequest] = useState(null)
@@ -51,7 +66,7 @@ export const Dashboard = () => {
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false)
 
   // Company Placement Nominations State
-  const [nominations, setNominations] = useState([])
+  const [nominations, setNominations] = useState(() => cachedOverview?.nominations || [])
   const [isRespondingNomination, setIsRespondingNomination] = useState(null)
   const [showDeclineModal, setShowDeclineModal] = useState(false)
   const [declineTargetNomination, setDeclineTargetNomination] = useState(null)
@@ -122,18 +137,51 @@ export const Dashboard = () => {
     }
   }, [latestResume?.status, latestResume?.id])
 
-  // 4. Fetch jobs, metrics, advisor & company nominations
+  // Optimization 2: Single unified dashboard overview fetcher (replaces 3-4 independent HTTP calls)
+  const fetchDashboardOverview = async () => {
+    try {
+      const res = await api.get('/analytics/student/summary')
+      if (res.data && res.data.status === 'success') {
+        if (res.data.job_count !== undefined) setJobCount(res.data.job_count)
+        if (res.data.target_role_match !== undefined) setTargetRoleMatch(res.data.target_role_match)
+        if (res.data.target_role_title) setTargetRoleTitle(res.data.target_role_title)
+        if (res.data.skill_gap_count !== undefined) setSkillGapCount(res.data.skill_gap_count)
+        if (res.data.advisor_data) setAdvisorData(res.data.advisor_data)
+        if (res.data.nominations) setNominations(res.data.nominations)
+
+        // Optimization 3: Persist fresh overview to session storage cache
+        try {
+          sessionStorage.setItem(DASHBOARD_SWR_KEY, JSON.stringify(res.data))
+        } catch (e) {}
+        return
+      }
+    } catch (err) {
+      console.warn('Dashboard summary endpoint notice, using fallback:', err)
+    }
+
+    // Fallback if needed
+    Promise.allSettled([
+      fetchDashboardMetrics(),
+      fetchAdvisorDetails(),
+      fetchNominations()
+    ])
+  }
+
   useEffect(() => {
-    fetchDashboardMetrics()
-    fetchAdvisorDetails()
-    fetchNominations()
+    fetchDashboardOverview()
   }, [completedResume?.id, completedResume?.status])
+
+  // Optimization 1: Keep jobCount synchronized from useJobs hook without duplicate API calls
+  useEffect(() => {
+    if (totalJobs || jobs?.length) {
+      setJobCount(totalJobs || jobs.length)
+    }
+  }, [totalJobs, jobs?.length])
 
   const fetchDashboardMetrics = async () => {
     try {
-      const jobsRes = await api.get('/jobs')
-      const jobsList = jobsRes.data?.jobs || []
-      setJobCount(jobsList.length)
+      // Optimization 1: Deduplicated - reuse totalJobs/jobs from useJobs hook
+      setJobCount(totalJobs || jobs?.length || 0)
 
       if (completedResume && completedResume.status === 'completed') {
         try {

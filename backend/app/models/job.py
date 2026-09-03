@@ -16,11 +16,11 @@ class Job(db.Model):
     location = db.Column(db.String(100))
     salary_range = db.Column(db.String(50))
     job_type = db.Column(db.String(50))
-    domain = db.Column(db.String(50))
+    domain = db.Column(db.String(50), index=True)
     
-    is_active = db.Column(db.Boolean, default=True)
+    is_active = db.Column(db.Boolean, default=True, index=True)
     is_live = db.Column(db.Boolean, default=False)
-    source = db.Column(db.String(50), default='internal')  # internal, remotive, arbeitnow, jsearch, adzuna, scraper
+    source = db.Column(db.String(50), default='internal', index=True)  # internal, remotive, arbeitnow, jsearch, adzuna, scraper
     external_id = db.Column(db.String(255), index=True, nullable=True)
     apply_url = db.Column(db.Text, nullable=True)
     
@@ -28,10 +28,14 @@ class Job(db.Model):
     salary_max = db.Column(db.Float, nullable=True)
     currency = db.Column(db.String(10), default='INR')
     
-    posted_date = db.Column(db.DateTime, default=datetime.utcnow)
+    posted_date = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     expires_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     raw_data = db.Column(db.JSON, nullable=True)
+
+    __table_args__ = (
+        db.Index('idx_jobs_active_posted', 'is_active', 'posted_date'),
+    )
     
     def to_dict(self):
         return {

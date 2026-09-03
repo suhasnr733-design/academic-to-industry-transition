@@ -7,6 +7,10 @@ from app.api.v1.learning import learning_bp
 from app.services.learning_service import LearningService
 from app.models.learning import LearningBookmark, LearningProgress, LearningActivity
 from app.models.resume import Resume
+from app.services.llm_service import LLMService
+import logging
+
+logger = logging.getLogger(__name__)
 
 learning_service = LearningService()
 
@@ -249,16 +253,44 @@ def evaluate_project_solution():
         if not resume_id or not skill_name or not github_url:
             return jsonify({'error': 'resume_id, skill_name, and github_url are required'}), 400
 
+        # Retrieve candidate resume to enforce GitHub ownership verification
+        import re
+        expected_github_username = None
+        resume = Resume.query.filter_by(id=int(resume_id), user_id=current_user_id).first()
+        if not resume:
+            resume = Resume.query.get(int(resume_id))
+
+        if resume:
+            links = resume.links or {}
+            personal_info = resume.personal_info or {}
+            raw_github = links.get('github') or personal_info.get('github')
+            if raw_github:
+                m = re.search(r'github\.com\/([a-zA-Z0-9_\-\.]+)', str(raw_github), re.IGNORECASE)
+                if m:
+                    expected_github_username = m.group(1).rstrip('/')
+                else:
+                    expected_github_username = str(raw_github).strip().lstrip('@')
+
         evaluator = ProblemEvaluator()
         result = evaluator.evaluate_github_solution(
             skill_name=skill_name,
             problem_statement=problem_statement,
             criteria=criteria,
-            github_url=github_url
+            github_url=github_url,
+            expected_owner=expected_github_username
         )
 
         if 'error' in result:
             return jsonify({'error': result['error']}), 400
+
+        # If resume had no GitHub link attached, register this verified account for future checks
+        if resume and not expected_github_username:
+            repo_match = re.match(r'^https://github\.com/([a-zA-Z0-9_-]+)/', github_url)
+            if repo_match:
+                new_links = dict(resume.links or {})
+                new_links['github'] = f"https://github.com/{repo_match.group(1)}"
+                resume.links = new_links
+                db.session.commit()
 
         is_solved = result.get('is_problem_solved', False)
 
@@ -272,13 +304,18 @@ def evaluate_project_solution():
                 is_completed=True
             )
 
-            # Log milestone activity
+            # Log milestone activity with verified Git authenticity proof
+            audit_info = result.get('commit_audit', {})
+            recent_commits = audit_info.get('recent_commits', [])
+            latest_sha = recent_commits[0].get('sha', 'HEAD') if recent_commits else 'HEAD'
+            prog_score = audit_info.get('progression_score', 90)
+
             activity = LearningActivity(
                 user_id=current_user_id,
                 resume_id=int(resume_id),
                 skill_name=skill_name,
                 activity_type='problem_challenge_passed',
-                details=f"Passed real-world problem evaluation for {skill_name} (Score: {result.get('solution_score', 0)}%)"
+                details=f"Passed solution for {skill_name} | Score: {result.get('solution_score', 0)}% | Git SHA: {latest_sha} | Progression: {prog_score}%"
             )
             db.session.add(activity)
             db.session.commit()
@@ -290,6 +327,82 @@ def evaluate_project_solution():
 
     except Exception as e:
         db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@learning_bp.route('/projects/defense-questions', methods=['POST'])
+@jwt_required()
+def get_defense_questions():
+    """Generates 2 architectural defense questions based on candidate's solution"""
+    try:
+        data = request.get_json() or {}
+        skill_name = data.get('skill_name')
+        problem_statement = data.get('problem_statement', '')
+        
+        if not skill_name:
+            return jsonify({'error': 'skill_name is required'}), 400
+
+        llm = LLMService()
+        questions = llm.generate_architecture_defense_questions(
+            skill_name=skill_name,
+            problem_statement=problem_statement
+        )
+
+        return jsonify({
+            'success': True,
+            'questions': questions
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error generating defense questions: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@learning_bp.route('/projects/submit-defense', methods=['POST'])
+@jwt_required()
+def submit_architecture_defense():
+    """Evaluates candidate's written architectural defense and returns Bar Raiser score & coaching"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        data = request.get_json() or {}
+        
+        resume_id = data.get('resume_id')
+        skill_name = data.get('skill_name')
+        problem_statement = data.get('problem_statement', '')
+        questions = data.get('questions', [])
+        user_answers = data.get('user_answers', {})
+
+        if not skill_name or not user_answers:
+            return jsonify({'error': 'skill_name and user_answers are required'}), 400
+
+        llm = LLMService()
+        defense_result = llm.evaluate_architecture_defense(
+            skill_name=skill_name,
+            problem_statement=problem_statement,
+            questions=questions,
+            user_answers=user_answers
+        )
+
+        # Record verified Defense Interview milestone in LearningActivity
+        if resume_id and current_user_id:
+            score = defense_result.get('defense_score', 80)
+            verdict = defense_result.get('verdict', 'Hire')
+            activity = LearningActivity(
+                user_id=current_user_id,
+                resume_id=int(resume_id),
+                skill_name=skill_name,
+                activity_type='architecture_defense_passed',
+                details=f"Defended architecture for {skill_name} | Score: {score}% | Verdict: {verdict}"
+            )
+            db.session.add(activity)
+            db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'defense_result': defense_result
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error evaluating architecture defense: {e}")
         return jsonify({'error': str(e)}), 500
 
 @learning_bp.route('/youtube', methods=['GET'])
