@@ -627,7 +627,7 @@ export const LearningPath = () => {
       {isAiOpen && (
         <AILearningAssistant
           skillName={aiSkillTarget}
-          targetRole={roadmapData.target_role}
+          targetRole={roadmapData?.target_role || 'Software Engineer'}
           stage={activeSkillObj?.stage || 'learn'}
           onClose={() => setIsAiOpen(false)}
         />

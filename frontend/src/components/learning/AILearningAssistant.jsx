@@ -116,26 +116,48 @@ const FormattedMessage = ({ text }) => {
   )
 }
 
-export const AILearningAssistant = ({ skillName, targetRole, stage, onClose }) => {
-  const [messages, setMessages] = useState([
+// Helper to load cached messages from sessionStorage per skill
+const getInitialMessages = (skill, role) => {
+  const cacheKey = `ai_chat_${skill || 'General'}`
+  try {
+    const cached = sessionStorage.getItem(cacheKey)
+    if (cached) {
+      const parsed = JSON.parse(cached)
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    }
+  } catch (e) {
+    console.error('Failed to load cached chat messages:', e)
+  }
+  return [
     {
       sender: 'ai',
-      text: `Hello! I am your AI Study Assistant for **${skillName || 'Skill'}** (${targetRole || 'Placement'} path).\n\nAsk me anything, or pick a quick topic below to start!`
+      text: `Hello! I am your AI Study Assistant for **${skill || 'Skill'}** (${role || 'Placement'} path).\n\nAsk me anything, or pick a quick topic below to start!`
     }
-  ])
+  ]
+}
+
+export const AILearningAssistant = ({ skillName, targetRole, stage, onClose }) => {
+  const [messages, setMessages] = useState(() => getInitialMessages(skillName, targetRole))
   const [inputPrompt, setInputPrompt] = useState('')
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef(null)
 
-  // Reset messages if skillName or targetRole changes
+  // Load stored messages when active skill or role changes
   useEffect(() => {
-    setMessages([
-      {
-        sender: 'ai',
-        text: `Hello! I am your AI Study Assistant for **${skillName || 'Skill'}** (${targetRole || 'Placement'} path).\n\nAsk me anything, or pick a quick topic below to start!`
-      }
-    ])
+    setMessages(getInitialMessages(skillName, targetRole))
   }, [skillName, targetRole])
+
+  // Automatically save messages to sessionStorage whenever updated
+  useEffect(() => {
+    if (messages && messages.length > 0) {
+      const cacheKey = `ai_chat_${skillName || 'General'}`
+      try {
+        sessionStorage.setItem(cacheKey, JSON.stringify(messages))
+      } catch (e) {
+        console.error('Failed to save chat history to sessionStorage:', e)
+      }
+    }
+  }, [messages, skillName])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -205,6 +227,12 @@ export const AILearningAssistant = ({ skillName, targetRole, stage, onClose }) =
   }
 
   const clearChat = () => {
+    const cacheKey = `ai_chat_${skillName || 'General'}`
+    try {
+      sessionStorage.removeItem(cacheKey)
+    } catch (e) {
+      console.error('Failed to clear sessionStorage:', e)
+    }
     setMessages([
       {
         sender: 'ai',

@@ -229,7 +229,7 @@ export const LearningDashboardHeader = ({
           />
         </div>
 
-        {/* Status Filters */}
+        {/* Status Filters & AI Assistant Trigger */}
         <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           <FilterIcon className="w-4 h-4 text-indigo-300 mr-1 hidden sm:inline" />
           {['all', 'in-progress', 'not-started', 'completed'].map((status) => (
@@ -244,6 +244,16 @@ export const LearningDashboardHeader = ({
               {status.replace('-', ' ')}
             </button>
           ))}
+          {onOpenAiAssistant && (
+            <button
+              onClick={onOpenAiAssistant}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-extrabold rounded-xl shadow-md hover:shadow-indigo-500/40 transition-all hover:scale-105 cursor-pointer border border-indigo-300/40 ml-1 whitespace-nowrap"
+              title="Open AI Study Assistant"
+            >
+              <SparklesIcon className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+              <span>AI Assistant</span>
+            </button>
+          )}
         </div>
       </div>
 

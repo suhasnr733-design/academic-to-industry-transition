@@ -1,6 +1,6 @@
-# backend/app/services/llm_service.py
-
 import os
+import json
+import random
 import logging
 from typing import Dict, List, Any, Optional
 
@@ -286,4 +286,172 @@ class LLMService:
             'response': response,
             'current_skills': current_skills,
             'target_role': target_role
+        }
+
+    INDUSTRIES = [
+        "Fintech & UPI Instant Payments",
+        "E-Commerce Flash Sale & Inventory Reservation",
+        "Hospital Emergency Telemetry & Patient Vitals",
+        "Ride-Hailing Fleet Tracking & Surge Dispatch",
+        "Live Video Streaming during Sports Championship",
+        "Food Delivery Routing during Peak Monsoon Hours",
+        "EdTech Online Examination & Anti-Cheat Ingestion",
+        "Airline Booking & Concurrent Seat Reservation"
+    ]
+
+    @staticmethod
+    def build_github_starter_url(gap_skill: str, known_skills: List[str] = None) -> str:
+        """Builds a high-yield, targeted GitHub search URL with hundreds of matching repositories"""
+        import urllib.parse
+
+        CODE_LANGUAGES = {
+            'python', 'javascript', 'typescript', 'java', 'cpp', 'c++', 'c#', 'csharp',
+            'golang', 'go', 'rust', 'php', 'ruby', 'kotlin', 'swift', 'scala',
+            'react', 'nodejs', 'fastapi', 'flask', 'django', 'spring', 'vue', 'angular', 'express'
+        }
+
+        IGNORE_TERMS = {
+            'algorithms', 'data structures', 'problem solving', 'system design',
+            'computer networks', 'dbms', 'oop', 'oops', 'software engineering',
+            'operating systems', 'sql', 'nosql', 'git', 'github'
+        }
+
+        gap_clean = (gap_skill or '').strip()
+        gap_low = gap_clean.lower()
+
+        # Find first concrete programming language/framework that is NOT the gap skill
+        primary_lang = ''
+        if known_skills:
+            for s in known_skills:
+                s_clean = str(s).strip()
+                s_low = s_clean.lower()
+                if s_low != gap_low and s_low not in IGNORE_TERMS and s_low not in gap_low:
+                    if s_low in CODE_LANGUAGES or any(lang in s_low for lang in CODE_LANGUAGES):
+                        primary_lang = s_clean
+                        break
+
+        # Construct concise 2-3 word query
+        if primary_lang and primary_lang.lower() not in gap_low:
+            query = f"{primary_lang} {gap_clean} starter"
+        else:
+            query = f"{gap_clean} starter template"
+
+        encoded_query = urllib.parse.quote(query)
+        return f"https://github.com/search?q={encoded_query}&type=repositories"
+
+    def generate_real_world_crisis_challenge(
+        self, 
+        gap_skill: str, 
+        known_skills: List[str] = None, 
+        target_role: str = "Software Engineer"
+    ) -> Dict[str, Any]:
+        """Generate an authentic, real-world human/business crisis scenario using Gemini API"""
+        domain = random.choice(self.INDUSTRIES)
+        strengths_str = ', '.join(known_skills[:4]) if (known_skills and len(known_skills) > 0) else 'Python, SQL, REST APIs'
+        github_search_url = self.build_github_starter_url(gap_skill, known_skills)
+
+        prompt = f"""
+You are a Principal Software Incident Commander & VP of Engineering.
+Create an authentic, high-stakes REAL-WORLD PRODUCTION CRISIS engineering challenge for a candidate.
+
+CANDIDATE CONTEXT:
+- Target Role: {target_role}
+- Candidate Known Skills (Strengths): {strengths_str}
+- Gap Skill to Master: {gap_skill}
+- Real-World Domain: {domain}
+
+RULES:
+1. DO NOT make this an academic dev tutorial or homework prompt like "Use {gap_skill} to build a todo app".
+2. Describe an authentic CRISIS that happened to users or businesses in the '{domain}' domain (e.g. system crashes, lost customer money, failed orders, 504 timeouts, locked database rows).
+3. The candidate's engineering mission is to resolve the root cause by bridging their known skills ({strengths_str}) with the gap skill ({gap_skill}).
+
+Return ONLY a valid JSON object matching this schema:
+{{
+  "title": "Short Crisis Project Title (e.g., Zero-Data-Loss Failover for Flash Sale Cart)",
+  "domain": "{domain}",
+  "estimated_time": "6-8 Hours",
+  "difficulty": "Intermediate",
+  "problem_statement": "The exact human/business crisis: What broke, who was affected, and the monetary/operational loss",
+  "description": "The engineering mission: How fixing the architecture prevents future outages",
+  "github_url": "{github_search_url}",
+  "search_url": "{github_search_url}",
+  "learnings": [
+    "Core Concept 1 mastered",
+    "Core Concept 2 mastered",
+    "Production best practice"
+  ],
+  "criteria": [
+    "Technical requirement 1 handling edge cases",
+    "Technical requirement 2 applying {gap_skill}",
+    "Automated testing or verification requirement"
+  ],
+  "steps": [
+    "Step 1: Reproduce failure & design resilient architecture",
+    "Step 2: Implement core logic bridging {strengths_str} with {gap_skill}",
+    "Step 3: Verification & simulated crash testing"
+  ]
+}}
+"""
+        # 1. Try Modern GenAI Client
+        if self.client:
+            candidate_models = []
+            for m in [self.gemini_model_name, "gemini-1.5-flash", "gemini-flash-lite-latest"]:
+                if m and m not in candidate_models:
+                    candidate_models.append(m)
+
+            for candidate_model in candidate_models:
+                try:
+                    resp = self.client.models.generate_content(
+                        model=candidate_model,
+                        contents=prompt,
+                        config={"temperature": 0.85} if types else None
+                    )
+                    if resp and resp.text:
+                        raw = resp.text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+                        parsed = json.loads(raw)
+                        if isinstance(parsed, dict) and 'problem_statement' in parsed:
+                            parsed['domain'] = domain
+                            parsed['search_url'] = github_search_url
+                            parsed['github_url'] = parsed.get('github_url') or github_search_url
+                            return parsed
+                except Exception as e:
+                    logger.warning(f"GenAI crisis generation failed on {candidate_model}: {e}")
+                    break
+
+        # 2. Try Legacy GenAI Client
+        if self.legacy_model:
+            try:
+                resp = self.legacy_model.generate_content(prompt)
+                if resp and resp.text:
+                    raw = resp.text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+                    parsed = json.loads(raw)
+                    if isinstance(parsed, dict) and 'problem_statement' in parsed:
+                        parsed['domain'] = domain
+                        parsed['search_url'] = github_search_url
+                        parsed['github_url'] = parsed.get('github_url') or github_search_url
+                        return parsed
+            except Exception as e:
+                logger.warning(f"Legacy Gemini crisis generation failed: {e}")
+
+        # 3. Dynamic Fallback
+        return {
+            'title': f"Real-World {gap_skill} {domain.split('&')[0].strip()} Incident Challenge",
+            'domain': domain,
+            'estimated_time': '6-8 Hours',
+            'difficulty': 'Intermediate',
+            'problem_statement': f"During high user concurrency in {domain}, synchronous processing of {gap_skill} operations created high latency and transaction timeout errors for active users.",
+            'description': f"Architect a resilient, non-blocking service using your {strengths_str} skills and {gap_skill} to eliminate timeouts and maintain 99.9% uptime during traffic surges.",
+            'github_url': github_search_url,
+            'search_url': github_search_url,
+            'learnings': [f"{gap_skill} Concurrency & Scaling", f"{domain} Architecture", "Automated Chaos & Failover Testing"],
+            'criteria': [
+                f"Implements robust, non-blocking handling for {gap_skill} operations.",
+                f"Bridges data flow between {strengths_str} and {gap_skill} without memory leaks.",
+                "Includes automated test suite verifying system stability under simulated high load."
+            ],
+            'steps': [
+                f"Design non-blocking service architecture for {gap_skill}",
+                f"Implement core logic bridging {strengths_str} and {gap_skill}",
+                "Write automated unit and load resilience tests"
+            ]
         }
