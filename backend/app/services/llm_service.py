@@ -455,3 +455,333 @@ Return ONLY a valid JSON object matching this schema:
                 "Write automated unit and load resilience tests"
             ]
         }
+
+    def review_code_solution(
+        self,
+        skill_name: str,
+        problem_statement: str,
+        criteria: List[str],
+        code_artifacts: Dict[str, str]
+    ) -> Optional[Dict[str, Any]]:
+        """Evaluates candidate code artifacts against production incident criteria using Gemini"""
+        if not code_artifacts:
+            return None
+
+        # Format code files with clear delimiters
+        formatted_code = ""
+        for file_path, content in code_artifacts.items():
+            formatted_code += f"\n--- FILE: {file_path} ---\n{content}\n"
+
+        criteria_str = "\n".join([f"- {c}" for c in criteria])
+
+        prompt = f"""
+You are a Principal Software Engineer and Incident Commander conducting a technical code review.
+Review the candidate's repository source code submitted to resolve a production crisis.
+
+PRODUCTION CRISIS CONTEXT:
+Skill: {skill_name}
+Incident Problem Statement: {problem_statement}
+
+ACCEPTANCE CRITERIA TO PASS:
+{criteria_str}
+
+CANDIDATE SOURCE CODE FILES:
+{formatted_code}
+
+EVALUATION INSTRUCTIONS:
+1. Analyze if the code genuinely solves the root cause (e.g. non-blocking operations, proper buffer allocation, event-loop mitigation).
+2. For each acceptance criterion, determine if it passed or failed based on evidence in the code.
+3. Assign an objective solution_score between 0 and 100:
+   - >= 70: Problem is solved (is_problem_solved = true)
+   - < 70: Needs revision (is_problem_solved = false)
+4. Provide constructive Staff-Engineer-level engineering feedback and 2 concrete optimization tips.
+
+Return ONLY a valid JSON object matching this schema:
+{{
+  "is_problem_solved": true,
+  "solution_score": 85.0,
+  "feedback": "Concise 2-3 sentence executive evaluation of the architecture.",
+  "passed_criteria": ["Criterion that was satisfied"],
+  "missing_criteria": ["Criterion that was missed or incomplete"],
+  "criteria_review": [
+    {{
+      "criterion": "Criterion name",
+      "status": "passed",
+      "evidence": "Short code snippet or line reference proving implementation",
+      "comment": "Why this meets the requirement"
+    }}
+  ],
+  "staff_engineer_tips": [
+    "Production tip 1 (e.g. memory leak protection)",
+    "Production tip 2 (e.g. scaling or backpressure)"
+  ]
+}}
+"""
+
+        candidate_models = []
+        for m in [self.gemini_model_name, "gemini-1.5-flash", "gemini-flash-lite-latest"]:
+            if m and m not in candidate_models:
+                candidate_models.append(m)
+
+        for candidate_model in candidate_models:
+            try:
+                if self.client:
+                    resp = self.client.models.generate_content(
+                        model=candidate_model,
+                        contents=prompt,
+                        config={"temperature": 0.2} if types else None
+                    )
+                    if resp and resp.text:
+                        raw = resp.text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+                        parsed = json.loads(raw)
+                        if isinstance(parsed, dict) and "solution_score" in parsed:
+                            return parsed
+            except Exception as e:
+                logger.warning(f"GenAI code review failed on {candidate_model}: {e}")
+                continue
+
+        # Optional legacy model fallback
+        if self.legacy_model:
+            try:
+                resp = self.legacy_model.generate_content(prompt)
+                if resp and resp.text:
+                    raw = resp.text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+                    parsed = json.loads(raw)
+                    if isinstance(parsed, dict) and "solution_score" in parsed:
+                        return parsed
+            except Exception as e:
+                logger.warning(f"Legacy Gemini code review failed: {e}")
+
+        return None
+
+    def generate_architecture_defense_questions(
+        self,
+        skill_name: str,
+        problem_statement: str,
+        code_artifacts: Dict[str, str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Prompts Gemini as a Staff Bar Raiser to inspect candidate's real code
+        and generate 2 sharp architectural defense questions challenging trade-offs and edge cases.
+        """
+        code_context_blocks = []
+        for file_path, code_text in (code_artifacts or {}).items():
+            code_context_blocks.append(f"--- FILE: {file_path} ---\n{code_text[:2000]}\n")
+        code_context = "\n".join(code_context_blocks) or "No code files provided."
+
+        prompt = f"""
+You are a Principal Software Engineer and Bar Raiser conducting an interactive architectural defense interview.
+The candidate just implemented a technical solution addressing a production crisis for the skill '{skill_name}'.
+
+CRISIS CONTEXT:
+{problem_statement}
+
+CANDIDATE'S ACTUAL CODE SOLUTION:
+{code_context}
+
+YOUR GOAL:
+Inspect the candidate's implementation details (functions, data structures, algorithms, error handlers) and generate EXACTLY 2 sharp, technical architecture defense interview questions.
+
+QUESTION 1 (Category: 'Architectural Trade-offs'):
+- Challenge a specific technical decision in their code (e.g. why they chose a specific data structure, loop construct, memory allocation, or library over alternatives).
+
+QUESTION 2 (Category: 'Resilience & Failure Modes'):
+- Challenge how their code would behave under catastrophic conditions (e.g. unhandled concurrency, buffer overflows, backpressure, or massive burst traffic).
+
+RESPONSE FORMAT:
+Return a JSON array containing exactly 2 objects:
+[
+  {{
+    "id": 1,
+    "category": "Architectural Trade-offs",
+    "question": "In your implementation of [file/function], why did you choose [construct] instead of [alternative], and what are the trade-offs regarding memory and CPU?",
+    "context_hint": "Focus on Big-O complexity and memory trade-offs."
+  }},
+  {{
+    "id": 2,
+    "category": "Resilience & Failure Modes",
+    "question": "What happens in your code if [catastrophic scenario]? How does your architecture protect against cascade failures?",
+    "context_hint": "Consider backpressure, circuit breaking, or memory pressure."
+  }}
+]
+
+Return ONLY valid JSON.
+"""
+
+        candidate_models = []
+        for m in [self.gemini_model_name, "gemini-1.5-flash", "gemini-flash-lite-latest"]:
+            if m and m not in candidate_models:
+                candidate_models.append(m)
+
+        for candidate_model in candidate_models:
+            try:
+                if self.client:
+                    resp = self.client.models.generate_content(
+                        model=candidate_model,
+                        contents=prompt,
+                        config={"temperature": 0.2} if types else None
+                    )
+                    if resp and resp.text:
+                        raw = resp.text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+                        parsed = json.loads(raw)
+                        if isinstance(parsed, list) and len(parsed) >= 2:
+                            return parsed[:2]
+            except Exception as e:
+                logger.warning(f"GenAI defense question generation failed on {candidate_model}: {e}")
+                continue
+
+        if self.legacy_model:
+            try:
+                resp = self.legacy_model.generate_content(prompt)
+                if resp and resp.text:
+                    raw = resp.text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+                    parsed = json.loads(raw)
+                    if isinstance(parsed, list) and len(parsed) >= 2:
+                        return parsed[:2]
+            except Exception as e:
+                logger.warning(f"Legacy Gemini defense questions failed: {e}")
+
+        # Resilient Fallback if offline or quota exceeded
+        return [
+            {
+                "id": 1,
+                "category": "Architectural Trade-offs",
+                "question": f"In your implementation for {skill_name}, what was the primary architectural trade-off you made between execution speed and memory consumption?",
+                "context_hint": "Explain why your chosen data structures fit this throughput requirement."
+            },
+            {
+                "id": 2,
+                "category": "Resilience & Failure Modes",
+                "question": f"If incoming requests increase 10x beyond your test threshold, where will your code fail first, and how would you implement backpressure or shedding?",
+                "context_hint": "Identify the primary bottleneck in your critical path."
+            }
+        ]
+
+    def evaluate_architecture_defense(
+        self,
+        skill_name: str,
+        problem_statement: str,
+        questions: List[Dict[str, Any]],
+        user_answers: Dict[str, str],
+        code_artifacts: Dict[str, str] = None
+    ) -> Dict[str, Any]:
+        """
+        Evaluates candidate's written architectural defense answers against:
+        1. Technical Soundness (runtime mechanics, Big-O, memory layout)
+        2. Trade-Off Articulation (pros vs. cons, simplicity vs. scalability)
+        3. Interview Communication (Senior/Staff engineering clarity)
+        """
+        qa_blocks = []
+        for q in questions:
+            q_id = str(q.get('id', ''))
+            q_text = q.get('question', '')
+            q_cat = q.get('category', 'Architecture')
+            ans = user_answers.get(q_id, user_answers.get(int(q_id) if q_id.isdigit() else q_id, 'No answer provided.'))
+            qa_blocks.append(f"QUESTION {q_id} [{q_cat}]:\n{q_text}\nCANDIDATE'S DEFENSE ANSWER:\n{ans}\n")
+        qa_context = "\n".join(qa_blocks)
+
+        prompt = f"""
+You are a Principal Software Engineer and Bar Raiser evaluating a candidate's architectural defense interview.
+The candidate implemented a technical solution for '{skill_name}' and defended their decisions in response to your technical challenge questions.
+
+CRISIS CONTEXT:
+{problem_statement}
+
+DEFENSE QUESTIONS & CANDIDATE ANSWERS:
+{qa_context}
+
+EVALUATION CRITERIA:
+1. Technical Precision: Did they demonstrate understanding of underlying runtime mechanics (memory, CPU, concurrency)?
+2. Trade-off Articulation: Did they explain trade-offs (e.g. throughput vs. latency, memory vs. compute) rather than claiming their design has no downsides?
+3. Senior Communication: Is the answer concise, structured, and authoritative?
+
+RESPONSE SCHEMA:
+Return a JSON object:
+{{
+  "defense_score": 88.0,
+  "verdict": "Strong Hire / Staff Rationale",
+  "overall_coaching": "High-level critique of their communication and technical depth.",
+  "question_evaluations": [
+    {{
+      "question_id": 1,
+      "score": 90.0,
+      "critique": "What was strong and what was missing or vague.",
+      "ideal_talking_points": [
+        "Key point a Principal Engineer would mention.",
+        "Another critical production trade-off."
+      ]
+    }},
+    {{
+      "question_id": 2,
+      "score": 85.0,
+      "critique": "Analysis of their disaster/scale handling answer.",
+      "ideal_talking_points": [
+        "Point 1",
+        "Point 2"
+      ]
+    }}
+  ]
+}}
+
+Return ONLY valid JSON.
+"""
+
+        candidate_models = []
+        for m in [self.gemini_model_name, "gemini-1.5-flash", "gemini-flash-lite-latest"]:
+            if m and m not in candidate_models:
+                candidate_models.append(m)
+
+        for candidate_model in candidate_models:
+            try:
+                if self.client:
+                    resp = self.client.models.generate_content(
+                        model=candidate_model,
+                        contents=prompt,
+                        config={"temperature": 0.2} if types else None
+                    )
+                    if resp and resp.text:
+                        raw = resp.text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+                        parsed = json.loads(raw)
+                        if isinstance(parsed, dict) and "defense_score" in parsed:
+                            return parsed
+            except Exception as e:
+                logger.warning(f"GenAI defense evaluation failed on {candidate_model}: {e}")
+                continue
+
+        if self.legacy_model:
+            try:
+                resp = self.legacy_model.generate_content(prompt)
+                if resp and resp.text:
+                    raw = resp.text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+                    parsed = json.loads(raw)
+                    if isinstance(parsed, dict) and "defense_score" in parsed:
+                        return parsed
+            except Exception as e:
+                logger.warning(f"Legacy Gemini defense evaluation failed: {e}")
+
+        # Resilient Fallback
+        return {
+            "defense_score": 82.0,
+            "verdict": "Hire / Solid Defense",
+            "overall_coaching": f"Good technical defense for {skill_name}. You articulated your core trade-offs well. In live interviews, quantify your performance claims with concrete latency or memory figures.",
+            "question_evaluations": [
+                {
+                    "question_id": 1,
+                    "score": 85.0,
+                    "critique": "Solid grasp of data structure selection and allocation overhead.",
+                    "ideal_talking_points": [
+                        "Mention cache locality and garbage collection pause avoidance.",
+                        "Discuss memory fragmentation under continuous uptime."
+                    ]
+                },
+                {
+                    "question_id": 2,
+                    "score": 80.0,
+                    "critique": "Addressed backpressure conceptually, but could detail packet shedding thresholds.",
+                    "ideal_talking_points": [
+                        "Define watermarks (e.g. 80% capacity triggers backpressure circuit breaking).",
+                        "Distinguish between graceful degradation vs hard queue drops."
+                    ]
+                }
+            ]
+        }

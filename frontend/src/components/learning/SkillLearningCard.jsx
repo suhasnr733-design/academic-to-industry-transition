@@ -220,33 +220,6 @@ export const SkillLearningCard = ({
           </div>
         )}
 
-        {/* YouTube Section */}
-        {(activeTab === 'all' || activeTab === 'youtube') && (
-          <YouTubeResourceList 
-            videos={skill.youtube_videos}
-            skillName={skill.skill_name}
-            onBookmark={onBookmark}
-          />
-        )}
-
-        {/* Practice Section */}
-        {(activeTab === 'all' || activeTab === 'practice') && (
-          <PracticeSection 
-            questions={skill.practice_questions}
-            skillName={skill.skill_name}
-            onCompletePractice={() => handleStageClick('practice', true)}
-          />
-        )}
-
-        {/* Project Section */}
-        {(activeTab === 'all' || activeTab === 'project') && (
-          <ProjectRecommendations 
-            project={skill.project}
-            skillName={skill.skill_name}
-            onBookmark={onBookmark}
-          />
-        )}
-
         {/* Assessment Section (10-Question Mastery Evaluation Quiz) */}
         {(activeTab === 'all' || activeTab === 'assessment') && (
           <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

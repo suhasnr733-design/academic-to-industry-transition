@@ -4,16 +4,30 @@ import { useState, useEffect, useCallback } from 'react'
 import { api } from '../services/api'
 import toast from 'react-hot-toast'
 
+const SWR_JOBS_CACHE_KEY = 'swr_jobs_cache'
+
+const getCachedJobs = () => {
+  try {
+    const raw = sessionStorage.getItem(SWR_JOBS_CACHE_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
 export const useJobs = () => {
-  const [jobs, setJobs] = useState([])
+  const cachedData = getCachedJobs()
+
+  // Optimization 4: Initialize state from session storage for instant 0.00s back-navigation
+  const [jobs, setJobs] = useState(() => cachedData?.jobs || [])
   const [selectedJob, setSelectedJob] = useState(null)
   const [interestedJobs, setInterestedJobs] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(() => !cachedData || !cachedData.jobs?.length)
   const [error, setError] = useState(null)
-  const [totalPages, setTotalPages] = useState(1)
-  const [total, setTotal] = useState(0)
+  const [totalPages, setTotalPages] = useState(() => cachedData?.totalPages || 1)
+  const [total, setTotal] = useState(() => cachedData?.total || 0)
   const [domains, setDomains] = useState([])
-  const [isLiveMode, setIsLiveMode] = useState(false)
+  const [isLiveMode, setIsLiveMode] = useState(() => Boolean(cachedData?.isLiveMode))
 
   const fetchJobs = useCallback(async (params = {}, append = false) => {
     try {
@@ -34,8 +48,22 @@ export const useJobs = () => {
       }
       const pages = res.data.pages || 1
       const curPage = res.data.page || params.page || 1
+      const totalCount = res.data.total || jobList.length
       setTotalPages(pages)
-      setTotal(res.data.total || jobList.length)
+      setTotal(totalCount)
+
+      // Optimization 4: Persist jobs to session cache for instant subsequent renders
+      if (!append && jobList.length > 0) {
+        try {
+          sessionStorage.setItem(SWR_JOBS_CACHE_KEY, JSON.stringify({
+            jobs: jobList,
+            total: totalCount,
+            totalPages: pages,
+            isLiveMode: false
+          }))
+        } catch (e) {}
+      }
+
       return { jobs: jobList, totalPages: pages, page: curPage, has_more: curPage < pages }
     } catch (err) {
       console.log('Error fetching jobs:', err)
@@ -71,6 +99,19 @@ export const useJobs = () => {
         setTotal(liveList.length)
       }
       setTotalPages(1)
+
+      // Optimization 4: Persist live jobs to session cache
+      if (!append && liveList.length > 0) {
+        try {
+          sessionStorage.setItem(SWR_JOBS_CACHE_KEY, JSON.stringify({
+            jobs: liveList,
+            total: liveList.length,
+            totalPages: 1,
+            isLiveMode: true
+          }))
+        } catch (e) {}
+      }
+
       const effectiveHasMore = hasMoreFromBackend && (!append || newlyAddedCount > 0)
       return { jobs: liveList, has_more: effectiveHasMore }
     } catch (err) {

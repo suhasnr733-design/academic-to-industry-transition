@@ -258,16 +258,21 @@ export const JobList = () => {
     setIsLoadingMore(false)
   }
 
+  // Optimization 4: 300ms debounce on search & tag filters to prevent typing request spikes
   useEffect(() => {
-    const query = selectedTags.join(' ') || urlSearch || undefined
-    fetchJobs({ 
-      page: 1, 
-      per_page: 20,
-      domain: urlDomain || undefined,
-      location: urlLocation || undefined,
-      search: query
-    })
-  }, [fetchJobs])
+    const handler = setTimeout(() => {
+      const query = selectedTags.join(' ') || urlSearch || undefined
+      fetchJobs({ 
+        page: 1, 
+        per_page: 20,
+        domain: urlDomain || undefined,
+        location: urlLocation || undefined,
+        search: query
+      })
+    }, 300)
+
+    return () => clearTimeout(handler)
+  }, [fetchJobs, selectedTags, urlDomain, urlLocation, urlSearch])
 
   // Dynamic quick-add presets based on current tab mode and backend domains
   const activePresetTags = useMemo(() => {

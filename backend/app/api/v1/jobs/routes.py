@@ -1,5 +1,6 @@
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy.orm import defer
 from app import db
 from app.models import Job, JobInterest, User, MentorshipRequest
 from app.api.v1.jobs import jobs_bp
@@ -10,7 +11,7 @@ from app.tasks.job_sync_task import sync_live_jobs_to_db
 @jobs_bp.route('', methods=['GET'])
 @cache.cache(ttl=60, key_prefix='jobs_list')
 def get_jobs():
-    """Get list of active jobs with pagination and filtering"""
+    """Get list of active jobs with pagination, indexed filtering, and deferred heavy columns"""
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
     domain = request.args.get('domain')
@@ -19,7 +20,8 @@ def get_jobs():
     search = request.args.get('search')
     source = request.args.get('source')
     
-    query = Job.query.filter_by(is_active=True)
+    # Optimization 3: Defer loading massive text description for the listing view
+    query = Job.query.filter_by(is_active=True).options(defer(Job.description))
     
     if domain:
         query = query.filter(Job.domain == domain)
@@ -38,9 +40,7 @@ def get_jobs():
                     Job.title.ilike(term_pat),
                     Job.company.ilike(term_pat),
                     Job.location.ilike(term_pat),
-                    Job.domain.ilike(term_pat),
-                    Job.description.ilike(term_pat),
-                    db.cast(Job.required_skills, db.String).ilike(term_pat)
+                    Job.domain.ilike(term_pat)
                 )
             )
     

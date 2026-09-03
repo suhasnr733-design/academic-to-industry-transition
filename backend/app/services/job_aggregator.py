@@ -4,6 +4,7 @@ from typing import Dict, List, Any, Optional
 import logging
 import re
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from app.config import Config
@@ -28,6 +29,32 @@ class JobAggregatorService:
     Unified orchestrator for all real-time job providers (LinkedIn, Indeed, Unstop, Internshala, Naukri, WeWorkRemotely, RemoteOK, Remotive, Arbeitnow, Adzuna).
     Deduplicates results, runs ML skill matching against student resumes, and calculates Academic-to-Industry Fit.
     """
+
+    # Optimization 1: Shared in-memory live search cache across requests
+    # Structure: { "cache_key": (timestamp, [job_dictionaries]) }
+    _search_cache: Dict[str, tuple] = {}
+    CACHE_TTL_SECONDS = 600  # 10 minutes cache lifespan
+
+    # Optimization 2: Resume-level live match cache across requests
+    # Structure: { "resume_id::location::limit": (timestamp, [matched_jobs]) }
+    _resume_match_cache: Dict[str, tuple] = {}
+    MATCH_CACHE_TTL = 600  # 10 minutes lifespan
+
+    @classmethod
+    def clear_cache(cls):
+        """Clear all in-memory live search & resume match caches"""
+        cls._search_cache.clear()
+        cls._resume_match_cache.clear()
+        logger.info("Cleared JobAggregatorService search & match caches")
+
+    @classmethod
+    def invalidate_resume_cache(cls, resume_id: int):
+        """Clear cached matches when a student modifies their resume skills"""
+        prefix = f"{resume_id}::"
+        keys_to_clear = [k for k in cls._resume_match_cache if k.startswith(prefix)]
+        for k in keys_to_clear:
+            cls._resume_match_cache.pop(k, None)
+        logger.info(f"Invalidated live job match cache for resume {resume_id}")
     
     def __init__(self):
         self.remotive = RemotiveProvider(base_url=getattr(Config, 'REMOTIVE_API_BASE_URL', None))
@@ -57,6 +84,19 @@ class JobAggregatorService:
         """
         Query all active providers in parallel and return deduplicated jobs with Academic Fit scoring and pagination.
         """
+        # Optimization 1: Check In-Memory TTL Cache for Instant Response
+        q_norm = (query or '').strip().lower()
+        loc_norm = (location or '').strip().lower()
+        src_norm = '-'.join(sorted(sources or ['all']))
+        cache_key = f"{q_norm}::{loc_norm}::{src_norm}::p{page}::l{total_limit}"
+
+        now = time.time()
+        if cache_key in self._search_cache:
+            cached_time, cached_jobs = self._search_cache[cache_key]
+            if (now - cached_time) < self.CACHE_TTL_SECONDS:
+                logger.info(f"Serving {len(cached_jobs)} live jobs from memory cache for '{cache_key}' (0.005s)")
+                return cached_jobs
+
         provider_map = {
             'remotive': self.remotive,
             'arbeitnow': self.arbeitnow,
@@ -199,6 +239,14 @@ class JobAggregatorService:
         if auto_cache and paginated_jobs:
             threading.Thread(target=self._async_cache_to_db, args=(paginated_jobs,), daemon=True).start()
 
+        # Optimization 1: Store paginated results into in-memory TTL cache
+        self._search_cache[cache_key] = (now, paginated_jobs)
+
+        # Bounded cache eviction (keep maximum 200 search queries in memory)
+        if len(self._search_cache) > 200:
+            oldest_key = min(self._search_cache.keys(), key=lambda k: self._search_cache[k][0])
+            self._search_cache.pop(oldest_key, None)
+
         return paginated_jobs
 
     def match_live_jobs_with_student(
@@ -272,8 +320,17 @@ class JobAggregatorService:
         limit: int = 15
     ) -> List[Dict[str, Any]]:
         """
-        Look up a saved Resume, extract its parsed skills, and match against live jobs.
+        Look up a saved Resume, extract its parsed skills, and match against live jobs with Optimization 2 caching.
         """
+        # Optimization 2: Check in-memory match cache for instant sub-second response
+        cache_key = f"{resume_id}::{location or 'all'}::{limit}"
+        now = time.time()
+        if cache_key in self._resume_match_cache:
+            cached_time, cached_matches = self._resume_match_cache[cache_key]
+            if (now - cached_time) < self.MATCH_CACHE_TTL:
+                logger.info(f"Serving {len(cached_matches)} cached job matches for resume {resume_id} (0.005s)")
+                return cached_matches
+
         from app.models.resume import Resume
         from app import db
         
@@ -291,12 +348,22 @@ class JobAggregatorService:
 
         target_domain = getattr(resume, 'target_role', None) or getattr(resume, 'domain', None)
 
-        return self.match_live_jobs_with_student(
+        matches = self.match_live_jobs_with_student(
             student_skills=skills,
             domain=target_domain,
             location=location,
             limit=limit
         )
+
+        # Optimization 2: Store matched jobs into in-memory TTL cache
+        self._resume_match_cache[cache_key] = (now, matches)
+
+        # Evict oldest keys if cache grows beyond 200 resumes
+        if len(self._resume_match_cache) > 200:
+            oldest_key = min(self._resume_match_cache.keys(), key=lambda k: self._resume_match_cache[k][0])
+            self._resume_match_cache.pop(oldest_key, None)
+
+        return matches
 
     def _calculate_academic_fit(self, title: str, description: str, skills: List[str]) -> Dict[str, Any]:
         """Calculates academic-to-industry transition candidate fit score using 6-pillar model"""
