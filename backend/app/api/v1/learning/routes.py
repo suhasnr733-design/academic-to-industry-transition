@@ -207,6 +207,30 @@ def submit_project():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@learning_bp.route('/projects/regenerate-challenge', methods=['POST'])
+@jwt_required(optional=True)
+def regenerate_project_challenge():
+    """Generates a fresh real-world crisis scenario for a given skill and resume context"""
+    try:
+        data = request.get_json() or {}
+        skill_name = data.get('skill_name', 'AWS')
+        target_role = data.get('target_role', 'Software Engineer')
+        known_skills = data.get('known_skills', ['Python', 'SQL'])
+
+        from app.services.llm_service import LLMService
+        llm_service = LLMService()
+
+        new_project = llm_service.generate_real_world_crisis_challenge(
+            gap_skill=skill_name,
+            known_skills=known_skills,
+            target_role=target_role
+        )
+
+        return jsonify({'project': new_project}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @learning_bp.route('/projects/evaluate-solution', methods=['POST'])
 @jwt_required()
 def evaluate_project_solution():
@@ -291,7 +315,7 @@ def get_youtube_resources():
         return jsonify({'error': str(e)}), 500
 
 @learning_bp.route('/ai-assist', methods=['POST'])
-@jwt_required()
+@jwt_required(optional=True)
 def ai_learning_assistant():
     """Contextual AI Learning Assistant endpoint powered by Gemini & adaptive engine"""
     try:

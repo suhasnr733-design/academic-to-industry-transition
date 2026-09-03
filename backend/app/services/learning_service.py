@@ -7,6 +7,7 @@ from app.models.resume import Resume
 from app.models.learning import LearningProgress, LearningBookmark, LearningActivity
 from app.services.skill_analyzer import SkillAnalyzer
 from app.services.youtube_service import YouTubeService
+from app.services.llm_service import LLMService
 try:
     from app.utils.courseUrls import get_course_url
 except ImportError:
@@ -20,6 +21,7 @@ class LearningService:
     def __init__(self):
         self.skill_analyzer = SkillAnalyzer()
         self.youtube_service = YouTubeService()
+        self.llm_service = LLMService()
 
         # Prerequisite dependency map (Skill A must be learned before Skill B)
         self.prerequisites = {
@@ -179,6 +181,8 @@ class LearningService:
         # 4. Fetch stored LearningProgress records for this specific resume_id
         progress_records = LearningProgress.query.filter_by(user_id=user_id, resume_id=resume.id).all()
         progress_map = {p.skill_name.lower(): p for p in progress_records}
+        completed_on_platform = [p.skill_name for p in progress_records if p.is_completed or (p.progress_percent and p.progress_percent >= 70)]
+        combined_known_skills = list(dict.fromkeys(current_skills + completed_on_platform))
 
         # 5. Build rich Skill Learning Cards & Roadmap Nodes
         roadmap_skills = []
@@ -217,9 +221,9 @@ class LearningService:
             # Contextual YouTube Videos (with language support)
             youtube_videos = self.youtube_service.get_videos_for_skill(skill_clean, target_role, stage, language=language)
 
-            # Practice Questions & Mini-Project
+            # Practice Questions & Mini-Project (combining resume skills + completed platform skills)
             practice_questions = self._get_practice_questions(skill_clean)
-            project_rec = self._get_project_recommendation(skill_clean, target_role)
+            project_rec = self._get_project_recommendation(skill_clean, target_role, known_skills=combined_known_skills)
 
             if is_existing:
                 why_recommended = f"{skill_clean} is an existing skill on your resume. Advance your mastery to excel in {target_role} interviews."
@@ -443,11 +447,21 @@ class LearningService:
             return "3-5 weeks"
         return "2-3 weeks" if priority in ['High', 'Developing'] else "1-2 weeks"
 
-    def _get_project_recommendation(self, skill: str, target_role: str = 'Software Engineer') -> Dict[str, Any]:
-        """Generate real-world industry problem challenge tailored to skill gap"""
-        import urllib.parse
-        encoded_skill = urllib.parse.quote(f"{skill} starter template project")
-        github_search_url = f"https://github.com/search?q={encoded_skill}&type=repositories"
+    def _get_project_recommendation(self, skill: str, target_role: str = 'Software Engineer', known_skills: List[str] = None) -> Dict[str, Any]:
+        """Generate real-world industry problem challenge tailored to skill gap and known resume skills"""
+        try:
+            if hasattr(self, 'llm_service') and self.llm_service:
+                dyn = self.llm_service.generate_real_world_crisis_challenge(
+                    gap_skill=skill,
+                    known_skills=known_skills,
+                    target_role=target_role
+                )
+                if dyn and isinstance(dyn, dict) and 'problem_statement' in dyn:
+                    return dyn
+        except Exception as e:
+            logger.warning(f"Dynamic project crisis generation fallback: {e}")
+
+        github_search_url = self.llm_service.build_github_starter_url(skill, known_skills) if hasattr(self, 'llm_service') else f"https://github.com/search?q={skill}+starter+template&type=repositories"
 
         dbms_challenge = {
             'title': 'E-Commerce Flash-Sale Concurrency & Inventory Race Condition',
