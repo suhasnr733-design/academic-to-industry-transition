@@ -100,33 +100,106 @@ class YouTubeService:
 
         # Per-skill YouTube video ID mapping
         skill_low = skill.lower()
-        if 'data struct' in skill_low:
-            v_id1, v_id2, v_id3, v_id4 = '0IAPZzGSbME', 'RBSGKlAvoiM', '8hly31xKLI0', 'eIrMbAQSU34'
-        elif 'algorithm' in skill_low:
-            v_id1, v_id2, v_id3, v_id4 = '0IAPZzGSbME', '8hly31xKLI0', 'RBSGKlAvoiM', 'eIrMbAQSU34'
+        if 'time management' in skill_low or 'productivity' in skill_low or 'time' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'iONDebHX9qk', 'z44w3jBfJp0', 'HAnw168huqA', '0IAPZzGSbME'
+        elif 'communication' in skill_low or 'presentation' in skill_low or 'public speaking' in skill_low or 'soft skill' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'HAnw168huqA', 'iONDebHX9qk', 'z44w3jBfJp0', '0IAPZzGSbME'
+        elif 'leadership' in skill_low or 'management' in skill_low or 'teamwork' in skill_low or 'collaboration' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'z44w3jBfJp0', 'HAnw168huqA', 'iONDebHX9qk', '0IAPZzGSbME'
+        elif 'figma' in skill_low or 'ui/ux' in skill_low or 'design' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'c9Wg6Cb_YlU', 'VqCgcpAypFQ', '1Rs2ND1ryYc', 'pQN-pnXPaVg'
+        elif 'vs code' in skill_low or 'vscode' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'VqCgcpAypFQ', 'B-s71n0dHUk', '8JJ101D3knE', 'wBp0Rb-ZJak'
+        elif 'postman' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'VywxIQ2ZXw4', 'Oe421EPjeBE', 'SccSCuHhOw0', '8JJ101D3knE'
+        elif 'node' in skill_low or 'express' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'Oe421EPjeBE', 'SccSCuHhOw0', 'W6NZfCO5SIk', 'bMknfKXIFA8'
+        elif 'ci/cd' in skill_low or 'cicd' in skill_low or 'devops' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'R8_veQiYBjU', 'fqMOX6JJhGo', '8JJ101D3knE', 'wBp0Rb-ZJak'
+        elif 'operating system' in skill_low or skill_low == 'os':
+            v_id1, v_id2, v_id3, v_id4 = 'bkSWJJZNgf8', 'wBp0Rb-ZJak', 'v_1zB2W9308', '0IAPZzGSbME'
+        elif 'oracle' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = '2HVMipp755E', 'HXV3zeQKqGY', 'qw--VYLpxG4', '9PZj7365gC0'
+        elif 'scikit' in skill_low or 'sklearn' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = '0B5eIE_1vpU', 'i_LwzRVP7bg', 'rfscVS0vtbw', 'r-uOLxNrNk8'
+        elif 'pandas' in skill_low or 'numpy' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'r-uOLxNrNk8', 'i_LwzRVP7bg', 'rfscVS0vtbw', 'HXV3zeQKqGY'
+        elif 'nlp' in skill_low or 'natural language' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'fNxaJsNG3-s', 'i_LwzRVP7bg', 'aircAruvnKk', 'rfscVS0vtbw'
+        elif 'pytorch' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'V_xro1bcAuA', 'aircAruvnKk', 'i_LwzRVP7bg', 'rfscVS0vtbw'
+        elif 'tensorflow' in skill_low or 'keras' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'tPYj3Ng4Y40', 'aircAruvnKk', 'i_LwzRVP7bg', 'rfscVS0vtbw'
+        elif 'deep learning' in skill_low or 'neural' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'aircAruvnKk', 'V_xro1bcAuA', 'i_LwzRVP7bg', 'rfscVS0vtbw'
+        elif 'machine learning' in skill_low or skill_low == 'ml' or skill_low == 'ai' or 'artificial intelligence' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'i_LwzRVP7bg', 'aircAruvnKk', 'rfscVS0vtbw', 'r-uOLxNrNk8'
+        elif skill_low == 'c' or skill_low.startswith('c ') or 'c prog' in skill_low or 'c lang' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'KJgsSFOSQv0', '87SH2Cn0s9A', 'vLnPwxZdW4Y', '0IAPZzGSbME'
+        elif 'c++' in skill_low or 'cpp' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'vLnPwxZdW4Y', 'ZzaPdXTrSb8', '1v_4dL8l8pQ', 'vLnPwxZdW4Y'
+        elif 'c#' in skill_low or 'csharp' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'gfkTfcpWqAY', 'GhQdlIFylQ8', '0IAPZzGSbME', 'eIrMbAQSU34'
+        elif 'linux' in skill_low or 'unix' in skill_low or 'bash' in skill_low or 'shell' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'wBp0Rb-ZJak', 'v_1zB2W9308', 'sWbBE14l6HM', 'ZtqB5Xn9qK8'
+        elif 'data struct' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'RBSGKlAvoiM', '0IAPZzGSbME', 'pkYVOmU3MgA', 'eIrMbAQSU34'
+        elif 'algorithm' in skill_low or 'problem solv' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = '0IAPZzGSbME', 'RBSGKlAvoiM', 'pkYVOmU3MgA', 'eIrMbAQSU34'
+        elif 'css' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = '1Rs2ND1ryYc', 'OXGznpKZ_sA', 'DPnqb74smus', 'G3e-cpL7ofc'
+        elif 'html' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'pQN-pnXPaVg', 'DPnqb74smus', '1Rs2ND1ryYc', 'G3e-cpL7ofc'
         elif 'java' in skill_low and 'script' not in skill_low:
             v_id1, v_id2, v_id3, v_id4 = 'eIrMbAQSU34', 'A74TOX803D0', 'grEKMHGYyns', 'GoXwIVyNvX0'
+        elif 'javascript' in skill_low or skill_low == 'js':
+            v_id1, v_id2, v_id3, v_id4 = 'W6NZfCO5SIk', 'efP14Wv9cdk', 'bMknfKXIFA8', 'Oe421EPjeBE'
+        elif 'typescript' in skill_low or skill_low == 'ts':
+            v_id1, v_id2, v_id3, v_id4 = 'd56mG7DezGs', 'W6NZfCO5SIk', 'efP14Wv9cdk', 'bMknfKXIFA8'
         elif 'python' in skill_low:
             v_id1, v_id2, v_id3, v_id4 = 'rfscVS0vtbw', '_uQrJ0TkZlc', 'HGOBQPFzWKo', 'kqtD5dpn9C8'
         elif 'git' in skill_low:
             v_id1, v_id2, v_id3, v_id4 = '8JJ101D3knE', 'RGOj5yH7evk', 'HVsySz-h9r4', 'apGV9Kg7ics'
-        elif 'sql' in skill_low or 'dbms' in skill_low:
+        elif 'sql' in skill_low or 'dbms' in skill_low or 'database' in skill_low:
             v_id1, v_id2, v_id3, v_id4 = 'HXV3zeQKqGY', '7S_tz1z_5bA', 'qw--VYLpxG4', '9PZj7365gC0'
         elif 'react' in skill_low:
             v_id1, v_id2, v_id3, v_id4 = 'bMknfKXIFA8', 'w7ejDZ8SWv8', 'SqcY0GlETPk', 'RVFAyFWO4go'
-        elif 'html' in skill_low or 'css' in skill_low:
-            v_id1, v_id2, v_id3, v_id4 = 'pQN-pnXPaVg', '1Rs2ND1ryYc', 'DPnqb74smus', 'G3e-cpL7ofc'
+        elif 'django' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'F5mRW0joWI0', 'rfscVS0vtbw', 'HXV3zeQKqGY', 'Oe421EPjeBE'
+        elif 'spring' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = '35EQXmHKZYs', 'eIrMbAQSU34', 'A74TOX803D0', 'HXV3zeQKqGY'
+        elif 'flutter' in skill_low or 'dart' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'pTJJsmejUOQ', 'VPvVD8t0258', 'W6NZfCO5SIk', 'Oe421EPjeBE'
+        elif 'docker' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'fqMOX6JJhGo', 'X48VuDVv0do', 'wBp0Rb-ZJak', '8JJ101D3knE'
+        elif 'kubernetes' in skill_low or 'k8s' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'X48VuDVv0do', 'fqMOX6JJhGo', 'wBp0Rb-ZJak', '8JJ101D3knE'
+        elif 'aws' in skill_low or 'cloud' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'k1RI5locZE4', 'NKEFWyq3v2c', 'fqMOX6JJhGo', 'wBp0Rb-ZJak'
+        elif 'system design' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'm8Icp_Cid5o', 'SqcY0GlETPk', 'bMknfKXIFA8', 'HXV3zeQKqGY'
+        elif 'oop' in skill_low or 'object' in skill_low:
+            v_id1, v_id2, v_id3, v_id4 = 'pTB0EiLXUC8', 'eIrMbAQSU34', 'vLnPwxZdW4Y', '0IAPZzGSbME'
         else:
-            v_id1, v_id2, v_id3, v_id4 = '0IAPZzGSbME', 'bbT_bV0Cc-0', '8hly31xKLI0', 'eIrMbAQSU34'
+            v_id1, v_id2, v_id3, v_id4 = '0IAPZzGSbME', 'RBSGKlAvoiM', 'rfscVS0vtbw', 'eIrMbAQSU34'
+
+        def make_embed_url(vid_id):
+            return f"https://www.youtube.com/embed/{vid_id}"
+
+        def make_watch_url(vid_id):
+            return f"https://www.youtube.com/watch?v={vid_id}"
+
+        def make_thumb_url(vid_id):
+            return f"https://i.ytimg.com/vi/{vid_id}/mqdefault.jpg"
 
         templates = [
             {
                 'id': v_id1,
                 'title': f"{skill} Complete Masterclass for {target_role}s",
                 'channel': "FreeCodeCamp & Tech Academy",
-                'thumbnail': f"https://i.ytimg.com/vi/{v_id1}/mqdefault.jpg",
-                'url': f"https://www.youtube.com/watch?v={v_id1}",
-                'embed_url': f"https://www.youtube.com/embed/{v_id1}",
+                'thumbnail': make_thumb_url(v_id1),
+                'url': make_watch_url(v_id1),
+                'embed_url': make_embed_url(v_id1),
                 'duration': '1 - 2 Hours',
                 'difficulty': 'Beginner to Intermediate',
                 'badge': '⭐ Highly Recommended'
@@ -135,9 +208,9 @@ class YouTubeService:
                 'id': v_id2,
                 'title': f"Top 10 {skill} Concepts Every {target_role} Must Know",
                 'channel': "Programming with Mosh",
-                'thumbnail': f"https://img.youtube.com/vi/{v_id2}/mqdefault.jpg",
-                'url': f"https://www.youtube.com/watch?v={v_id2}",
-                'embed_url': f"https://www.youtube.com/embed/{v_id2}",
+                'thumbnail': make_thumb_url(v_id2),
+                'url': make_watch_url(v_id2),
+                'embed_url': make_embed_url(v_id2),
                 'duration': '35 mins',
                 'difficulty': 'Beginner Friendly',
                 'badge': 'Beginner Friendly'
@@ -146,9 +219,9 @@ class YouTubeService:
                 'id': v_id3,
                 'title': f"Hands-On {skill} Practical Exercises & Real Projects",
                 'channel': "Core Tech Tutorials",
-                'thumbnail': f"https://img.youtube.com/vi/{v_id3}/mqdefault.jpg",
-                'url': f"https://www.youtube.com/watch?v={v_id3}",
-                'embed_url': f"https://www.youtube.com/embed/{v_id3}",
+                'thumbnail': make_thumb_url(v_id3),
+                'url': make_watch_url(v_id3),
+                'embed_url': make_embed_url(v_id3),
                 'duration': '45 mins',
                 'difficulty': 'Practice Focused',
                 'badge': 'Practice Focused'
@@ -157,9 +230,9 @@ class YouTubeService:
                 'id': v_id4,
                 'title': f"{skill} Technical Interview Questions & Live Coding",
                 'channel': "NeetCode & Career Prep",
-                'thumbnail': f"https://img.youtube.com/vi/{v_id4}/mqdefault.jpg",
-                'url': f"https://www.youtube.com/watch?v={v_id4}",
-                'embed_url': f"https://www.youtube.com/embed/{v_id4}",
+                'thumbnail': make_thumb_url(v_id4),
+                'url': make_watch_url(v_id4),
+                'embed_url': make_embed_url(v_id4),
                 'duration': '40 mins',
                 'difficulty': 'Interview Focused',
                 'badge': 'Interview Focused'

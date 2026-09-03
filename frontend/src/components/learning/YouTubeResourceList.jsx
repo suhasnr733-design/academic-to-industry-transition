@@ -7,29 +7,29 @@ import { PlayIcon, ExternalLinkIcon, SearchIcon } from '@heroicons/react/outline
 const getYouTubeThumbnail = (vid) => {
   let videoId = null
 
-  // 1. Direct YouTube video ID
-  if (vid.id && typeof vid.id === 'string' && !vid.id.startsWith('fallback')) {
+  // 1. Direct YouTube video ID (must be a valid 11-character ID)
+  if (vid.id && typeof vid.id === 'string' && !vid.id.startsWith('fallback') && !vid.id.startsWith('search_')) {
     videoId = vid.id
   }
 
   // 2. Extract from embed URL
   if (!videoId && vid.embed_url) {
-    const match = vid.embed_url.match(/\/embed\/([a-zA-Z0-9_-]+)/)
+    const match = vid.embed_url.match(/\/embed\/([a-zA-Z0-9_-]{11})/)
     if (match) videoId = match[1]
   }
 
   // 3. Extract from watch URL
   if (!videoId && vid.url) {
-    const match = vid.url.match(/(?:v=|\/embed\/|\/watch\?v=|\.be\/)([a-zA-Z0-9_-]+)/)
-    if (match && !match[1].includes('results')) videoId = match[1]
+    const match = vid.url.match(/(?:v=|\/embed\/|\/watch\?v=|\.be\/)([a-zA-Z0-9_-]{11})/)
+    if (match) videoId = match[1]
   }
 
-  // mqdefault.jpg is 100% guaranteed by YouTube to exist for ALL videos
+  // mqdefault.jpg is 100% guaranteed by YouTube to exist for valid videos
   if (videoId) {
     return `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`
   }
 
-  return vid.thumbnail || 'https://images.unsplash.com/photo-1516116211223-4c7144594c03?auto=format&fit=crop&w=600&q=80'
+  return vid.thumbnail || 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?auto=format&fit=crop&w=600&q=80'
 }
 
 export const YouTubeResourceList = ({ videos, skillName }) => {
@@ -37,7 +37,7 @@ export const YouTubeResourceList = ({ videos, skillName }) => {
 
   const featuredVid = videos[0]
   const ytThumbnail = getYouTubeThumbnail(featuredVid)
-  const fallbackImage = 'https://images.unsplash.com/photo-1516116211223-4c7144594c03?auto=format&fit=crop&w=600&q=80'
+  const fallbackImage = 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?auto=format&fit=crop&w=600&q=80'
   const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(skillName + ' full course tutorial for software engineer')}`
 
   return (
@@ -73,9 +73,8 @@ export const YouTubeResourceList = ({ videos, skillName }) => {
             alt={featuredVid.title} 
             className="w-full h-full object-cover group-hover:scale-105 group-hover:opacity-85 transition-all duration-300"
             onError={(e) => {
-              if (e.target.src !== fallbackImage) {
-                e.target.src = fallbackImage
-              }
+              e.target.onerror = null
+              e.target.src = fallbackImage
             }}
           />
           
