@@ -284,7 +284,6 @@ def create_app(config_class='app.config.DevelopmentConfig'):
                         conn.execute(db.text("ALTER TABLE jobs ADD COLUMN expires_at DATETIME"))
                     if 'raw_data' not in job_columns:
                         conn.execute(db.text("ALTER TABLE jobs ADD COLUMN raw_data JSON"))
-
                 # Schema migration check for Resume columns
                 if 'resumes' in inspector.get_table_names():
                     resume_columns = [c['name'] for c in inspector.get_columns('resumes')]
