@@ -5,10 +5,23 @@ import { api } from '../services/api'
 import { useAuth } from './AuthContext'
 import toast from 'react-hot-toast'
 
+const SWR_RESUME_LIST_KEY = 'swr_resume_list'
+const SWR_RESUME_DETAIL_PREFIX = 'swr_resume_detail_'
+
+const getCachedResumeList = () => {
+  try {
+    const raw = sessionStorage.getItem(SWR_RESUME_LIST_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
 const ResumeContext = createContext(null)
 
 export const ResumeProvider = ({ children }) => {
-  const [resumes, setResumes] = useState([])
+  // Optimization 4: Hydrate resumes list from session storage for instant 0.00s rendering
+  const [resumes, setResumes] = useState(() => getCachedResumeList())
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const { isAuthenticated, user } = useAuth()
@@ -27,6 +40,12 @@ export const ResumeProvider = ({ children }) => {
       const res = await api.get('/resume/list')
       const items = res.data?.resumes || []
       setResumes(items)
+
+      // Optimization 4: Persist resume list to session storage
+      try {
+        sessionStorage.setItem(SWR_RESUME_LIST_KEY, JSON.stringify(items))
+      } catch {}
+
       return items
     } catch (err) {
       console.log('Error fetching resumes:', err)
@@ -77,6 +96,11 @@ export const ResumeProvider = ({ children }) => {
       // Single active resume policy: replace previous resume in state
       setResumes([newResume])
 
+      // Optimization 4: Invalidate cached resume list on new upload
+      try {
+        sessionStorage.removeItem(SWR_RESUME_LIST_KEY)
+      } catch {}
+
       toast.success('Resume uploaded successfully')
       
       // Re-sync with backend
@@ -90,19 +114,42 @@ export const ResumeProvider = ({ children }) => {
     }
   }
 
-  const getResume = async (id) => {
+  // Optimization 4: Stale-While-Revalidate for individual resume details
+  const getResume = useCallback(async (id) => {
+    const cacheKey = SWR_RESUME_DETAIL_PREFIX + id
+    let cachedResume = null
+    try {
+      const raw = sessionStorage.getItem(cacheKey)
+      if (raw) cachedResume = JSON.parse(raw)
+    } catch {}
+
+    const networkFetch = api.get(`/resume/${id}`)
+      .then(res => {
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify(res.data))
+        } catch {}
+        return res.data
+      })
+      .catch(err => {
+        if (cachedResume) return cachedResume
+        console.log('Error fetching resume:', err)
+        setError(err.response?.data?.error || 'Failed to load resume details')
+        throw err
+      })
+
+    // If cached, return immediately in 0.00s and quietly revalidate in background
+    if (cachedResume) {
+      networkFetch.catch(() => {})
+      return cachedResume
+    }
+
     try {
       setIsLoading(true)
-      const res = await api.get(`/resume/${id}`)
-      return res.data
-    } catch (err) {
-      console.log('Error fetching resume:', err)
-      setError(err.response?.data?.error || 'Failed to load resume details')
-      throw err
+      return await networkFetch
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   const deleteResume = async (id) => {
     try {
@@ -111,6 +158,12 @@ export const ResumeProvider = ({ children }) => {
       
       const updatedResumes = resumes.filter(r => r.id !== id)
       setResumes(updatedResumes)
+
+      // Optimization 4: Invalidate session storage caches on resume deletion
+      try {
+        sessionStorage.removeItem(SWR_RESUME_LIST_KEY)
+        sessionStorage.removeItem(SWR_RESUME_DETAIL_PREFIX + id)
+      } catch {}
 
       // Invalidate assessment flags
       localStorage.removeItem(`assessment_completed_for_resume_${id}`)

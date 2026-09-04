@@ -1,8 +1,10 @@
 # backend/app/api/v1/placement/routes.py
 
+import time
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
+from sqlalchemy.orm import defer, joinedload
 from app.extensions import db
 from app.models import User, PlacementNomination, Notification, Resume
 from app.api.v1.placement import placement_bp
@@ -12,6 +14,23 @@ try:
     from app.services.websocket import send_notification
 except ImportError:
     send_notification = None
+
+# Optimization 2: In-memory cache for campus drives summary and student nominations
+# Structure: { 'summary': {'data': dict, 'timestamp': float}, f"student_{id}": ... }
+_drives_cache = {}
+DRIVES_CACHE_TTL = 600  # 10 minutes lifespan
+
+def invalidate_drives_cache(student_id=None):
+    """Invalidate campus drives summary and student nominations cache."""
+    global _drives_cache
+    _drives_cache.pop('summary', None)
+    if student_id:
+        _drives_cache.pop(f"student_{student_id}", None)
+    else:
+        keys_to_del = [k for k in _drives_cache if k.startswith('student_')]
+        for k in keys_to_del:
+            _drives_cache.pop(k, None)
+
 
 
 # ==========================================================
@@ -118,6 +137,9 @@ def nominate_students():
 
         db.session.commit()
 
+        # Optimization 2: Invalidate summary cache on new nominations
+        invalidate_drives_cache()
+
         return jsonify({
             'success': True,
             'message': f"Successfully nominated {len(created_nominations)} candidate(s) for {company_name}",
@@ -139,6 +161,17 @@ def get_my_nominations():
     """Get active and past company drive nominations for current student"""
     try:
         current_user_id = int(get_jwt_identity())
+        now = time.time()
+        cache_key = f"student_{current_user_id}"
+
+        # Optimization 2: Return cached student nominations (0.0ms)
+        if cache_key in _drives_cache:
+            entry = _drives_cache[cache_key]
+            if now - entry['timestamp'] < DRIVES_CACHE_TTL:
+                cached_data = dict(entry['data'])
+                cached_data['cached'] = True
+                return jsonify(cached_data), 200
+
         student = db.session.get(User, current_user_id)
         if not student:
             return jsonify({'error': 'User not found'}), 404
@@ -147,10 +180,18 @@ def get_my_nominations():
             student_id=student.id
         ).order_by(PlacementNomination.id.desc()).all()
 
-        return jsonify({
+        response_data = {
             'success': True,
             'nominations': [n.to_dict() for n in nominations]
-        }), 200
+        }
+
+        # Optimization 2: Cache student nominations
+        _drives_cache[cache_key] = {
+            'data': response_data,
+            'timestamp': now
+        }
+
+        return jsonify(response_data), 200
 
     except Exception as e:
         return jsonify({'error': 'Failed to fetch nominations', 'message': str(e)}), 500
@@ -243,6 +284,9 @@ def respond_to_nomination(nomination_id):
 
         db.session.commit()
 
+        # Optimization 2: Invalidate summary and student cache on RSVP response
+        invalidate_drives_cache(student.id)
+
         return jsonify({
             'success': True,
             'message': f"Drive attendance marked as {nomination.status}",
@@ -318,6 +362,9 @@ def mark_nomination_hired(nomination_id):
 
         db.session.commit()
 
+        # Optimization 2: Invalidate summary and student cache when marked hired
+        invalidate_drives_cache(student.id)
+
         return jsonify({
             'success': True,
             'message': f"Student {student.full_name} marked as officially Placed at {nomination.company_name}!",
@@ -383,7 +430,19 @@ def get_company_nominations():
 def get_campus_drives_summary():
     """Faculty retrieves all company drives with aggregated RSVP & attendance counts"""
     try:
-        all_noms = PlacementNomination.query.order_by(PlacementNomination.id.desc()).all()
+        now = time.time()
+        # Optimization 2: Check in-memory summary cache (0.0ms)
+        if 'summary' in _drives_cache:
+            entry = _drives_cache['summary']
+            if now - entry['timestamp'] < DRIVES_CACHE_TTL:
+                cached_data = dict(entry['data'])
+                cached_data['cached'] = True
+                return jsonify(cached_data), 200
+
+        # Optimization 1: Eager load faculty to eliminate N+1 loop queries
+        all_noms = PlacementNomination.query.options(
+            joinedload(PlacementNomination.faculty)
+        ).order_by(PlacementNomination.id.desc()).all()
 
         # Group by company_name (case-insensitive key, keep original display name)
         drives_map = {}
@@ -393,7 +452,7 @@ def get_campus_drives_summary():
                 continue
 
             if comp_key not in drives_map:
-                faculty_user = db.session.get(User, nom.faculty_id) if nom.faculty_id else None
+                faculty_user = nom.faculty
                 drives_map[comp_key] = {
                     'company_name': comp_key,
                     'job_role': nom.job_role or 'Software Engineer',
@@ -427,11 +486,19 @@ def get_campus_drives_summary():
         # Sort by most recent activity
         drives_list.sort(key=lambda d: d.get('last_activity') or '', reverse=True)
 
-        return jsonify({
+        response_data = {
             'success': True,
             'drives': drives_list,
             'total_drives': len(drives_list)
-        }), 200
+        }
+
+        # Optimization 2: Cache drives summary
+        _drives_cache['summary'] = {
+            'data': response_data,
+            'timestamp': now
+        }
+
+        return jsonify(response_data), 200
 
     except Exception as e:
         return jsonify({'error': 'Failed to fetch campus drives summary', 'message': str(e)}), 500
@@ -449,7 +516,10 @@ def get_drive_attendees(company_name):
         clean_company = (company_name or '').strip()
         status_filter = request.args.get('status', 'all').strip()
 
-        query = PlacementNomination.query.filter(PlacementNomination.company_name.ilike(clean_company))
+        # Optimization 1: Eager load student in a single join query
+        query = PlacementNomination.query.options(
+            joinedload(PlacementNomination.student)
+        ).filter(PlacementNomination.company_name.ilike(clean_company))
 
         if status_filter and status_filter != 'all':
             if status_filter == 'confirmed':
@@ -463,13 +533,34 @@ def get_drive_attendees(company_name):
 
         nominations = query.order_by(PlacementNomination.id.desc()).all()
 
+        # Optimization 1: Batch fetch candidate resumes in a single query with column deferral
+        student_ids = list({nom.student_id for nom in nominations if nom.student_id})
+        resumes_map = {}
+        if student_ids:
+            resumes = Resume.query.options(
+                defer(Resume.summary),
+                defer(Resume.ats_breakdown),
+                defer(Resume.personal_info),
+                defer(Resume.links),
+                defer(Resume.education),
+                defer(Resume.experience),
+                defer(Resume.projects),
+                defer(Resume.certifications),
+                defer(Resume.achievements),
+                defer(Resume.publications),
+                defer(Resume.error_message)
+            ).filter(Resume.user_id.in_(student_ids)).order_by(Resume.id.desc()).all()
+            for r in resumes:
+                if r.user_id not in resumes_map:
+                    resumes_map[r.user_id] = r
+
         attendees = []
         for nom in nominations:
-            student = db.session.get(User, nom.student_id)
+            student = nom.student
             if not student:
                 continue
 
-            latest_resume = Resume.query.filter_by(user_id=student.id).order_by(Resume.id.desc()).first()
+            latest_resume = resumes_map.get(student.id)
 
             attendees.append({
                 'nomination_id': nom.id,

@@ -30,8 +30,23 @@ export const PlacementDrives = () => {
   const { user } = useAuth()
   const { resumes } = useResume()
 
-  const [nominations, setNominations] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
+  // Optimization 3: Hydrate student nominations from sessionStorage (0.00s render)
+  const [nominations, setNominations] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('swr_student_placement_drives')
+      return cached ? JSON.parse(cached) : []
+    } catch {
+      return []
+    }
+  })
+  const [isLoading, setIsLoading] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('swr_student_placement_drives')
+      return !cached
+    } catch {
+      return true
+    }
+  })
   const [isRespondingNomination, setIsRespondingNomination] = useState(null)
   
   // Tabs & Filter State
@@ -51,10 +66,18 @@ export const PlacementDrives = () => {
   }, [])
 
   const fetchNominations = async () => {
-    setIsLoading(true)
+    if (!nominations || nominations.length === 0) {
+      setIsLoading(true)
+    }
     try {
       const res = await api.get('/placement/my-nominations')
-      setNominations(res.data?.nominations || [])
+      const freshNoms = res.data?.nominations || []
+      setNominations(freshNoms)
+
+      // Optimization 3: Persist fresh drives in sessionStorage
+      try {
+        sessionStorage.setItem('swr_student_placement_drives', JSON.stringify(freshNoms))
+      } catch {}
     } catch (err) {
       console.error('Error fetching placement nominations:', err)
       toast.error('Failed to load placement drives')
@@ -389,7 +412,7 @@ export const PlacementDrives = () => {
 
       {/* Placement Drives List Section */}
       <div className="space-y-4">
-        {isLoading ? (
+        {isLoading && nominations.length === 0 ? (
           <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 shadow-sm">
             <RefreshIcon className="h-8 w-8 text-primary-500 animate-spin mx-auto mb-3" />
             <p className="text-sm font-semibold text-gray-700">Loading placement drive notifications...</p>

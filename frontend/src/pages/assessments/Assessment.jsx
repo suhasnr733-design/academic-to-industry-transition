@@ -34,12 +34,46 @@ export const Assessment = () => {
   const [session, setSession] = useState(null)
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0)
   const [answers, setAnswers] = useState({})
-  const [isLoading, setIsLoading] = useState(true)
+  // Optimization 2: Hydrate latest assessment result immediately from sessionStorage (0.00s render)
+  const [result, setResult] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('swr_latest_assessment')
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        if (parsed?.has_assessment && parsed?.result) {
+          return parsed.result
+        }
+      }
+    } catch {}
+    return null
+  })
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('swr_latest_assessment')
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        if (parsed?.has_assessment && parsed?.result) {
+          return 'results'
+        }
+      }
+    } catch {}
+    return 'loading'
+  })
+  const [isLoading, setIsLoading] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('swr_latest_assessment')
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        if (parsed?.has_assessment && parsed?.result) {
+          return false
+        }
+      }
+    } catch {}
+    return true
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploadingResume, setIsUploadingResume] = useState(false)
   const [isDragActive, setIsDragActive] = useState(false)
-  const [result, setResult] = useState(null)
-  const [viewMode, setViewMode] = useState('loading') // 'loading', 'no_resume', 'quiz', 'results'
   const [secondsElapsed, setSecondsElapsed] = useState(0)
   
   const timerRef = useRef(null)
@@ -57,8 +91,30 @@ export const Assessment = () => {
           return
         }
 
+        // Optimization 3: Restore active in-progress quiz if present
+        const savedProgress = sessionStorage.getItem('active_assessment_progress')
+        if (savedProgress) {
+          try {
+            const parsed = JSON.parse(savedProgress)
+            // Restore if session was active within the last 2 hours
+            if (parsed?.session?.questions?.length > 0 && Date.now() - (parsed.timestamp || 0) < 7200000) {
+              setSession(parsed.session)
+              setAnswers(parsed.answers || {})
+              setCurrentQuestionIdx(parsed.currentQuestionIdx || 0)
+              setSecondsElapsed(parsed.secondsElapsed || 0)
+              setViewMode('quiz')
+              setIsLoading(false)
+              return
+            }
+          } catch {}
+        }
+
         // 1. Check if student already has a verified assessment attempt stored on the server
         const latestData = await getLatestAssessment()
+        try {
+          sessionStorage.setItem('swr_latest_assessment', JSON.stringify(latestData))
+        } catch {}
+
         if (latestData?.has_assessment && latestData?.result) {
           setResult(latestData.result)
           setViewMode('results')
@@ -85,6 +141,21 @@ export const Assessment = () => {
     }
   }, [resumes, resumesLoading, getLatestAssessment])
 
+  // Optimization 3: Auto-persist active quiz progress to prevent accidental loss
+  useEffect(() => {
+    if (viewMode === 'quiz' && session?.questions?.length > 0) {
+      try {
+        sessionStorage.setItem('active_assessment_progress', JSON.stringify({
+          session,
+          answers,
+          currentQuestionIdx,
+          secondsElapsed,
+          timestamp: Date.now()
+        }))
+      } catch {}
+    }
+  }, [viewMode, session, answers, currentQuestionIdx, secondsElapsed])
+
   // Timer runner during active quiz
   useEffect(() => {
     if (viewMode === 'quiz') {
@@ -100,6 +171,10 @@ export const Assessment = () => {
   }, [viewMode])
 
   const handleStartNewAssessment = async () => {
+    // Optimization 3: Clear any existing draft when starting fresh
+    try {
+      sessionStorage.removeItem('active_assessment_progress')
+    } catch {}
     setIsLoading(true)
     try {
       const newSession = await startAssessment()
@@ -209,6 +284,19 @@ export const Assessment = () => {
       const evaluation = await submitAssessment(answers, secondsElapsed)
       setResult(evaluation)
       
+      // Optimization 2: Persist in sessionStorage for instant return
+      try {
+        sessionStorage.setItem('swr_latest_assessment', JSON.stringify({
+          has_assessment: true,
+          result: evaluation
+        }))
+      } catch {}
+
+      // Optimization 3: Clear active draft upon successful submission
+      try {
+        sessionStorage.removeItem('active_assessment_progress')
+      } catch {}
+      
       const activeResume = resumes && resumes.length > 0 ? resumes[0] : null
       const resumeId = activeResume?.id || 'default'
       const scoreVal = Math.round(evaluation?.score || 85)
@@ -242,7 +330,7 @@ export const Assessment = () => {
   // ----------------------------------------------------
   // 1. LOADING STATE
   // ----------------------------------------------------
-  if (isLoading || viewMode === 'loading' || resumesLoading) {
+  if (((isLoading || viewMode === 'loading') && !result) || (resumesLoading && !result)) {
     return (
       <div className="max-w-3xl mx-auto py-16 text-center">
         <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent mb-4"></div>

@@ -1,7 +1,9 @@
 import os
+import time
 import logging
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy.orm import defer, joinedload
 from app import db
 from app.models import Resume, User, Job
 from app.api.v1.prediction import prediction_bp
@@ -15,6 +17,23 @@ logger = logging.getLogger(__name__)
 prediction_service = PredictionService()
 rec_service = RecommendationService()
 skill_analyzer = SkillAnalyzer()
+
+# Optimization 1: In-memory cache for skill gap analysis responses
+# Structure: { f"{resume_id}_{target_role}_{domain}": {'data': dict, 'timestamp': float} }
+_skill_gap_cache = {}
+SKILL_GAP_CACHE_TTL = 600  # 10 minutes lifespan
+
+def invalidate_skill_gap_cache(resume_id=None):
+    """Invalidate cache entries for a specific resume or all resumes."""
+    global _skill_gap_cache
+    if resume_id:
+        prefix = f"{resume_id}_"
+        keys_to_del = [k for k in _skill_gap_cache if k.startswith(prefix)]
+        for k in keys_to_del:
+            _skill_gap_cache.pop(k, None)
+    else:
+        _skill_gap_cache.clear()
+
 
 @prediction_bp.route('/employability/<int:resume_id>', methods=['GET'])
 @jwt_required()
@@ -116,10 +135,27 @@ def get_skill_gap(resume_id=None):
     """Get skill gap analysis for a target role"""
     try:
         current_user_id = int(get_jwt_identity())
+        
+        # Optimization 4: Eager load user and defer heavy unneeded JSON/text columns
+        resume_query = Resume.query.options(
+            joinedload(Resume.user),
+            defer(Resume.summary),
+            defer(Resume.ats_breakdown),
+            defer(Resume.personal_info),
+            defer(Resume.links),
+            defer(Resume.education),
+            defer(Resume.experience),
+            defer(Resume.projects),
+            defer(Resume.certifications),
+            defer(Resume.achievements),
+            defer(Resume.publications),
+            defer(Resume.error_message)
+        )
+
         if resume_id:
-            resume = Resume.query.filter_by(id=resume_id, user_id=current_user_id).first()
+            resume = resume_query.filter_by(id=resume_id, user_id=current_user_id).first()
         else:
-            resume = Resume.query.filter_by(user_id=current_user_id).order_by(Resume.created_at.desc()).first()
+            resume = resume_query.filter_by(user_id=current_user_id).order_by(Resume.created_at.desc()).first()
 
         if not resume:
             return jsonify({
@@ -153,6 +189,16 @@ def get_skill_gap(resume_id=None):
         target_role = req_role
         domain = request.args.get('domain')
         
+        # Optimization 1: Check in-memory cache for instant 0.0ms response
+        cache_key = f"{resume.id}_{target_role.strip().lower()}_{domain or ''}"
+        now = time.time()
+        if cache_key in _skill_gap_cache:
+            entry = _skill_gap_cache[cache_key]
+            if now - entry['timestamp'] < SKILL_GAP_CACHE_TTL:
+                cached_data = dict(entry['data'])
+                cached_data['cached'] = True
+                return jsonify(cached_data), 200
+
         skills = resume.skills or []
         gap_data = skill_analyzer.analyze_gaps(skills, target_role=target_role, domain=domain)
         rec_data = skill_analyzer.get_recommendations(skills, gap_data.get('missing_skills', []))
@@ -177,7 +223,7 @@ def get_skill_gap(resume_id=None):
         if not rec_roles:
             rec_roles = ['Full Stack Developer', 'Software Engineer', 'Frontend Developer']
 
-        return jsonify({
+        response_data = {
             'resume_id': resume.id,
             'filename': resume.filename,
             'candidate_name': resume.user.full_name if resume.user else None,
@@ -192,7 +238,15 @@ def get_skill_gap(resume_id=None):
             'gap_categories': gap_data.get('gap_categories', {}),
             'recommendations': rec_data.get('recommendations', []),
             'learning_path': rec_data.get('learning_path', [])
-        }), 200
+        }
+
+        # Optimization 1: Store in-memory cache
+        _skill_gap_cache[cache_key] = {
+            'data': response_data,
+            'timestamp': now
+        }
+
+        return jsonify(response_data), 200
     except Exception as e:
         logger.error(f"Error getting skill gap analysis: {e}")
         return jsonify({'error': str(e)}), 500

@@ -20,17 +20,55 @@ export default function Settings() {
   const { user, updateProfile } = useAuth()
   const navigate = useNavigate()
 
-  const [notifications, setNotifications] = useState(user?.notifications_enabled ?? true)
-  const [emailAlerts, setEmailAlerts] = useState(user?.email_alerts_enabled ?? true)
+  // Optimization 3: Instant lazy initializers from user or cached session
+  const [notifications, setNotifications] = useState(() => {
+    if (user?.notifications_enabled !== undefined) return Boolean(user.notifications_enabled)
+    try {
+      const cached = JSON.parse(localStorage.getItem('auth_user') || sessionStorage.getItem('auth_user') || '{}')
+      return cached.notifications_enabled !== undefined ? Boolean(cached.notifications_enabled) : true
+    } catch {
+      return true
+    }
+  })
+  const [emailAlerts, setEmailAlerts] = useState(() => {
+    if (user?.email_alerts_enabled !== undefined) return Boolean(user.email_alerts_enabled)
+    try {
+      const cached = JSON.parse(localStorage.getItem('auth_user') || sessionStorage.getItem('auth_user') || '{}')
+      return cached.email_alerts_enabled !== undefined ? Boolean(cached.email_alerts_enabled) : true
+    } catch {
+      return true
+    }
+  })
   const [isSavingPreferences, setIsSavingPreferences] = useState(false)
 
   // Sync state if user profile loads/updates asynchronously
   useEffect(() => {
     if (user) {
-      setNotifications(user.notifications_enabled !== undefined ? user.notifications_enabled : true)
-      setEmailAlerts(user.email_alerts_enabled !== undefined ? user.email_alerts_enabled : true)
+      if (user.notifications_enabled !== undefined) setNotifications(Boolean(user.notifications_enabled))
+      if (user.email_alerts_enabled !== undefined) setEmailAlerts(Boolean(user.email_alerts_enabled))
     }
   }, [user])
+
+  // Optimization 3: Instant optimistic toggles with non-blocking background sync
+  const handleToggleNotification = async (enabled) => {
+    setNotifications(enabled)
+    try {
+      await updateProfile({ notifications_enabled: enabled })
+    } catch (err) {
+      setNotifications(!enabled)
+      toast.error('Failed to update notification preference')
+    }
+  }
+
+  const handleToggleEmailAlerts = async (enabled) => {
+    setEmailAlerts(enabled)
+    try {
+      await updateProfile({ email_alerts_enabled: enabled })
+    } catch (err) {
+      setEmailAlerts(!enabled)
+      toast.error('Failed to update email alerts preference')
+    }
+  }
 
   // Password change state
   const [passwordForm, setPasswordForm] = useState({
@@ -198,7 +236,7 @@ export default function Settings() {
             <input
               type="checkbox"
               checked={notifications}
-              onChange={(e) => setNotifications(e.target.checked)}
+              onChange={(e) => handleToggleNotification(e.target.checked)}
               className="w-5 h-5 accent-primary-600 rounded cursor-pointer"
             />
           </div>
@@ -215,7 +253,7 @@ export default function Settings() {
             <input
               type="checkbox"
               checked={emailAlerts}
-              onChange={(e) => setEmailAlerts(e.target.checked)}
+              onChange={(e) => handleToggleEmailAlerts(e.target.checked)}
               className="w-5 h-5 accent-primary-600 rounded cursor-pointer"
             />
           </div>
