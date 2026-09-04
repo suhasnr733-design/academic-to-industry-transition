@@ -114,7 +114,7 @@ export const Navbar = ({ onMenuClick, isCollapsed = false, onToggleCollapse }) =
                 <div className="relative">
                   <button
                     onClick={() => setShowDropdown(!showDropdown)}
-                    className="flex items-center space-x-2.5 p-1 rounded-xl hover:bg-gray-50 transition-colors"
+                    className="flex items-center space-x-2.5 p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   >
                     <div className={`w-8 h-8 rounded-full text-white flex items-center justify-center font-semibold text-sm shadow-sm ${
                       isFaculty 
@@ -123,29 +123,34 @@ export const Navbar = ({ onMenuClick, isCollapsed = false, onToggleCollapse }) =
                         ? 'bg-red-600' 
                         : 'bg-primary-600'
                     }`}>
-                      {user?.full_name?.[0] || user?.username?.[0] || 'U'}
+                      {(user?.full_name || user?.username || 'U')[0]?.toUpperCase()}
                     </div>
                     <div className="hidden md:block text-left">
-                      <p className="text-sm font-semibold text-gray-900 leading-none">
-                        {user?.full_name || user?.username}
+                      <p className="text-sm font-bold text-gray-900 dark:text-white leading-none">
+                        {user?.full_name || user?.username || 'Student'}
                       </p>
-                      <p className="text-[10px] text-gray-500 font-medium capitalize mt-0.5">
-                        {role}
+                      <p className="text-[11px] text-gray-500 dark:text-gray-300 font-mono font-medium mt-0.5">
+                        {user?.username ? `@${user.username}` : role}
                       </p>
                     </div>
                   </button>
 
                   {showDropdown && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl py-1.5 border border-gray-100 z-50">
-                      <div className="px-4 py-2 border-b border-gray-100">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
+                    <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-gray-900 rounded-xl shadow-xl py-1.5 border border-gray-100 dark:border-gray-800 z-50 text-gray-900 dark:text-white">
+                      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-800">
+                        <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
                           {user?.full_name || user?.username}
                         </p>
-                        <p className="text-xs text-gray-500 truncate">
+                        {user?.username && (
+                          <p className="text-xs font-mono text-primary-600 dark:text-primary-400 font-bold">
+                            @{user.username}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
                           {user?.email}
                         </p>
                         <span className={`inline-block mt-1 text-[10px] font-bold px-1.5 py-0.2 rounded uppercase ${
-                          isFaculty ? 'bg-purple-50 text-purple-700' : isAdmin ? 'bg-red-50 text-red-700' : 'bg-primary-50 text-primary-700'
+                          isFaculty ? 'bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300' : isAdmin ? 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300' : 'bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300'
                         }`}>
                           {role}
                         </span>
@@ -154,7 +159,7 @@ export const Navbar = ({ onMenuClick, isCollapsed = false, onToggleCollapse }) =
                       {isFaculty ? (
                         <Link
                           to="/faculty"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-purple-50 dark:hover:bg-purple-950/50 hover:text-purple-700"
                           onClick={() => setShowDropdown(false)}
                         >
                           <HomeIcon className="h-4 w-4 mr-2.5 text-purple-600" />
@@ -163,7 +168,7 @@ export const Navbar = ({ onMenuClick, isCollapsed = false, onToggleCollapse }) =
                       ) : isAdmin ? (
                         <Link
                           to="/admin"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-red-50 dark:hover:bg-red-950/50 hover:text-red-700"
                           onClick={() => setShowDropdown(false)}
                         >
                           <HomeIcon className="h-4 w-4 mr-2.5 text-red-600" />
@@ -172,7 +177,7 @@ export const Navbar = ({ onMenuClick, isCollapsed = false, onToggleCollapse }) =
                       ) : (
                         <Link
                           to="/dashboard"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-primary-50 dark:hover:bg-primary-950/50 hover:text-primary-600"
                           onClick={() => setShowDropdown(false)}
                         >
                           <HomeIcon className="h-4 w-4 mr-2.5 text-primary-600" />
@@ -182,12 +187,12 @@ export const Navbar = ({ onMenuClick, isCollapsed = false, onToggleCollapse }) =
 
                       <Link
                         to="/profile"
-                        className={`flex items-center px-4 py-2 text-sm text-gray-700 ${
+                        className={`flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 ${
                           isFaculty
-                            ? 'hover:bg-purple-50 hover:text-purple-700'
+                            ? 'hover:bg-purple-50 dark:hover:bg-purple-950/50 hover:text-purple-700'
                             : isAdmin
-                            ? 'hover:bg-red-50 hover:text-red-700'
-                            : 'hover:bg-primary-50 hover:text-primary-700'
+                            ? 'hover:bg-red-50 dark:hover:bg-red-950/50 hover:text-red-700'
+                            : 'hover:bg-primary-50 dark:hover:bg-primary-950/50 hover:text-primary-600'
                         }`}
                         onClick={() => setShowDropdown(false)}
                       >
@@ -205,18 +210,18 @@ export const Navbar = ({ onMenuClick, isCollapsed = false, onToggleCollapse }) =
 
                       <Link
                         to="/settings"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
                         onClick={() => setShowDropdown(false)}
                       >
                         <CogIcon className="h-4 w-4 mr-2.5 text-gray-500" />
                         Settings
                       </Link>
 
-                      <div className="border-t border-gray-100 my-1" />
+                      <div className="border-t border-gray-100 dark:border-gray-800 my-1" />
 
                       <button
                         onClick={handleLogout}
-                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50"
                       >
                         <LogoutIcon className="h-4 w-4 mr-2.5 text-red-500" />
                         Logout

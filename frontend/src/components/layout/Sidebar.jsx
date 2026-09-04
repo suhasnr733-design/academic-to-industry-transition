@@ -1,7 +1,7 @@
 // src/components/layout/Sidebar.jsx
 
 import React, { useState, useEffect } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { cn } from '../../utils/helpers'
 import { useAuth } from '../../hooks/useAuth'
 import { api } from '../../services/api'
@@ -24,24 +24,24 @@ const studentSections = [
   {
     title: 'Main',
     items: [
-      { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-      { name: 'Career Analytics', href: '/dashboard/advanced', icon: TrendingUpIcon },
+      { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, shortcut: '⌘1' },
+      { name: 'Career Analytics', href: '/dashboard/advanced', icon: TrendingUpIcon, shortcut: '⌘2' },
     ]
   },
   {
     title: 'Career Opportunities',
     items: [
-      { name: 'Job Matches', href: '/jobs', icon: BriefcaseIcon, badgeKey: 'jobs' },
-      { name: 'Placement Drives', href: '/placements', icon: OfficeBuildingIcon, badgeKey: 'placement' },
-      { name: 'Resume Hub', href: '/resume', icon: DocumentTextIcon },
+      { name: 'Job Matches', href: '/jobs', icon: BriefcaseIcon, badgeKey: 'jobs', shortcut: '⌘J' },
+      { name: 'Placement Drives', href: '/placements', icon: OfficeBuildingIcon, badgeKey: 'placement', shortcut: '⌘P' },
+      { name: 'Resume Hub', href: '/resume', icon: DocumentTextIcon, shortcut: '⌘R' },
     ]
   },
   {
     title: 'Skill & Learning',
     items: [
-      { name: 'Skill Gap Analysis', href: '/skills', icon: ChartBarIcon },
-      { name: 'Learning Roadmap', href: '/learning', icon: AcademicCapIcon },
-      { name: 'Assessments', href: '/assessment', icon: ClipboardListIcon },
+      { name: 'Skill Gap Analysis', href: '/skills', icon: ChartBarIcon, shortcut: '⌘S' },
+      { name: 'Learning Roadmap', href: '/learning', icon: AcademicCapIcon, shortcut: '⌘L' },
+      { name: 'Assessments', href: '/assessment', icon: ClipboardListIcon, shortcut: '⌘A' },
     ]
   },
   {
@@ -96,6 +96,7 @@ const adminSections = [
 
 export const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }) => {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [pendingPlacementsCount, setPendingPlacementsCount] = useState(0)
   const [jobCount, setJobCount] = useState(0)
 
@@ -153,41 +154,45 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse
     return location.pathname === href
   }
 
+  const displayName = user?.full_name || user?.username || 'User'
+  const avatarLetter = (displayName[0] || 'U').toUpperCase()
+  const usernameHandle = user?.username ? `@${user.username}` : (role === 'faculty' ? 'Faculty Advisor' : role === 'admin' ? 'Administrator' : 'Student Candidate')
+
   return (
     <>
       {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/70 backdrop-blur-xs z-40 lg:hidden"
           onClick={onClose}
         />
       )}
 
-      {/* Sidebar Container */}
+      {/* Sidebar Container (Linear / Vercel Dark Theme Aesthetic) */}
       <aside
         className={cn(
-          'fixed top-16 left-0 z-40 h-[calc(100vh-4rem)] bg-white dark:bg-gray-900 border-r border-slate-200/80 dark:border-gray-800 flex flex-col justify-between shadow-sm transition-all duration-300',
+          'fixed top-16 left-0 z-40 h-[calc(100vh-4rem)] bg-[#0F172A] border-r border-slate-800/80 flex flex-col justify-between shadow-2xl transition-all duration-300 select-none',
           isCollapsed ? 'w-64 lg:w-20' : 'w-64',
           'lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        {/* Close button - mobile */}
+        {/* Mobile close button */}
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 p-2 text-gray-400 hover:text-gray-600 lg:hidden"
+          className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden"
           aria-label="Close Sidebar"
         >
-          <XIcon className="h-6 w-6" />
+          <XIcon className="h-5 w-5" />
         </button>
 
         {/* Categorized Navigation Sections */}
         <div className="p-3 overflow-y-auto flex-1 space-y-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          {sections.map((section) => (
-            <div key={section.title} className="space-y-1">
-              {/* Section title hidden when collapsed on desktop */}
+          {sections.map((section, sIdx) => (
+            <div key={section.title} className={cn("space-y-1", sIdx > 0 ? "pt-2 border-t border-slate-800/50" : "")}>
+              {/* Section title (hidden when collapsed on desktop) */}
               <div className={cn(
-                "text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest transition-all duration-200",
+                "text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest px-3 py-1 transition-all duration-200",
                 isCollapsed ? "px-3 lg:hidden" : "px-3"
               )}>
                 {section.title}
@@ -196,71 +201,92 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse
               <nav className="space-y-1">
                 {section.items.map((item) => {
                   const active = isItemActive(item.href)
+
+                  // Role-tailored active style
+                  const activeClass = role === 'faculty'
+                    ? 'bg-gradient-to-r from-purple-500/20 via-indigo-500/10 to-transparent text-white font-bold border-purple-500/40 shadow-xs'
+                    : role === 'admin'
+                    ? 'bg-gradient-to-r from-red-500/20 via-orange-500/10 to-transparent text-white font-bold border-red-500/40 shadow-xs'
+                    : 'bg-gradient-to-r from-indigo-500/20 via-purple-500/10 to-transparent text-white font-bold border-indigo-500/40 shadow-xs'
+
+                  const iconColor = active
+                    ? role === 'faculty'
+                      ? 'text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]'
+                      : role === 'admin'
+                      ? 'text-red-400 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]'
+                      : 'text-indigo-400 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]'
+                    : 'text-slate-400 group-hover:text-slate-200'
+
+                  const activeIndicatorColor = role === 'faculty'
+                    ? 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]'
+                    : role === 'admin'
+                    ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'
+                    : 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]'
+
                   return (
                     <NavLink
                       key={item.name}
                       to={item.href}
                       className={cn(
-                        'flex items-center rounded-xl text-xs font-medium transition-all duration-150 group relative',
+                        'flex items-center rounded-xl text-xs transition-all duration-200 group relative border',
                         isCollapsed
-                          ? 'justify-between px-3 py-2 lg:justify-center lg:px-0 lg:py-2.5'
+                          ? 'justify-between px-3 py-2 lg:w-11 lg:h-11 lg:p-0 lg:mx-auto lg:justify-center'
                           : 'justify-between px-3 py-2',
                         active
-                          ? role === 'faculty'
-                            ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-bold border-l-2 border-purple-600 shadow-xs'
-                            : role === 'admin'
-                            ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 font-bold border-l-2 border-red-600 shadow-xs'
-                            : 'bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 font-bold border-l-2 border-primary-600 shadow-xs'
-                          : 'text-gray-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800/60 hover:text-gray-900 dark:hover:text-gray-200'
+                          ? activeClass
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 border-transparent hover:border-slate-700/40'
                       )}
                       onClick={() => onClose()}
                       title={item.name}
                     >
+                      {/* Active Left Indicator Bar */}
+                      {active && (
+                        <div className={cn(
+                          "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full",
+                          activeIndicatorColor
+                        )} />
+                      )}
+
                       <div className={cn(
                         "flex items-center min-w-0",
                         isCollapsed ? "lg:justify-center" : ""
                       )}>
                         <item.icon className={cn(
-                          "h-5 w-5 flex-shrink-0 transition-transform duration-150 group-hover:scale-110",
+                          "w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
                           isCollapsed ? "mr-2.5 lg:mr-0" : "mr-2.5",
-                          active
-                            ? role === 'faculty'
-                              ? "text-purple-600 dark:text-purple-400"
-                              : role === 'admin'
-                              ? "text-red-600 dark:text-red-400"
-                              : "text-primary-600 dark:text-primary-400"
-                            : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"
+                          iconColor
                         )} />
                         
                         {/* Text label */}
                         <span className={cn(
-                          "truncate transition-all duration-200",
+                          "truncate font-medium tracking-tight transition-all duration-200",
+                          active ? "font-bold text-white" : "text-slate-300 group-hover:text-white",
                           isCollapsed ? "inline lg:hidden" : "inline"
                         )}>
                           {item.name}
                         </span>
                       </div>
 
-                      {/* Full Live Badges (when expanded) */}
-                      <div className={cn(isCollapsed ? "lg:hidden" : "inline-flex")}>
+                      {/* Badges (Expanded state) */}
+                      <div className={cn(isCollapsed ? "lg:hidden" : "inline-flex items-center gap-1.5")}>
                         {item.badgeKey === 'placement' && pendingPlacementsCount > 0 && (
-                          <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-extrabold bg-amber-500 text-white rounded-full shadow-xs animate-pulse ml-2 flex-shrink-0">
+                          <span className="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full shadow-xs animate-pulse ml-1.5 flex-shrink-0">
                             {pendingPlacementsCount} Action
                           </span>
                         )}
                         {item.badgeKey === 'jobs' && jobCount > 0 && (
-                          <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-md ml-2 flex-shrink-0">
+                          <span className="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-full shadow-xs ml-1.5 flex-shrink-0">
                             {jobCount}
                           </span>
                         )}
                       </div>
 
-                      {/* Mini Badge Dots (when collapsed on desktop) */}
+                      {/* Mini Badge Dots (Collapsed on desktop) */}
                       {isCollapsed && item.badgeKey === 'placement' && pendingPlacementsCount > 0 && (
-                        <span className="hidden lg:block absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white dark:ring-gray-900 animate-pulse" />
+                        <span className="hidden lg:block absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-[#0F172A] animate-pulse" />
                       )}
                       {isCollapsed && item.badgeKey === 'jobs' && jobCount > 0 && (
-                        <span className="hidden lg:block absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-gray-900" />
+                        <span className="hidden lg:block absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#0F172A]" />
                       )}
                     </NavLink>
                   )
@@ -270,28 +296,60 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse
           ))}
         </div>
 
-        {/* Clean Sidebar Footer */}
+        {/* Bottom Profile & Status Card (Linear / Clerk Aesthetic) */}
         <div className={cn(
-          "p-3 border-t border-slate-100 dark:border-gray-800 bg-slate-50/70 dark:bg-gray-800/40 flex items-center transition-all duration-300",
-          isCollapsed ? "justify-between lg:justify-center lg:px-0" : "justify-between"
+          "p-2.5 border-t border-slate-800/80 bg-[#111827]/90 transition-all duration-300",
+          isCollapsed ? "lg:p-2 lg:flex lg:justify-center" : "p-3"
         )}>
-          <div className="flex items-center space-x-2 min-w-0" title={role === 'faculty' ? 'Faculty Portal' : role === 'admin' ? 'Admin Console' : 'Student Portal'}>
-            <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-              role === 'faculty' ? 'bg-purple-500 ring-2 ring-purple-200 dark:ring-purple-900' : role === 'admin' ? 'bg-red-500 ring-2 ring-red-200 dark:ring-red-900' : 'bg-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900'
-            } animate-pulse`} />
-            <span className={cn(
-              "text-[11px] font-semibold text-gray-600 dark:text-gray-400 truncate",
-              isCollapsed ? "inline lg:hidden" : "inline"
-            )}>
-              {role === 'faculty' ? 'Faculty Portal' : role === 'admin' ? 'Admin Console' : 'Student Portal'}
-            </span>
-          </div>
-          <span className={cn(
-            "text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider ml-2 flex-shrink-0",
-            isCollapsed ? "inline lg:hidden" : "inline"
+          <div className={cn(
+            "flex items-center justify-between gap-2",
+            isCollapsed ? "lg:justify-center" : "w-full"
           )}>
-            v1.0
-          </span>
+            <div 
+              onClick={() => navigate('/profile')}
+              className={cn(
+                "flex items-center space-x-2.5 min-w-0 cursor-pointer group rounded-xl hover:bg-slate-800/60 transition-colors",
+                isCollapsed ? "p-1 lg:p-1 lg:justify-center" : "p-1 flex-1"
+              )}
+              title={displayName}
+            >
+              <div className="relative flex-shrink-0">
+                <div className={`w-8 h-8 rounded-full text-white font-bold flex items-center justify-center text-xs shadow-md ${
+                  role === 'faculty' 
+                    ? 'bg-gradient-to-tr from-purple-600 to-indigo-600' 
+                    : role === 'admin' 
+                    ? 'bg-gradient-to-tr from-red-600 to-orange-600' 
+                    : 'bg-gradient-to-tr from-indigo-600 to-purple-600'
+                }`}>
+                  {avatarLetter}
+                </div>
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-[#111827] rounded-full" title="Online" />
+              </div>
+
+              <div className={cn(
+                "min-w-0 flex-1 transition-all duration-200",
+                isCollapsed ? "hidden lg:hidden" : "block"
+              )}>
+                <p className="text-xs font-bold text-white group-hover:text-indigo-300 transition-colors truncate leading-tight">
+                  {displayName}
+                </p>
+                <p className="text-[10px] font-mono text-slate-400 truncate leading-tight mt-0.5">
+                  {usernameHandle}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => navigate('/settings')}
+              className={cn(
+                "p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors",
+                isCollapsed ? "hidden lg:hidden" : "block"
+              )}
+              title="Settings"
+            >
+              <CogIcon className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </aside>
     </>

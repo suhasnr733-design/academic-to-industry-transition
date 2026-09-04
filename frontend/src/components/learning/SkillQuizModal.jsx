@@ -93,19 +93,19 @@ export const SkillQuizModal = ({ skillName, onClose, onPassQuiz }) => {
   const passed = score >= 6
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-gray-100 flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-[#111827] rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-gray-800 flex flex-col max-h-[90vh]">
         {/* Modal Header */}
-        <div className="p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between">
+        <div className="p-5 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 text-white flex items-center justify-between border-b border-gray-800">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300 font-extrabold">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-extrabold">
               <SparklesIcon className="w-6 h-6" />
             </div>
             <div>
               <h3 className="font-extrabold text-base text-white">
                 {skillName} Mastery Evaluation Quiz
               </h3>
-              <p className="text-xs text-indigo-200">
+              <p className="text-xs text-indigo-300">
                 10 Technical Interview Questions • 15 Mins Assessment
               </p>
             </div>
@@ -124,37 +124,37 @@ export const SkillQuizModal = ({ skillName, onClose, onPassQuiz }) => {
           <div className="p-6 overflow-y-auto space-y-5 flex-1">
             {/* Question Progress Bar */}
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs font-bold text-gray-700">
+              <div className="flex items-center justify-between text-xs font-bold text-gray-300">
                 <span>Question {currentIndex + 1} of {questions.length}</span>
-                <span className="text-indigo-600">{Math.round(((currentIndex + 1) / questions.length) * 100)}% Completed</span>
+                <span className="text-indigo-400">{Math.round(((currentIndex + 1) / questions.length) * 100)}% Completed</span>
               </div>
-              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-[#0F172A] rounded-full overflow-hidden border border-gray-800">
                 <div 
-                  className="h-full bg-gradient-to-r from-indigo-600 to-purple-600 transition-all duration-300 rounded-full" 
+                  className="h-full bg-gradient-to-r from-indigo-600 to-violet-600 transition-all duration-300 rounded-full" 
                   style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
                 />
               </div>
             </div>
 
             {/* Question Title */}
-            <h4 className="font-extrabold text-base text-gray-900 leading-snug">
+            <h4 className="font-extrabold text-base text-white leading-snug">
               {currentQ.question}
             </h4>
 
             {/* Options List */}
             <div className="space-y-2.5 pt-1">
               {currentQ.options.map((opt, oIdx) => {
-                let optStyle = "border-gray-200 hover:border-indigo-300 bg-white"
+                let optStyle = "border-gray-700/80 hover:border-indigo-500/50 bg-[#1E293B] text-gray-200"
                 if (submitted) {
                   if (oIdx === currentQ.correct_index) {
-                    optStyle = "border-green-500 bg-green-50 text-green-950 font-bold"
+                    optStyle = "border-emerald-500 bg-emerald-950/40 text-emerald-300 font-bold"
                   } else if (selectedOption === oIdx) {
-                    optStyle = "border-red-500 bg-red-50 text-red-950"
+                    optStyle = "border-rose-500 bg-rose-950/40 text-rose-300"
                   } else {
-                    optStyle = "border-gray-100 bg-gray-50 opacity-50"
+                    optStyle = "border-gray-800 bg-[#0F172A] opacity-40 text-gray-500"
                   }
                 } else if (selectedOption === oIdx) {
-                  optStyle = "border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-500/20 font-semibold"
+                  optStyle = "border-indigo-500 bg-indigo-950/60 ring-2 ring-indigo-500/30 text-white font-semibold"
                 }
 
                 return (
@@ -166,10 +166,10 @@ export const SkillQuizModal = ({ skillName, onClose, onPassQuiz }) => {
                   >
                     <span className="pr-2">{opt}</span>
                     {submitted && oIdx === currentQ.correct_index && (
-                      <CheckCircleIcon className="w-5 h-5 text-green-600 shrink-0" />
+                      <CheckCircleIcon className="w-5 h-5 text-emerald-400 shrink-0" />
                     )}
                     {submitted && selectedOption === oIdx && oIdx !== currentQ.correct_index && (
-                      <XCircleIcon className="w-5 h-5 text-red-500 shrink-0" />
+                      <XCircleIcon className="w-5 h-5 text-rose-400 shrink-0" />
                     )}
                   </button>
                 )
@@ -178,7 +178,7 @@ export const SkillQuizModal = ({ skillName, onClose, onPassQuiz }) => {
 
             {/* Explanation box after submit */}
             {submitted && currentQ.explanation && (
-              <div className={`p-3.5 rounded-xl text-xs leading-relaxed ${isCorrect ? 'bg-green-50 text-green-900 border border-green-200' : 'bg-red-50 text-red-900 border border-red-200'}`}>
+              <div className={`p-3.5 rounded-xl text-xs leading-relaxed ${isCorrect ? 'bg-emerald-950/30 text-emerald-300 border border-emerald-500/30' : 'bg-rose-950/30 text-rose-300 border border-rose-500/30'}`}>
                 <span className="font-bold">{isCorrect ? '✓ Correct Answer:' : '✕ Explanation:'}</span> {currentQ.explanation}
               </div>
             )}
@@ -187,33 +187,33 @@ export const SkillQuizModal = ({ skillName, onClose, onPassQuiz }) => {
           /* Quiz Results View */
           <div className="p-8 text-center space-y-4 my-auto">
             {passed ? (
-              <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 mx-auto flex items-center justify-center shadow-inner">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mx-auto flex items-center justify-center shadow-lg">
                 <BadgeCheckIcon className="w-10 h-10" />
               </div>
             ) : (
-              <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-600 mx-auto flex items-center justify-center shadow-inner">
+              <div className="w-16 h-16 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 mx-auto flex items-center justify-center shadow-lg">
                 <SparklesIcon className="w-10 h-10" />
               </div>
             )}
 
             <div>
-              <h3 className="text-xl font-extrabold text-gray-900">
+              <h3 className="text-xl font-extrabold text-white">
                 {passed ? '🎉 Congratulations! You Passed!' : 'Practice Assessment Finished'}
               </h3>
-              <p className="text-sm text-gray-600 mt-1">
-                You scored <span className="font-bold text-indigo-700">{score}</span> out of {questions.length} ({percentScore}% Mastery).
+              <p className="text-sm text-gray-400 mt-1">
+                You scored <span className="font-bold text-indigo-400">{score}</span> out of {questions.length} ({percentScore}% Mastery).
               </p>
             </div>
 
             {passed && (
-              <div className="p-3 bg-green-50 border border-green-200 text-green-800 text-xs font-bold rounded-xl">
+              <div className="p-3 bg-emerald-950/30 border border-emerald-500/30 text-emerald-300 text-xs font-bold rounded-xl">
                 ✓ {skillName} has been marked as COMPLETED on your dashboard!
               </div>
             )}
 
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition-all cursor-pointer"
+              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition-all cursor-pointer"
             >
               Close Assessment
             </button>
@@ -222,21 +222,21 @@ export const SkillQuizModal = ({ skillName, onClose, onPassQuiz }) => {
 
         {/* Modal Footer Controls */}
         {!completed && (
-          <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500">Current Score: {score} / {questions.length}</span>
+          <div className="p-4 bg-[#0F172A] border-t border-gray-800 flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-400">Current Score: {score} / {questions.length}</span>
 
             {!submitted ? (
               <button
                 disabled={selectedOption === null}
                 onClick={handleSubmit}
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-extrabold rounded-xl shadow cursor-pointer transition-colors"
+                className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white text-xs font-extrabold rounded-xl shadow cursor-pointer transition-colors"
               >
                 Submit Answer
               </button>
             ) : (
               <button
                 onClick={handleNext}
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-extrabold rounded-xl shadow cursor-pointer transition-all"
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-extrabold rounded-xl shadow cursor-pointer transition-all"
               >
                 <span>{currentIndex + 1 < questions.length ? 'Next Question' : 'Finish Quiz'}</span>
                 <ArrowRightIcon className="w-4 h-4" />

@@ -40,11 +40,11 @@ export const Layout = ({ children }) => {
 
   if (isAuthPage) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex flex-col relative overflow-x-hidden overflow-y-auto">
-        {/* Ambient background glows — fixed so they stay anchored while page scrolls */}
-        <div className="pointer-events-none fixed -top-24 -left-24 w-96 h-96 bg-primary-400/15 rounded-full blur-3xl -z-0" />
-        <div className="pointer-events-none fixed top-1/3 -right-24 w-96 h-96 bg-indigo-400/15 rounded-full blur-3xl -z-0" />
-        <div className="pointer-events-none fixed -bottom-24 left-1/4 w-80 h-80 bg-purple-400/15 rounded-full blur-3xl -z-0" />
+      <div className="min-h-screen bg-[#0F172A] text-[#F8FAFC] flex flex-col relative overflow-x-hidden overflow-y-auto">
+        {/* Ambient background glows */}
+        <div className="pointer-events-none fixed -top-24 -left-24 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl -z-0" />
+        <div className="pointer-events-none fixed top-1/3 -right-24 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl -z-0" />
+        <div className="pointer-events-none fixed -bottom-24 left-1/4 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl -z-0" />
 
         <Navbar 
           onMenuClick={toggleSidebar} 
@@ -60,7 +60,7 @@ export const Layout = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-between">
+    <div className="min-h-screen bg-[#0F172A] text-[#F8FAFC] flex flex-col justify-between relative selection:bg-indigo-500/30">
       <div>
         <Navbar 
           onMenuClick={toggleSidebar} 
@@ -80,7 +80,7 @@ export const Layout = ({ children }) => {
           
           <main className={`flex-1 transition-all duration-300 ${
             isAuthenticated ? (isCollapsed ? 'lg:ml-20' : 'lg:ml-64') : ''
-          } p-3 sm:p-4 md:p-5`}>
+          } p-3 sm:p-4 md:p-6 min-h-[calc(100vh-4rem)]`}>
             {children}
           </main>
         </div>

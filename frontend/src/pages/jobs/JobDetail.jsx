@@ -209,8 +209,8 @@ export const JobDetail = () => {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-24">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600 mb-3" />
-        <p className="text-sm text-slate-500 font-medium">Retrieving opportunity details...</p>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500 mb-3" />
+        <p className="text-sm text-gray-400 font-medium">Retrieving opportunity details...</p>
       </div>
     )
   }
@@ -218,15 +218,15 @@ export const JobDetail = () => {
   if (!job) {
     return (
       <div className="max-w-xl mx-auto py-20 px-4 text-center">
-        <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-200 shadow-xs">
+        <div className="w-16 h-16 bg-amber-500/10 text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-500/20 shadow-lg">
           <BriefcaseIcon className="w-8 h-8" />
         </div>
-        <h3 className="text-xl font-bold text-slate-900 mb-2">Opportunity Not Found or Expired</h3>
-        <p className="text-sm text-slate-600 mb-6">
-          {error || 'This live web opportunity or campus placement drive could not be located. It may have expired or been removed by the provider.'}
+        <h3 className="text-xl font-bold text-white mb-2">Opportunity Not Found or Expired</h3>
+        <p className="text-sm text-gray-400 mb-6">
+          {error || 'This live opportunity or campus placement drive could not be located. It may have expired or been removed.'}
         </p>
         <Button onClick={() => navigate('/jobs')} className="px-6 py-2.5 text-sm font-semibold">
-          Explore Active Campus & Live Opportunities
+          Explore Active Opportunities
         </Button>
       </div>
     )
@@ -237,11 +237,8 @@ export const JobDetail = () => {
   const formatSalaryDisplay = (salaryRaw, description = '', title = '', location = '') => {
     let s = String(salaryRaw || '').trim()
 
-    // 1. If salaryRaw is missing or 'Competitive', scan description for embedded salary
     if (!s || s.toLowerCase().includes('competitive')) {
       const descText = String(description || '')
-      
-      // Look for patterns like "Salary: 65,000-75,000" or "$90-$150/hr" or "€50,000 - €70,000"
       const descHourlyMatch = descText.match(/(?:salary|pay|rate|compensation)?[:\s]*\$(\d+)\s*(?:-|to)\s*\$?(\d+)\s*(?:\/|\s+per\s+)?(?:hr|hour)/i)
       if (descHourlyMatch) {
         s = `$${descHourlyMatch[1]} - $${descHourlyMatch[2]} / hr`
@@ -257,14 +254,11 @@ export const JobDetail = () => {
       }
     }
 
-    // 2. If a concrete numeric salary exists, convert to LPA / Cr
     if (s && !s.toLowerCase().includes('competitive')) {
-      // If already formatted in INR (₹ or LPA)
       if (s.includes('₹') || s.toLowerCase().includes('lpa') || s.toLowerCase().includes('inr')) {
         return s
       }
 
-      // Handle Hourly Rates (e.g. "$90 - $150 / hr" or "$50/hr")
       const hourlyMatch = s.match(/\$?(\d+)(?:\s*(?:-|to)\s*\$?(\d+))?\s*(?:\/|\s+per\s+)?(?:hr|hour)/i)
       if (hourlyMatch) {
         const minHourly = parseInt(hourlyMatch[1], 10)
@@ -278,7 +272,6 @@ export const JobDetail = () => {
         return `$${minHourly} - $${maxHourly}/hr (~₹${minINRInCr} - ${maxINRInCr} Cr/yr)`
       }
 
-      // Handle Annual USD Rates (e.g. "$80,000 - $120,000" or "$80k - $120k" or "65,000-75,000")
       const annualUSDMatch = s.match(/\$?(\d+[\d,]*)(?:k)?\s*(?:-|to)\s*\$?(\d+[\d,]*)(?:k)?/i)
       if (annualUSDMatch) {
         let minUSD = parseInt(annualUSDMatch[1].replace(/,/g, ''), 10)
@@ -293,7 +286,6 @@ export const JobDetail = () => {
         }
       }
 
-      // Handle single annual figure (e.g. "$120,000 / year")
       const singleMatch = s.match(/\$?(\d+[\d,]*)(?:k)?\s*(?:\/|\s+per\s+)?(?:yr|year)?/i)
       if (singleMatch) {
         let val = parseInt(singleMatch[1].replace(/,/g, ''), 10)
@@ -305,7 +297,6 @@ export const JobDetail = () => {
       }
     }
 
-    // 3. Fallback: Compute Realistic Market Benchmark based on Role & Seniority
     const t = (title || '').toLowerCase()
     const loc = (location || '').toLowerCase()
     const isGlobalOrRemote = loc.includes('remote') || loc.includes('global') || loc.includes('london') || loc.includes('us') || loc.includes('uk') || loc.includes('europe') || loc.includes('germany') || loc.includes('munich') || loc.includes('berlin')
@@ -333,26 +324,26 @@ export const JobDetail = () => {
     <div className="max-w-4xl mx-auto py-6 px-4">
       <button
         onClick={() => navigate('/jobs')}
-        className="flex items-center text-gray-600 hover:text-gray-900 mb-6 font-medium text-sm transition-colors"
+        className="flex items-center text-gray-400 hover:text-white mb-6 font-medium text-sm transition-colors group"
       >
-        <ArrowLeftIcon className="h-5 w-5 mr-2" />
+        <ArrowLeftIcon className="h-4 w-4 mr-2 group-hover:-translate-x-0.5 transition-transform" />
         Back to Campus Board & Jobs
       </button>
 
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+      <div className="bg-[#111827] rounded-2xl shadow-2xl border border-gray-800/80 overflow-hidden">
         {/* Header */}
-        <div className="p-6 md:p-8 border-b border-gray-100">
+        <div className="p-6 md:p-8 border-b border-gray-800 bg-gradient-to-b from-[#1E293B]/40 to-transparent">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2">
-                <Heading level={2}>{job.title}</Heading>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="text-2xl font-bold text-white tracking-tight">{job.title}</h1>
                 {job.source && (
-                  <span className="px-2.5 py-0.5 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full uppercase">
+                  <span className="px-2.5 py-0.5 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs font-semibold rounded-full uppercase">
                     {job.source}
                   </span>
                 )}
               </div>
-              <p className="text-xl font-semibold text-primary-600 mt-1">{job.company}</p>
+              <p className="text-lg font-semibold text-indigo-400 mt-1">{job.company}</p>
             </div>
             <div className="flex items-center space-x-2">
               {!isFacultyOrAdmin && (
@@ -360,28 +351,28 @@ export const JobDetail = () => {
                   onClick={() => toggleJobInterest(job)}
                   className={`p-2.5 rounded-xl border transition-all ${
                     isSaved 
-                      ? 'bg-amber-50 text-amber-500 border-amber-200 shadow-xs' 
-                      : 'bg-gray-50 text-gray-400 border-gray-200 hover:text-amber-500 hover:bg-amber-50'
+                      ? 'bg-amber-500/10 text-amber-400 border-amber-500/30 shadow-md shadow-amber-500/10' 
+                      : 'bg-[#1E293B] text-gray-400 border-gray-700/80 hover:text-amber-400 hover:border-amber-500/40 hover:bg-amber-500/10'
                   }`}
                   title={isSaved ? "Saved to Campus Board" : "Save to Campus Board"}
                 >
-                  {isSaved ? <StarSolidIcon className="h-5 w-5 text-amber-500" /> : <StarIcon className="h-5 w-5" />}
+                  {isSaved ? <StarSolidIcon className="h-5 w-5 text-amber-400" /> : <StarIcon className="h-5 w-5" />}
                 </button>
               )}
-              <Button variant="ghost" size="sm" onClick={handleShare} title="Share Opportunity">
-                <ShareIcon className="h-5 w-5 text-gray-500" />
+              <Button variant="secondary" size="sm" onClick={handleShare} title="Share Opportunity">
+                <ShareIcon className="h-4 w-4 text-gray-300" />
               </Button>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-gray-600">
+          <div className="flex flex-wrap items-center gap-4 mt-4 text-xs font-medium text-gray-400">
             {job.location && (
               <span className="flex items-center">
                 <MapPinIcon className="h-4 w-4 mr-1 text-gray-400" />
                 {job.location}
               </span>
             )}
-            <span className="flex items-center font-medium text-emerald-700">
-              <CurrencyRupeeIcon className="h-4 w-4 mr-1 text-emerald-600" />
+            <span className="flex items-center font-semibold text-emerald-400">
+              <CurrencyRupeeIcon className="h-4 w-4 mr-1 text-emerald-400" />
               {formatSalaryDisplay(job.salary_range, job.description, job.title, job.location)}
             </span>
             {job.job_type && (
@@ -401,19 +392,19 @@ export const JobDetail = () => {
 
         {/* Match Score */}
         {effectiveMatchScore > 0 && (
-          <div className="p-6 bg-gradient-to-r from-primary-50 to-indigo-50 border-b border-primary-100/50">
+          <div className="p-6 bg-gradient-to-r from-indigo-950/60 via-purple-950/40 to-slate-900 border-b border-indigo-500/20">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-bold text-gray-900">Academic Skill Match</h4>
-                <p className="text-sm text-gray-600">Calculated against your parsed resume competencies</p>
+                <h4 className="font-bold text-white text-base">Academic Skill Match</h4>
+                <p className="text-xs text-gray-400">Calculated against your parsed resume competencies</p>
               </div>
-              <div className="text-3xl font-extrabold text-primary-700">
+              <div className="text-2xl font-black text-indigo-400">
                 {Math.round(effectiveMatchScore)}%
               </div>
             </div>
-            <div className="mt-2 w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
+            <div className="mt-3 w-full h-2.5 bg-gray-800 rounded-full overflow-hidden border border-gray-700/50">
               <div 
-                className="h-full bg-gradient-to-r from-primary-500 to-indigo-600 rounded-full"
+                className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full shadow-lg shadow-indigo-500/50"
                 style={{ width: `${Math.round(effectiveMatchScore)}%` }}
               />
             </div>
@@ -426,30 +417,30 @@ export const JobDetail = () => {
 
           if (status.type === 'CLOSED') {
             return (
-              <div className="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-amber-50 border border-amber-300 flex items-center justify-between">
-                <div className="flex items-center space-x-3 text-amber-900">
-                  <ClockIcon className="h-6 w-6 text-amber-600 shrink-0" />
+              <div className="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-amber-950/30 border border-amber-500/30 flex items-center justify-between">
+                <div className="flex items-center space-x-3 text-amber-300">
+                  <ClockIcon className="h-5 w-5 text-amber-400 shrink-0" />
                   <div>
                     <p className="text-sm font-bold">{status.label}</p>
-                    <p className="text-xs text-amber-700">{status.subText}</p>
+                    <p className="text-xs text-amber-400/80">{status.subText}</p>
                   </div>
                 </div>
-                <span className="px-3 py-1 bg-amber-600 text-white rounded-lg text-xs font-bold shadow-xs">Closed</span>
+                <span className="px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold">Closed</span>
               </div>
             )
           }
 
           if (status.type === 'CLOSING_TODAY' || status.type === 'URGENT_1_DAY') {
             return (
-              <div className="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-rose-50 border border-rose-300 flex items-center justify-between animate-pulse">
-                <div className="flex items-center space-x-3 text-rose-800">
-                  <ClockIcon className="h-6 w-6 text-rose-600 shrink-0" />
+              <div className="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-rose-950/30 border border-rose-500/30 flex items-center justify-between animate-pulse">
+                <div className="flex items-center space-x-3 text-rose-300">
+                  <ClockIcon className="h-5 w-5 text-rose-400 shrink-0" />
                   <div>
                     <p className="text-sm font-bold">{status.detailText}</p>
-                    <p className="text-xs text-rose-600">{status.subText}</p>
+                    <p className="text-xs text-rose-400/80">{status.subText}</p>
                   </div>
                 </div>
-                <span className="px-3 py-1 bg-rose-600 text-white rounded-lg text-xs font-bold shadow-xs">
+                <span className="px-3 py-1 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold">
                   {status.type === 'CLOSING_TODAY' ? 'Closes Today' : '1 Day Left'}
                 </span>
               </div>
@@ -458,15 +449,15 @@ export const JobDetail = () => {
 
           if (status.type === 'CLOSING_SOON') {
             return (
-              <div className="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between">
-                <div className="flex items-center space-x-3 text-amber-900">
-                  <ClockIcon className="h-6 w-6 text-amber-600 shrink-0" />
+              <div className="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-amber-950/30 border border-amber-500/30 flex items-center justify-between">
+                <div className="flex items-center space-x-3 text-amber-300">
+                  <ClockIcon className="h-5 w-5 text-amber-400 shrink-0" />
                   <div>
                     <p className="text-sm font-bold">{status.detailText}</p>
-                    <p className="text-xs text-amber-700">{status.subText}</p>
+                    <p className="text-xs text-amber-400/80">{status.subText}</p>
                   </div>
                 </div>
-                <span className="px-3 py-1 bg-amber-600 text-white rounded-lg text-xs font-bold shadow-xs">
+                <span className="px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-bold">
                   {status.label.includes('2 days') ? '2 Days Left' : status.label}
                 </span>
               </div>
@@ -475,32 +466,31 @@ export const JobDetail = () => {
 
           if (status.type === 'ACTIVE_DEADLINE') {
             return (
-              <div className="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                <div className="flex items-center space-x-3 text-slate-800">
-                  <ClockIcon className="h-5 w-5 text-slate-500 shrink-0" />
+              <div className="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-[#1E293B]/70 border border-gray-700 flex items-center justify-between">
+                <div className="flex items-center space-x-3 text-gray-300">
+                  <ClockIcon className="h-5 w-5 text-indigo-400 shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold">{status.detailText}</p>
-                    <p className="text-xs text-slate-500">{status.subText}</p>
+                    <p className="text-sm font-semibold text-white">{status.detailText}</p>
+                    <p className="text-xs text-gray-400">{status.subText}</p>
                   </div>
                 </div>
-                <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md text-xs font-semibold">
+                <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md text-xs font-semibold">
                   Active Deadline
                 </span>
               </div>
             )
           }
 
-          // Rolling admissions banner
           return (
-            <div className="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-emerald-50/50 border border-emerald-200/70 flex items-center justify-between">
-              <div className="flex items-center space-x-3 text-emerald-950">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <div className="mx-6 md:mx-8 mt-6 p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/20 flex items-center justify-between">
+              <div className="flex items-center space-x-3 text-emerald-300">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                 <div>
-                  <p className="text-sm font-bold text-emerald-900">{status.detailText}</p>
-                  <p className="text-xs text-emerald-700">{status.subText}</p>
+                  <p className="text-sm font-bold text-white">{status.detailText}</p>
+                  <p className="text-xs text-emerald-400/80">{status.subText}</p>
                 </div>
               </div>
-              <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 font-bold border border-emerald-300 rounded-md text-xs">
+              <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold rounded-md text-xs">
                 Active Opening
               </span>
             </div>
@@ -509,21 +499,21 @@ export const JobDetail = () => {
 
         {/* Description */}
         <div className="p-6 md:p-8">
-          <h4 className="font-bold text-gray-900 text-lg mb-3">Role Overview & Responsibilities</h4>
-          <div className="prose max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap text-sm">
+          <h4 className="font-bold text-white text-base mb-3">Role Overview & Responsibilities</h4>
+          <div className="prose max-w-none text-gray-300 leading-relaxed whitespace-pre-wrap text-sm">
             {job.description || 'No detailed description provided for this campus opportunity.'}
           </div>
         </div>
 
         {/* Candidate Eligibility & Cohort */}
         {(job.eligibility?.length > 0 || job.raw_data?.eligibility?.length > 0) && (
-          <div className="p-6 md:p-8 border-t border-gray-100 bg-white">
-            <h4 className="font-bold text-gray-900 text-base mb-3">Eligibility & Candidate Cohort</h4>
+          <div className="p-6 md:p-8 border-t border-gray-800 bg-[#0F172A]/40">
+            <h4 className="font-bold text-white text-sm mb-3">Eligibility & Candidate Cohort</h4>
             <div className="flex flex-wrap gap-2">
               {(job.eligibility || job.raw_data?.eligibility || []).map((elig, idx) => (
                 <span 
                   key={idx} 
-                  className="px-3 py-1 bg-indigo-50 text-indigo-800 font-semibold border border-indigo-200 rounded-lg text-xs"
+                  className="px-3 py-1 bg-indigo-500/10 text-indigo-300 font-medium border border-indigo-500/20 rounded-lg text-xs"
                 >
                   {elig}
                 </span>
@@ -534,13 +524,13 @@ export const JobDetail = () => {
 
         {/* Required Skills */}
         {job.required_skills && job.required_skills.length > 0 && (
-          <div className="p-6 md:p-8 border-t border-gray-100 bg-gray-50/50">
-            <h4 className="font-bold text-gray-900 text-base mb-3">Required Technical Competencies</h4>
+          <div className="p-6 md:p-8 border-t border-gray-800 bg-[#0F172A]/60">
+            <h4 className="font-bold text-white text-sm mb-3">Required Technical Competencies</h4>
             <div className="flex flex-wrap gap-2">
               {job.required_skills.map((skill, idx) => (
                 <span 
                   key={idx} 
-                  className="px-3 py-1 bg-white text-gray-800 font-semibold border border-gray-200 rounded-lg text-xs shadow-xs"
+                  className="px-3 py-1 bg-[#1E293B] text-gray-200 font-medium border border-gray-700/80 rounded-lg text-xs hover:border-indigo-500/40 transition-colors"
                 >
                   {skill}
                 </span>
@@ -550,34 +540,32 @@ export const JobDetail = () => {
         )}
 
         {/* Action Buttons */}
-        <div className="p-6 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row gap-3">
+        <div className="p-6 border-t border-gray-800 bg-[#0F172A] flex flex-col sm:flex-row gap-3">
           {isFacultyOrAdmin ? (
-            /* ================= FACULTY ACTION VIEW ================= */
             <>
               {job.apply_url && (
                 <a
                   href={job.apply_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-md transition-all text-center text-sm"
+                  className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-purple-500/20 transition-all text-center text-sm"
                 >
                   View Official Company Posting ↗
                 </a>
               )}
               <Button 
-                variant="outline"
-                className="flex-1 py-3 font-semibold flex items-center justify-center gap-2 border-purple-200 text-purple-700 bg-white hover:bg-purple-50"
+                variant="secondary"
+                className="flex-1 py-3 font-semibold flex items-center justify-center gap-2 border-purple-500/30 text-purple-300 hover:bg-purple-950/40"
                 onClick={() => navigate('/faculty?tab=students&scope=mentees')}
               >
                 <span>🎓</span> Return to Faculty Portal
               </Button>
             </>
           ) : (
-            /* ================= STUDENT ACTION VIEW ================= */
             <>
               {(job.is_closed || job.status === 'closed') ? (
-                <div className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-slate-100 border border-slate-300 text-slate-600 font-bold rounded-xl shadow-xs text-sm cursor-not-allowed">
-                  <ClockIcon className="h-5 w-5 text-slate-400" />
+                <div className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-[#1E293B] border border-gray-700 text-gray-400 font-bold rounded-xl shadow-sm text-sm cursor-not-allowed">
+                  <ClockIcon className="h-5 w-5 text-gray-500" />
                   <span>Application Closed</span>
                 </div>
               ) : job.apply_url ? (
@@ -585,20 +573,20 @@ export const JobDetail = () => {
                   href={job.apply_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl shadow-md transition-all text-center text-sm"
+                  className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all text-center text-sm"
                 >
                   Apply on Company Portal ↗
                 </a>
               ) : isAlreadyApplied ? (
-                <div className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-emerald-50 border border-emerald-300 text-emerald-800 font-bold rounded-xl shadow-xs text-sm">
-                  <CheckCircleIcon className="h-5 w-5 text-emerald-600" />
+                <div className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-emerald-950/30 border border-emerald-500/30 text-emerald-300 font-bold rounded-xl shadow-sm text-sm">
+                  <CheckCircleIcon className="h-5 w-5 text-emerald-400" />
                   <span>Application Submitted ({existingInterest?.status?.toUpperCase() || 'APPLIED'})</span>
                 </div>
               ) : (
                 <Button
                   onClick={handleSubmitCampusApplication}
                   disabled={isSubmittingApp}
-                  className="flex-1 py-3 text-base font-bold bg-primary-600 hover:bg-primary-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-3 text-sm font-bold bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-95 transition-all flex items-center justify-center gap-2"
                 >
                   {isSubmittingApp ? (
                     <>
@@ -613,11 +601,11 @@ export const JobDetail = () => {
               <Button 
                 variant={isSaved ? "secondary" : "outline"} 
                 className={`flex-1 py-3 font-semibold flex items-center justify-center gap-2 ${
-                  isSaved ? 'border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100' : ''
+                  isSaved ? 'border-amber-500/30 text-amber-400 bg-amber-500/10 hover:bg-amber-500/20' : ''
                 }`}
                 onClick={() => toggleJobInterest(job)}
               >
-                {isSaved ? <StarSolidIcon className="h-5 w-5 text-amber-500" /> : <StarIcon className="h-5 w-5" />}
+                {isSaved ? <StarSolidIcon className="h-5 w-5 text-amber-400" /> : <StarIcon className="h-5 w-5" />}
                 {isSaved ? "Saved to Campus Board ⭐" : "Save to Campus Board"}
               </Button>
             </>
@@ -627,20 +615,20 @@ export const JobDetail = () => {
 
       {/* Faculty Advisor Mentee Card */}
       {isFacultyOrAdmin && (
-        <div className="mt-8 bg-white rounded-2xl shadow-lg border border-purple-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-primary-900 p-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="mt-8 bg-[#111827] rounded-2xl shadow-xl border border-purple-500/30 overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-950 via-indigo-950 to-slate-950 p-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-500/20">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
-                <AcademicCapIcon className="h-6 w-6 text-purple-200" />
+              <div className="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center">
+                <AcademicCapIcon className="h-6 w-6 text-purple-400" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
                   Assigned Mentees Interested
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-purple-400/30 text-purple-100 border border-purple-300/30">
+                  <span className="px-2 py-0.5 rounded-full text-xs font-extrabold bg-purple-500/20 text-purple-300 border border-purple-400/30">
                     {mentees.length}
                   </span>
                 </h3>
-                <p className="text-xs text-purple-200">
+                <p className="text-xs text-gray-400">
                   Accepted mentees from your cohort who marked interest or applied to {job.company}
                 </p>
               </div>
@@ -648,7 +636,7 @@ export const JobDetail = () => {
 
             <button
               onClick={() => navigate('/faculty?tab=students&scope=mentees')}
-              className="inline-flex items-center text-xs font-semibold px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors"
+              className="inline-flex items-center text-xs font-semibold px-3.5 py-2 rounded-xl bg-[#1E293B] hover:bg-purple-950/40 text-purple-300 border border-purple-500/30 transition-colors"
             >
               Open Faculty Portal
               <ArrowRightIcon className="h-3.5 w-3.5 ml-1.5" />
@@ -657,34 +645,34 @@ export const JobDetail = () => {
 
           <div className="p-6">
             {loadingMentees ? (
-              <div className="flex items-center justify-center py-8 space-x-3 text-purple-600">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600" />
-                <span className="text-sm font-medium">Checking your mentee cohort...</span>
+              <div className="flex items-center justify-center py-8 space-x-3 text-purple-400">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500" />
+                <span className="text-xs font-medium">Checking your mentee cohort...</span>
               </div>
             ) : mentees.length > 0 ? (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-800">
                 {mentees.map((m) => (
-                  <div key={m.student_id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-purple-50/40 p-3 rounded-xl transition-colors">
+                  <div key={m.student_id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-purple-950/20 p-3 rounded-xl transition-colors">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold text-sm flex items-center justify-center shadow-xs">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center shadow-sm">
                         {m.full_name?.[0] || m.username?.[0] || 'S'}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-bold text-gray-900">{m.full_name || m.username}</p>
+                          <p className="font-semibold text-white text-sm">{m.full_name || m.username}</p>
                           <span className={`px-2 py-0.5 text-xs font-semibold rounded-full capitalize ${
                             m.interest_status === 'offer'
-                              ? 'bg-emerald-100 text-emerald-800'
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                               : m.interest_status === 'interviewing'
-                              ? 'bg-blue-100 text-blue-800'
+                              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                               : m.interest_status === 'applied'
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-amber-100 text-amber-800'
+                              ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
+                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                           }`}>
                             {m.interest_status || 'Interested'}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="text-xs text-gray-400 mt-0.5">
                           {m.department || 'Student'} {m.year_of_study ? `• Year ${m.year_of_study}` : ''} • {m.email}
                         </p>
                       </div>
@@ -693,7 +681,7 @@ export const JobDetail = () => {
                     <div className="flex items-center space-x-2 self-end sm:self-center">
                       <button
                         onClick={() => navigate(`/faculty?scope=mentees&selectedStudent=${m.student_id}&tab=students`)}
-                        className="inline-flex items-center px-3.5 py-1.5 text-xs font-bold text-purple-700 bg-purple-100/70 hover:bg-purple-200 rounded-lg transition-all shadow-xs"
+                        className="inline-flex items-center px-3 py-1.5 text-xs font-bold text-purple-300 bg-purple-950/40 hover:bg-purple-900/50 border border-purple-500/30 rounded-lg transition-all"
                       >
                         Go to Faculty Mentee Page
                         <ArrowRightIcon className="h-3.5 w-3.5 ml-1" />
@@ -703,11 +691,11 @@ export const JobDetail = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 px-4 bg-gray-50/60 rounded-xl border border-dashed border-gray-200">
-                <UserGroupIcon className="h-10 w-10 text-gray-300 mx-auto mb-2" />
-                <p className="font-semibold text-gray-700 text-sm">No Accepted Mentees Interested Yet</p>
-                <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
-                  When one of your accepted mentees saves this job or applies to {job.company}, they will automatically appear here with direct links to their profile.
+              <div className="text-center py-8 px-4 bg-[#0F172A]/50 rounded-xl border border-dashed border-gray-800">
+                <UserGroupIcon className="h-9 w-9 text-gray-600 mx-auto mb-2" />
+                <p className="font-semibold text-gray-300 text-sm">No Accepted Mentees Interested Yet</p>
+                <p className="text-xs text-gray-500 mt-1 max-w-md mx-auto">
+                  When one of your accepted mentees saves this job or applies to {job.company}, they will automatically appear here.
                 </p>
               </div>
             )}

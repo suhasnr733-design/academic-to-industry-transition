@@ -123,18 +123,18 @@ export const RealTimeDashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Real-time Dashboard</h1>
-          <p className="text-gray-500 mt-1">Live updates and analytics</p>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">Real-time Dashboard</h1>
+          <p className="text-gray-400 mt-1 text-sm">Live socket streaming updates and activity telemetry</p>
         </div>
         <div className="flex items-center space-x-3">
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-            isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+            isConnected ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
           }`}>
             {isConnected ? '🟢 Live' : '🔴 Disconnected'}
           </span>
           <button
             onClick={fetchDashboardData}
-            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-2 text-gray-400 hover:text-white bg-[#1E293B] border border-gray-800 rounded-xl transition-colors"
           >
             <RefreshIcon className="h-5 w-5" />
           </button>
@@ -161,9 +161,9 @@ export const RealTimeDashboard = () => {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          className="bg-[#111827] rounded-2xl border border-gray-800/90 shadow-2xl p-6"
         >
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-bold text-white mb-4">
             Real-time Activity
           </h3>
           <RealTimeChart data={realtimeData} height={300} />
@@ -173,9 +173,9 @@ export const RealTimeDashboard = () => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-xl shadow-sm p-6"
+          className="bg-[#111827] rounded-2xl border border-gray-800/90 shadow-2xl p-6"
         >
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-bold text-white mb-4">
             Recent Activity
           </h3>
           <ActivityFeed activities={recentActivities} />

@@ -426,8 +426,8 @@ export const LearningPath = () => {
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto py-16 px-4 text-center space-y-4">
-        <RefreshIcon className="w-10 h-10 text-indigo-600 animate-spin mx-auto" />
-        <p className="text-sm font-semibold text-gray-600">Generating resume-specific personalized learning path...</p>
+        <RefreshIcon className="w-10 h-10 text-indigo-400 animate-spin mx-auto" />
+        <p className="text-sm font-semibold text-gray-400">Generating resume-specific personalized learning path...</p>
       </div>
     )
   }
@@ -436,25 +436,25 @@ export const LearningPath = () => {
   if (!activeResumeId || !roadmapData || !roadmapData.has_resume) {
     return (
       <div className="max-w-3xl mx-auto py-16 px-4 text-center">
-        <div className="bg-white rounded-3xl p-10 shadow-xl border border-gray-100 space-y-5">
-          <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
+        <div className="bg-[#111827] rounded-3xl p-10 shadow-2xl border border-gray-800/90 space-y-5">
+          <div className="w-20 h-20 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
             <AcademicCapIcon className="w-10 h-10" />
           </div>
-          <h2 className="text-2xl font-extrabold text-gray-900">No Resume Selected</h2>
-          <p className="text-sm text-gray-600 max-w-md mx-auto leading-relaxed">
+          <h2 className="text-2xl font-extrabold text-white">No Resume Selected</h2>
+          <p className="text-sm text-gray-400 max-w-md mx-auto leading-relaxed">
             Upload or select a resume to generate your personalized Learning Path.
           </p>
           
           {resumes && resumes.length > 0 && (
             <div className="pt-2 flex items-center justify-center gap-2">
-              <span className="text-xs font-bold text-gray-600">Select an uploaded resume:</span>
+              <span className="text-xs font-bold text-gray-400">Select an uploaded resume:</span>
               <select
                 onChange={(e) => handleSelectResume(Number(e.target.value))}
-                className="bg-indigo-50 text-indigo-900 font-bold text-xs rounded-xl px-3 py-2 border border-indigo-200 cursor-pointer"
+                className="bg-[#1E293B] text-gray-200 font-bold text-xs rounded-xl px-3 py-2 border border-gray-700 cursor-pointer"
               >
                 <option value="">-- Choose Resume --</option>
                 {resumes.map(r => (
-                  <option key={r.id} value={r.id}>
+                  <option key={r.id} value={r.id} className="bg-[#111827] text-white">
                     📄 {r.filename}
                   </option>
                 ))}
@@ -465,7 +465,7 @@ export const LearningPath = () => {
           <div className="pt-3">
             <button
               onClick={() => navigate('/resume/upload')}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-extrabold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-indigo-500/25 transition-all"
             >
               <UploadIcon className="w-5 h-5" />
               Upload New Resume
@@ -544,13 +544,13 @@ export const LearningPath = () => {
       />
 
       {/* Main Section Navigation Tabs (Roadmap vs Bookmarks) */}
-      <div className="flex items-center gap-3 border-b border-gray-200 pb-2">
+      <div className="flex items-center gap-3 border-b border-gray-800 pb-2">
         <button
           onClick={() => setActiveMainTab('roadmap')}
-          className={`px-4 py-2 font-extrabold text-sm rounded-xl transition-all ${
+          className={`px-4 py-2 font-bold text-sm rounded-xl transition-all ${
             activeMainTab === 'roadmap'
-              ? 'bg-indigo-600 text-white shadow'
-              : 'text-gray-600 hover:bg-gray-100'
+              ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md'
+              : 'text-gray-400 hover:text-white hover:bg-[#1E293B]'
           }`}
         >
           🎓 Interactive Learning Roadmap
@@ -558,10 +558,10 @@ export const LearningPath = () => {
 
         <button
           onClick={() => setActiveMainTab('bookmarks')}
-          className={`px-4 py-2 font-extrabold text-sm rounded-xl transition-all flex items-center gap-1.5 ${
+          className={`px-4 py-2 font-bold text-sm rounded-xl transition-all flex items-center gap-1.5 ${
             activeMainTab === 'bookmarks'
-              ? 'bg-indigo-600 text-white shadow'
-              : 'text-gray-600 hover:bg-gray-100'
+              ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md'
+              : 'text-gray-400 hover:text-white hover:bg-[#1E293B]'
           }`}
         >
           <BookmarkIcon className="w-4 h-4" />

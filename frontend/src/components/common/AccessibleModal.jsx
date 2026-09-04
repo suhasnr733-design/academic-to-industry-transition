@@ -64,36 +64,36 @@ export const AccessibleModal = ({
       aria-labelledby="modal-title"
     >
       <div 
-        className="min-h-screen px-4 text-center"
+        className="min-h-screen px-4 text-center flex items-center justify-center"
         onClick={handleOverlayClick}
       >
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
           aria-hidden="true"
         />
 
         <div 
           ref={modalRef}
-          className={`inline-block w-full ${sizeClasses[size]} align-middle bg-white rounded-2xl shadow-xl transform transition-all my-8 p-6 relative`}
+          className={`inline-block w-full ${sizeClasses[size]} align-middle bg-[#111827] border border-gray-800/80 rounded-2xl shadow-2xl shadow-indigo-950/40 transform transition-all my-8 p-6 relative text-left`}
           role="document"
         >
           {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 id="modal-title" className="text-xl font-semibold text-gray-900">
+          <div className="flex items-center justify-between mb-4 border-b border-gray-800 pb-3">
+            <h2 id="modal-title" className="text-lg font-semibold text-white tracking-tight">
               {title}
             </h2>
             <button
               ref={closeButtonRef}
               onClick={onClose}
-              className="p-1 text-gray-400 hover:text-gray-500 rounded-full hover:bg-gray-100 transition-colors"
+              className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-colors"
               aria-label="Close modal"
             >
-              <XIcon className="h-6 w-6" />
+              <XIcon className="h-5 w-5" />
             </button>
           </div>
 
           {/* Content */}
-          <div className="mt-2">
+          <div className="mt-2 text-gray-300 text-sm">
             {children}
           </div>
         </div>

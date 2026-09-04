@@ -19,9 +19,9 @@ export const DataTable = ({
 
   // Filter data
   const filteredData = useMemo(() => {
-    if (!searchTerm) return data
+    if (!searchTerm) return data || []
     
-    return data.filter(row => {
+    return (data || []).filter(row => {
       return columns.some(column => {
         const value = row[column.accessor]
         if (value === null || value === undefined) return false
@@ -74,23 +74,23 @@ export const DataTable = ({
   const getSortIcon = (accessor) => {
     if (sortField !== accessor) return null
     return sortDirection === 'asc' 
-      ? <ChevronUpIcon className="h-4 w-4" />
-      : <ChevronDownIcon className="h-4 w-4" />
+      ? <ChevronUpIcon className="h-4 w-4 text-indigo-400" />
+      : <ChevronDownIcon className="h-4 w-4 text-indigo-400" />
   }
 
   return (
-    <div className={`bg-white rounded-xl shadow-sm overflow-hidden ${className}`}>
+    <div className={`bg-[#111827] border border-gray-800/80 rounded-2xl shadow-xl overflow-hidden ${className}`}>
       {/* Search */}
       {searchable && (
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-800 bg-[#0F172A]/50">
           <div className="relative">
-            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <SearchIcon className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Search in table..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+              className="w-full pl-10 pr-4 py-2 bg-[#1E293B] border border-gray-700/70 rounded-xl text-sm text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
             />
           </div>
         </div>
@@ -99,17 +99,17 @@ export const DataTable = ({
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-[#0F172A] border-b border-gray-800">
             <tr>
               {columns.map((column) => (
                 <th
                   key={column.accessor}
                   onClick={() => column.sortable !== false && handleSort(column.accessor)}
-                  className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    column.sortable !== false ? 'cursor-pointer hover:text-gray-700' : ''
+                  className={`px-6 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider ${
+                    column.sortable !== false ? 'cursor-pointer hover:text-indigo-400' : ''
                   }`}
                 >
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center space-x-1.5">
                     <span>{column.header}</span>
                     {getSortIcon(column.accessor)}
                   </div>
@@ -117,10 +117,10 @@ export const DataTable = ({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-800/60">
             {paginatedData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={columns.length} className="px-6 py-12 text-center text-gray-400 text-sm">
                   No data available
                 </td>
               </tr>
@@ -129,10 +129,10 @@ export const DataTable = ({
                 <tr
                   key={index}
                   onClick={() => onRowClick && onRowClick(row)}
-                  className={`${onRowClick ? 'cursor-pointer hover:bg-gray-50' : ''} transition-colors`}
+                  className={`${onRowClick ? 'cursor-pointer hover:bg-indigo-950/20' : 'hover:bg-white/[0.02]'} transition-colors`}
                 >
                   {columns.map((column) => (
-                    <td key={column.accessor} className="px-6 py-4 text-sm text-gray-900">
+                    <td key={column.accessor} className="px-6 py-4 text-sm text-gray-200">
                       {column.render ? column.render(row) : row[column.accessor]}
                     </td>
                   ))}
@@ -145,22 +145,22 @@ export const DataTable = ({
 
       {/* Pagination */}
       {pagination && totalPages > 1 && (
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-          <div className="text-sm text-gray-500">
+        <div className="px-6 py-4 border-t border-gray-800 bg-[#0F172A]/40 flex items-center justify-between text-xs text-gray-400">
+          <div>
             Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, sortedData.length)} of {sortedData.length} results
           </div>
           <div className="flex space-x-2">
             <button
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+              className="px-3 py-1.5 bg-[#1E293B] border border-gray-700/80 rounded-lg text-xs font-medium text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-700 hover:text-white transition-colors"
             >
               Previous
             </button>
             <button
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+              className="px-3 py-1.5 bg-[#1E293B] border border-gray-700/80 rounded-lg text-xs font-medium text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-700 hover:text-white transition-colors"
             >
               Next
             </button>

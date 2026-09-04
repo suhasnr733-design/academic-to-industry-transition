@@ -207,11 +207,11 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
           prev.map((c) =>
             c.id === student.id
               ? {
-                  ...c,
-                  nomination_status: 'placed',
-                  placement_status: 'placed',
-                  placed_company: companyName
-                }
+                ...c,
+                nomination_status: 'placed',
+                placement_status: 'placed',
+                placed_company: companyName
+              }
               : c
           )
         )
@@ -264,18 +264,18 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
       const res = await api.post('/placement/nominate', payload)
       if (res.data?.success) {
         toast.success(res.data.message || `Nominated ${nominateTargetStudents.length} candidate(s)!`)
-        
+
         // Update local candidate status
         const targetIds = new Set(nominateTargetStudents.map((s) => s.id))
         setCandidates((prev) =>
           prev.map((c) =>
             targetIds.has(c.id)
               ? {
-                  ...c,
-                  nomination_status: 'pending',
-                  nomination_role: nominateRole.trim(),
-                  nomination_package: nominatePackage ? parseFloat(nominatePackage) : null
-                }
+                ...c,
+                nomination_status: 'pending',
+                nomination_role: nominateRole.trim(),
+                nomination_package: nominatePackage ? parseFloat(nominatePackage) : null
+              }
               : c
           )
         )
@@ -386,18 +386,18 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       {/* Top Value Banner */}
-      <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
-        <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+      <div className="bg-gradient-to-r from-indigo-950 via-[#111827] to-purple-950 rounded-3xl p-6 text-white shadow-xl border border-indigo-800/40 relative overflow-hidden">
+        <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-sm text-purple-100 border border-white/20 mb-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 backdrop-blur-sm text-indigo-300 border border-indigo-500/30 mb-2">
               <SparklesIcon className="h-4 w-4 text-amber-300" />
               Company Eligibility & Instant Shortlisting Tool
             </div>
             <h2 className="text-2xl font-bold text-white">Campus Placement Shortlist & Bundle Packager</h2>
-            <p className="text-purple-100 text-sm mt-1 max-w-2xl">
+            <p className="text-gray-300 text-sm mt-1 max-w-2xl">
               Match visiting company criteria in seconds, verify candidate readiness scores, and download a complete ZIP package with all student resumes ready for HR.
             </p>
           </div>
@@ -407,9 +407,9 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
               onClick={handleDownloadZipBundle}
               isLoading={isExportingZip}
               disabled={selectedStudentIds.length === 0}
-              className="bg-amber-500 hover:bg-amber-600 text-gray-950 font-bold px-5 py-2.5 rounded-xl shadow-lg flex items-center gap-2 border border-amber-400"
+              className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-500/25 flex items-center gap-2 border border-indigo-400/30"
             >
-              <DocumentDownloadIcon className="h-5 w-5 text-gray-950" />
+              <DocumentDownloadIcon className="h-5 w-5 text-white" />
               📦 Export ZIP Bundle ({selectedStudentIds.length})
             </Button>
           </div>
@@ -417,11 +417,11 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
       </div>
 
       {/* Criteria Filter Builder */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 space-y-6">
-        <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+      <div className="bg-[#111827] rounded-3xl p-6 shadow-xl border border-gray-800/80 space-y-6">
+        <div className="flex items-center justify-between border-b border-gray-800 pb-4">
           <div className="flex items-center gap-2">
-            <FilterIcon className="h-5 w-5 text-purple-600" />
-            <h3 className="font-bold text-gray-900 text-base">Company Hiring Criteria</h3>
+            <FilterIcon className="h-5 w-5 text-indigo-400" />
+            <h3 className="font-bold text-white text-base">Company Hiring Criteria</h3>
           </div>
           <button
             onClick={() => {
@@ -432,7 +432,7 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
               setPlacementStatus('seeking')
               setMinEmployability(0)
             }}
-            className="text-xs text-gray-500 hover:text-purple-600 font-medium"
+            className="text-xs text-gray-400 hover:text-indigo-400 font-medium transition-colors"
           >
             Reset Filters
           </button>
@@ -441,7 +441,7 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
         {/* Row 1: Company Name & Scope */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
               Company / Drive Title
             </label>
             <div className="relative">
@@ -451,19 +451,19 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder="e.g., Google SWE Drive, Microsoft SDE"
-                className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-10 pr-3 py-2 text-sm bg-[#1E293B] border border-gray-700/80 text-white placeholder-gray-400 rounded-xl focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
               Target Department
             </label>
             <select
               value={selectedDept}
               onChange={(e) => setSelectedDept(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2 text-sm bg-[#1E293B] border border-gray-700/80 text-white rounded-xl focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
             >
               <option value="all">All Departments</option>
               {departments.map((d) => (
@@ -475,13 +475,13 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
               Cohort Scope
             </label>
             <select
               value={filterScope}
               onChange={(e) => setFilterScope(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent font-medium"
+              className="w-full px-3 py-2 text-sm bg-[#1E293B] border border-gray-700/80 text-white rounded-xl focus:ring-2 focus:ring-indigo-500/30 focus:outline-none font-medium"
             >
               <option value="all">Entire Student Cohort (All Students)</option>
               <option value="mentees">My Assigned Mentees Only</option>
@@ -492,13 +492,13 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
         {/* Row 2: Year, Status, Minimum Score */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
               Academic Year of Study
             </label>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2 text-sm bg-[#1E293B] border border-gray-700/80 text-white rounded-xl focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
             >
               <option value="all">Any Academic Year</option>
               <option value="4">Final Year (Year 4 - Graduating)</option>
@@ -509,13 +509,13 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider mb-1.5">
               Placement Status
             </label>
             <select
               value={placementStatus}
               onChange={(e) => setPlacementStatus(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2 text-sm bg-[#1E293B] border border-gray-700/80 text-white rounded-xl focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
             >
               <option value="seeking">Seeking Placement (Unplaced)</option>
               <option value="placed">Already Placed</option>
@@ -525,10 +525,10 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
 
           <div>
             <div className="flex justify-between items-center mb-1.5">
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+              <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">
                 Min. Employability Score
               </label>
-              <span className="text-xs font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md">
+              <span className="text-xs font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20">
                 {minEmployability}%+
               </span>
             </div>
@@ -539,38 +539,38 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
               step="5"
               value={minEmployability}
               onChange={(e) => setMinEmployability(Number(e.target.value))}
-              className="w-full accent-purple-600 cursor-pointer h-2 bg-gray-200 rounded-lg"
+              className="w-full accent-indigo-500 cursor-pointer h-2 bg-[#1E293B] rounded-lg"
             />
           </div>
         </div>
 
         {/* Row 3: Required Technical Skills Builder */}
         <div className="space-y-2.5 pt-2">
-          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+          <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">
             Required Technical Skills for this Drive
           </label>
 
           {/* Selected Skills Badges */}
-          <div className="flex flex-wrap items-center gap-2 min-h-[44px] p-2.5 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="flex flex-wrap items-center gap-2 min-h-[44px] p-2.5 bg-[#1E293B]/60 rounded-2xl border border-gray-800">
             {selectedSkills.length > 0 ? (
               selectedSkills.map((skill) => (
                 <span
                   key={skill}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-purple-600 text-white shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/20"
                 >
                   <TagIcon className="h-3 w-3" />
                   {skill}
                   <button
                     type="button"
                     onClick={() => handleRemoveSkill(skill)}
-                    className="hover:bg-purple-700 p-0.5 rounded transition-colors focus:outline-none ml-0.5"
+                    className="hover:bg-white/20 p-0.5 rounded transition-colors focus:outline-none ml-0.5"
                   >
                     <XIcon className="h-3.5 w-3.5" />
                   </button>
                 </span>
               ))
             ) : (
-              <span className="text-xs text-gray-400 italic">
+              <span className="text-xs text-gray-500 italic">
                 No specific skills selected (all candidates matching year/status will be included).
               </span>
             )}
@@ -578,7 +578,7 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
 
           {/* Quick-add popular skills */}
           <div className="flex flex-wrap items-center gap-1.5 pt-1">
-            <span className="text-xs text-gray-500 font-medium mr-1">Quick Add:</span>
+            <span className="text-xs text-gray-400 font-medium mr-1">Quick Add:</span>
             {popularSkillsList.map((skill) => {
               const isSelected = selectedSkills.some((s) => s.toLowerCase() === skill.toLowerCase())
               return (
@@ -586,13 +586,12 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
                   key={skill}
                   type="button"
                   onClick={() => (isSelected ? handleRemoveSkill(skill) : handleAddSkill(skill))}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${
-                    isSelected
-                      ? 'bg-purple-100 text-purple-800 border border-purple-300 font-bold shadow-xs'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:border-purple-400 hover:text-purple-700 shadow-xs'
-                  }`}
+                  className={`px-2.5 py-1 rounded-xl text-xs font-medium transition-all flex items-center gap-1 ${isSelected
+                    ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-bold shadow-sm'
+                    : 'bg-[#1E293B] text-gray-300 border border-gray-700/80 hover:border-indigo-400 hover:text-white'
+                    }`}
                 >
-                  {isSelected && <CheckIcon className="h-3 w-3 text-purple-600" />}
+                  {isSelected && <CheckIcon className="h-3 w-3 text-indigo-400" />}
                   {skill}
                 </button>
               )
@@ -612,14 +611,14 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
                 }
               }}
               placeholder="Type custom skill (e.g. Kubernetes, Golang, PyTorch) and press Enter"
-              className="flex-1 px-3.5 py-2 text-xs border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none bg-white text-gray-900"
+              className="flex-1 px-3.5 py-2 text-xs bg-[#1E293B] border border-gray-700/80 rounded-xl focus:ring-2 focus:ring-indigo-500/30 focus:outline-none text-white placeholder-gray-400"
             />
             <Button
               size="sm"
               variant="outline"
               disabled={!customSkillInput.trim()}
               onClick={() => handleAddSkill(customSkillInput)}
-              className="text-xs font-semibold rounded-xl px-4 py-2"
+              className="text-xs font-semibold rounded-xl px-4 py-2 bg-[#1E293B] border-gray-700 text-gray-200 hover:bg-[#334155]"
             >
               Add Skill
             </Button>
@@ -628,16 +627,16 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
       </div>
 
       {/* Active Campus Drives Helper Banner */}
-      <div className="bg-gradient-to-r from-purple-50 via-indigo-50 to-white p-4 rounded-xl border border-purple-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="bg-[#111827] p-5 rounded-3xl border border-gray-800/80 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-purple-600 text-white rounded-xl shadow-sm">
+          <div className="p-2.5 bg-indigo-500/10 text-indigo-400 rounded-2xl border border-indigo-500/20">
             <OfficeBuildingIcon className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-gray-900">
+            <h3 className="text-sm font-bold text-white">
               Campus Drives & Confirmed Attendance Manager
             </h3>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-400">
               Shortlist and invite candidates here. Track confirmed RSVPs and finalize placements in the Campus Drives tab.
             </p>
           </div>
@@ -654,15 +653,15 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
               window.location.href = url.toString()
             }
           }}
-          className="text-xs font-bold text-purple-700 hover:text-purple-900 bg-white hover:bg-purple-50 border border-purple-300 px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 self-start sm:self-auto shadow-sm"
+          className="text-xs font-bold text-indigo-400 hover:text-indigo-300 bg-[#1E293B] hover:bg-[#334155] border border-gray-700/80 px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 self-start sm:self-auto shadow-md"
         >
-          <OfficeBuildingIcon className="h-4 w-4 text-purple-600" />
+          <OfficeBuildingIcon className="h-4 w-4 text-indigo-400" />
           Open Campus Drives Manager ➔
         </button>
       </div>
 
       {/* Results Header & Batch Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#111827] p-5 rounded-3xl border border-gray-800/80 shadow-xl">
         <div className="flex items-center gap-3">
           <div className="flex items-center h-5">
             <input
@@ -673,20 +672,20 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
                 selectedStudentIds.length === visibleCandidates.length
               }
               onChange={handleToggleSelectAll}
-              className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded cursor-pointer"
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-700 bg-[#1E293B] rounded cursor-pointer"
             />
           </div>
           <div>
-            <span className="text-sm font-bold text-gray-900">
+            <span className="text-sm font-bold text-white">
               {visibleCandidates.length} Candidates Matched
             </span>
-            <span className="text-xs text-gray-500 ml-2">
+            <span className="text-xs text-gray-400 ml-2">
               ({selectedStudentIds.length} selected for ZIP export)
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="relative">
             <SearchIcon className="h-4 w-4 absolute left-3 top-2.5 text-gray-400" />
             <input
@@ -694,7 +693,7 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
               placeholder="Search by name, email..."
-              className="pl-9 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-purple-500 w-48 sm:w-60"
+              className="pl-9 pr-3 py-1.5 text-xs bg-[#1E293B] border border-gray-700/80 text-white placeholder-gray-400 rounded-xl focus:ring-1 focus:ring-indigo-500 w-48 sm:w-60"
             />
           </div>
 
@@ -703,7 +702,7 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
             variant="outline"
             onClick={handleExportCSV}
             disabled={selectedStudentIds.length === 0}
-            className="text-xs flex items-center gap-1.5"
+            className="text-xs flex items-center gap-1.5 bg-[#1E293B] border-gray-700 text-gray-300 hover:bg-[#334155]"
           >
             <DownloadIcon className="h-3.5 w-3.5" />
             Export CSV
@@ -714,7 +713,7 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
             onClick={handleDownloadZipBundle}
             isLoading={isExportingZip}
             disabled={selectedStudentIds.length === 0}
-            className="bg-purple-600 hover:bg-purple-700 text-white text-xs flex items-center gap-1.5 font-semibold"
+            className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs flex items-center gap-1.5 font-semibold shadow-md shadow-indigo-500/20"
           >
             <DocumentDownloadIcon className="h-3.5 w-3.5" />
             Download Resumes ZIP
@@ -726,7 +725,7 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
               handleOpenNominateModal(candidates.filter((c) => selectedStudentIds.includes(c.id)))
             }
             disabled={selectedStudentIds.length === 0}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs flex items-center gap-1.5 font-semibold shadow-sm"
+            className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs flex items-center gap-1.5 font-semibold shadow-md shadow-indigo-500/20"
           >
             <SparklesIcon className="h-3.5 w-3.5 text-amber-300" />
             Invite Selected ({selectedStudentIds.length})
@@ -735,38 +734,37 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
       </div>
 
       {/* Candidate List Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-[#111827] rounded-3xl shadow-xl border border-gray-800/80 overflow-hidden">
         {loading ? (
           <div className="py-16 text-center">
-            <RefreshIcon className="h-8 w-8 text-purple-600 animate-spin mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Matching candidate skill matrices against criteria...</p>
+            <RefreshIcon className="h-8 w-8 text-indigo-400 animate-spin mx-auto mb-2" />
+            <p className="text-sm text-gray-400">Matching candidate skill matrices against criteria...</p>
           </div>
         ) : visibleCandidates.length === 0 ? (
           <div className="py-16 text-center px-4">
-            <UserGroupIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-            <h4 className="text-base font-bold text-gray-700">No candidates match this criteria</h4>
-            <p className="text-xs text-gray-500 mt-1 max-w-md mx-auto">
+            <UserGroupIcon className="h-12 w-12 text-gray-600 mx-auto mb-3" />
+            <h4 className="text-base font-bold text-white">No candidates match this criteria</h4>
+            <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
               Try adjusting the required skills, lowering the minimum employability score, or setting the academic year to "Any Year".
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-800/80">
             {visibleCandidates.map((student) => {
               const isSelected = selectedStudentIds.includes(student.id)
               const matchPct = student.match_percentage || 0
               const empScore = student.employability_score || 0
 
-              let matchBadgeColor = 'bg-green-100 text-green-800 border-green-200'
-              if (matchPct < 50) matchBadgeColor = 'bg-rose-100 text-rose-800 border-rose-200'
-              else if (matchPct < 80) matchBadgeColor = 'bg-amber-100 text-amber-800 border-amber-200'
+              let matchBadgeColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+              if (matchPct < 50) matchBadgeColor = 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+              else if (matchPct < 80) matchBadgeColor = 'bg-amber-500/10 text-amber-400 border-amber-500/20'
 
               return (
                 <div
                   key={student.id}
                   onClick={() => handleToggleStudent(student.id)}
-                  className={`p-4 transition-colors cursor-pointer flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
-                    isSelected ? 'bg-purple-50/40 hover:bg-purple-50/70' : 'hover:bg-gray-50'
-                  }`}
+                  className={`p-4 transition-colors cursor-pointer flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${isSelected ? 'bg-indigo-950/30 hover:bg-indigo-950/40' : 'hover:bg-[#1E293B]/40'
+                    }`}
                 >
                   {/* Left Column: Checkbox, Avatar, Name & Details */}
                   <div className="flex items-start gap-3.5 min-w-0">
@@ -775,17 +773,17 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => handleToggleStudent(student.id)}
-                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded cursor-pointer"
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-700 bg-[#1E293B] rounded cursor-pointer"
                       />
                     </div>
 
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
+                    <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-md">
                       {(student.full_name || student.username || 'S')[0].toUpperCase()}
                     </div>
 
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-sm font-bold text-gray-900 truncate">
+                        <h4 className="text-sm font-bold text-white truncate">
                           {student.full_name || student.username}
                         </h4>
                         <span
@@ -794,28 +792,28 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
                           🎯 {matchPct}% Match
                         </span>
                         {student.placement_status === 'placed' ? (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                             Placed ({student.placed_company || 'Company'})
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                             Seeking Placement
                           </span>
                         )}
                       </div>
 
-                      <p className="text-xs text-gray-500 mt-0.5 truncate">
+                      <p className="text-xs text-gray-400 mt-0.5 truncate">
                         {student.email} • {student.phone || 'Phone not set'}
                       </p>
 
-                      <div className="flex items-center gap-3 text-xs text-gray-600 mt-1">
+                      <div className="flex items-center gap-3 text-xs text-gray-400 mt-1">
                         <span>🏫 {student.department || 'General'}</span>
                         <span>🎓 Year {student.year_of_study || 'N/A'}</span>
                         <span>
-                           📄 {student.has_resume ? (
-                            <span className="text-emerald-700 font-medium">Verified Resume</span>
+                          📄 {student.has_resume ? (
+                            <span className="text-emerald-400 font-medium">Verified Resume</span>
                           ) : (
-                            <span className="text-gray-400">Profile Dossier</span>
+                            <span className="text-gray-500">Profile Dossier</span>
                           )}
                         </span>
                       </div>
@@ -827,12 +825,12 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
                     {/* Employability Score */}
                     <div className="min-w-[100px]">
                       <div className="flex justify-between text-xs font-medium mb-1">
-                        <span className="text-gray-500">Readiness:</span>
-                        <span className="font-bold text-purple-700">{empScore}%</span>
+                        <span className="text-gray-400">Readiness:</span>
+                        <span className="font-bold text-indigo-400">{empScore}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                      <div className="w-full bg-[#0F172A] rounded-full h-1.5 overflow-hidden">
                         <div
-                          className="bg-purple-600 h-full rounded-full"
+                          className="bg-gradient-to-r from-indigo-500 to-violet-500 h-full rounded-full"
                           style={{ width: `${Math.min(empScore, 100)}%` }}
                         />
                       </div>
@@ -844,7 +842,7 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
                         {(student.matched_skills || []).map((sk) => (
                           <span
                             key={sk}
-                            className="px-2 py-0.5 rounded text-[11px] font-bold bg-green-100 text-green-800 border border-green-300"
+                            className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                           >
                             ✓ {sk}
                           </span>
@@ -852,7 +850,7 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
                         {(student.missing_skills || []).map((sk) => (
                           <span
                             key={sk}
-                            className="px-2 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-500 border border-dashed border-gray-300"
+                            className="px-2 py-0.5 rounded text-[11px] font-medium bg-[#1E293B] text-gray-400 border border-dashed border-gray-700"
                           >
                             ✕ {sk}
                           </span>
@@ -862,7 +860,7 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
                           (student.skills || []).slice(0, 3).map((sk) => (
                             <span
                               key={sk}
-                              className="px-2 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-700"
+                              className="px-2 py-0.5 rounded text-[11px] font-medium bg-[#1E293B] text-gray-300"
                             >
                               {sk}
                             </span>
@@ -873,19 +871,19 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
                     {/* Nomination Action / Status */}
                     <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                       {student.nomination_status === 'confirmed_attending' ? (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
                           🟢 Confirmed Attending
                         </span>
                       ) : student.nomination_status === 'pending' ? (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
                           ⏳ Invited (Pending RSVP)
                         </span>
                       ) : student.nomination_status === 'rejected' ? (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-300 flex items-center gap-1">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center gap-1">
                           🔴 Declined Drive
                         </span>
                       ) : student.nomination_status === 'placed' || student.placement_status === 'placed' ? (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-300 flex items-center gap-1">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1">
                           🏆 Placed ({student.placed_company || companyName})
                         </span>
                       ) : (
@@ -893,9 +891,9 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
                           size="sm"
                           variant="outline"
                           onClick={() => handleOpenNominateModal([student])}
-                          className="text-xs text-indigo-700 border-indigo-300 hover:bg-indigo-50 flex items-center gap-1 font-medium py-1 px-2.5"
+                          className="text-xs text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/10 flex items-center gap-1 font-medium py-1 px-2.5 bg-[#1E293B]"
                         >
-                          <SparklesIcon className="h-3.5 w-3.5 text-indigo-600" />
+                          <SparklesIcon className="h-3.5 w-3.5 text-indigo-400" />
                           Invite to Drive
                         </Button>
                       )}
@@ -910,23 +908,23 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
 
       {/* Company Drive Nomination Modal */}
       {showNominateModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 transform transition-all">
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#111827] rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-800 transform transition-all animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-800">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-purple-100 text-purple-700">
+                <div className="p-2 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                   <SparklesIcon className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Nominate Candidates for Company</h3>
-                  <p className="text-xs text-gray-500">
+                  <h3 className="text-lg font-bold text-white">Nominate Candidates for Company</h3>
+                  <p className="text-xs text-gray-400">
                     Students will receive an in-app alert to Accept or Decline
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowNominateModal(false)}
-                className="text-gray-400 hover:text-gray-600 text-xl font-bold p-1 rounded-lg hover:bg-gray-100"
+                className="text-gray-400 hover:text-white text-xl font-bold p-1 rounded-lg hover:bg-[#1E293B] transition-colors"
               >
                 ✕
               </button>
@@ -934,15 +932,15 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
 
             <div className="space-y-4 my-5">
               {/* Selected candidates summary */}
-              <div className="bg-purple-50/70 border border-purple-200 rounded-xl p-3">
-                <span className="text-xs font-bold text-purple-900 block mb-1">
+              <div className="bg-[#1E293B]/60 border border-gray-800 rounded-2xl p-3.5">
+                <span className="text-xs font-bold text-indigo-300 block mb-1">
                   Selected Candidate(s) ({nominateTargetStudents.length}):
                 </span>
                 <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
                   {nominateTargetStudents.map((s) => (
                     <span
                       key={s.id}
-                      className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-white text-purple-800 border border-purple-200 shadow-2xs"
+                      className="px-2 py-0.5 rounded-lg text-[11px] font-medium bg-[#111827] text-gray-200 border border-gray-700 shadow-2xs"
                     >
                       {s.full_name || s.username}
                     </span>
@@ -952,22 +950,22 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
 
               {/* Company Name */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Company / Organization <span className="text-rose-500">*</span>
+                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                  Company / Organization <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="e.g. Samsung Electronics"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm bg-[#1E293B] border border-gray-700 text-white rounded-xl focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
                 />
               </div>
 
               {/* Job Role & Package */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  <label className="block text-xs font-semibold text-gray-300 mb-1">
                     Designation / Job Role
                   </label>
                   <input
@@ -975,11 +973,11 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
                     value={nominateRole}
                     onChange={(e) => setNominateRole(e.target.value)}
                     placeholder="e.g. Software Engineer"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm bg-[#1E293B] border border-gray-700 text-white rounded-xl focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  <label className="block text-xs font-semibold text-gray-300 mb-1">
                     Offered CTC (LPA, Optional)
                   </label>
                   <input
@@ -988,14 +986,14 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
                     value={nominatePackage}
                     onChange={(e) => setNominatePackage(e.target.value)}
                     placeholder="e.g. 14.5"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm bg-[#1E293B] border border-gray-700 text-white rounded-xl focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
                   />
                 </div>
               </div>
 
               {/* Faculty Note */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-300 mb-1">
                   Faculty Note / Interview Instructions (Optional)
                 </label>
                 <textarea
@@ -1003,17 +1001,18 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
                   value={nominateNotes}
                   onChange={(e) => setNominateNotes(e.target.value)}
                   placeholder="e.g. Shortlisted based on resume match. First round technical interview on Friday 10 AM."
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                  className="w-full px-3 py-2 text-sm bg-[#1E293B] border border-gray-700 text-white rounded-xl focus:ring-2 focus:ring-indigo-500/30 focus:outline-none resize-none"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-800">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowNominateModal(false)}
                 disabled={isSubmittingNomination}
+                className="bg-[#1E293B] border-gray-700 text-gray-300 hover:bg-[#334155]"
               >
                 Cancel
               </Button>
@@ -1021,7 +1020,7 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
                 size="sm"
                 onClick={handleSubmitNomination}
                 isLoading={isSubmittingNomination}
-                className="bg-purple-600 hover:bg-purple-700 text-white font-semibold flex items-center gap-1.5"
+                className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold flex items-center gap-1.5 shadow-md shadow-indigo-500/20"
               >
                 <SparklesIcon className="h-4 w-4 text-amber-300" />
                 Confirm & Notify Candidate(s)
@@ -1033,3 +1032,4 @@ export const PlacementShortlist = ({ departments = [], initialScope = 'all', onN
     </div>
   )
 }
+

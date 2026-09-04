@@ -82,7 +82,6 @@ export const ResumeUpload = () => {
       return
     }
 
-    // If student already has an active resume, prompt confirmation modal
     if (activeResume) {
       setShowConfirmModal(true)
     } else {
@@ -99,7 +98,6 @@ export const ResumeUpload = () => {
       await uploadResume(formData)
       toast.success(activeResume ? 'Resume replaced successfully!' : 'Resume uploaded successfully!')
       
-      // Invalidate legacy assessment caches for fresh evaluation
       localStorage.removeItem('assessment_completed')
       localStorage.removeItem('latest_assessment_score')
       window.dispatchEvent(new Event('storage'))
@@ -118,12 +116,12 @@ export const ResumeUpload = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="bg-white rounded-2xl shadow-lg p-8">
-        <Heading level={2} className="text-center">
+    <div className="max-w-3xl mx-auto py-4">
+      <div className="bg-[#111827] rounded-2xl shadow-2xl border border-gray-800/80 p-6 sm:p-8">
+        <h2 className="text-2xl font-bold text-white text-center tracking-tight">
           {activeResume ? 'Update Your Resume' : 'Upload Your Resume'}
-        </Heading>
-        <p className="text-center text-gray-500 mt-2">
+        </h2>
+        <p className="text-center text-gray-400 mt-2 text-sm max-w-lg mx-auto">
           {activeResume 
             ? 'Upload a new resume to update your profile, extracted skills, and employability score'
             : 'Upload your resume in PDF, DOCX, or TXT format to get personalized recommendations'
@@ -132,23 +130,23 @@ export const ResumeUpload = () => {
 
         {/* Existing Active Resume Banner */}
         {activeResume && (
-          <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start space-x-3">
-            <ExclamationIcon className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1 text-xs text-amber-800">
+          <div className="mt-6 p-4 bg-amber-950/30 border border-amber-500/30 rounded-xl flex items-start space-x-3">
+            <ExclamationIcon className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 text-xs text-amber-200">
               <span className="font-bold">Active Resume on Profile:</span>{' '}
-              <span className="font-semibold">{activeResume.filename}</span>
+              <span className="font-semibold text-white">{activeResume.filename}</span>
               {activeResume.employability_score && (
-                <span className="ml-2 px-1.5 py-0.5 bg-amber-200 text-amber-900 rounded font-medium">
+                <span className="ml-2 px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded font-medium">
                   {Math.round(activeResume.employability_score)}% Score
                 </span>
               )}
-              <p className="mt-1 text-amber-700">
+              <p className="mt-1 text-amber-300/80">
                 Uploading a new resume will automatically delete this resume and recalculate your analysis.
               </p>
             </div>
             <Link 
               to={`/resume/${activeResume.id}`}
-              className="text-xs font-semibold text-amber-900 underline hover:text-amber-950 flex-shrink-0"
+              className="text-xs font-semibold text-amber-400 underline hover:text-amber-300 flex-shrink-0"
             >
               View Current
             </Link>
@@ -171,24 +169,24 @@ export const ResumeUpload = () => {
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`mt-8 border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-200 ${
+          className={`mt-8 border-2 border-dashed rounded-2xl p-10 sm:p-12 text-center cursor-pointer transition-all duration-200 ${
             isDragActive
-              ? 'border-primary-500 bg-primary-50'
-              : 'border-gray-300 hover:border-primary-400 hover:bg-gray-50'
+              ? 'border-indigo-500 bg-indigo-950/40'
+              : 'border-gray-700/80 hover:border-indigo-500/60 hover:bg-[#1E293B]/40'
           }`}
         >
-          <UploadIcon className={`h-16 w-16 mx-auto ${
-            isDragActive ? 'text-primary-500' : 'text-gray-400'
+          <UploadIcon className={`h-14 w-14 mx-auto ${
+            isDragActive ? 'text-indigo-400' : 'text-gray-500'
           }`} />
           
           {isDragActive ? (
-            <p className="mt-4 text-primary-600 font-medium">Drop your resume here</p>
+            <p className="mt-4 text-indigo-400 font-semibold text-sm">Drop your resume here</p>
           ) : (
             <>
-              <p className="mt-4 text-gray-600 font-medium">
+              <p className="mt-4 text-gray-200 font-semibold text-sm sm:text-base">
                 Drag & drop your resume here, or click to select
               </p>
-              <p className="mt-2 text-sm text-gray-400">
+              <p className="mt-1.5 text-xs text-gray-400">
                 Supported formats: PDF, DOCX, TXT (Max size: 10MB)
               </p>
               
@@ -196,7 +194,7 @@ export const ResumeUpload = () => {
                 <button
                   type="button"
                   onClick={openFilePicker}
-                  className="px-6 py-2.5 bg-primary-50 text-primary-600 font-semibold rounded-lg hover:bg-primary-100 transition-colors shadow-sm"
+                  className="px-5 py-2.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 font-semibold rounded-xl transition-colors text-xs"
                 >
                   Browse Files
                 </button>
@@ -207,13 +205,13 @@ export const ResumeUpload = () => {
 
         {/* Selected File Preview Card */}
         {file && (
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="mt-6 p-4 bg-[#1E293B] rounded-xl border border-gray-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <DocumentIcon className="h-8 w-8 text-primary-500" />
+                <DocumentIcon className="h-8 w-8 text-indigo-400" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm font-semibold text-white">{file.name}</p>
+                  <p className="text-xs text-gray-400">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
@@ -221,7 +219,7 @@ export const ResumeUpload = () => {
               <button
                 type="button"
                 onClick={removeFile}
-                className="p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50 transition-colors"
+                className="p-1.5 text-gray-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors"
                 title="Remove file"
               >
                 <XIcon className="h-5 w-5" />
@@ -245,9 +243,9 @@ export const ResumeUpload = () => {
         </div>
 
         {/* Tip Box */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-700">
-            <strong>Tip:</strong> Your resume will be analyzed to extract skills, 
+        <div className="mt-6 p-4 bg-indigo-950/30 border border-indigo-500/20 rounded-xl">
+          <p className="text-xs text-indigo-300">
+            <strong className="text-white">Tip:</strong> Your resume will be analyzed to extract skills, 
             education, and experience. This helps us provide personalized job 
             matches and skill recommendations.
           </p>
@@ -256,38 +254,38 @@ export const ResumeUpload = () => {
 
       {/* Confirmation & Replacement Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center space-x-3 text-amber-600 mb-4">
-              <div className="p-2.5 bg-amber-100 rounded-full">
-                <RefreshIcon className="h-6 w-6 text-amber-600" />
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#111827] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-800 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center space-x-3 text-amber-400 mb-4">
+              <div className="p-2.5 bg-amber-500/10 rounded-full border border-amber-500/20">
+                <RefreshIcon className="h-6 w-6 text-amber-400" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900">Replace Existing Resume?</h3>
+              <h3 className="text-lg font-bold text-white">Replace Existing Resume?</h3>
             </div>
 
-            <p className="text-sm text-gray-600 leading-relaxed mb-4">
+            <p className="text-xs text-gray-300 leading-relaxed mb-4">
               You already have an active resume on your profile:
             </p>
 
-            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-700 mb-4 space-y-1">
+            <div className="p-3 bg-[#1E293B] rounded-xl border border-gray-700 text-xs text-gray-300 mb-4 space-y-1">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-gray-900 truncate max-w-[240px]">{activeResume?.filename}</span>
+                <span className="font-semibold text-white truncate max-w-[220px]">{activeResume?.filename}</span>
                 {activeResume?.employability_score && (
-                  <span className="font-bold text-green-700">{Math.round(activeResume.employability_score)}% Score</span>
+                  <span className="font-bold text-emerald-400">{Math.round(activeResume.employability_score)}% Score</span>
                 )}
               </div>
-              <p className="text-gray-500">
+              <p className="text-gray-400 text-[11px]">
                 Uploaded on {activeResume?.created_at ? new Date(activeResume.created_at).toLocaleDateString() : 'N/A'}
               </p>
             </div>
 
-            <p className="text-sm text-gray-600 leading-relaxed mb-6">
-              Uploading <strong className="text-gray-900">{file?.name}</strong> will permanently delete your previous resume file and replace your employability metrics and skill analysis.
+            <p className="text-xs text-gray-300 leading-relaxed mb-6">
+              Uploading <strong className="text-white">{file?.name}</strong> will permanently delete your previous resume file and replace your employability metrics and skill analysis.
             </p>
 
             <div className="flex items-center justify-end space-x-3">
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={() => setShowConfirmModal(false)}
                 disabled={isLoading}
@@ -295,11 +293,10 @@ export const ResumeUpload = () => {
                 Cancel
               </Button>
               <Button
-                variant="primary"
+                variant="warning"
                 size="sm"
                 onClick={executeUpload}
                 isLoading={isLoading}
-                className="bg-amber-600 hover:bg-amber-700 text-white"
               >
                 Yes, Replace & Upload
               </Button>

@@ -106,10 +106,10 @@ export const DataExport = ({ data, filename = 'export', formats = ['csv', 'json'
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl z-50 py-2"
+              className="absolute right-0 mt-2 w-56 bg-[#111827] border border-gray-800 rounded-2xl shadow-2xl z-50 py-2"
             >
-              <div className="px-4 py-2 border-b border-gray-200">
-                <p className="text-sm font-medium text-gray-900">Export As</p>
+              <div className="px-4 py-2 border-b border-gray-800">
+                <p className="text-xs font-bold text-gray-300 uppercase tracking-wider">Export Format</p>
               </div>
               
               {exportOptions
@@ -119,13 +119,13 @@ export const DataExport = ({ data, filename = 'export', formats = ['csv', 'json'
                     key={format}
                     onClick={() => exportData(format)}
                     disabled={isExporting}
-                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    className="w-full flex items-center px-4 py-2.5 text-xs font-semibold text-gray-200 hover:bg-[#1E293B] hover:text-white transition-colors disabled:opacity-50"
                   >
-                    <Icon className="h-5 w-5 mr-3 text-gray-400" />
+                    <Icon className="h-4 w-4 mr-3 text-indigo-400" />
                     {label}
                     {isExporting && (
                       <span className="ml-auto">
-                        <div className="h-4 w-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                       </span>
                     )}
                   </button>

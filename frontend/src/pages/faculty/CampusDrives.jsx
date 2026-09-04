@@ -256,27 +256,27 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
   // =========================================================================
   if (selectedCompany) {
     return (
-      <div className="space-y-6 animate-fadeIn">
+      <div className="space-y-6 animate-fadeIn pb-12">
         {/* Navigation Breadcrumb & Back Button */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#111827] p-6 rounded-3xl shadow-xl border border-gray-800/80">
           <div>
             <button
               onClick={() => setSelectedCompany(null)}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-600 hover:text-purple-800 transition-colors mb-2 bg-purple-50 hover:bg-purple-100 px-3 py-1 rounded-lg border border-purple-200"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors mb-2 bg-[#1E293B] hover:bg-[#334155] px-3 py-1.5 rounded-xl border border-gray-700/80"
             >
               <ArrowLeftIcon className="h-3.5 w-3.5" />
               Back to All Campus Drives
             </button>
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 flex items-center gap-2">
-                <OfficeBuildingIcon className="h-8 w-8 text-purple-600" />
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2">
+                <OfficeBuildingIcon className="h-8 w-8 text-indigo-400" />
                 {selectedCompany}
               </h1>
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                 Drive Attendance Manager
               </span>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-400 mt-1">
               Verify student RSVPs, export candidate resume bundles for HR, and mark final hired candidates.
             </p>
           </div>
@@ -288,7 +288,7 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
               size="sm"
               onClick={handleExportCSV}
               disabled={attendees.length === 0}
-              className="text-xs flex items-center gap-1.5 border-gray-300"
+              className="text-xs flex items-center gap-1.5 bg-[#1E293B] border-gray-700 text-gray-300 hover:bg-[#334155]"
             >
               <DownloadIcon className="h-4 w-4" />
               Export Roster CSV
@@ -298,7 +298,7 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
               onClick={handleExportZip}
               isLoading={isExportingZip}
               disabled={attendees.length === 0}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md shadow-purple-600/20"
+              className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md shadow-indigo-500/20"
             >
               <DocumentDownloadIcon className="h-4 w-4" />
               Download Resumes ZIP
@@ -313,89 +313,89 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
               onClick={() => handleStatusFilterChange('confirmed')}
               className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden ${
                 statusFilter === 'confirmed'
-                  ? 'bg-emerald-50/80 border-emerald-400 ring-2 ring-emerald-500/20 shadow-sm'
-                  : 'bg-white border-gray-200 hover:bg-emerald-50/30'
+                  ? 'bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/20 shadow-lg'
+                  : 'bg-[#111827] border-gray-800 hover:border-emerald-500/30'
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-emerald-800">Confirmed Attending</span>
-                <CheckCircleIcon className="h-5 w-5 text-emerald-600" />
+                <span className="text-xs font-bold text-emerald-400">Confirmed Attending</span>
+                <CheckCircleIcon className="h-5 w-5 text-emerald-400" />
               </div>
-              <div className="text-2xl font-black text-emerald-700 mt-1">{driveStats.confirmed_attending}</div>
-              <span className="text-[11px] text-emerald-600/80">Ready for Drive Day</span>
+              <div className="text-2xl font-black text-white mt-1">{driveStats.confirmed_attending}</div>
+              <span className="text-[11px] text-emerald-400/80">Ready for Drive Day</span>
             </button>
 
             <button
               onClick={() => handleStatusFilterChange('pending')}
               className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden ${
                 statusFilter === 'pending'
-                  ? 'bg-amber-50/80 border-amber-400 ring-2 ring-amber-500/20 shadow-sm'
-                  : 'bg-white border-gray-200 hover:bg-amber-50/30'
+                  ? 'bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/20 shadow-lg'
+                  : 'bg-[#111827] border-gray-800 hover:border-amber-500/30'
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-amber-800">Awaiting RSVP</span>
-                <ClockIcon className="h-5 w-5 text-amber-600" />
+                <span className="text-xs font-bold text-amber-400">Awaiting RSVP</span>
+                <ClockIcon className="h-5 w-5 text-amber-400" />
               </div>
-              <div className="text-2xl font-black text-amber-700 mt-1">{driveStats.pending_rsvp}</div>
-              <span className="text-[11px] text-amber-600/80">Pending Student Action</span>
+              <div className="text-2xl font-black text-white mt-1">{driveStats.pending_rsvp}</div>
+              <span className="text-[11px] text-amber-400/80">Pending Student Action</span>
             </button>
 
             <button
               onClick={() => handleStatusFilterChange('declined')}
               className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden ${
                 statusFilter === 'declined'
-                  ? 'bg-rose-50/80 border-rose-400 ring-2 ring-rose-500/20 shadow-sm'
-                  : 'bg-white border-gray-200 hover:bg-rose-50/30'
+                  ? 'bg-rose-950/40 border-rose-500 ring-2 ring-rose-500/20 shadow-lg'
+                  : 'bg-[#111827] border-gray-800 hover:border-rose-500/30'
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-rose-800">Declined Drive</span>
-                <XCircleIcon className="h-5 w-5 text-rose-600" />
+                <span className="text-xs font-bold text-rose-400">Declined Drive</span>
+                <XCircleIcon className="h-5 w-5 text-rose-400" />
               </div>
-              <div className="text-2xl font-black text-rose-700 mt-1">{driveStats.declined}</div>
-              <span className="text-[11px] text-rose-600/80">Cannot Attend</span>
+              <div className="text-2xl font-black text-white mt-1">{driveStats.declined}</div>
+              <span className="text-[11px] text-rose-400/80">Cannot Attend</span>
             </button>
 
             <button
               onClick={() => handleStatusFilterChange('placed')}
               className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden ${
                 statusFilter === 'placed'
-                  ? 'bg-purple-50/80 border-purple-400 ring-2 ring-purple-500/20 shadow-sm'
-                  : 'bg-white border-gray-200 hover:bg-purple-50/30'
+                  ? 'bg-purple-950/40 border-purple-500 ring-2 ring-purple-500/20 shadow-lg'
+                  : 'bg-[#111827] border-gray-800 hover:border-purple-500/30'
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-purple-800">Final Placed</span>
-                <SparklesIcon className="h-5 w-5 text-purple-600" />
+                <span className="text-xs font-bold text-purple-400">Final Placed</span>
+                <SparklesIcon className="h-5 w-5 text-purple-400" />
               </div>
-              <div className="text-2xl font-black text-purple-700 mt-1">{driveStats.placed}</div>
-              <span className="text-[11px] text-purple-600/80">Officially Hired</span>
+              <div className="text-2xl font-black text-white mt-1">{driveStats.placed}</div>
+              <span className="text-[11px] text-purple-400/80">Officially Hired</span>
             </button>
 
             <button
               onClick={() => handleStatusFilterChange('all')}
               className={`p-4 rounded-2xl border text-left transition-all col-span-2 sm:col-span-1 relative overflow-hidden ${
                 statusFilter === 'all'
-                  ? 'bg-gray-100 border-gray-400 ring-2 ring-gray-500/20 shadow-sm'
-                  : 'bg-white border-gray-200 hover:bg-gray-50'
+                  ? 'bg-[#1E293B] border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg'
+                  : 'bg-[#111827] border-gray-800 hover:border-gray-700'
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-700">Total Shortlisted</span>
-                <UserGroupIcon className="h-5 w-5 text-gray-500" />
+                <span className="text-xs font-bold text-gray-300">Total Shortlisted</span>
+                <UserGroupIcon className="h-5 w-5 text-gray-400" />
               </div>
-              <div className="text-2xl font-black text-gray-900 mt-1">{driveStats.total_invited}</div>
-              <span className="text-[11px] text-gray-500">All Candidates</span>
+              <div className="text-2xl font-black text-white mt-1">{driveStats.total_invited}</div>
+              <span className="text-[11px] text-gray-400">All Candidates</span>
             </button>
           </div>
         )}
 
         {/* Attendees Table / Roster */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="bg-[#111827] rounded-3xl shadow-xl border border-gray-800/80 overflow-hidden">
+          <div className="p-4 border-b border-gray-800 bg-[#1E293B]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-gray-900">
+              <span className="text-xs font-bold text-white">
                 {statusFilter === 'confirmed'
                   ? '🟢 Confirmed Drive Attendees'
                   : statusFilter === 'pending'
@@ -408,26 +408,26 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
                 ({attendees.length})
               </span>
             </div>
-            <span className="text-[11px] text-gray-500">
+            <span className="text-[11px] text-gray-400">
               Click "Mark as Final Hired" once interview selection results are declared.
             </span>
           </div>
 
           {attendeesLoading ? (
             <div className="py-16 text-center">
-              <RefreshIcon className="h-8 w-8 text-purple-600 animate-spin mx-auto mb-2" />
-              <p className="text-sm text-gray-500">Fetching drive candidates...</p>
+              <RefreshIcon className="h-8 w-8 text-indigo-400 animate-spin mx-auto mb-2" />
+              <p className="text-sm text-gray-400">Fetching drive candidates...</p>
             </div>
           ) : attendees.length === 0 ? (
             <div className="py-16 text-center px-4">
-              <UserGroupIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-              <h4 className="text-base font-bold text-gray-700">No students found in this category</h4>
-              <p className="text-xs text-gray-500 mt-1">
+              <UserGroupIcon className="h-12 w-12 text-gray-600 mx-auto mb-3" />
+              <h4 className="text-base font-bold text-white">No students found in this category</h4>
+              <p className="text-xs text-gray-400 mt-1">
                 Switch filters above to view other candidate statuses.
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-800/80">
               {attendees.map((attendee) => {
                 const student = attendee.student
                 const resume = attendee.resume
@@ -439,57 +439,57 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
                 return (
                   <div
                     key={attendee.nomination_id}
-                    className="p-5 hover:bg-gray-50 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                    className="p-5 hover:bg-[#1E293B]/40 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4"
                   >
                     {/* Left: Avatar, Name & Student Info */}
                     <div className="flex items-start gap-4 min-w-0">
-                      <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold flex items-center justify-center text-base shadow-sm flex-shrink-0">
+                      <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-bold flex items-center justify-center text-base shadow-md flex-shrink-0">
                         {(student.full_name || student.username || 'S')[0].toUpperCase()}
                       </div>
 
                       <div>
                         <div className="flex items-center gap-2.5 flex-wrap">
-                          <h3 className="text-base font-bold text-gray-900">
+                          <h3 className="text-base font-bold text-white">
                             {student.full_name || student.username}
                           </h3>
-                          <span className="text-xs text-gray-500 font-normal">(@{student.username})</span>
+                          <span className="text-xs text-gray-400 font-normal">(@{student.username})</span>
 
                           {isConfirmed && !isPlaced && (
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
-                              <CheckCircleIcon className="h-3.5 w-3.5 text-emerald-600" />
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                              <CheckCircleIcon className="h-3.5 w-3.5 text-emerald-400" />
                               Confirmed Attending
                             </span>
                           )}
 
                           {isPlaced && (
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-300 flex items-center gap-1">
-                              <SparklesIcon className="h-3.5 w-3.5 text-amber-500" />
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1">
+                              <SparklesIcon className="h-3.5 w-3.5 text-amber-400" />
                               Officially Placed
                             </span>
                           )}
 
                           {isPending && (
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
-                              <ClockIcon className="h-3.5 w-3.5 text-amber-600" />
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
+                              <ClockIcon className="h-3.5 w-3.5 text-amber-400" />
                               Awaiting RSVP
                             </span>
                           )}
 
                           {isDeclined && (
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 flex items-center gap-1">
-                              <XCircleIcon className="h-3.5 w-3.5 text-rose-600" />
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center gap-1">
+                              <XCircleIcon className="h-3.5 w-3.5 text-rose-400" />
                               Declined Drive
                             </span>
                           )}
 
                           {attendee.package_lpa && (
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                               ₹{attendee.package_lpa} LPA CTC
                             </span>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-3 text-xs text-gray-600 mt-1 flex-wrap">
+                        <div className="flex items-center gap-3 text-xs text-gray-400 mt-1 flex-wrap">
                           <span>📧 {student.email}</span>
                           <span>📞 {student.phone || 'Phone not set'}</span>
                           <span>🏫 {student.department || 'General'}</span>
@@ -497,8 +497,8 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
                         </div>
 
                         {attendee.student_response_note && (
-                          <p className="text-xs text-gray-600 mt-2 bg-gray-100/70 border border-gray-200 rounded-lg px-2.5 py-1.5 max-w-xl">
-                            <span className="font-semibold text-gray-700">Student Note:</span> "{attendee.student_response_note}"
+                          <p className="text-xs text-gray-300 mt-2 bg-[#1E293B]/70 border border-gray-700/80 rounded-xl px-3 py-2 max-w-xl">
+                            <span className="font-semibold text-white">Student Note:</span> "{attendee.student_response_note}"
                           </p>
                         )}
                       </div>
@@ -508,8 +508,8 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
                     <div className="flex items-center gap-4 lg:gap-6 flex-shrink-0 self-end lg:self-center">
                       {/* Score Badge */}
                       <div className="text-right">
-                        <span className="text-[11px] text-gray-500 block">Employability Score</span>
-                        <span className="text-sm font-black text-purple-700">
+                        <span className="text-[11px] text-gray-400 block">Employability Score</span>
+                        <span className="text-sm font-black text-indigo-400">
                           {resume.employability_score || 0}%
                         </span>
                       </div>
@@ -520,7 +520,7 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
                           size="sm"
                           onClick={() => handleMarkStudentHired(attendee)}
                           isLoading={isMarkingHired === attendee.nomination_id}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20"
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
                         >
                           <SparklesIcon className="h-4 w-4 text-amber-300" />
                           Mark as Final Hired
@@ -528,8 +528,8 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
                       )}
 
                       {isPlaced && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-purple-100 text-purple-900 font-bold text-xs border border-purple-200">
-                          <CheckCircleIcon className="h-4 w-4 text-purple-600" />
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-purple-500/10 text-purple-300 font-bold text-xs border border-purple-500/20">
+                          <CheckCircleIcon className="h-4 w-4 text-purple-400" />
                           Hired & Placed
                         </span>
                       )}
@@ -548,19 +548,19 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
   // VIEW 1: CAMPUS DRIVES OVERVIEW (LIST OF ALL COMPANY DRIVES)
   // =========================================================================
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       {/* Header & Stats Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#111827] p-6 rounded-3xl shadow-xl border border-gray-800/80">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200 uppercase tracking-wide">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-wide">
               Campus Drives Command Center
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1.5">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white mt-1.5">
             Active Campus Placement Drives
           </h1>
-          <p className="text-gray-500 text-xs sm:text-sm mt-0.5">
+          <p className="text-gray-400 text-xs sm:text-sm mt-0.5">
             Track confirmed candidate attendees, student RSVPs, and manage final placements for visiting companies.
           </p>
         </div>
@@ -571,7 +571,7 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
             size="sm"
             onClick={fetchDrivesSummary}
             isLoading={loading}
-            className="flex items-center text-xs"
+            className="flex items-center text-xs bg-[#1E293B] border-gray-700 text-gray-200 hover:bg-[#334155]"
           >
             <RefreshIcon className="h-4 w-4 mr-1.5" />
             Refresh Drives
@@ -581,7 +581,7 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
             <Button
               size="sm"
               onClick={onNavigateToShortlist}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs flex items-center shadow-md shadow-purple-600/20"
+              className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold text-xs flex items-center shadow-md shadow-indigo-500/20"
             >
               <SparklesIcon className="h-4 w-4 mr-1.5 text-amber-300" />
               New Candidate Shortlist
@@ -592,41 +592,41 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
 
       {/* Aggregate Overview Metrics Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="bg-[#111827] p-5 rounded-2xl border border-gray-800/80 shadow-xl">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500">Active Company Drives</span>
-            <OfficeBuildingIcon className="h-5 w-5 text-purple-600" />
+            <span className="text-xs font-semibold text-gray-400">Active Company Drives</span>
+            <OfficeBuildingIcon className="h-5 w-5 text-indigo-400" />
           </div>
-          <div className="text-2xl font-black text-gray-900 mt-1">{totalStats.total_drives}</div>
+          <div className="text-2xl font-black text-white mt-1">{totalStats.total_drives}</div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="bg-[#111827] p-5 rounded-2xl border border-gray-800/80 shadow-xl">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500">Total Shortlisted</span>
-            <UserGroupIcon className="h-5 w-5 text-blue-600" />
+            <span className="text-xs font-semibold text-gray-400">Total Shortlisted</span>
+            <UserGroupIcon className="h-5 w-5 text-blue-400" />
           </div>
-          <div className="text-2xl font-black text-gray-900 mt-1">{totalStats.total_invited}</div>
+          <div className="text-2xl font-black text-white mt-1">{totalStats.total_invited}</div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="bg-[#111827] p-5 rounded-2xl border border-gray-800/80 shadow-xl">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-700">Confirmed Attending</span>
-            <CheckCircleIcon className="h-5 w-5 text-emerald-600" />
+            <span className="text-xs font-semibold text-emerald-400">Confirmed Attending</span>
+            <CheckCircleIcon className="h-5 w-5 text-emerald-400" />
           </div>
-          <div className="text-2xl font-black text-emerald-700 mt-1">{totalStats.confirmed_attending}</div>
+          <div className="text-2xl font-black text-emerald-400 mt-1">{totalStats.confirmed_attending}</div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="bg-[#111827] p-5 rounded-2xl border border-gray-800/80 shadow-xl">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-purple-700">Officially Placed</span>
-            <SparklesIcon className="h-5 w-5 text-purple-600" />
+            <span className="text-xs font-semibold text-purple-400">Officially Placed</span>
+            <SparklesIcon className="h-5 w-5 text-purple-400" />
           </div>
-          <div className="text-2xl font-black text-purple-700 mt-1">{totalStats.placed}</div>
+          <div className="text-2xl font-black text-purple-400 mt-1">{totalStats.placed}</div>
         </div>
       </div>
 
       {/* Search Filter */}
-      <div className="flex items-center justify-between gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <div className="flex items-center justify-between gap-4 bg-[#111827] p-4 rounded-2xl border border-gray-800/80 shadow-xl">
         <div className="relative flex-1 max-w-md">
           <SearchIcon className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
           <input
@@ -634,27 +634,27 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search drives by company name, job role..."
-            className="w-full pl-9 pr-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full pl-9 pr-3 py-2 text-xs bg-[#1E293B] border border-gray-700/80 text-white placeholder-gray-400 rounded-xl focus:ring-2 focus:ring-indigo-500/30 focus:outline-none"
           />
         </div>
-        <span className="text-xs text-gray-500 font-medium">{visibleDrives.length} Company Drives</span>
+        <span className="text-xs text-gray-400 font-medium">{visibleDrives.length} Company Drives</span>
       </div>
 
       {/* Drives Grid */}
       {loading && drives.length === 0 ? (
         <div className="py-20 text-center">
-          <RefreshIcon className="h-8 w-8 text-purple-600 animate-spin mx-auto mb-2" />
-          <p className="text-sm text-gray-500">Loading campus placement drives...</p>
+          <RefreshIcon className="h-8 w-8 text-indigo-400 animate-spin mx-auto mb-2" />
+          <p className="text-sm text-gray-400">Loading campus placement drives...</p>
         </div>
       ) : visibleDrives.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 text-center border border-gray-200">
-          <OfficeBuildingIcon className="h-16 w-16 text-gray-300 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-gray-800">No Campus Drives Created Yet</h3>
-          <p className="text-xs text-gray-500 mt-1 max-w-md mx-auto">
+        <div className="bg-[#111827] rounded-3xl p-12 text-center border border-gray-800/80 shadow-xl">
+          <OfficeBuildingIcon className="h-16 w-16 text-gray-600 mx-auto mb-3" />
+          <h3 className="text-lg font-bold text-white">No Campus Drives Created Yet</h3>
+          <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
             Use the Candidate Shortlist tool to select candidates for visiting companies and send drive invitations.
           </p>
           {onNavigateToShortlist && (
-            <Button size="sm" onClick={onNavigateToShortlist} className="mt-4 bg-purple-600 text-white text-xs">
+            <Button size="sm" onClick={onNavigateToShortlist} className="mt-4 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs">
               Open Shortlist Tool
             </Button>
           )}
@@ -666,38 +666,38 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
               <div
                 key={drive.company_name}
                 onClick={() => handleOpenDriveDetail(drive.company_name)}
-                className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md hover:border-purple-300 transition-all cursor-pointer flex flex-col justify-between group"
+                className="bg-[#111827] rounded-3xl p-6 border border-gray-800/80 shadow-xl hover:shadow-2xl hover:border-indigo-500/40 transition-all cursor-pointer flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex items-start justify-between gap-3">
-                    <div className="p-3 bg-purple-50 text-purple-700 rounded-xl group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                    <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-2xl group-hover:bg-gradient-to-r group-hover:from-indigo-600 group-hover:to-violet-600 group-hover:text-white transition-all">
                       <OfficeBuildingIcon className="h-6 w-6" />
                     </div>
 
                     {drive.package_lpa && (
-                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                         ₹{drive.package_lpa} LPA CTC
                       </span>
                     )}
                   </div>
 
-                  <h3 className="text-lg font-extrabold text-gray-900 mt-3 group-hover:text-purple-700 transition-colors">
+                  <h3 className="text-lg font-extrabold text-white mt-3 group-hover:text-indigo-400 transition-colors">
                     {drive.company_name}
                   </h3>
 
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-gray-400 mt-0.5">
                     {drive.job_role || 'Software Engineer'} • Coordinated by {drive.faculty_name}
                   </p>
 
                   {/* Attendance Progress Bar */}
                   <div className="mt-4">
                     <div className="flex justify-between text-xs font-medium mb-1">
-                      <span className="text-gray-600 font-semibold">RSVP Confirmation</span>
-                      <span className="text-emerald-700 font-bold">
+                      <span className="text-gray-300 font-semibold">RSVP Confirmation</span>
+                      <span className="text-emerald-400 font-bold">
                         {drive.confirmed_attending} of {drive.total_invited} Confirmed
                       </span>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden flex">
+                    <div className="w-full bg-[#0F172A] rounded-full h-2 overflow-hidden flex">
                       <div
                         className="bg-emerald-500 h-full"
                         style={{ width: `${(drive.confirmed_attending / (drive.total_invited || 1)) * 100}%` }}
@@ -719,27 +719,27 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
 
                   {/* Mini RSVP Pills */}
                   <div className="flex items-center gap-2 flex-wrap mt-3.5">
-                    <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                       🟢 {drive.confirmed_attending} Confirmed
                     </span>
                     {drive.pending_rsvp > 0 && (
-                      <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                      <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
                         ⏳ {drive.pending_rsvp} Pending
                       </span>
                     )}
                     {drive.placed > 0 && (
-                      <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-200">
+                      <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
                         🏆 {drive.placed} Placed
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="pt-5 mt-5 border-t border-gray-100 flex items-center justify-between text-xs">
-                  <span className="text-gray-400 font-medium">
+                <div className="pt-5 mt-5 border-t border-gray-800 flex items-center justify-between text-xs">
+                  <span className="text-gray-500 font-medium">
                     {drive.last_activity ? new Date(drive.last_activity).toLocaleDateString() : 'Active'}
                   </span>
-                  <span className="font-bold text-purple-600 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                  <span className="font-bold text-indigo-400 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
                     Manage Confirmed Attendees ➔
                   </span>
                 </div>
@@ -751,3 +751,4 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
     </div>
   )
 }
+

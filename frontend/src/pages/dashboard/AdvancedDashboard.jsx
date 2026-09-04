@@ -87,60 +87,60 @@ export const AdvancedDashboard = () => {
 
       {/* Summary KPI Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-xs flex items-center space-x-3">
-          <div className="p-3 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-lg">
+        <div className="bg-[#111827] rounded-2xl p-5 border border-gray-800/90 shadow-xl flex items-center space-x-4">
+          <div className="p-3.5 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-xl">
             <BriefcaseIcon className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs text-gray-500 font-medium">Tracked Applications</p>
-            <h3 className="text-2xl font-black text-gray-900 dark:text-white">{metrics.total_applications}</h3>
+            <p className="text-xs text-gray-400 font-semibold">Tracked Applications</p>
+            <h3 className="text-2xl font-extrabold text-white">{metrics.total_applications}</h3>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-xs flex items-center space-x-3">
-          <div className="p-3 bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 rounded-lg">
+        <div className="bg-[#111827] rounded-2xl p-5 border border-gray-800/90 shadow-xl flex items-center space-x-4">
+          <div className="p-3.5 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-xl">
             <SparklesIcon className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs text-gray-500 font-medium">Interviews & Drive RSVPs</p>
-            <h3 className="text-2xl font-black text-purple-600 dark:text-purple-400">{metrics.total_interviews}</h3>
+            <p className="text-xs text-gray-400 font-semibold">Interviews & Drive RSVPs</p>
+            <h3 className="text-2xl font-extrabold text-purple-400">{metrics.total_interviews}</h3>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-xs flex items-center space-x-3">
-          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-lg">
+        <div className="bg-[#111827] rounded-2xl p-5 border border-gray-800/90 shadow-xl flex items-center space-x-4">
+          <div className="p-3.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl">
             <CheckCircleIcon className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs text-gray-500 font-medium">Hiring & Placement Offers</p>
-            <h3 className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{metrics.total_offers}</h3>
+            <p className="text-xs text-gray-400 font-semibold">Hiring & Placement Offers</p>
+            <h3 className="text-2xl font-extrabold text-emerald-400">{metrics.total_offers}</h3>
           </div>
         </div>
       </div>
 
       {/* Zero Applications Onboarding Banner */}
       {metrics.total_applications === 0 && !isLoading && (
-        <div className="p-4 bg-primary-50/80 dark:bg-primary-950/30 border border-primary-200 dark:border-primary-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start space-x-3">
-            <InformationCircleIcon className="h-5 w-5 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
+        <div className="p-5 bg-indigo-950/30 border border-indigo-800/50 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+          <div className="flex items-start space-x-3.5">
+            <InformationCircleIcon className="h-5 w-5 text-indigo-400 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="text-sm font-bold text-primary-900 dark:text-primary-200">Start Tracking Your Career Applications</h4>
-              <p className="text-xs text-primary-700 dark:text-primary-300 mt-0.5">
+              <h4 className="text-sm font-bold text-white">Start Tracking Your Career Applications</h4>
+              <p className="text-xs text-indigo-300/80 mt-0.5">
                 Mark job listings as 'Interested' or 'Applied' in the Job Board to populate your monthly velocity charts.
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-2 flex-shrink-0">
+          <div className="flex items-center space-x-2.5 flex-shrink-0">
             <Link
               to="/jobs"
-              className="px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1 transition-colors shadow-2xs"
+              className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-lg shadow-indigo-500/20"
             >
               Browse Jobs <ArrowRightIcon className="h-3.5 w-3.5" />
             </Link>
             {!metrics.has_active_resume && (
               <Link
                 to="/resume/upload"
-                className="px-3.5 py-1.5 bg-white dark:bg-gray-800 hover:bg-gray-50 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800 text-xs font-semibold rounded-lg transition-colors"
+                className="px-4 py-2 bg-[#1E293B] hover:bg-[#334155] text-gray-200 border border-gray-700 text-xs font-semibold rounded-xl transition-all"
               >
                 Upload Resume
               </Link>
@@ -189,14 +189,14 @@ export const AdvancedDashboard = () => {
           <WidgetContainer title="Resume Skill Competency vs Industry Benchmarks" onRefresh={handleRefresh} loading={isLoading}>
             {!metrics.has_active_resume || skillData.length === 0 ? (
               <div className="py-12 px-4 text-center">
-                <DocumentTextIcon className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                <h4 className="text-base font-bold text-gray-800 dark:text-gray-200">No Resume Uploaded Yet</h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400 max-w-md mx-auto mt-1">
+                <DocumentTextIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                <h4 className="text-base font-bold text-white">No Resume Uploaded Yet</h4>
+                <p className="text-xs text-gray-400 max-w-md mx-auto mt-1">
                   Upload your resume to let AI extract your technical competencies and benchmark them against real industry requisitions.
                 </p>
                 <Link
                   to="/resume/upload"
-                  className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors"
+                  className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all"
                 >
                   Upload Resume Now &rarr;
                 </Link>
@@ -209,38 +209,38 @@ export const AdvancedDashboard = () => {
                 </div>
 
                 {/* Right: AI Insights Panel */}
-                <div className="lg:col-span-5 bg-slate-50 dark:bg-gray-800/60 rounded-xl p-4 border border-slate-100 dark:border-gray-700 space-y-3">
+                <div className="lg:col-span-5 bg-[#1E293B] rounded-2xl p-5 border border-gray-800 space-y-3.5 shadow-inner">
                   <div className="flex items-center gap-2">
-                    <SparklesIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                    <h4 className="text-sm font-bold text-gray-900 dark:text-white">AI Competency Insights</h4>
+                    <SparklesIcon className="w-5 h-5 text-purple-400" />
+                    <h4 className="text-sm font-bold text-white">AI Competency Insights</h4>
                   </div>
 
-                  <div className="space-y-2 text-xs">
-                    <div className="p-2.5 bg-white dark:bg-gray-800 rounded-lg border border-slate-200/70 dark:border-gray-700 shadow-2xs">
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">🎯 Target Benchmark:</span>
-                      <p className="text-gray-600 dark:text-gray-400 mt-0.5">
+                  <div className="space-y-2.5 text-xs">
+                    <div className="p-3 bg-[#111827] rounded-xl border border-gray-800/80">
+                      <span className="font-bold text-emerald-400">🎯 Target Benchmark:</span>
+                      <p className="text-gray-400 mt-1">
                         Industry standard recommends an 85% competency index for target engineering roles.
                       </p>
                     </div>
 
-                    <div className="p-2.5 bg-white dark:bg-gray-800 rounded-lg border border-slate-200/70 dark:border-gray-700 shadow-2xs">
-                      <span className="font-bold text-primary-600 dark:text-primary-400">🚀 Recommended Action:</span>
-                      <p className="text-gray-600 dark:text-gray-400 mt-0.5">
+                    <div className="p-3 bg-[#111827] rounded-xl border border-gray-800/80">
+                      <span className="font-bold text-indigo-400">🚀 Recommended Action:</span>
+                      <p className="text-gray-400 mt-1">
                         Take a personalized skill assessment to test your knowledge and raise your benchmark score.
                       </p>
                     </div>
                   </div>
 
-                  <div className="pt-2 flex items-center gap-2">
+                  <div className="pt-2 flex items-center gap-2.5">
                     <Link
                       to="/assessment"
-                      className="flex-1 text-center py-2 px-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+                      className="flex-1 text-center py-2.5 px-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 transition-all"
                     >
                       Take Skill Assessment &rarr;
                     </Link>
                     <Link
                       to="/learning"
-                      className="py-2 px-3 bg-white dark:bg-gray-700 hover:bg-gray-50 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-semibold transition-colors"
+                      className="py-2.5 px-4 bg-[#111827] hover:bg-[#1E293B] text-gray-300 border border-gray-700/80 rounded-xl text-xs font-semibold transition-colors"
                     >
                       Roadmap
                     </Link>

@@ -72,14 +72,14 @@ const FormattedMessage = ({ text }) => {
 
               if (trimmed.startsWith('### ')) {
                 return (
-                  <h4 key={lIdx} className="font-bold text-indigo-900 text-xs mt-2 mb-1 border-b border-indigo-100 pb-0.5">
+                  <h4 key={lIdx} className="font-bold text-indigo-400 text-xs mt-2 mb-1 border-b border-gray-800 pb-0.5">
                     {trimmed.replace(/^###\s*/, '').replace(/\*\*/g, '')}
                   </h4>
                 )
               }
               if (trimmed.startsWith('## ')) {
                 return (
-                  <h3 key={lIdx} className="font-bold text-indigo-950 text-sm mt-2 mb-1">
+                  <h3 key={lIdx} className="font-bold text-white text-sm mt-2 mb-1">
                     {trimmed.replace(/^##\s*/, '').replace(/\*\*/g, '')}
                   </h3>
                 )
@@ -88,9 +88,9 @@ const FormattedMessage = ({ text }) => {
                 const bulletText = trimmed.replace(/^[-*]\s*/, '')
                 return (
                   <div key={lIdx} className="flex items-start gap-1.5 ml-1">
-                    <span className="text-indigo-500 font-bold">•</span>
+                    <span className="text-indigo-400 font-bold">•</span>
                     <span dangerouslySetInnerHTML={{ 
-                      __html: bulletText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
+                      __html: bulletText.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>') 
                     }} />
                   </div>
                 )
@@ -242,21 +242,21 @@ export const AILearningAssistant = ({ skillName, targetRole, stage, onClose }) =
   }
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[420px] bg-white shadow-2xl border-l border-gray-200 flex flex-col justify-between animate-slide-in">
+    <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[420px] bg-[#111827] shadow-2xl border-l border-gray-800 flex flex-col justify-between animate-slide-in">
       {/* Header */}
-      <div className="p-4 bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white flex items-center justify-between shadow-md">
+      <div className="p-4 bg-[#0F172A] border-b border-gray-800 text-white flex items-center justify-between shadow-md">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-indigo-500/30 border border-indigo-400/40 flex items-center justify-center">
-            <SparklesIcon className="w-4 h-4 text-indigo-300 animate-pulse" />
+          <div className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+            <SparklesIcon className="w-4 h-4 text-indigo-400 animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h4 className="font-bold text-sm tracking-tight">AI Study Assistant</h4>
-              <span className="px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30">
+              <h4 className="font-bold text-sm tracking-tight text-white">AI Study Assistant</h4>
+              <span className="px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20">
                 Active
               </span>
             </div>
-            <p className="text-[11px] text-indigo-200 font-medium truncate max-w-[200px]">
+            <p className="text-[11px] text-gray-400 font-medium truncate max-w-[200px]">
               {skillName || 'General'} • {targetRole || 'Full Stack Developer'}
             </p>
           </div>
@@ -265,14 +265,14 @@ export const AILearningAssistant = ({ skillName, targetRole, stage, onClose }) =
           <button 
             onClick={clearChat} 
             title="Clear Chat History"
-            className="p-1.5 rounded-lg text-indigo-200 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
           >
             <TrashIcon className="w-4 h-4" />
           </button>
           <button 
             onClick={onClose} 
             title="Close Assistant"
-            className="p-1.5 rounded-lg text-indigo-200 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
           >
             <XIcon className="w-5 h-5" />
           </button>
@@ -280,7 +280,7 @@ export const AILearningAssistant = ({ skillName, targetRole, stage, onClose }) =
       </div>
 
       {/* Quick Prompts Bar */}
-      <div className="p-2.5 bg-indigo-50/70 border-b border-indigo-100 flex items-center gap-1.5 overflow-x-auto text-[11px] no-scrollbar">
+      <div className="p-2.5 bg-[#0F172A] border-b border-gray-800 flex items-center gap-1.5 overflow-x-auto text-[11px] no-scrollbar">
         {[
           { label: '💡 Explain Topic', type: 'explain' },
           { label: '📝 Practice Qs', type: 'practice' },
@@ -291,7 +291,7 @@ export const AILearningAssistant = ({ skillName, targetRole, stage, onClose }) =
             key={i}
             disabled={loading}
             onClick={() => handleQuickAction(item.type, item.label)}
-            className="px-2.5 py-1.5 bg-white hover:bg-indigo-600 hover:text-white text-indigo-900 border border-indigo-200 hover:border-indigo-600 rounded-xl font-semibold whitespace-nowrap shadow-xs transition-all disabled:opacity-50"
+            className="px-2.5 py-1.5 bg-[#1E293B] hover:bg-gradient-to-r hover:from-indigo-600 hover:to-violet-600 hover:text-white text-gray-300 border border-gray-700/80 rounded-xl font-semibold whitespace-nowrap shadow-xs transition-all disabled:opacity-50"
           >
             {item.label}
           </button>
@@ -299,13 +299,13 @@ export const AILearningAssistant = ({ skillName, targetRole, stage, onClose }) =
       </div>
 
       {/* Chat Messages Body */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-slate-50/70 text-xs">
+      <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-[#0F172A] text-xs">
         {messages.map((m, idx) => (
           <div key={idx} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`p-3.5 rounded-2xl max-w-[90%] shadow-sm ${
+            <div className={`p-3.5 rounded-2xl max-w-[90%] shadow-md ${
               m.sender === 'user'
-                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-br-none'
-                : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none'
+                ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-br-none'
+                : 'bg-[#1E293B] border border-gray-800 text-gray-200 rounded-bl-none'
             }`}>
               {m.sender === 'user' ? (
                 <p className="whitespace-pre-wrap font-medium">{m.text}</p>
@@ -317,8 +317,8 @@ export const AILearningAssistant = ({ skillName, targetRole, stage, onClose }) =
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="p-3 bg-white border border-indigo-100 rounded-2xl text-indigo-700 shadow-sm flex items-center gap-2 text-xs font-medium">
-              <RefreshIcon className="w-4 h-4 animate-spin text-indigo-600" />
+            <div className="p-3 bg-[#1E293B] border border-gray-800 rounded-2xl text-indigo-400 shadow-md flex items-center gap-2 text-xs font-semibold">
+              <RefreshIcon className="w-4 h-4 animate-spin text-indigo-400" />
               AI Assistant is thinking...
             </div>
           </div>
@@ -327,19 +327,19 @@ export const AILearningAssistant = ({ skillName, targetRole, stage, onClose }) =
       </div>
 
       {/* Input Form */}
-      <form onSubmit={handleSendMessage} className="p-3 bg-white border-t border-gray-200 flex items-center gap-2 shadow-lg">
+      <form onSubmit={handleSendMessage} className="p-3 bg-[#111827] border-t border-gray-800 flex items-center gap-2 shadow-2xl">
         <input
           type="text"
           placeholder={`Ask about ${skillName || 'this skill'}...`}
           value={inputPrompt}
           onChange={(e) => setInputPrompt(e.target.value)}
           disabled={loading}
-          className="flex-1 px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all disabled:opacity-60"
+          className="flex-1 px-3.5 py-2.5 bg-[#1E293B] border border-gray-700 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={loading || !inputPrompt.trim()}
-          className="p-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white rounded-xl shadow-md transition-all flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
+          className="p-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded-xl shadow-md transition-all flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
         >
           <PaperAirplaneIcon className="w-4 h-4 transform rotate-90" />
         </button>

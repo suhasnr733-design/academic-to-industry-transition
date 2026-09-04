@@ -20,18 +20,18 @@ export const WidgetContainer = ({ title, children, onRefresh, loading = false })
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
-      className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-shadow hover:shadow-md"
+      className="bg-[#111827] rounded-2xl shadow-xl border border-gray-800/90 overflow-hidden transition-all"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h3 className="font-semibold text-gray-900">{title}</h3>
+      <div className="flex items-center justify-between p-5 border-b border-gray-800">
+        <h3 className="font-bold text-white text-base">{title}</h3>
         <div className="flex items-center space-x-2">
           {onRefresh && (
             <button
               onClick={onRefresh}
               disabled={loading}
-              className="p-1 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+              className="p-1.5 text-gray-400 hover:text-white transition-colors disabled:opacity-50 rounded-lg hover:bg-gray-800"
               title="Refresh Data"
             >
               <RefreshIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -39,7 +39,7 @@ export const WidgetContainer = ({ title, children, onRefresh, loading = false })
           )}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-800"
             title={isExpanded ? 'Collapse' : 'Expand'}
           >
             {isExpanded ? <ChevronUpIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
@@ -47,10 +47,10 @@ export const WidgetContainer = ({ title, children, onRefresh, loading = false })
         </div>
       </div>
       {isExpanded && (
-        <div className="p-4">
+        <div className="p-5">
           {loading ? (
             <div className="flex justify-center py-8">
-              <div className="spinner h-8 w-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+              <div className="spinner h-8 w-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
             children
@@ -64,23 +64,24 @@ export const WidgetContainer = ({ title, children, onRefresh, loading = false })
 export const InteractiveLineChart = ({ data = [], xKey = 'name', lines = [], height = 300 }) => {
   const [activeKey, setActiveKey] = useState(null)
   
-  const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444']
+  const colors = ['#6366f1', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444']
   
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-        <XAxis dataKey={xKey} stroke="#64748b" />
-        <YAxis stroke="#64748b" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+        <XAxis dataKey={xKey} stroke="#94a3b8" />
+        <YAxis stroke="#94a3b8" />
         <Tooltip
           contentStyle={{
-            backgroundColor: '#ffffff',
-            borderRadius: '8px',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e2e8f0',
+            backgroundColor: '#1E293B',
+            borderRadius: '12px',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
+            border: '1px solid #374151',
+            color: '#fff'
           }}
         />
-        <Legend />
+        <Legend wrapperStyle={{ color: '#cbd5e1' }} />
         {lines.map((line, index) => (
           <Line
             key={line.key}
@@ -89,7 +90,7 @@ export const InteractiveLineChart = ({ data = [], xKey = 'name', lines = [], hei
             name={line.name}
             stroke={colors[index % colors.length]}
             strokeWidth={activeKey === line.key ? 3 : 2}
-            dot={{ r: 4 }}
+            dot={{ r: 4, fill: colors[index % colors.length] }}
             activeDot={{ r: 6 }}
           />
         ))}
@@ -100,21 +101,21 @@ export const InteractiveLineChart = ({ data = [], xKey = 'name', lines = [], hei
 
 export const InteractivePieChart = ({ data = [], height = 300 }) => {
   const [activeIndex, setActiveIndex] = useState(null)
-  const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899']
+  const colors = ['#6366f1', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899']
 
   const totalValue = data.reduce((acc, curr) => acc + (curr.value || 0), 0)
 
   if (totalValue === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center h-[300px]">
-        <div className="p-3.5 bg-slate-50 text-slate-400 rounded-2xl mb-3 border border-slate-100">
+        <div className="p-4 bg-[#1E293B] text-gray-400 rounded-2xl mb-3 border border-gray-800">
           <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
           </svg>
         </div>
-        <p className="text-sm font-bold text-gray-800">No Application Data Yet</p>
-        <p className="text-xs text-gray-500 max-w-xs mt-1">
+        <p className="text-sm font-bold text-white">No Application Data Yet</p>
+        <p className="text-xs text-gray-400 max-w-xs mt-1">
           Apply to jobs or RSVP to placement drives to populate your conversion funnel.
         </p>
       </div>
@@ -147,20 +148,21 @@ export const InteractivePieChart = ({ data = [], height = 300 }) => {
             <Cell
               key={`cell-${index}`}
               fill={colors[index % colors.length]}
-              stroke="#fff"
+              stroke="#111827"
               strokeWidth={2}
             />
           ))}
         </Pie>
         <Tooltip
           contentStyle={{
-            backgroundColor: '#ffffff',
-            borderRadius: '8px',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e2e8f0',
+            backgroundColor: '#1E293B',
+            borderRadius: '12px',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
+            border: '1px solid #374151',
+            color: '#fff'
           }}
         />
-        <Legend />
+        <Legend wrapperStyle={{ color: '#cbd5e1' }} />
       </PieChart>
     </ResponsiveContainer>
   )
@@ -170,43 +172,44 @@ export const InteractiveRadarChart = ({ data = [], keys = ['current', 'required'
   return (
     <ResponsiveContainer width="100%" height={height}>
       <RadarChart data={data} cx="50%" cy="50%" outerRadius="75%">
-        <PolarGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+        <PolarGrid stroke="#334155" strokeDasharray="3 3" />
         <PolarAngleAxis 
           dataKey="name" 
-          tick={{ fill: '#475569', fontSize: 11, fontWeight: 600 }} 
+          tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }} 
         />
         <PolarRadiusAxis 
           angle={30} 
           domain={[0, 100]} 
-          stroke="#cbd5e1" 
-          tick={{ fontSize: 10, fill: '#94a3b8' }} 
+          stroke="#475569" 
+          tick={{ fontSize: 10, fill: '#64748b' }} 
         />
         <Radar
           name="Your Skill Level"
           dataKey="current"
-          stroke="#2563eb"
-          fill="#3b82f6"
-          fillOpacity={0.3}
+          stroke="#6366f1"
+          fill="#6366f1"
+          fillOpacity={0.35}
           strokeWidth={2}
         />
         <Radar
           name="Industry Benchmark"
           dataKey="required"
-          stroke="#9333ea"
+          stroke="#a855f7"
           fill="#a855f7"
-          fillOpacity={0.12}
+          fillOpacity={0.15}
           strokeDasharray="4 4"
           strokeWidth={2}
         />
         <Tooltip
           contentStyle={{
-            backgroundColor: '#ffffff',
-            borderRadius: '8px',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e2e8f0',
+            backgroundColor: '#1E293B',
+            borderRadius: '12px',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
+            border: '1px solid #374151',
+            color: '#fff'
           }}
         />
-        <Legend verticalAlign="bottom" height={36} />
+        <Legend verticalAlign="bottom" height={36} wrapperStyle={{ color: '#cbd5e1' }} />
       </RadarChart>
     </ResponsiveContainer>
   )

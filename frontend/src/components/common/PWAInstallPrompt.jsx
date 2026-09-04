@@ -67,43 +67,43 @@ export const PWAInstallPrompt = () => {
         exit={{ y: 100, opacity: 0 }}
         className="fixed bottom-0 left-0 right-0 z-50 p-4"
       >
-        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-6 border border-gray-200">
+        <div className="max-w-md mx-auto bg-[#111827] rounded-3xl shadow-2xl p-6 border border-gray-800/90 backdrop-blur-xl">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center text-white font-bold text-xl">
+                <div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-500/25">
                   AI
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Install App</h3>
-                  <p className="text-sm text-gray-500">Get faster experience</p>
+                  <h3 className="font-extrabold text-white text-base">Install App</h3>
+                  <p className="text-xs text-gray-400">Get an ultra-fast desktop experience</p>
                 </div>
               </div>
-              <ul className="mt-3 space-y-2 text-sm text-gray-600">
-                <li>✅ Works offline</li>
-                <li>✅ Faster loading</li>
-                <li>✅ Push notifications</li>
+              <ul className="mt-3 space-y-1.5 text-xs text-gray-300 font-medium">
+                <li>✅ Works offline with persistent cache</li>
+                <li>✅ Faster rendering and low latency</li>
+                <li>✅ Instant desktop & mobile launch</li>
               </ul>
             </div>
             <button
               onClick={handleDismiss}
-              className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-1 text-gray-400 hover:text-white transition-colors"
             >
               <XIcon className="h-5 w-5" />
             </button>
           </div>
           
-          <div className="mt-4 flex space-x-3">
+          <div className="mt-5 flex space-x-3">
             <button
               onClick={handleInstall}
-              className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium flex items-center justify-center"
+              className="flex-1 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl transition-all font-bold text-xs flex items-center justify-center shadow-lg shadow-indigo-500/25"
             >
-              <DownloadIcon className="h-5 w-5 mr-2" />
-              Install
+              <DownloadIcon className="h-4 w-4 mr-2" />
+              Install Application
             </button>
             <button
               onClick={handleDismiss}
-              className="px-4 py-2 text-gray-500 hover:text-gray-700 transition-colors font-medium"
+              className="px-4 py-2.5 bg-[#1E293B] hover:bg-[#334155] border border-gray-700 text-gray-300 hover:text-white rounded-xl transition-colors font-semibold text-xs"
             >
               Not now
             </button>

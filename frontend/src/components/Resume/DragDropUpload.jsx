@@ -57,7 +57,6 @@ export const DragDropUpload = ({ onUploadSuccess }) => {
       
       toast.success(`${fileItem.name} uploaded successfully!`)
       
-      // Remove from pending after 3 seconds
       setTimeout(() => {
         setFiles(prev => prev.filter(f => f.id !== fileItem.id))
       }, 3000)
@@ -83,9 +82,9 @@ export const DragDropUpload = ({ onUploadSuccess }) => {
 
   const getFileIcon = (status) => {
     switch (status) {
-      case 'completed': return <CheckCircleIcon className="h-5 w-5 text-green-500" />
-      case 'error': return <XIcon className="h-5 w-5 text-red-500" />
-      case 'uploading': return <div className="h-5 w-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+      case 'completed': return <CheckCircleIcon className="h-5 w-5 text-emerald-400" />
+      case 'error': return <XIcon className="h-5 w-5 text-rose-400" />
+      case 'uploading': return <div className="h-5 w-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
       default: return <DocumentIcon className="h-5 w-5 text-gray-400" />
     }
   }
@@ -102,18 +101,18 @@ export const DragDropUpload = ({ onUploadSuccess }) => {
         {...getRootProps()}
         className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-200 ${
           isDragActive
-            ? 'border-primary-500 bg-primary-50'
-            : 'border-gray-300 hover:border-primary-400 hover:bg-gray-50'
+            ? 'border-indigo-500 bg-indigo-950/40'
+            : 'border-gray-700/80 hover:border-indigo-500/60 hover:bg-[#1E293B]/40'
         }`}
       >
         <input {...getInputProps()} />
-        <UploadIcon className={`h-16 w-16 mx-auto ${
-          isDragActive ? 'text-primary-500' : 'text-gray-400'
+        <UploadIcon className={`h-14 w-14 mx-auto ${
+          isDragActive ? 'text-indigo-400' : 'text-gray-500'
         }`} />
-        <p className="mt-4 text-gray-600 font-medium">
+        <p className="mt-4 text-white font-medium text-sm">
           {isDragActive ? 'Drop your files here' : 'Drag & drop files here, or click to select'}
         </p>
-        <p className="mt-2 text-sm text-gray-400">
+        <p className="mt-1.5 text-xs text-gray-400">
           Supported formats: PDF, DOCX (Max size: 10MB)
         </p>
       </div>
@@ -121,11 +120,11 @@ export const DragDropUpload = ({ onUploadSuccess }) => {
       {files.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="font-medium text-gray-900">Files ({files.length})</h4>
+            <h4 className="font-semibold text-white text-sm">Files ({files.length})</h4>
             <button
               onClick={handleUploadAll}
               disabled={isLoading}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
+              className="px-3.5 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium text-xs rounded-xl hover:from-indigo-500 hover:to-violet-500 transition-all disabled:opacity-50"
             >
               Upload All
             </button>
@@ -138,23 +137,23 @@ export const DragDropUpload = ({ onUploadSuccess }) => {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                className="flex items-center justify-between p-3.5 bg-[#1E293B] border border-gray-700 rounded-xl"
               >
-                <div className="flex items-center space-x-3 flex-1">
+                <div className="flex items-center space-x-3 flex-1 min-w-0">
                   {getFileIcon(file.status)}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-xs font-semibold text-white truncate">
                       {file.name}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-[11px] text-gray-400">
                       {formatFileSize(file.size)}
                       {file.status === 'uploading' && ` - ${uploadProgress}%`}
                     </p>
                   </div>
                   {file.status === 'uploading' && (
-                    <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="w-24 h-1.5 bg-[#0F172A] rounded-full overflow-hidden border border-gray-700">
                       <div 
-                        className="h-full bg-primary-500 rounded-full transition-all duration-300"
+                        className="h-full bg-indigo-500 rounded-full transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
                       />
                     </div>
@@ -163,15 +162,15 @@ export const DragDropUpload = ({ onUploadSuccess }) => {
                 {file.status === 'pending' && (
                   <button
                     onClick={() => removeFile(file.id)}
-                    className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                    className="p-1 text-gray-400 hover:text-rose-400 transition-colors"
                   >
-                    <XIcon className="h-5 w-5" />
+                    <XIcon className="h-4 w-4" />
                   </button>
                 )}
                 {file.status === 'pending' && (
                   <button
                     onClick={() => handleUpload(file)}
-                    className="ml-2 px-3 py-1 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm"
+                    className="ml-2 px-3 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors text-xs font-semibold"
                   >
                     Upload
                   </button>

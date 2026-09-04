@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../../hooks/useAuth'
 import { useResume } from '../../hooks/useResume'
 import { api } from '../../services/api'
@@ -30,7 +31,7 @@ export const PlacementDrives = () => {
   const { user } = useAuth()
   const { resumes } = useResume()
 
-  // Optimization 3: Hydrate student nominations from sessionStorage (0.00s render)
+  // Hydrate student nominations from sessionStorage
   const [nominations, setNominations] = useState(() => {
     try {
       const cached = sessionStorage.getItem('swr_student_placement_drives')
@@ -74,7 +75,6 @@ export const PlacementDrives = () => {
       const freshNoms = res.data?.nominations || []
       setNominations(freshNoms)
 
-      // Optimization 3: Persist fresh drives in sessionStorage
       try {
         sessionStorage.setItem('swr_student_placement_drives', JSON.stringify(freshNoms))
       } catch {}
@@ -147,13 +147,11 @@ export const PlacementDrives = () => {
 
   // Filtered List
   const filteredNominations = nominations.filter((nom) => {
-    // Tab filter
     if (activeTab === 'pending' && nom.status !== 'pending') return false
     if (activeTab === 'confirmed' && !(nom.status === 'confirmed_attending' || nom.status === 'accepted')) return false
     if (activeTab === 'placed' && nom.status !== 'placed') return false
     if (activeTab === 'rejected' && nom.status !== 'rejected') return false
 
-    // Search query filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       const matchCompany = nom.company_name?.toLowerCase().includes(q)
@@ -166,243 +164,179 @@ export const PlacementDrives = () => {
   })
 
   return (
-    <div className="space-y-8 pb-12">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-primary-600 via-primary-700 to-secondary-700 rounded-2xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+    <div className="max-w-7xl mx-auto space-y-7 pb-16 px-2 sm:px-4">
+      {/* 1. Header Hero Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-950/60 via-purple-950/40 to-slate-900 border border-indigo-500/20 p-6 sm:p-8 shadow-xl shadow-indigo-500/5">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/15 backdrop-blur-md border border-white/20">
-              <SparklesIcon className="h-4 w-4 text-amber-300" />
-              <span>Student Career Suite • Placement Portal</span>
+          <div className="space-y-2.5 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+              <SparklesIcon className="h-4 w-4 text-amber-400 animate-pulse" />
+              <span>Campus Placement Command Center</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Company Placement Drives & Invitations
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+              Company Drives & Invitations
             </h1>
-            <p className="text-white/85 text-sm sm:text-base leading-relaxed">
-              Manage your company campus invitations, coordinator shortlists, RSVP for upcoming recruitment drives, and track your hiring milestones.
+            <p className="text-gray-300 text-xs sm:text-sm leading-relaxed">
+              Track your campus invitations, review coordinator shortlists, RSVP for upcoming corporate recruitment drives, and manage your offers.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant="secondary"
-              size="sm"
-              className="bg-white/15 hover:bg-white/25 text-white border-white/25 backdrop-blur-sm shadow-sm"
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
               onClick={fetchNominations}
               disabled={isLoading}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white bg-[#1E293B]/70 hover:bg-[#1E293B] border border-gray-700 transition-all active:scale-95"
             >
-              <RefreshIcon className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh Drives
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="bg-white text-primary-700 hover:bg-gray-50 border-white shadow-sm font-bold"
+              <RefreshIcon className={`h-4 w-4 ${isLoading ? 'animate-spin text-indigo-400' : ''}`} />
+              <span>Refresh Drives</span>
+            </button>
+            <button
               onClick={() => navigate('/resume/upload')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-md shadow-indigo-600/20 transition-all active:scale-95"
             >
-              <DocumentTextIcon className="h-4 w-4 mr-2 text-primary-600" />
-              Update Resume
-            </Button>
+              <DocumentTextIcon className="h-4 w-4 text-white" />
+              <span>Update Resume</span>
+            </button>
           </div>
         </div>
 
-        {/* Ambient Decorative Background Circles */}
-        <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-white/5 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute left-1/2 -top-12 w-48 h-48 bg-secondary-400/10 rounded-full blur-xl pointer-events-none" />
+        {/* Ambient Glows */}
+        <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute left-1/3 -top-12 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
       </div>
 
-      {/* Metrics Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 2. Metrics Summary Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Total Drives */}
         <div 
           onClick={() => setActiveTab('all')}
-          className={`cursor-pointer bg-white rounded-2xl p-5 border transition-all duration-200 hover:shadow-md ${
-            activeTab === 'all' ? 'border-primary-500 ring-2 ring-primary-500/20 shadow-sm' : 'border-gray-200/80'
+          className={`cursor-pointer rounded-2xl p-4 sm:p-5 bg-[#111827] border transition-all duration-200 hover:border-gray-700 hover:-translate-y-0.5 ${
+            activeTab === 'all' ? 'border-indigo-500/60 ring-1 ring-indigo-500/30 shadow-md shadow-indigo-500/5' : 'border-gray-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Drives</span>
-            <div className="p-2.5 rounded-xl bg-gray-100 text-gray-700">
-              <OfficeBuildingIcon className="h-5 w-5" />
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Total Drives</span>
+            <div className="p-2 rounded-xl bg-gray-800 text-gray-300">
+              <OfficeBuildingIcon className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-extrabold text-gray-900">{nominations.length}</span>
-            <span className="text-xs text-gray-500 ml-2">Shortlists</span>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-extrabold text-white">{nominations.length}</span>
+            <span className="text-xs text-gray-400">Shortlists</span>
           </div>
         </div>
 
-        {/* Pending Action Required */}
+        {/* Action Required */}
         <div 
           onClick={() => setActiveTab('pending')}
-          className={`cursor-pointer bg-white rounded-2xl p-5 border transition-all duration-200 hover:shadow-md ${
-            activeTab === 'pending' ? 'border-amber-500 ring-2 ring-amber-500/20 shadow-sm' : 'border-gray-200/80'
+          className={`cursor-pointer rounded-2xl p-4 sm:p-5 bg-[#111827] border transition-all duration-200 hover:border-amber-500/40 hover:-translate-y-0.5 ${
+            activeTab === 'pending' ? 'border-amber-500/60 ring-1 ring-amber-500/30 bg-amber-500/5' : 'border-gray-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">Action Required</span>
-            <div className="p-2.5 rounded-xl bg-amber-100 text-amber-700">
-              <ClockIcon className="h-5 w-5" />
+            <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Action Required</span>
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <ClockIcon className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-extrabold text-amber-600">{pendingList.length}</span>
-            <span className="text-xs text-amber-700/80 ml-2 font-medium">Pending RSVP</span>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-extrabold text-amber-400">{pendingList.length}</span>
+            <span className="text-xs text-amber-300/80">Pending RSVP</span>
           </div>
         </div>
 
         {/* Confirmed Attending */}
         <div 
           onClick={() => setActiveTab('confirmed')}
-          className={`cursor-pointer bg-white rounded-2xl p-5 border transition-all duration-200 hover:shadow-md ${
-            activeTab === 'confirmed' ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm' : 'border-gray-200/80'
+          className={`cursor-pointer rounded-2xl p-4 sm:p-5 bg-[#111827] border transition-all duration-200 hover:border-emerald-500/40 hover:-translate-y-0.5 ${
+            activeTab === 'confirmed' ? 'border-emerald-500/60 ring-1 ring-emerald-500/30 bg-emerald-500/5' : 'border-gray-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Confirmed</span>
-            <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-700">
-              <CheckCircleIcon className="h-5 w-5" />
+            <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">Confirmed</span>
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <CheckCircleIcon className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-extrabold text-emerald-600">{confirmedList.length}</span>
-            <span className="text-xs text-emerald-700/80 ml-2 font-medium">Attending Drives</span>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-extrabold text-emerald-400">{confirmedList.length}</span>
+            <span className="text-xs text-emerald-300/80">Attending</span>
           </div>
         </div>
 
-        {/* Officially Placed */}
+        {/* Offers & Placed */}
         <div 
           onClick={() => setActiveTab('placed')}
-          className={`cursor-pointer bg-white rounded-2xl p-5 border transition-all duration-200 hover:shadow-md ${
-            activeTab === 'placed' ? 'border-purple-500 ring-2 ring-purple-500/20 shadow-sm' : 'border-gray-200/80'
+          className={`cursor-pointer rounded-2xl p-4 sm:p-5 bg-[#111827] border transition-all duration-200 hover:border-purple-500/40 hover:-translate-y-0.5 ${
+            activeTab === 'placed' ? 'border-purple-500/60 ring-1 ring-purple-500/30 bg-purple-500/5' : 'border-gray-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-purple-700 uppercase tracking-wider">Offers & Hired</span>
-            <div className="p-2.5 rounded-xl bg-purple-100 text-purple-700">
-              <SparklesIcon className="h-5 w-5 text-amber-500" />
+            <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">Hired & Offers</span>
+            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              <SparklesIcon className="h-4 w-4 text-amber-400" />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-extrabold text-purple-600">{placedList.length}</span>
-            <span className="text-xs text-purple-700/80 ml-2 font-medium">Placed Offers</span>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-extrabold text-purple-400">{placedList.length}</span>
+            <span className="text-xs text-purple-300/80">Offers</span>
           </div>
         </div>
       </div>
 
-      {/* Filter Tabs & Search Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xs">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
-          <button
-            onClick={() => setActiveTab('all')}
-            className={cn(
-              "px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5",
-              activeTab === 'all'
-                ? 'bg-primary-600 text-white shadow-xs'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
-            )}
-          >
-            <span>All Drives</span>
-            <span className={cn(
-              "px-1.5 py-0.2 rounded-full text-[10px]",
-              activeTab === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-            )}>
-              {nominations.length}
-            </span>
-          </button>
-          
-          <button
-            onClick={() => setActiveTab('pending')}
-            className={cn(
-              "px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5",
-              activeTab === 'pending'
-                ? 'bg-amber-500 text-white shadow-xs'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-800 dark:hover:text-amber-400'
-            )}
-          >
-            <span>⚡ Action Required</span>
-            <span className={cn(
-              "px-1.5 py-0.2 rounded-full text-[10px]",
-              activeTab === 'pending'
-                ? 'bg-white text-amber-800 font-extrabold'
-                : pendingList.length > 0
-                ? 'bg-amber-500 text-white font-extrabold animate-pulse'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-            )}>
-              {pendingList.length}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('confirmed')}
-            className={cn(
-              "px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5",
-              activeTab === 'confirmed'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-800 dark:hover:text-emerald-400'
-            )}
-          >
-            <span>✅ Attending</span>
-            <span className={cn(
-              "px-1.5 py-0.2 rounded-full text-[10px]",
-              activeTab === 'confirmed' ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-            )}>
-              {confirmedList.length}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('placed')}
-            className={cn(
-              "px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5",
-              activeTab === 'placed'
-                ? 'bg-purple-600 text-white shadow-xs'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-800 dark:hover:text-purple-400'
-            )}
-          >
-            <span>🏆 Hired</span>
-            <span className={cn(
-              "px-1.5 py-0.2 rounded-full text-[10px]",
-              activeTab === 'placed' ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-            )}>
-              {placedList.length}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('rejected')}
-            className={cn(
-              "px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5",
-              activeTab === 'rejected'
-                ? 'bg-gray-700 text-white shadow-xs'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
-            )}
-          >
-            <span>Declined</span>
-            <span className={cn(
-              "px-1.5 py-0.2 rounded-full text-[10px]",
-              activeTab === 'rejected' ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-            )}>
-              {rejectedList.length}
-            </span>
-          </button>
+      {/* 3. Filter Tabs & Search Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-[#111827] p-3 rounded-2xl border border-gray-800 shadow-sm">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+          {[
+            { key: 'all', label: 'All Drives', count: nominations.length },
+            { key: 'pending', label: '⚡ Action Required', count: pendingList.length, highlight: pendingList.length > 0 },
+            { key: 'confirmed', label: '✅ Attending', count: confirmedList.length },
+            { key: 'placed', label: '🏆 Hired', count: placedList.length },
+            { key: 'rejected', label: 'Declined', count: rejectedList.length }
+          ].map(tab => {
+            const isActive = activeTab === tab.key
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={cn(
+                  "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border",
+                  isActive
+                    ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm'
+                    : 'bg-[#1E293B]/40 border-gray-800 text-gray-400 hover:text-gray-200 hover:border-gray-700'
+                )}
+              >
+                <span>{tab.label}</span>
+                <span className={cn(
+                  "px-1.5 py-0.2 rounded-md text-[10px] font-bold",
+                  isActive 
+                    ? 'bg-white/20 text-white' 
+                    : tab.highlight 
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
+                    : 'bg-gray-800 text-gray-400'
+                )}>
+                  {tab.count}
+                </span>
+              </button>
+            )
+          })}
         </div>
 
         {/* Search Input */}
-        <div className="relative min-w-[220px]">
-          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <div className="relative min-w-[240px]">
+          <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             value={searchQuery}
             disabled={nominations.length === 0}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={nominations.length === 0 ? "Search enabled when invitations arrive..." : "Search by company or role..."}
-            className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400 disabled:cursor-not-allowed"
+            placeholder="Search by company or role..."
+            className="w-full pl-9 pr-8 py-1.5 rounded-xl bg-[#1E293B]/60 border border-gray-700 text-xs text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 p-0.5"
             >
               <XIcon className="h-3.5 w-3.5" />
             </button>
@@ -410,20 +344,20 @@ export const PlacementDrives = () => {
         </div>
       </div>
 
-      {/* Placement Drives List Section */}
+      {/* 4. Placement Drives List Feed */}
       <div className="space-y-4">
         {isLoading && nominations.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 shadow-sm">
-            <RefreshIcon className="h-8 w-8 text-primary-500 animate-spin mx-auto mb-3" />
-            <p className="text-sm font-semibold text-gray-700">Loading placement drive notifications...</p>
+          <div className="bg-[#111827] rounded-3xl p-12 text-center border border-gray-800">
+            <div className="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-xs font-semibold text-gray-400">Loading placement drive notifications...</p>
           </div>
         ) : filteredNominations.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 sm:p-12 text-center border border-gray-200 dark:border-gray-700 shadow-sm space-y-4">
-            <div className="w-16 h-16 bg-primary-50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+          <div className="bg-[#111827] rounded-3xl p-8 sm:p-12 text-center border border-gray-800 shadow-sm space-y-4">
+            <div className="w-16 h-16 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
               <OfficeBuildingIcon className="h-8 w-8" />
             </div>
             <div className="max-w-md mx-auto">
-              <h3 className="text-base font-bold text-gray-900 dark:text-white">
+              <h3 className="text-base font-bold text-white">
                 {searchQuery
                   ? 'No drives match your search query'
                   : activeTab === 'pending'
@@ -436,7 +370,7 @@ export const PlacementDrives = () => {
                   ? 'Resume Required for Campus Drive Shortlisting'
                   : 'No placement drive invitations yet'}
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed">
+              <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
                 {nominations.length === 0
                   ? !completedResume
                     ? 'Upload your resume so department faculty and placement coordinators can verify your technical skills and shortlist you for upcoming campus recruitment drives.'
@@ -445,35 +379,20 @@ export const PlacementDrives = () => {
               </p>
             </div>
 
-            {nominations.length === 0 && (
-              <div className="pt-2 flex flex-wrap justify-center gap-3">
-                <Button
-                  size="sm"
-                  onClick={() => navigate('/jobs')}
-                  className="bg-primary-600 hover:bg-primary-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm"
-                >
-                  <BriefcaseIcon className="h-4 w-4" />
-                  Explore 20 Live Job Openings &rarr;
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/resume/upload')}
-                  className="text-xs flex items-center gap-1.5"
-                >
-                  <DocumentTextIcon className="h-4 w-4 text-gray-500" />
-                  {completedResume ? 'Update Resume' : 'Upload Resume'}
-                </Button>
-              </div>
-            )}
-
-            <div className="text-xs text-gray-500 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-center gap-1">
-              <span>Have questions about campus drive eligibility?</span>
-              <button 
-                onClick={() => navigate('/dashboard')}
-                className="font-bold text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-0.5"
+            <div className="pt-2 flex flex-wrap justify-center gap-3">
+              <button
+                onClick={() => navigate('/jobs')}
+                className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl transition-all shadow-md shadow-indigo-600/20 flex items-center gap-1.5"
               >
-                Connect with your Faculty Advisor &rarr;
+                <BriefcaseIcon className="h-4 w-4" />
+                <span>Explore Live Job Openings</span>
+              </button>
+              <button
+                onClick={() => navigate('/resume/upload')}
+                className="px-4 py-2 text-xs font-semibold text-gray-300 bg-[#1E293B] hover:bg-gray-800 rounded-xl border border-gray-700 transition-all flex items-center gap-1.5"
+              >
+                <DocumentTextIcon className="h-4 w-4 text-gray-400" />
+                <span>{completedResume ? 'Update Resume' : 'Upload Resume'}</span>
               </button>
             </div>
           </div>
@@ -488,45 +407,45 @@ export const PlacementDrives = () => {
               return (
                 <div
                   key={nom.id}
-                  className={`rounded-2xl p-6 border shadow-sm transition-all duration-200 relative overflow-hidden bg-white ${
+                  className={`rounded-3xl p-5 sm:p-6 border transition-all duration-200 relative overflow-hidden bg-[#111827] ${
                     isPending
-                      ? 'border-amber-300 ring-1 ring-amber-300/50 hover:shadow-md'
+                      ? 'border-amber-500/40 ring-1 ring-amber-500/20 shadow-md shadow-amber-500/5'
                       : isPlaced
-                      ? 'border-purple-300 bg-gradient-to-r from-purple-50/50 to-white hover:shadow-md'
+                      ? 'border-purple-500/40 bg-gradient-to-r from-purple-950/20 to-[#111827] shadow-md shadow-purple-500/5'
                       : isConfirmed
-                      ? 'border-emerald-300 bg-gradient-to-r from-emerald-50/40 to-white hover:shadow-md'
-                      : 'border-gray-200 hover:shadow-md opacity-85'
+                      ? 'border-emerald-500/40 bg-gradient-to-r from-emerald-950/20 to-[#111827] shadow-md shadow-emerald-500/5'
+                      : 'border-gray-800 opacity-80'
                   }`}
                 >
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div className="flex items-start gap-4">
                       {/* Company Icon Avatar */}
                       <div
-                        className={`p-4 rounded-2xl flex-shrink-0 shadow-sm ${
+                        className={`p-4 rounded-2xl flex-shrink-0 ${
                           isPending
-                            ? 'bg-amber-500 text-white shadow-amber-500/20'
+                            ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
                             : isPlaced
-                            ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-purple-500/25'
+                            ? 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
                             : isConfirmed
-                            ? 'bg-emerald-600 text-white shadow-emerald-600/20'
-                            : 'bg-gray-400 text-white'
+                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                            : 'bg-gray-800 text-gray-400 border border-gray-700'
                         }`}
                       >
                         <OfficeBuildingIcon className="h-7 w-7" />
                       </div>
 
-                      {/* Info & Details */}
+                      {/* Details */}
                       <div className="space-y-1.5">
-                        <div className="flex items-center gap-2.5 flex-wrap">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                            className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider border ${
                               isPending
-                                ? 'bg-amber-100 text-amber-900 border border-amber-300 animate-pulse'
+                                ? 'bg-amber-500/10 text-amber-300 border-amber-500/30 animate-pulse'
                                 : isPlaced
-                                ? 'bg-purple-100 text-purple-900 border border-purple-300'
+                                ? 'bg-purple-500/10 text-purple-300 border-purple-500/30'
                                 : isConfirmed
-                                ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                                : 'bg-gray-200 text-gray-700 border border-gray-300'
+                                ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                                : 'bg-gray-800 text-gray-400 border-gray-700'
                             }`}
                           >
                             {isPending
@@ -539,29 +458,22 @@ export const PlacementDrives = () => {
                           </span>
 
                           {nom.package_lpa && (
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-900 border border-purple-200">
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/10 text-purple-300 border border-purple-500/30">
                               💰 ₹{nom.package_lpa} LPA CTC
-                            </span>
-                          )}
-
-                          {isPending && (
-                            <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
-                              <ClockIcon className="h-3.5 w-3.5 text-amber-600" />
-                              RSVP Pending
                             </span>
                           )}
                         </div>
 
-                        <h3 className="text-xl font-extrabold text-gray-900 flex items-center gap-2">
+                        <h3 className="text-lg sm:text-xl font-extrabold text-white flex items-center gap-2">
                           {nom.company_name}
-                          <span className="text-sm font-normal text-gray-500">
+                          <span className="text-sm font-normal text-gray-400">
                             • {nom.job_role || 'Software Engineer'}
                           </span>
                         </h3>
 
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-gray-400">
                           Shortlisted by{' '}
-                          <span className="font-semibold text-gray-800">
+                          <span className="font-semibold text-gray-200">
                             {nom.faculty?.full_name || 'Department Faculty'}
                           </span>{' '}
                           ({nom.faculty?.department || 'Coordinator'}) on{' '}
@@ -574,95 +486,82 @@ export const PlacementDrives = () => {
 
                         {/* Coordinator Note */}
                         {nom.faculty_notes && (
-                          <div className="mt-2 text-xs text-purple-950 bg-purple-50/90 border border-purple-200/80 rounded-xl p-3 max-w-2xl">
-                            <span className="font-bold text-purple-900">Coordinator Note:</span> {nom.faculty_notes}
+                          <div className="mt-2 text-xs text-purple-200 bg-purple-950/40 border border-purple-500/30 rounded-xl p-3 max-w-2xl">
+                            <span className="font-bold text-purple-300">Coordinator Note:</span> {nom.faculty_notes}
                           </div>
                         )}
 
                         {/* Confirmation State Feedback */}
                         {isConfirmed && !isPlaced && (
-                          <div className="mt-2 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl p-3 max-w-2xl flex items-center gap-2">
-                            <CheckCircleIcon className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                          <div className="mt-2 text-xs text-emerald-300 bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-3 max-w-2xl flex items-center gap-2">
+                            <CheckCircleIcon className="h-4 w-4 text-emerald-400 flex-shrink-0" />
                             <span>
-                              You have confirmed attendance for this placement drive. Please keep your resume updated and check your inbox for test links & schedule details!
+                              You have confirmed attendance for this placement drive. Check your inbox for assessment links and schedule details.
                             </span>
                           </div>
                         )}
 
                         {/* Placed Celebration Banner */}
                         {isPlaced && (
-                          <div className="mt-2 text-xs text-purple-900 bg-gradient-to-r from-purple-100 to-indigo-100 border border-purple-200 rounded-xl p-3 max-w-2xl flex items-center gap-2">
-                            <SparklesIcon className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                          <div className="mt-2 text-xs text-purple-200 bg-purple-950/40 border border-purple-500/40 rounded-xl p-3 max-w-2xl flex items-center gap-2">
+                            <SparklesIcon className="h-4 w-4 text-amber-400 flex-shrink-0" />
                             <span className="font-semibold">
-                              Congratulations! You have been marked as hired for {nom.company_name}.
+                              Congratulations! You have received a formal offer and are placed at {nom.company_name}.
                             </span>
                           </div>
                         )}
 
-                        {/* Student Response Note */}
                         {nom.student_response_note && !isPending && (
-                          <p className="text-xs text-gray-500 italic mt-1">
-                            Your response note: "{nom.student_response_note}"
+                          <p className="text-xs text-gray-400 italic mt-1">
+                            Your response: "{nom.student_response_note}"
                           </p>
                         )}
                       </div>
                     </div>
 
                     {/* Interactive Action Area */}
-                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 self-end lg:self-center flex-shrink-0">
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2.5 self-end lg:self-center flex-shrink-0">
                       {isPending && (
                         <>
-                          <Button
-                            variant="outline"
-                            size="sm"
+                          <button
                             onClick={() => handleOpenDeclineModal(nom)}
                             disabled={isRespondingNomination === nom.id}
-                            className="text-xs border-gray-300 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 flex items-center gap-1.5"
+                            className="px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition-all flex items-center gap-1.5 active:scale-95"
                           >
                             <XIcon className="h-4 w-4" />
-                            Decline Invitation
-                          </Button>
-                          <Button
-                            size="sm"
+                            <span>Decline</span>
+                          </button>
+                          <button
                             onClick={() => handleAcceptNomination(nom)}
-                            isLoading={isRespondingNomination === nom.id}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20"
+                            disabled={isRespondingNomination === nom.id}
+                            className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md shadow-emerald-600/20 transition-all flex items-center gap-1.5 active:scale-95"
                           >
                             <CheckCircleIcon className="h-4 w-4" />
-                            Confirm Attendance
-                          </Button>
+                            <span>Confirm Attendance</span>
+                          </button>
                         </>
                       )}
 
                       {isConfirmed && !isPlaced && (
                         <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-100 text-emerald-900 font-bold text-xs border border-emerald-300">
-                            <CheckCircleIcon className="h-4 w-4 text-emerald-600" />
+                          <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500/15 text-emerald-300 font-bold text-xs border border-emerald-500/30">
+                            <CheckCircleIcon className="h-4 w-4 text-emerald-400" />
                             Attendance Confirmed
                           </span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate('/resume/upload')}
-                            className="text-xs flex items-center gap-1"
-                          >
-                            <DocumentTextIcon className="h-3.5 w-3.5 text-gray-500" />
-                            Resume Ready
-                          </Button>
                         </div>
                       )}
 
                       {isPlaced && (
-                        <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-100 text-purple-900 font-bold text-xs border border-purple-300 shadow-sm">
-                          <SparklesIcon className="h-4 w-4 text-amber-500" />
-                          Officially Hired & Placed!
+                        <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-500/15 text-purple-300 font-bold text-xs border border-purple-500/30 shadow-sm">
+                          <SparklesIcon className="h-4 w-4 text-amber-400" />
+                          Officially Hired
                         </span>
                       )}
 
                       {isRejected && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 text-gray-700 font-medium text-xs border border-gray-200">
-                          <XIcon className="h-3.5 w-3.5 text-gray-500" />
-                          Declined by Candidate
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-800 text-gray-400 font-medium text-xs border border-gray-700">
+                          <XIcon className="h-3.5 w-3.5 text-gray-400" />
+                          Declined
                         </span>
                       )}
                     </div>
@@ -674,43 +573,43 @@ export const PlacementDrives = () => {
         )}
       </div>
 
-      {/* Placement Preparation Tips & Roadmap */}
-      <div className="bg-gradient-to-tr from-slate-50 to-blue-50/50 rounded-2xl p-6 border border-blue-100/80 shadow-sm">
+      {/* 5. Campus Drive Preparation Checklist */}
+      <div className="bg-[#111827] rounded-3xl p-6 border border-gray-800 shadow-sm">
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-blue-600 text-white rounded-xl shadow-md shadow-blue-600/20 flex-shrink-0">
+          <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-2xl flex-shrink-0">
             <LightBulbIcon className="h-6 w-6" />
           </div>
           <div className="space-y-2 flex-1">
-            <h3 className="text-sm font-bold text-gray-900">
+            <h3 className="text-sm font-bold text-white">
               Campus Drive Preparation Checklist
             </h3>
-            <p className="text-xs text-gray-600 leading-relaxed">
+            <p className="text-xs text-gray-400 leading-relaxed">
               Ensure you are 100% prepared for online assessments and in-person interviews during placement season.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
               {/* Resume Card */}
               <div 
                 onClick={() => navigate('/resume')}
-                className="cursor-pointer bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-200/80 dark:border-gray-700 hover:border-primary-400 hover:shadow-xs transition-all flex flex-col justify-between group"
+                className="cursor-pointer bg-[#1E293B]/50 hover:bg-[#1E293B] p-3.5 rounded-2xl border border-gray-800 hover:border-indigo-500/40 transition-all flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5 group-hover:text-primary-600 transition-colors">
-                      <DocumentTextIcon className="h-4 w-4 text-primary-600" />
-                      Update Latest Resume
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5 group-hover:text-indigo-300 transition-colors">
+                      <DocumentTextIcon className="h-4 w-4 text-indigo-400" />
+                      Update Resume
                     </span>
                     <span className={cn(
-                      "text-[10px] font-bold px-1.5 py-0.5 rounded-full border",
-                      completedResume ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
+                      "text-[10px] font-bold px-1.5 py-0.5 rounded-md border",
+                      completedResume ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border-amber-500/30"
                     )}>
                       {completedResume ? "Ready" : "Pending"}
                     </span>
                   </div>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-[11px] text-gray-400 mt-1">
                     Keep ATS score high and highlight key tech projects.
                   </p>
                 </div>
-                <span className="text-[11px] font-semibold text-primary-600 group-hover:text-primary-700 mt-2 flex items-center gap-1">
+                <span className="text-[11px] font-semibold text-indigo-400 group-hover:text-indigo-300 mt-2 flex items-center gap-1">
                   Manage Resume &rarr;
                 </span>
               </div>
@@ -718,23 +617,23 @@ export const PlacementDrives = () => {
               {/* Skill Gap Card */}
               <div 
                 onClick={() => navigate('/skills')}
-                className="cursor-pointer bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-200/80 dark:border-gray-700 hover:border-emerald-400 hover:shadow-xs transition-all flex flex-col justify-between group"
+                className="cursor-pointer bg-[#1E293B]/50 hover:bg-[#1E293B] p-3.5 rounded-2xl border border-gray-800 hover:border-emerald-500/40 transition-all flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5 group-hover:text-emerald-600 transition-colors">
-                      <AcademicCapIcon className="h-4 w-4 text-emerald-600" />
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5 group-hover:text-emerald-300 transition-colors">
+                      <AcademicCapIcon className="h-4 w-4 text-emerald-400" />
                       Review Skill Gaps
                     </span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                      AI Benchmark
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/30">
+                      AI Matrix
                     </span>
                   </div>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-[11px] text-gray-400 mt-1">
                     Target high-frequency interview topics & libraries.
                   </p>
                 </div>
-                <span className="text-[11px] font-semibold text-emerald-600 group-hover:text-emerald-700 mt-2 flex items-center gap-1">
+                <span className="text-[11px] font-semibold text-emerald-400 group-hover:text-emerald-300 mt-2 flex items-center gap-1">
                   Analyze Gaps &rarr;
                 </span>
               </div>
@@ -742,23 +641,23 @@ export const PlacementDrives = () => {
               {/* Assessment Card */}
               <div 
                 onClick={() => navigate('/assessment')}
-                className="cursor-pointer bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-200/80 dark:border-gray-700 hover:border-amber-400 hover:shadow-xs transition-all flex flex-col justify-between group"
+                className="cursor-pointer bg-[#1E293B]/50 hover:bg-[#1E293B] p-3.5 rounded-2xl border border-gray-800 hover:border-amber-500/40 transition-all flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5 group-hover:text-amber-600 transition-colors">
-                      <SparklesIcon className="h-4 w-4 text-amber-500" />
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5 group-hover:text-amber-300 transition-colors">
+                      <SparklesIcon className="h-4 w-4 text-amber-400" />
                       Practice Assessments
                     </span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/30">
                       Adaptive Test
                     </span>
                   </div>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
-                    Take adaptive multiple-choice technical practice tests.
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Take adaptive technical practice tests.
                   </p>
                 </div>
-                <span className="text-[11px] font-semibold text-amber-600 group-hover:text-amber-700 mt-2 flex items-center gap-1">
+                <span className="text-[11px] font-semibold text-amber-400 group-hover:text-amber-300 mt-2 flex items-center gap-1">
                   Start Test &rarr;
                 </span>
               </div>
@@ -769,59 +668,60 @@ export const PlacementDrives = () => {
 
       {/* Decline Invitation Modal */}
       {showDeclineModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 space-y-4 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                <ExclamationCircleIcon className="h-5 w-5 text-rose-500" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-[#111827] rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-800 space-y-4"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-gray-800">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <ExclamationCircleIcon className="h-5 w-5 text-rose-400" />
                 Decline Placement Drive
               </h3>
               <button
                 onClick={() => setShowDeclineModal(false)}
-                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100"
+                className="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-gray-800"
               >
                 <XIcon className="h-5 w-5" />
               </button>
             </div>
 
-            <p className="text-xs text-gray-600 leading-relaxed">
+            <p className="text-xs text-gray-300 leading-relaxed">
               Are you sure you want to decline the invitation for{' '}
-              <strong className="text-gray-900">{declineTargetNomination?.company_name}</strong> (
+              <strong className="text-white">{declineTargetNomination?.company_name}</strong> (
               {declineTargetNomination?.job_role || 'Software Engineer'})?
             </p>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
                 Reason / Note for Faculty Coordinator (Optional):
               </label>
               <textarea
                 value={declineReason}
                 onChange={(e) => setDeclineReason(e.target.value)}
-                placeholder="e.g., Prior commitment, accepted other offer, or target domain mismatch..."
+                placeholder="e.g., Accepted other offer, prior commitment, or domain mismatch..."
                 rows={3}
-                className="w-full text-xs p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                className="w-full text-xs p-3 bg-[#1E293B] border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-rose-500/50 focus:border-rose-500"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
-              <Button
-                variant="outline"
-                size="sm"
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-800">
+              <button
                 onClick={() => setShowDeclineModal(false)}
-                className="text-xs"
+                className="px-4 py-2 text-xs font-semibold text-gray-400 hover:text-white"
               >
                 Cancel
-              </Button>
-              <Button
-                size="sm"
+              </button>
+              <button
                 onClick={handleConfirmDecline}
-                isLoading={isRespondingNomination === declineTargetNomination?.id}
-                className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm"
+                disabled={isRespondingNomination === declineTargetNomination?.id}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-md shadow-rose-600/20 transition-all active:scale-95"
               >
                 Confirm Decline
-              </Button>
+              </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

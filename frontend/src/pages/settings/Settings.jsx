@@ -20,7 +20,6 @@ export default function Settings() {
   const { user, updateProfile } = useAuth()
   const navigate = useNavigate()
 
-  // Optimization 3: Instant lazy initializers from user or cached session
   const [notifications, setNotifications] = useState(() => {
     if (user?.notifications_enabled !== undefined) return Boolean(user.notifications_enabled)
     try {
@@ -41,7 +40,6 @@ export default function Settings() {
   })
   const [isSavingPreferences, setIsSavingPreferences] = useState(false)
 
-  // Sync state if user profile loads/updates asynchronously
   useEffect(() => {
     if (user) {
       if (user.notifications_enabled !== undefined) setNotifications(Boolean(user.notifications_enabled))
@@ -49,7 +47,6 @@ export default function Settings() {
     }
   }, [user])
 
-  // Optimization 3: Instant optimistic toggles with non-blocking background sync
   const handleToggleNotification = async (enabled) => {
     setNotifications(enabled)
     try {
@@ -70,7 +67,6 @@ export default function Settings() {
     }
   }
 
-  // Password change state
   const [passwordForm, setPasswordForm] = useState({
     oldPassword: '',
     newPassword: '',
@@ -161,46 +157,46 @@ export default function Settings() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-          <FiSettings className="text-primary-600" /> Platform Settings
+        <h1 className="text-3xl font-bold text-white flex items-center gap-3 tracking-tight">
+          <FiSettings className="text-indigo-400" /> Platform Settings
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <p className="text-gray-400 text-sm mt-1">
           Customize your profile preferences and account security
         </p>
       </div>
 
-      {/* Profile Overview & Quick Edit Card */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md border border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+      {/* Profile Overview Card */}
+      <div className="bg-[#111827] rounded-2xl p-6 shadow-xl border border-gray-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
         <div className="flex items-center space-x-4">
           <div
             className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white font-extrabold text-xl shadow-md ${
               user?.role === 'faculty'
                 ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 shadow-purple-500/25'
                 : user?.role === 'admin'
-                ? 'bg-gradient-to-tr from-red-600 to-orange-600'
-                : 'bg-gradient-to-tr from-primary-600 to-secondary-600 shadow-primary-500/25'
+                ? 'bg-gradient-to-tr from-rose-600 to-orange-600'
+                : 'bg-gradient-to-tr from-indigo-600 to-violet-600 shadow-indigo-500/25'
             }`}
           >
             {user?.full_name?.[0] || user?.username?.[0] || 'U'}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              <h2 className="text-lg font-bold text-white">
                 {user?.full_name || user?.username || 'User Profile'}
               </h2>
               <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${
                   user?.role === 'faculty'
-                    ? 'bg-purple-100 text-purple-800 border-purple-200'
+                    ? 'bg-purple-500/10 text-purple-300 border-purple-500/30'
                     : user?.role === 'admin'
-                    ? 'bg-red-100 text-red-800 border-red-200'
-                    : 'bg-primary-50 text-primary-700 border-primary-200'
+                    ? 'bg-rose-500/10 text-rose-300 border-rose-500/30'
+                    : 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30'
                 }`}
               >
                 {user?.role || 'student'}
               </span>
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-gray-400 mt-0.5">
               {user?.email} • {user?.department || 'Department not set'}{' '}
               {user?.college ? `• ${user.college}` : ''}
             </p>
@@ -209,11 +205,7 @@ export default function Settings() {
 
         <button
           onClick={() => navigate('/profile')}
-          className={`px-4 py-2.5 font-semibold text-xs rounded-xl transition-all border flex items-center gap-1.5 self-start sm:self-center flex-shrink-0 ${
-            user?.role === 'faculty'
-              ? 'bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200'
-              : 'bg-primary-50 text-primary-700 hover:bg-primary-100 border-primary-200'
-          }`}
+          className="px-4 py-2.5 font-semibold text-xs rounded-xl transition-all border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 flex items-center gap-1.5 self-start sm:self-center flex-shrink-0 cursor-pointer"
         >
           <FiUser className="w-4 h-4" />
           Edit Profile Information &rarr;
@@ -221,15 +213,15 @@ export default function Settings() {
       </div>
 
       {/* Notification Preferences */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md border border-gray-100 dark:border-gray-700 space-y-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <FiBell className="text-primary-600" /> Notification Preferences
+      <div className="bg-[#111827] rounded-2xl p-6 shadow-xl border border-gray-800/80 space-y-6">
+        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <FiBell className="text-indigo-400" /> Notification Preferences
         </h2>
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+          <div className="flex items-center justify-between p-4 bg-[#1E293B] border border-gray-700/80 rounded-xl">
             <div>
-              <p className="font-semibold text-gray-900 dark:text-white">In-App Notifications</p>
-              <p className="text-sm text-gray-500">
+              <p className="font-semibold text-white text-sm">In-App Notifications</p>
+              <p className="text-xs text-gray-400">
                 Receive alerts when resume processing or evaluations complete
               </p>
             </div>
@@ -237,16 +229,16 @@ export default function Settings() {
               type="checkbox"
               checked={notifications}
               onChange={(e) => handleToggleNotification(e.target.checked)}
-              className="w-5 h-5 accent-primary-600 rounded cursor-pointer"
+              className="w-5 h-5 accent-indigo-600 rounded cursor-pointer"
             />
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+          <div className="flex items-center justify-between p-4 bg-[#1E293B] border border-gray-700/80 rounded-xl">
             <div>
-              <p className="font-semibold text-gray-900 dark:text-white">
+              <p className="font-semibold text-white text-sm">
                 Email Digest & Activity Alerts
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-xs text-gray-400">
                 Receive email notifications for critical updates
               </p>
             </div>
@@ -254,7 +246,7 @@ export default function Settings() {
               type="checkbox"
               checked={emailAlerts}
               onChange={(e) => handleToggleEmailAlerts(e.target.checked)}
-              className="w-5 h-5 accent-primary-600 rounded cursor-pointer"
+              className="w-5 h-5 accent-indigo-600 rounded cursor-pointer"
             />
           </div>
         </div>
@@ -264,16 +256,16 @@ export default function Settings() {
             type="button"
             onClick={handleSendTestDigest}
             disabled={isSendingDigest || !emailAlerts}
-            className="px-4 py-2 text-sm font-semibold rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-2 text-xs font-semibold rounded-xl border border-gray-700 text-gray-300 hover:bg-[#1E293B] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            <FiMail className="w-4 h-4 text-primary-500" />
+            <FiMail className="w-4 h-4 text-indigo-400" />
             {isSendingDigest ? 'Sending Digest...' : 'Send Test Digest'}
           </button>
           <button
             type="button"
             onClick={handleSavePreferences}
             disabled={isSavingPreferences}
-            className="btn-primary px-5 py-2 text-sm shadow-md disabled:opacity-50"
+            className="px-5 py-2 text-xs font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl shadow-md disabled:opacity-50"
           >
             {isSavingPreferences ? 'Saving...' : 'Save Preferences'}
           </button>
@@ -281,12 +273,12 @@ export default function Settings() {
       </div>
 
       {/* Security & Password */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md border border-gray-100 dark:border-gray-700 space-y-6">
+      <div className="bg-[#111827] rounded-2xl p-6 shadow-xl border border-gray-800/80 space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <FiShield className="text-primary-600" /> Security & Password Management
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <FiShield className="text-indigo-400" /> Security & Password Management
           </h2>
-          <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full font-medium">
+          <span className="text-xs text-gray-400 bg-[#1E293B] border border-gray-700 px-3 py-1 rounded-full font-medium">
             Account: {user?.email || 'Logged In'}
           </span>
         </div>
@@ -294,15 +286,15 @@ export default function Settings() {
         {/* Change Password Form */}
         <form
           onSubmit={handleChangePassword}
-          className="space-y-4 pt-2 border-t border-gray-100 dark:border-gray-700"
+          className="space-y-4 pt-2 border-t border-gray-800"
         >
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <FiKey className="text-gray-500" /> Change Password
+          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+            <FiKey className="text-gray-400" /> Change Password
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
                 Current Password
               </label>
               <div className="relative">
@@ -313,12 +305,12 @@ export default function Settings() {
                   onChange={(e) =>
                     setPasswordForm({ ...passwordForm, oldPassword: e.target.value })
                   }
-                  className="w-full pl-3.5 pr-10 py-2.5 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
+                  className="w-full pl-3.5 pr-10 py-2.5 text-sm border border-gray-700/80 bg-[#1E293B] text-white rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                 />
                 <button
                   type="button"
                   onClick={() => setShowOldPassword(!showOldPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 focus:outline-none"
                   tabIndex={-1}
                   aria-label={showOldPassword ? 'Hide password' : 'Show password'}
                 >
@@ -328,7 +320,7 @@ export default function Settings() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
                 New Password
               </label>
               <div className="relative">
@@ -339,12 +331,12 @@ export default function Settings() {
                   onChange={(e) =>
                     setPasswordForm({ ...passwordForm, newPassword: e.target.value })
                   }
-                  className="w-full pl-3.5 pr-10 py-2.5 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
+                  className="w-full pl-3.5 pr-10 py-2.5 text-sm border border-gray-700/80 bg-[#1E293B] text-white rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 focus:outline-none"
                   tabIndex={-1}
                   aria-label={showNewPassword ? 'Hide password' : 'Show password'}
                 >
@@ -354,7 +346,7 @@ export default function Settings() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
                 Confirm New Password
               </label>
               <div className="relative">
@@ -365,12 +357,12 @@ export default function Settings() {
                   onChange={(e) =>
                     setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
                   }
-                  className="w-full pl-3.5 pr-10 py-2.5 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
+                  className="w-full pl-3.5 pr-10 py-2.5 text-sm border border-gray-700/80 bg-[#1E293B] text-white rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 focus:outline-none"
                   tabIndex={-1}
                   aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                 >
@@ -381,7 +373,7 @@ export default function Settings() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-gray-400">
               Forgot your current password? You can request a reset link sent to your email.
             </div>
             <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -389,7 +381,7 @@ export default function Settings() {
                 type="button"
                 onClick={handleSendResetEmail}
                 disabled={isSendingResetEmail}
-                className="px-4 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 rounded-xl transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 text-xs font-semibold text-gray-300 bg-[#1E293B] border border-gray-700 hover:bg-gray-700 rounded-xl transition-colors flex items-center gap-1.5"
               >
                 <FiMail className="w-3.5 h-3.5" />
                 {isSendingResetEmail ? 'Sending Link...' : 'Email Reset Link'}
@@ -397,7 +389,7 @@ export default function Settings() {
               <button
                 type="submit"
                 disabled={isChangingPassword}
-                className="btn-primary px-5 py-2 text-xs font-semibold shadow-md flex items-center gap-1.5"
+                className="px-5 py-2 text-xs font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl shadow-md flex items-center gap-1.5"
               >
                 <FiLock className="w-3.5 h-3.5" />
                 {isChangingPassword ? 'Updating...' : 'Update Password'}
@@ -407,14 +399,14 @@ export default function Settings() {
         </form>
 
         {/* 2FA Section */}
-        <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl flex items-center justify-between mt-4">
+        <div className="p-4 bg-[#1E293B] border border-gray-700/80 rounded-xl flex items-center justify-between mt-4">
           <div>
-            <p className="font-semibold text-gray-900 dark:text-white">
+            <p className="font-semibold text-white text-sm">
               Two-Factor Authentication (2FA)
             </p>
-            <p className="text-sm text-gray-500">Enhance your account login security</p>
+            <p className="text-xs text-gray-400">Enhance your account login security</p>
           </div>
-          <span className="px-3 py-1 bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300 text-xs font-semibold rounded-full">
+          <span className="px-3 py-1 bg-[#0F172A] text-gray-400 border border-gray-700 text-xs font-semibold rounded-full">
             Coming Soon
           </span>
         </div>

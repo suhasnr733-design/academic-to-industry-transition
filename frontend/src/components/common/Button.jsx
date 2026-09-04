@@ -4,20 +4,20 @@ import React from 'react'
 import { cn } from '../../utils/helpers'
 
 const variants = {
-  primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-2 focus:ring-primary-500',
-  secondary: 'bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-2 focus:ring-gray-400',
-  success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500',
-  danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500',
-  warning: 'bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-2 focus:ring-yellow-400',
-  outline: 'border-2 border-primary-600 text-primary-600 hover:bg-primary-50 focus:ring-2 focus:ring-primary-500',
-  ghost: 'text-gray-600 hover:bg-gray-100 focus:ring-2 focus:ring-gray-400',
+  primary: 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 shadow-md shadow-indigo-500/20 focus:ring-2 focus:ring-indigo-500/50',
+  secondary: 'bg-[#1E293B] text-gray-200 border border-gray-700/60 hover:bg-[#334155] hover:text-white focus:ring-2 focus:ring-gray-600',
+  success: 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500 shadow-md shadow-emerald-500/20 focus:ring-2 focus:ring-emerald-500',
+  danger: 'bg-gradient-to-r from-rose-600 to-red-600 text-white hover:from-rose-500 hover:to-red-500 shadow-md shadow-rose-500/20 focus:ring-2 focus:ring-rose-500',
+  warning: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-400 hover:to-orange-400 shadow-md shadow-amber-500/20 focus:ring-2 focus:ring-amber-400',
+  outline: 'border border-indigo-500/40 text-indigo-400 hover:bg-indigo-950/40 hover:border-indigo-400 focus:ring-2 focus:ring-indigo-500',
+  ghost: 'text-gray-300 hover:bg-white/5 hover:text-white focus:ring-2 focus:ring-gray-600',
 }
 
 const sizes = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-base',
-  lg: 'px-6 py-3 text-lg',
-  xl: 'px-8 py-4 text-xl',
+  sm: 'px-3 py-1.5 text-xs font-medium',
+  md: 'px-4 py-2 text-sm font-medium',
+  lg: 'px-5 py-2.5 text-base font-semibold',
+  xl: 'px-7 py-3.5 text-lg font-semibold',
 }
 
 export const Button = ({
@@ -34,9 +34,9 @@ export const Button = ({
   return (
     <button
       className={cn(
-        'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200',
-        'focus:outline-none focus:ring-2 focus:ring-offset-2',
-        'disabled:opacity-50 disabled:cursor-not-allowed',
+        'inline-flex items-center justify-center rounded-xl transition-all duration-200 active:scale-[0.98]',
+        'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0F172A]',
+        'disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100',
         variants[variant],
         sizes[size],
         className

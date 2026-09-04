@@ -53,13 +53,13 @@ export const MultiStepForm = ({ steps, onSubmit }) => {
     <div>
       {/* Progress Bar */}
       <div className="mb-8">
-        <div className="flex justify-between text-sm text-gray-500 mb-2">
+        <div className="flex justify-between text-sm font-semibold text-gray-400 mb-2">
           <span>Step {currentStep} of {totalSteps}</span>
-          <span>{Math.round(progress)}%</span>
+          <span className="text-indigo-400 font-bold">{Math.round(progress)}%</span>
         </div>
-        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div className="w-full h-2.5 bg-gray-800 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-primary-500 rounded-full transition-all duration-500"
+            className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-500 shadow-md shadow-indigo-500/30"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -86,7 +86,7 @@ export const FormField = ({ label, error, children }) => {
   return (
     <div className="mb-4">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-semibold text-gray-300 mb-1.5 tracking-wide">
           {label}
         </label>
       )}
@@ -95,7 +95,7 @@ export const FormField = ({ label, error, children }) => {
         <motion.p
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-1 text-sm text-red-600"
+          className="mt-1 text-xs text-rose-400 font-medium"
         >
           {error}
         </motion.p>
@@ -108,16 +108,16 @@ export const FormSection = ({ title, children }) => {
   const [isOpen, setIsOpen] = useState(true)
 
   return (
-    <div className="border border-gray-200 rounded-lg mb-4 overflow-hidden">
+    <div className="border border-gray-800 rounded-2xl mb-4 overflow-hidden bg-[#111827]">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-3.5 bg-[#1E293B] hover:bg-[#283548] transition-colors"
       >
-        <span className="font-medium text-gray-900">{title}</span>
+        <span className="font-bold text-white text-sm">{title}</span>
         {isOpen ? (
-          <ChevronDownIcon className="h-5 w-5 text-gray-500" />
+          <ChevronDownIcon className="h-5 w-5 text-gray-400" />
         ) : (
-          <ChevronRightIcon className="h-5 w-5 text-gray-500" />
+          <ChevronRightIcon className="h-5 w-5 text-gray-400" />
         )}
       </button>
       <AnimatePresence>
@@ -129,7 +129,7 @@ export const FormSection = ({ title, children }) => {
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
-            <div className="p-4">
+            <div className="p-5 bg-[#111827]">
               {children}
             </div>
           </motion.div>

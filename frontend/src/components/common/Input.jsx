@@ -19,9 +19,9 @@ export const Input = forwardRef(({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 tracking-wide">
+        <label className="block text-xs font-semibold text-gray-300 mb-1.5 tracking-wide">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-rose-400 ml-1">*</span>}
         </label>
       )}
       <div className="relative">
@@ -29,11 +29,11 @@ export const Input = forwardRef(({
           ref={ref}
           type={effectiveType}
           className={cn(
-            'w-full px-3.5 py-2.5 bg-white dark:bg-gray-800 border rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400',
-            'focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 outline-none shadow-sm',
-            'disabled:bg-gray-100 disabled:cursor-not-allowed',
+            'w-full px-3.5 py-2.5 bg-[#1E293B] border rounded-xl text-sm text-white placeholder-gray-400',
+            'focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 outline-none shadow-sm',
+            'disabled:bg-[#0F172A] disabled:text-gray-500 disabled:cursor-not-allowed',
             isPassword && 'pr-11',
-            error ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300',
+            error ? 'border-rose-500 focus:ring-rose-500/20 focus:border-rose-500' : 'border-gray-700/80 hover:border-gray-600',
             className
           )}
           {...props}
@@ -43,20 +43,20 @@ export const Input = forwardRef(({
             type="button"
             tabIndex={-1}
             onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors duration-150"
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-200 focus:outline-none transition-colors duration-150"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
             title={showPassword ? 'Hide password' : 'Show password'}
           >
             {showPassword ? (
-              <FiEyeOff className="w-5 h-5" />
+              <FiEyeOff className="w-4 h-4" />
             ) : (
-              <FiEye className="w-5 h-5" />
+              <FiEye className="w-4 h-4" />
             )}
           </button>
         )}
       </div>
       {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
+        <p className="mt-1 text-xs text-rose-400 font-medium">{error}</p>
       )}
     </div>
   )

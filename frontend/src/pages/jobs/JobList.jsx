@@ -689,74 +689,74 @@ export const JobList = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setCampusTab('all')}
-            className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 border ${
               campusTab === 'all'
-                ? 'bg-primary-600 text-white shadow-xs'
-                : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 shadow-xs'
+                ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm'
+                : 'bg-[#1E293B]/60 border-gray-800 text-gray-400 hover:text-white hover:border-gray-700'
             }`}
           >
-            <BriefcaseIcon className="h-3 w-3" />
-            All Campus Drives ({jobs.length})
+            <BriefcaseIcon className="h-3.5 w-3.5" />
+            <span>All Campus Drives ({jobs.length})</span>
           </button>
           <button
             onClick={() => setCampusTab('interested')}
-            className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 border ${
               campusTab === 'interested'
-                ? 'bg-amber-500 text-white shadow-xs'
-                : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 shadow-xs'
+                ? 'bg-amber-500 border-amber-400 text-gray-950 font-bold shadow-sm'
+                : 'bg-[#1E293B]/60 border-gray-800 text-gray-400 hover:text-white hover:border-gray-700'
             }`}
           >
-            <StarSolidIcon className="h-3 w-3 text-amber-300" />
-            Target Roles ({interestedJobs.length})
+            <StarSolidIcon className="h-3.5 w-3.5 text-amber-400" />
+            <span>Target Roles ({interestedJobs.length})</span>
           </button>
         </div>
       )}
 
       {/* Universal Interactive Tag Search Engine */}
       {(isLiveMode || campusTab === 'all') && (
-        <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-3 space-y-2">
+        <div className="bg-[#111827] rounded-2xl shadow-sm border border-gray-800 p-3.5 space-y-2.5">
           
           {/* Active Search Tags Box + Live Portal Indicators */}
-          <div className="flex items-center justify-between gap-2 p-2 bg-slate-50 rounded-lg border border-slate-200 min-h-[40px]">
+          <div className="flex items-center justify-between gap-2 p-2 bg-[#1E293B]/40 rounded-xl border border-gray-800 min-h-[40px]">
             <div className="flex flex-wrap items-center gap-1.5 flex-1">
               {selectedTags.length > 0 ? (
                 selectedTags.map((tag) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-primary-600 text-white shadow-xs animate-fadeIn"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-xs"
                   >
                     <TagIcon className="h-3 w-3" />
                     {tag}
                     <button
                       type="button"
                       onClick={() => handleRemoveTag(tag)}
-                      className="hover:bg-primary-700 p-0.5 rounded transition-colors focus:outline-none ml-0.5"
+                      className="hover:bg-indigo-700 p-0.5 rounded transition-colors focus:outline-none ml-0.5"
                     >
                       <XIcon className="h-3.5 w-3.5" />
                     </button>
                   </span>
                 ))
               ) : (
-                <span className="text-xs text-slate-400 italic">
-                  Filter by clicking quick tags below or type your custom skill / role / location...
+                <span className="text-xs text-gray-400 italic">
+                  Filter by clicking quick tags below or type custom skill / role / location...
                 </span>
               )}
             </div>
 
             <div className="flex items-center gap-2">
               {isLiveMode && (
-                <div className="hidden sm:flex items-center gap-1 text-[10px] text-slate-500">
-                  <span className="font-semibold text-slate-400">Portals:</span>
-                  <span className="px-1.5 py-0.5 bg-yellow-50 text-yellow-800 rounded border border-yellow-200 font-medium">Unstop</span>
-                  <span className="px-1.5 py-0.5 bg-teal-50 text-teal-800 rounded border border-teal-200 font-medium">Internshala</span>
-                  <span className="px-1.5 py-0.5 bg-blue-50 text-blue-800 rounded border border-blue-200 font-medium">LinkedIn</span>
+                <div className="hidden sm:flex items-center gap-1 text-[10px] text-gray-400">
+                  <span className="font-semibold text-gray-400">Portals:</span>
+                  <span className="px-1.5 py-0.5 bg-yellow-500/10 text-yellow-300 rounded border border-yellow-500/20 font-medium">Unstop</span>
+                  <span className="px-1.5 py-0.5 bg-teal-500/10 text-teal-300 rounded border border-teal-500/20 font-medium">Internshala</span>
+                  <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-300 rounded border border-blue-500/20 font-medium">LinkedIn</span>
                 </div>
               )}
               {selectedTags.length > 0 && (
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="text-xs text-slate-500 hover:text-slate-800 font-semibold px-2 py-0.5 rounded hover:bg-slate-200 transition-colors flex-shrink-0"
+                  className="text-xs text-gray-400 hover:text-white font-semibold px-2 py-0.5 rounded hover:bg-gray-800 transition-colors flex-shrink-0"
                 >
                   Clear All
                 </button>
@@ -764,9 +764,9 @@ export const JobList = () => {
             </div>
           </div>
 
-          {/* Quick-Add Preset Chips (Tailored to Campus or Live Mode) */}
+          {/* Quick-Add Preset Chips */}
           <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-            <span className="text-[11px] font-semibold text-slate-400 mr-1">Quick Add:</span>
+            <span className="text-[11px] font-semibold text-gray-400 mr-1">Quick Add:</span>
             {activePresetTags.map((tag) => {
               const isSelected = selectedTags.some(t => t.toLowerCase() === tag.toLowerCase())
               return (
@@ -774,20 +774,19 @@ export const JobList = () => {
                   key={tag}
                   type="button"
                   onClick={() => handleToggleTag(tag)}
-                  className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-all flex items-center gap-1 cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-xl text-[11px] font-medium transition-all flex items-center gap-1 cursor-pointer border ${
                     isSelected
-                      ? 'bg-primary-100 text-primary-800 border border-primary-300 font-bold shadow-xs'
-                      : 'bg-white text-slate-600 border border-slate-200 hover:border-primary-400 hover:text-primary-700 shadow-xs'
+                      ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40 font-bold shadow-xs'
+                      : 'bg-[#1E293B]/40 text-gray-400 border-gray-800 hover:border-gray-700 hover:text-white'
                   }`}
                 >
-                  {isSelected && <CheckIcon className="h-3 w-3 text-primary-600" />}
+                  {isSelected && <CheckIcon className="h-3 w-3 text-indigo-400" />}
                   {tag}
                 </button>
               )
             })}
           </div>
 
-          {/* Batch & Fresher Eligibility Filter Bar */}
           {/* Universal Custom Input Bar */}
           <form onSubmit={handleAddCustomTag} className="flex gap-1.5 pt-0.5">
             <input
@@ -795,11 +794,11 @@ export const JobList = () => {
               value={customInput}
               onChange={(e) => setCustomInput(e.target.value)}
               placeholder="Type any skill, role, location, or domain (e.g. Kubernetes, Golang, Remote, AWS) and press Enter"
-              className="flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none bg-white text-slate-900"
+              className="flex-1 px-3 py-2 text-xs border border-gray-700 rounded-xl focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-[#1E293B]/60 text-white placeholder-gray-400"
             />
             <button
               type="submit"
-              className="px-3 py-1.5 bg-primary-600 hover:bg-primary-700 active:scale-95 text-white text-xs font-semibold rounded-lg transition-all flex items-center gap-1 shadow-xs cursor-pointer"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1 shadow-md shadow-indigo-600/20 cursor-pointer"
             >
               Add Filter
             </button>
@@ -809,12 +808,12 @@ export const JobList = () => {
 
       {/* Jobs Grid */}
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
-          <p className="mt-3 text-xs text-slate-500 font-medium">Aggregating matching opportunities...</p>
+        <div className="flex flex-col items-center justify-center py-16 bg-[#111827] rounded-3xl border border-gray-800">
+          <div className="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3" />
+          <p className="text-xs text-gray-400 font-medium">Aggregating matching opportunities...</p>
         </div>
       ) : displayItems.length > 0 ? (
-        <div className="space-y-3">
+        <div className="space-y-3.5">
           {displayItems.map((job) => {
             const isSaved = isJobInterested(job)
             const matchScore = calculateMatchScore(job)
@@ -822,22 +821,22 @@ export const JobList = () => {
             return (
               <div
                 key={job.interest_id || job.id || job.external_id || `${job.company}-${job.title}`}
-                className="group relative bg-white rounded-xl p-3.5 sm:p-4 border border-slate-200 shadow-xs hover:shadow-md hover:border-primary-300 transition-all duration-150 overflow-hidden"
+                className="group relative bg-[#111827] rounded-2xl p-4 sm:p-5 border border-gray-800 hover:border-indigo-500/40 shadow-sm transition-all duration-150 overflow-hidden"
               >
                 {/* Accent Bar */}
                 <div className={`absolute left-0 top-0 bottom-0 w-1 transition-colors ${
-                  matchScore >= 80 ? 'bg-emerald-500' : matchScore >= 65 ? 'bg-primary-500' : 'bg-slate-300'
+                  matchScore >= 80 ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : matchScore >= 65 ? 'bg-indigo-500' : 'bg-gray-700'
                 }`} />
 
-                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 pl-1">
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 pl-2">
                   {/* Job Info */}
                   <div className="flex-1 space-y-1.5">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-primary-600 transition-colors">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-indigo-300 transition-colors">
                         <Link 
                           to={`/jobs/${job.id || job.external_id}`} 
                           state={{ matchScore }}
-                          className="hover:underline hover:text-primary-600 transition-colors"
+                          className="hover:underline hover:text-indigo-300 transition-colors"
                         >
                           {job.title}
                         </Link>
@@ -846,45 +845,45 @@ export const JobList = () => {
                       {job.is_interested_item && getStatusBadge(job.status)}
                     </div>
 
-                    <p className="text-slate-700 font-semibold text-xs flex items-center gap-2">
+                    <p className="text-gray-300 font-semibold text-xs flex items-center gap-2">
                       <span>{job.company}</span>
                       {job.job_type && (
                         <>
-                          <span className="text-slate-300">•</span>
-                          <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-normal">
+                          <span className="text-gray-600">•</span>
+                          <span className="px-2 py-0.5 bg-gray-800 text-gray-300 rounded-md text-[10px] font-normal border border-gray-700/60">
                             {job.job_type}
                           </span>
                         </>
                       )}
                     </p>
 
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-500 font-medium">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-gray-400 font-medium">
                       <span className="flex items-center">
-                        <MapPinIcon className="h-3.5 w-3.5 mr-1 text-slate-400" />
+                        <MapPinIcon className="h-3.5 w-3.5 mr-1 text-gray-400" />
                         {job.location || 'Remote / Campus'}
                       </span>
-                      <span className="flex items-center text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 text-xs">
-                        <CurrencyRupeeIcon className="h-3 w-3 mr-1 text-emerald-600" />
+                      <span className="flex items-center text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20 text-xs">
+                        <CurrencyRupeeIcon className="h-3 w-3 mr-1 text-emerald-400" />
                         {formatSalaryDisplay(job.salary_range, job.description, job.title, job.location)}
                       </span>
                       {renderDateBadges(job)}
                       {job.campus_interest_count > 0 && (
-                        <span className="flex items-center text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
-                          <UserGroupIcon className="h-2.5 w-2.5 mr-1 text-indigo-500" />
+                        <span className="flex items-center text-[10px] font-semibold text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                          <UserGroupIcon className="h-2.5 w-2.5 mr-1 text-indigo-400" />
                           {job.campus_interest_count} student{job.campus_interest_count > 1 ? 's' : ''} interested
                         </span>
                       )}
                     </div>
 
                     {job.description && (
-                      <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">
                         {job.description}
                       </p>
                     )}
 
                     {/* Skill Tags */}
                     {job.required_skills && job.required_skills.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
                         {job.required_skills.slice(0, 6).map((skill, idx) => {
                           const skillStr = String(skill || '').toLowerCase().trim()
                           const isSkillMatched = skillStr && userSkills.some(u => {
@@ -894,19 +893,19 @@ export const JobList = () => {
                           return (
                             <span 
                               key={idx} 
-                              className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
+                              className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold transition-colors border ${
                                 isSkillMatched 
-                                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold' 
-                                  : 'bg-slate-50 text-slate-700 border border-slate-200'
+                                  ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 font-bold' 
+                                  : 'bg-[#1E293B] text-gray-300 border-gray-700/60'
                               }`}
                             >
-                              {isSkillMatched && <CheckCircleIcon className="h-2.5 w-2.5 mr-1 text-emerald-600" />}
+                              {isSkillMatched && <CheckCircleIcon className="h-2.5 w-2.5 mr-1 text-emerald-400" />}
                               {String(skill)}
                             </span>
                           )
                         })}
                         {job.required_skills.length > 6 && (
-                          <span className="text-[10px] text-slate-400 font-medium px-1">
+                          <span className="text-[10px] text-gray-400 font-medium px-1">
                             +{job.required_skills.length - 6} more
                           </span>
                         )}
@@ -915,12 +914,12 @@ export const JobList = () => {
 
                     {/* Application Progress Status Changer */}
                     {job.is_interested_item && (
-                      <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-2 text-xs">
-                        <span className="font-semibold text-slate-700 text-[11px]">Stage:</span>
+                      <div className="pt-2 border-t border-gray-800 flex flex-wrap items-center gap-2 text-xs">
+                        <span className="font-semibold text-gray-400 text-[11px]">Stage:</span>
                         <select
                           value={job.status || 'interested'}
                           onChange={(e) => updateInterestStatus(job.interest_id, e.target.value)}
-                          className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded px-2 py-0.5 focus:ring-2 focus:ring-primary-500 outline-none cursor-pointer"
+                          className="text-xs font-semibold bg-[#1E293B] text-white border border-gray-700 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer"
                         >
                           <option value="interested">⭐ Target Role</option>
                           <option value="applied">📝 Applied</option>
@@ -934,55 +933,55 @@ export const JobList = () => {
                   </div>
 
                   {/* Actions & Match Score */}
-                  <div className="flex lg:flex-col items-center lg:items-end justify-between lg:justify-start gap-2 min-w-[140px] pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100">
-                    <div className="flex items-center gap-1.5">
+                  <div className="flex lg:flex-col items-center lg:items-end justify-between lg:justify-start gap-2.5 min-w-[140px] pt-2 lg:pt-0 border-t lg:border-t-0 border-gray-800">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={() => toggleJobInterest(job)}
                         title={isSaved ? "Remove from Campus Board" : "Save to Campus Board"}
-                        className={`p-1.5 rounded-lg transition-all border ${
+                        className={`p-2 rounded-xl transition-all border ${
                           isSaved 
-                            ? 'bg-amber-50 text-amber-500 border-amber-300 shadow-xs' 
-                            : 'bg-slate-50 text-slate-400 border-slate-200 hover:text-amber-500 hover:bg-amber-50'
+                            ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 shadow-xs' 
+                            : 'bg-[#1E293B] text-gray-400 border-gray-700 hover:text-amber-400 hover:border-amber-500/30'
                         }`}
                       >
-                        {isSaved ? <StarSolidIcon className="h-3.5 w-3.5 text-amber-500" /> : <StarIcon className="h-3.5 w-3.5" />}
+                        {isSaved ? <StarSolidIcon className="h-4 w-4 text-amber-400" /> : <StarIcon className="h-4 w-4" />}
                       </button>
 
                       {hasActiveResume ? (
-                        <div className={`px-2.5 py-0.5 rounded-md border text-right ${
+                        <div className={`px-2.5 py-1 rounded-xl border text-right ${
                           matchScore >= 80 
-                            ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-                            : 'bg-indigo-50 border-indigo-200 text-indigo-800'
+                            ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300' 
+                            : 'bg-indigo-500/15 border-indigo-500/30 text-indigo-300'
                         }`}>
                           <div className="text-xs font-black leading-tight flex items-center justify-end gap-0.5">
-                            <SparklesIcon className="h-3.5 w-3.5 text-amber-500" />
+                            <SparklesIcon className="h-3.5 w-3.5 text-amber-400" />
                             {matchScore}%
                           </div>
-                          <div className="text-[8px] font-semibold opacity-75">AI Match</div>
+                          <div className="text-[8px] font-semibold uppercase tracking-wider opacity-75">AI Match</div>
                         </div>
                       ) : (
                         <Link 
                           to="/resume" 
-                          className="text-[10px] font-semibold text-primary-600 hover:text-primary-700 bg-primary-50 px-2 py-0.5 rounded border border-primary-200 hover:underline"
+                          className="text-[10px] font-semibold text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded-lg border border-indigo-500/20"
                         >
                           Match
                         </Link>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-1.5 w-full lg:w-auto">
+                    <div className="flex items-center gap-2 w-full lg:w-auto">
                       <Link 
                         to={`/jobs/${job.id || job.external_id}`} 
                         state={{ matchScore }}
                         className="flex-1 lg:flex-none"
                       >
-                        <Button variant="outline" size="sm" className="w-full text-xs font-semibold rounded-lg py-1 px-2.5 hover:bg-slate-50">
+                        <button className="w-full text-xs font-semibold rounded-xl py-1.5 px-3 bg-[#1E293B] hover:bg-gray-800 text-gray-200 border border-gray-700 transition-all">
                           Details
-                        </Button>
+                        </button>
                       </Link>
                       {job.apply_url && (
                         job.is_closed || job.status === 'closed' ? (
-                          <span className="flex-1 lg:flex-none inline-flex items-center justify-center px-3 py-1 bg-slate-100 text-slate-400 text-xs font-semibold rounded-lg border border-slate-200 cursor-not-allowed">
+                          <span className="flex-1 lg:flex-none inline-flex items-center justify-center px-3 py-1.5 bg-gray-800 text-gray-400 text-xs font-semibold rounded-xl border border-gray-700 cursor-not-allowed">
                             Closed
                           </span>
                         ) : (
@@ -990,7 +989,7 @@ export const JobList = () => {
                             href={job.apply_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 lg:flex-none inline-flex items-center justify-center px-3 py-1 bg-primary-600 hover:bg-primary-700 active:scale-95 text-white text-xs font-semibold rounded-lg shadow-xs transition-all"
+                            className="flex-1 lg:flex-none inline-flex items-center justify-center px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition-all"
                           >
                             Apply
                             <ExternalLinkIcon className="h-3 w-3 ml-1" />
@@ -1011,16 +1010,16 @@ export const JobList = () => {
                 type="button"
                 onClick={handleLoadMore}
                 disabled={isLoadingMore}
-                className="px-6 py-2.5 bg-white border border-primary-500 text-primary-600 hover:bg-primary-50 active:scale-95 disabled:opacity-50 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+                className="px-6 py-2.5 bg-[#1E293B] border border-gray-700 text-indigo-300 hover:bg-gray-800 active:scale-95 disabled:opacity-50 text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
               >
                 {isLoadingMore ? (
                   <>
-                    <div className="w-3.5 h-3.5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
-                    <span>Loading More {isLiveMode ? 'Opportunities' : 'Campus Drives'}...</span>
+                    <div className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                    <span>Loading More...</span>
                   </>
                 ) : (
                   <>
-                    {isLiveMode ? <GlobeIcon className="h-3.5 w-3.5 text-primary-500" /> : <AcademicCapIcon className="h-3.5 w-3.5 text-primary-500" />}
+                    <GlobeIcon className="h-3.5 w-3.5 text-indigo-400" />
                     <span>Load More {isLiveMode ? 'Opportunities (+25)' : 'Campus Drives (+20)'}</span>
                   </>
                 )}
@@ -1029,69 +1028,32 @@ export const JobList = () => {
           )}
         </div>
       ) : (
-        /* Actionable Compact Empty State with 1-Click Live Web Bridge */
-        <div className="text-center py-7 px-4 bg-gradient-to-b from-white to-slate-50/60 rounded-xl border border-dashed border-slate-200 shadow-xs">
-          <div className="w-10 h-10 bg-primary-50 text-primary-600 rounded-lg flex items-center justify-center mx-auto mb-2 border border-primary-100">
-            <BriefcaseIcon className="h-5 w-5 text-primary-600" />
+        /* Empty State */
+        <div className="text-center py-12 px-4 bg-[#111827] rounded-3xl border border-gray-800 shadow-sm">
+          <div className="w-12 h-12 bg-indigo-500/10 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-indigo-500/20">
+            <BriefcaseIcon className="h-6 w-6" />
           </div>
-          <h3 className="text-sm font-bold text-slate-900">
+          <h3 className="text-base font-bold text-white">
             {campusTab === 'interested' 
               ? 'No Saved Target Roles' 
               : selectedTags.length > 0 
-                ? `0 Campus Drives match "${selectedTags.join(', ')}"` 
+                ? `0 Opportunities match "${selectedTags.join(', ')}"` 
                 : 'No Opportunities Found'}
           </h3>
-          <p className="mt-1 text-slate-500 text-xs max-w-md mx-auto leading-relaxed">
+          <p className="mt-1.5 text-gray-400 text-xs max-w-md mx-auto leading-relaxed">
             {campusTab === 'interested' 
               ? 'Click the ⭐ star icon on any drive to curate your personal target pipeline.'
-              : isLiveMode 
-                ? 'No live listings matched your search. Try different keywords or reset filters.' 
-                : selectedTags.length > 0
-                  ? `No on-campus placement drives matched these filters. Switch to Live Web to search across 10+ internet portals.`
-                  : 'Try adjusting your filters or switch to Live Internet Jobs.'}
+              : 'Try adjusting your search keywords or explore live placement drives.'}
           </p>
 
-          <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2">
-            {campusTab === 'interested' ? (
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
+            {hasActiveFilters && (
               <button 
-                onClick={() => setCampusTab('all')}
-                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 active:scale-95 text-white text-xs font-semibold rounded-lg shadow-xs transition-all flex items-center gap-1.5"
+                onClick={clearFilters}
+                className="px-4 py-2 bg-[#1E293B] hover:bg-gray-800 text-gray-300 border border-gray-700 rounded-xl text-xs font-semibold transition-all"
               >
-                <BriefcaseIcon className="h-3.5 w-3.5" />
-                Browse Campus Drives
+                Reset Filters
               </button>
-            ) : (
-              <>
-                {!isLiveMode && selectedTags.length > 0 ? (
-                  <button 
-                    onClick={() => {
-                      setIsLiveMode(true)
-                      fetchLiveJobs({ search: selectedTags.join(' ') })
-                    }}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-lg text-xs font-bold shadow-xs transition-all flex items-center gap-1.5"
-                  >
-                    <GlobeIcon className="h-3.5 w-3.5" />
-                    Search 10+ Live Portals for "{selectedTags.join(', ')}"
-                  </button>
-                ) : !isLiveMode ? (
-                  <button 
-                    onClick={() => toggleLiveMode(true)}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-lg text-xs font-bold shadow-xs transition-all flex items-center gap-1.5"
-                  >
-                    <GlobeIcon className="h-3.5 w-3.5" />
-                    Search 10+ Live Internet Portals
-                  </button>
-                ) : null}
-
-                {hasActiveFilters && (
-                  <button 
-                    onClick={clearFilters}
-                    className="px-3.5 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-semibold transition-all shadow-xs"
-                  >
-                    Reset Filters
-                  </button>
-                )}
-              </>
             )}
           </div>
         </div>

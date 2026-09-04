@@ -58,16 +58,12 @@ export const ResetPassword = () => {
   }
 
   return (
-    <div className={`w-full max-w-[420px] mx-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl p-5 sm:p-7 rounded-2xl shadow-xl border-x border-b transition-all ${
-      isFaculty
-        ? 'border-t-4 border-t-purple-600 border-purple-100/80 dark:border-gray-700/80 shadow-purple-100/50 dark:shadow-none'
-        : 'border-t-4 border-t-primary-600 border-primary-100/80 dark:border-gray-700/80 shadow-primary-100/50 dark:shadow-none'
-    }`}>
-      <div className="text-center mb-5">
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border mb-2.5 ${
+    <div className="w-full max-w-[440px] mx-auto bg-[#111827] backdrop-blur-xl p-6 sm:p-8 rounded-3xl shadow-2xl border border-gray-800/90 transition-all">
+      <div className="text-center mb-6">
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border mb-2.5 ${
           isFaculty
-            ? 'bg-purple-50 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-purple-200/80 dark:border-purple-700/60'
-            : 'bg-primary-50 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border-primary-200/80 dark:border-primary-700/60'
+            ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+            : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
         }`}>
           {isFaculty ? (
             <>
@@ -82,27 +78,27 @@ export const ResetPassword = () => {
           )}
         </span>
 
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
           Set New Password
         </h2>
-        <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400 max-w-xs mx-auto leading-relaxed">
+        <p className="mt-1.5 text-xs text-gray-400 max-w-xs mx-auto leading-relaxed">
           Please create a strong new password for your account.
         </p>
       </div>
 
       {!token ? (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/60 rounded-xl space-y-3 text-center">
-          <div className="flex items-center justify-center gap-1.5 text-red-800 dark:text-red-300 font-semibold text-xs">
+        <div className="p-4 bg-rose-950/30 border border-rose-800/60 rounded-2xl space-y-3 text-center">
+          <div className="flex items-center justify-center gap-1.5 text-rose-300 font-bold text-xs">
             <span>⚠️</span> Invalid or Missing Token
           </div>
-          <p className="text-xs text-red-700 dark:text-red-400 leading-relaxed">
+          <p className="text-xs text-rose-400/90 leading-relaxed">
             The password reset link is invalid or has expired. Please request a new link.
           </p>
           <div className="pt-1">
             <Link 
               to={isFaculty ? '/forgot-password?role=faculty' : '/forgot-password'}
-              className={`inline-flex items-center justify-center w-full px-4 py-2 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors ${
-                isFaculty ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-primary-600 hover:bg-primary-700'
+              className={`inline-flex items-center justify-center w-full px-4 py-2.5 text-white rounded-xl text-xs font-bold shadow-md transition-colors ${
+                isFaculty ? 'bg-purple-600 hover:bg-purple-500' : 'bg-indigo-600 hover:bg-indigo-500'
               }`}
             >
               Request New Link →
@@ -129,21 +125,21 @@ export const ResetPassword = () => {
 
           <Button
             type="submit"
-            className={`w-full py-2.5 text-white font-medium shadow-md active:scale-[0.99] transition-all ${
+            className={`w-full py-3 text-white font-bold rounded-xl shadow-lg active:scale-[0.99] transition-all ${
               isFaculty
-                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-indigo-500/25'
-                : 'bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 shadow-primary-500/25'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-purple-500/25'
+                : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-indigo-500/25'
             }`}
             isLoading={isLoading}
           >
             Update Password
           </Button>
 
-          <div className="text-center pt-1">
+          <div className="text-center pt-2">
             <Link 
               to={isFaculty ? '/faculty/login' : '/login'} 
-              className={`text-xs font-medium hover:underline ${
-                isFaculty ? 'text-indigo-600 dark:text-indigo-400' : 'text-primary-600 dark:text-primary-400'
+              className={`text-xs font-semibold hover:underline ${
+                isFaculty ? 'text-purple-400 hover:text-purple-300' : 'text-indigo-400 hover:text-indigo-300'
               }`}
             >
               ← Back to {isFaculty ? 'Faculty Sign In' : 'Sign In'}
