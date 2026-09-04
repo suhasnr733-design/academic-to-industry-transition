@@ -1,6 +1,4 @@
-// src/pages/faculty/CampusDrives.jsx
-
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { api } from '../../services/api'
 import { Button } from '../../components/common/Button'
 import toast from 'react-hot-toast'
@@ -19,8 +17,23 @@ import {
 } from '@heroicons/react/outline'
 
 export const CampusDrives = ({ onNavigateToShortlist }) => {
-  const [drives, setDrives] = useState([])
-  const [loading, setLoading] = useState(true)
+  // Optimization 4: Hydrate campus drives summary immediately from sessionStorage (0.00s render)
+  const [drives, setDrives] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('swr_faculty_campus_drives')
+      return cached ? JSON.parse(cached) : []
+    } catch {
+      return []
+    }
+  })
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('swr_faculty_campus_drives')
+      return !cached
+    } catch {
+      return true
+    }
+  })
   const [searchQuery, setSearchQuery] = useState('')
 
   // Drill-down state
@@ -32,12 +45,21 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
   const [isExportingZip, setIsExportingZip] = useState(false)
   const [isMarkingHired, setIsMarkingHired] = useState(null)
 
+  // Optimization 4: Memoization cache for company attendees: { f"{company}_{filter}": { attendees, stats } }
+  const attendeesCache = useRef({})
+
   // Fetch all drives summary
   const fetchDrivesSummary = async () => {
-    try {
+    if (!drives || drives.length === 0) {
       setLoading(true)
+    }
+    try {
       const res = await api.get('/placement/drives-summary')
-      setDrives(res.data?.drives || [])
+      const freshDrives = res.data?.drives || []
+      setDrives(freshDrives)
+      try {
+        sessionStorage.setItem('swr_faculty_campus_drives', JSON.stringify(freshDrives))
+      } catch {}
     } catch (err) {
       console.error('Failed to fetch campus drives:', err)
       toast.error('Failed to load campus drives')
@@ -53,14 +75,27 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
   // Fetch attendees for a specific company drive
   const fetchDriveAttendees = async (companyName, filter = statusFilter) => {
     if (!companyName) return
+    const filterParam = filter === 'all' ? 'all' : filter
+    const cacheKey = `${companyName}_${filterParam}`
+
+    // Optimization 4: Instant 0.00s swap if attendees are already loaded
+    if (attendeesCache.current[cacheKey]) {
+      const cached = attendeesCache.current[cacheKey]
+      setAttendees(cached.attendees)
+      setDriveStats(cached.stats)
+      return
+    }
+
     try {
       setAttendeesLoading(true)
-      const filterParam = filter === 'all' ? 'all' : filter
       const res = await api.get(
         `/placement/drives/${encodeURIComponent(companyName)}/attendees?status=${filterParam}`
       )
-      setAttendees(res.data?.attendees || [])
-      setDriveStats(res.data?.stats || null)
+      const attList = res.data?.attendees || []
+      const stats = res.data?.stats || null
+      setAttendees(attList)
+      setDriveStats(stats)
+      attendeesCache.current[cacheKey] = { attendees: attList, stats }
     } catch (err) {
       console.error('Failed to fetch drive attendees:', err)
       toast.error('Failed to load drive attendees')
@@ -94,6 +129,8 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
           `🎉 ${attendee.student.full_name} is officially marked as Placed at ${selectedCompany}!`,
           { duration: 5000 }
         )
+        // Optimization 4: Invalidate attendees cache on status change
+        attendeesCache.current = {}
         // Refresh attendees and drives summary
         fetchDriveAttendees(selectedCompany, statusFilter)
         fetchDrivesSummary()
@@ -604,7 +641,7 @@ export const CampusDrives = ({ onNavigateToShortlist }) => {
       </div>
 
       {/* Drives Grid */}
-      {loading ? (
+      {loading && drives.length === 0 ? (
         <div className="py-20 text-center">
           <RefreshIcon className="h-8 w-8 text-purple-600 animate-spin mx-auto mb-2" />
           <p className="text-sm text-gray-500">Loading campus placement drives...</p>

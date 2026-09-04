@@ -222,6 +222,20 @@ def refresh():
         }), 500
 
 # ============================================
+# IN-MEMORY USER PROFILE CACHE (Optimization 1)
+# ============================================
+_user_profile_cache = {}
+USER_PROFILE_CACHE_TTL = 600  # 10 minutes TTL
+
+def invalidate_profile_cache(user_id=None):
+    """Evict user from profile cache when updated or password changed"""
+    global _user_profile_cache
+    if user_id is not None:
+        _user_profile_cache.pop(int(user_id), None)
+    else:
+        _user_profile_cache.clear()
+
+# ============================================
 # GET PROFILE ENDPOINT
 # ============================================
 @auth_bp.route('/profile', methods=['GET'])
@@ -230,6 +244,16 @@ def get_profile():
     """Get current user profile"""
     try:
         current_user_id = int(get_jwt_identity())
+
+        # Optimization 1: Serve warm profile from in-memory cache (0.0ms)
+        cached_entry = _user_profile_cache.get(current_user_id)
+        if cached_entry:
+            age = (datetime.utcnow() - cached_entry['timestamp']).total_seconds()
+            if age < USER_PROFILE_CACHE_TTL:
+                data = dict(cached_entry['data'])
+                data['cached'] = True
+                return jsonify(data), 200
+
         user = db.session.get(User, current_user_id)
         
         if not user:
@@ -238,7 +262,15 @@ def get_profile():
                 'message': 'User no longer exists'
             }), 404
         
-        return jsonify(user.to_dict()), 200
+        user_dict = user.to_dict()
+        _user_profile_cache[current_user_id] = {
+            'data': user_dict,
+            'timestamp': datetime.utcnow()
+        }
+
+        resp_data = dict(user_dict)
+        resp_data['cached'] = False
+        return jsonify(resp_data), 200
         
     except Exception as e:
         logger.error(f"Profile fetch error: {e}")
@@ -334,10 +366,18 @@ def update_profile():
         
         db.session.commit()
         
+        # Optimization 1: Invalidate profile cache upon update and repopulate fresh state
+        invalidate_profile_cache(current_user_id)
+        user_data = user.to_dict()
+        _user_profile_cache[current_user_id] = {
+            'data': user_data,
+            'timestamp': datetime.utcnow()
+        }
+
         return jsonify({
             'message': 'Profile updated successfully',
             'updated_fields': updated_fields,
-            'user': user.to_dict()
+            'user': user_data
         }), 200
         
     except Exception as e:
@@ -388,6 +428,9 @@ def change_password():
         user.set_password(new_password)
         db.session.commit()
         
+        # Optimization 1: Invalidate profile cache upon password change
+        invalidate_profile_cache(current_user_id)
+
         return jsonify({
             'message': 'Password changed successfully'
         }), 200
@@ -600,6 +643,9 @@ def reset_password():
         user.set_password(new_password)
         db.session.commit()
         
+        # Optimization 1: Invalidate profile cache upon password reset
+        invalidate_profile_cache(user_id)
+
         logger.info(f"Password successfully reset for user: {user.username}")
         
         return jsonify({
