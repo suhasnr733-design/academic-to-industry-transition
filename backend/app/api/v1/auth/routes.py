@@ -5,14 +5,21 @@ from flask_jwt_extended import (
     create_access_token, 
     create_refresh_token,
     jwt_required,
-    get_jwt_identity
+    get_jwt_identity,
+    decode_token
 )
 from app import db, limiter
 from app.models import User
 from app.api.v1.auth import auth_bp
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 import logging
+import io
+import base64
+import json
+import secrets
+import pyotp
+import qrcode
 
 logger = logging.getLogger(__name__)
 
@@ -169,6 +176,20 @@ def login():
                 'message': 'Your account has been deactivated. Please contact support.'
             }), 403
         
+        # Check if Two-Factor Authentication is enabled
+        if user.two_factor_enabled:
+            temp_token = create_access_token(
+                identity=str(user.id),
+                expires_delta=timedelta(minutes=5),
+                additional_claims={'is_2fa_pending': True}
+            )
+            logger.info(f"2FA challenge issued for user: {user.username} (ID: {user.id})")
+            return jsonify({
+                'requires_2fa': True,
+                'temp_token': temp_token,
+                'message': 'Two-Factor Authentication code required'
+            }), 200
+
         user.last_login = datetime.utcnow()
         db.session.commit()
         
@@ -963,3 +984,201 @@ def linkedin_callback():
     except Exception as e:
         logger.error(f"LinkedIn callback exception: {e}")
         return redirect(f"{frontend_url}/auth/callback?error=linkedin_callback_exception")
+
+# ============================================
+# TWO-FACTOR AUTHENTICATION (2FA) ENDPOINTS
+# ============================================
+
+@auth_bp.route('/2fa/setup', methods=['POST'])
+@jwt_required()
+def setup_two_factor():
+    """Generate a TOTP secret and QR code for the authenticated user"""
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(int(current_user_id)) if current_user_id else None
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        if user.two_factor_enabled:
+            return jsonify({'error': 'Two-Factor Authentication is already enabled on your account'}), 400
+
+        # 1. Generate a 32-character base32 secret
+        secret = pyotp.random_base32()
+        user.two_factor_secret = secret
+        db.session.commit()
+
+        # 2. Construct standard TOTP URI
+        totp = pyotp.TOTP(secret)
+        provisioning_uri = totp.provisioning_uri(
+            name=user.email,
+            issuer_name="CareerPortal"
+        )
+
+        # 3. Render QR Code image into memory as Base64 data URL
+        qr_img = qrcode.make(provisioning_uri)
+        buf = io.BytesIO()
+        qr_img.save(buf, format='PNG')
+        buf.seek(0)
+        qr_base64 = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode('utf-8')
+
+        return jsonify({
+            'secret': secret,
+            'qr_code': qr_base64,
+            'message': 'Scan this QR code with Google Authenticator or Microsoft Authenticator'
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error initiating 2FA setup: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Failed to initiate 2FA setup', 'details': str(e)}), 500
+
+
+@auth_bp.route('/2fa/verify-setup', methods=['POST'])
+@jwt_required()
+def verify_two_factor_setup():
+    """Verify the 6-digit code and officially activate 2FA"""
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(int(current_user_id)) if current_user_id else None
+        
+        if not user or not user.two_factor_secret:
+            return jsonify({'error': 'Please initiate 2FA setup first'}), 400
+
+        data = request.get_json() or {}
+        code = str(data.get('code', '')).strip()
+
+        if not code:
+            return jsonify({'error': '6-digit verification code is required'}), 400
+
+        # Verify code using pyotp (valid_window=1 accommodates +-30s clock drift)
+        totp = pyotp.TOTP(user.two_factor_secret)
+        if not totp.verify(code, valid_window=1):
+            return jsonify({'error': 'Invalid or expired 6-digit code. Please try again.'}), 400
+
+        # Generate 8 random one-time backup recovery codes (e.g. 'a8b2-4f1c')
+        backup_codes = [f"{secrets.token_hex(2)}-{secrets.token_hex(2)}" for _ in range(8)]
+        
+        # Enable 2FA on the user
+        user.two_factor_enabled = True
+        user.two_factor_backup_codes = json.dumps(backup_codes)
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Two-Factor Authentication successfully enabled!',
+            'backup_codes': backup_codes,
+            'two_factor_enabled': True
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error verifying 2FA setup: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Failed to verify 2FA code', 'details': str(e)}), 500
+
+
+@auth_bp.route('/2fa/disable', methods=['POST'])
+@jwt_required()
+def disable_two_factor():
+    """Disable Two-Factor Authentication with password verification"""
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(int(current_user_id)) if current_user_id else None
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        data = request.get_json() or {}
+        password = data.get('password')
+
+        if not password:
+            return jsonify({'error': 'Password is required to disable 2FA'}), 400
+
+        # Confirm user password before disabling security layer
+        if not user.check_password(password):
+            return jsonify({'error': 'Incorrect password'}), 401
+
+        user.two_factor_enabled = False
+        user.two_factor_secret = None
+        user.two_factor_backup_codes = None
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Two-Factor Authentication has been successfully disabled',
+            'two_factor_enabled': False
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error disabling 2FA: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Failed to disable 2FA', 'details': str(e)}), 500
+
+
+@auth_bp.route('/2fa/validate-login', methods=['POST'])
+@limiter.limit('10 per minute')
+def validate_two_factor_login():
+    """Verify 2FA code during login and return full session tokens"""
+    try:
+        data = request.get_json() or {}
+        temp_token = data.get('temp_token')
+        code = str(data.get('code', '')).strip()
+
+        if not temp_token or not code:
+            return jsonify({'error': 'Temporary token and 2FA code are required'}), 400
+
+        # 1. Decode and validate the temporary 2FA token
+        try:
+            decoded = decode_token(temp_token)
+        except Exception as te:
+            logger.warning(f"Invalid or expired 2FA token submitted: {te}")
+            return jsonify({'error': 'Invalid or expired 2FA session. Please log in again.'}), 401
+
+        if not decoded.get('is_2fa_pending'):
+            return jsonify({'error': 'Invalid token type for 2FA validation'}), 401
+
+        user_id = decoded.get('sub')
+        user = User.query.get(int(user_id)) if user_id else None
+
+        if not user or not user.is_active:
+            return jsonify({'error': 'User not found or account inactive'}), 404
+
+        # 2. Verify with TOTP authenticator
+        is_valid = False
+        if user.two_factor_secret:
+            totp = pyotp.TOTP(user.two_factor_secret)
+            is_valid = totp.verify(code, valid_window=1)
+
+        # 3. Fallback: Check one-time backup recovery codes
+        if not is_valid and user.two_factor_backup_codes:
+            try:
+                backup_codes = json.loads(user.two_factor_backup_codes)
+                if code in backup_codes:
+                    is_valid = True
+                    backup_codes.remove(code)
+                    user.two_factor_backup_codes = json.dumps(backup_codes)
+                    logger.info(f"User {user.username} logged in with backup code. {len(backup_codes)} codes left.")
+            except Exception as e:
+                logger.error(f"Error parsing backup codes for user {user.username}: {e}")
+
+        if not is_valid:
+            return jsonify({'error': 'Invalid or expired verification code'}), 401
+
+        # 4. Success: Generate complete session tokens
+        user.last_login = datetime.utcnow()
+        db.session.commit()
+
+        access_token = create_access_token(identity=str(user.id))
+        refresh_token = create_refresh_token(identity=str(user.id))
+
+        logger.info(f"User completed 2FA login: {user.username} (ID: {user.id})")
+
+        return jsonify({
+            'message': 'Login successful',
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+            'user': user.to_dict()
+        }), 200
+
+    except Exception as e:
+        logger.error(f"2FA login validation exception: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Failed to validate 2FA login', 'details': str(e)}), 500

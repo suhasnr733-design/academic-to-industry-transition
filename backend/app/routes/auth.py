@@ -4,6 +4,12 @@ from app import db
 from app.models import User
 import re
 from datetime import timedelta
+import io
+import base64
+import json
+import secrets
+import pyotp
+import qrcode
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -246,3 +252,112 @@ def change_password():
     db.session.commit()
     
     return jsonify({'message': 'Password changed successfully'}), 200
+
+# ==========================================
+# Two-Factor Authentication (2FA) Routes
+# ==========================================
+
+@auth_bp.route('/2fa/setup', methods=['POST'])
+@jwt_required()
+def setup_two_factor():
+    """Generate a TOTP secret and QR code for the user"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(int(current_user_id)) if current_user_id else None
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    if user.two_factor_enabled:
+        return jsonify({'error': 'Two-Factor Authentication is already enabled on your account'}), 400
+
+    # 1. Generate a 32-character base32 secret
+    secret = pyotp.random_base32()
+    user.two_factor_secret = secret
+    db.session.commit()
+
+    # 2. Construct standard TOTP URI
+    totp = pyotp.TOTP(secret)
+    provisioning_uri = totp.provisioning_uri(
+        name=user.email,
+        issuer_name="CareerPortal"
+    )
+
+    # 3. Render QR Code image into memory as Base64
+    qr_img = qrcode.make(provisioning_uri)
+    buf = io.BytesIO()
+    qr_img.save(buf, format='PNG')
+    buf.seek(0)
+    qr_base64 = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode('utf-8')
+
+    return jsonify({
+        'secret': secret,
+        'qr_code': qr_base64,
+        'message': 'Scan this QR code with Google Authenticator or Microsoft Authenticator'
+    }), 200
+
+
+@auth_bp.route('/2fa/verify-setup', methods=['POST'])
+@jwt_required()
+def verify_two_factor_setup():
+    """Verify the 6-digit code and officially activate 2FA"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(int(current_user_id)) if current_user_id else None
+    
+    if not user or not user.two_factor_secret:
+        return jsonify({'error': 'Please initiate 2FA setup first'}), 400
+
+    data = request.get_json() or {}
+    code = str(data.get('code', '')).strip()
+
+    if not code:
+        return jsonify({'error': '6-digit verification code is required'}), 400
+
+    # Verify code using pyotp (window=1 allows +-30s clock drift)
+    totp = pyotp.TOTP(user.two_factor_secret)
+    if not totp.verify(code, valid_window=1):
+        return jsonify({'error': 'Invalid or expired 6-digit code. Please try again.'}), 400
+
+    # Generate 8 random one-time backup codes (e.g. 'a8b2-4f1c')
+    backup_codes = [f"{secrets.token_hex(2)}-{secrets.token_hex(2)}" for _ in range(8)]
+    
+    # Enable 2FA on the user
+    user.two_factor_enabled = True
+    user.two_factor_backup_codes = json.dumps(backup_codes)
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Two-Factor Authentication successfully enabled!',
+        'backup_codes': backup_codes,
+        'two_factor_enabled': True
+    }), 200
+
+
+@auth_bp.route('/2fa/disable', methods=['POST'])
+@jwt_required()
+def disable_two_factor():
+    """Disable Two-Factor Authentication with password verification"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(int(current_user_id)) if current_user_id else None
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    data = request.get_json() or {}
+    password = data.get('password')
+
+    if not password:
+        return jsonify({'error': 'Password is required to disable 2FA'}), 400
+
+    # Confirm user password before disabling security layer
+    if not user.check_password(password):
+        return jsonify({'error': 'Incorrect password'}), 401
+
+    user.two_factor_enabled = False
+    user.two_factor_secret = None
+    user.two_factor_backup_codes = None
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Two-Factor Authentication has been successfully disabled',
+        'two_factor_enabled': False
+    }), 200

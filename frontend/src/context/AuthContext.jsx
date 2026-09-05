@@ -79,6 +79,16 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials, rememberMe = false) => {
     const response = await api.post('/auth/login', credentials)
+    
+    // If Two-Factor Authentication is enabled for this account
+    if (response.data?.requires_2fa) {
+      return {
+        requires2FA: true,
+        tempToken: response.data.temp_token,
+        message: response.data.message
+      }
+    }
+
     const { access_token, refresh_token, user } = response.data
     
     // 1. Clear any existing tokens across storages
@@ -93,6 +103,29 @@ export const AuthProvider = ({ children }) => {
     
     api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
     
+    setUser(user)
+    setIsAuthenticated(true)
+    return user
+  }
+
+  const verify2FALogin = async (tempToken, code, rememberMe = false) => {
+    const response = await api.post('/auth/2fa/validate-login', {
+      temp_token: tempToken,
+      code
+    })
+
+    const { access_token, refresh_token, user } = response.data
+
+    clearAuthTokens()
+    clearCachedUser()
+
+    const storage = rememberMe ? localStorage : sessionStorage
+    storage.setItem('access_token', access_token)
+    storage.setItem('refresh_token', refresh_token)
+    saveCachedUser(user, rememberMe)
+
+    api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
+
     setUser(user)
     setIsAuthenticated(true)
     return user
@@ -153,6 +186,7 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated,
       isLoading,
       login,
+      verify2FALogin,
       register,
       logout,
       handleOAuthLogin,
@@ -171,6 +205,7 @@ export const useAuth = () => {
       isAuthenticated: false,
       isLoading: false,
       login: async () => {},
+      verify2FALogin: async () => {},
       register: async () => {},
       logout: () => {},
       handleOAuthLogin: async () => {},

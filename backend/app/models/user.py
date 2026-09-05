@@ -31,6 +31,9 @@ class User(db.Model):
     profile_picture = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     last_login = db.Column(db.DateTime, nullable=True)
+    two_factor_enabled = db.Column(db.Boolean, default=False, nullable=False)
+    two_factor_secret = db.Column(db.String(64), nullable=True)
+    two_factor_backup_codes = db.Column(db.Text, nullable=True)
 
     # Relationships
     resumes = db.relationship('Resume', backref='user', lazy=True, cascade='all, delete-orphan')
@@ -42,6 +45,7 @@ class User(db.Model):
                  package_lpa=None, is_active=True, is_email_verified=False,
                  notifications_enabled=True, email_alerts_enabled=True,
                  oauth_provider=None, oauth_provider_id=None, profile_picture=None,
+                 two_factor_enabled=False, two_factor_secret=None, two_factor_backup_codes=None,
                  **kwargs):
         super().__init__(**kwargs)
         if username is not None:
@@ -68,6 +72,9 @@ class User(db.Model):
         self.oauth_provider = oauth_provider
         self.oauth_provider_id = oauth_provider_id
         self.profile_picture = profile_picture
+        self.two_factor_enabled = two_factor_enabled if two_factor_enabled is not None else False
+        self.two_factor_secret = two_factor_secret
+        self.two_factor_backup_codes = two_factor_backup_codes
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -98,6 +105,7 @@ class User(db.Model):
             'email_alerts_enabled': self.email_alerts_enabled if self.email_alerts_enabled is not None else True,
             'oauth_provider': self.oauth_provider,
             'profile_picture': self.profile_picture,
+            'two_factor_enabled': bool(self.two_factor_enabled),
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'last_login': self.last_login.isoformat() if self.last_login else None
         }

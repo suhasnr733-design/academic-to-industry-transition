@@ -6,7 +6,7 @@ import * as yup from 'yup'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../../components/common/Button'
 import { Input } from '../../components/common/Input'
-import { UserIcon, AcademicCapIcon } from '@heroicons/react/outline'
+import { UserIcon, AcademicCapIcon, ShieldCheckIcon } from '@heroicons/react/outline'
 import toast from 'react-hot-toast'
 import { getApiBaseUrl } from '../../config/apiConfig'
 
@@ -18,8 +18,15 @@ const loginSchema = yup.object({
 
 export const Login = () => {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { login, verify2FALogin } = useAuth()
   const [isLoading, setIsLoading] = React.useState(false)
+
+  // 2FA Challenge States
+  const [is2FAStep, setIs2FAStep] = React.useState(false)
+  const [tempToken, setTempToken] = React.useState('')
+  const [twoFactorCode, setTwoFactorCode] = React.useState('')
+  const [rememberMePref, setRememberMePref] = React.useState(true)
+  const [isVerifying2FA, setIsVerifying2FA] = React.useState(false)
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(loginSchema),
@@ -31,7 +38,18 @@ export const Login = () => {
   const onSubmit = async (data) => {
     try {
       setIsLoading(true)
-      const user = await login(data, !!data.rememberMe)
+      const result = await login(data, !!data.rememberMe)
+      
+      // If 2FA is required for this account, transition to step 2
+      if (result?.requires2FA) {
+        setTempToken(result.tempToken)
+        setRememberMePref(Boolean(data.rememberMe))
+        setIs2FAStep(true)
+        toast('Please enter your Two-Factor Authentication code', { icon: '🔐' })
+        return
+      }
+
+      const user = result
       sessionStorage.setItem('just_logged_in', 'true')
       toast.success(`Welcome back, ${user?.full_name || user?.username || 'User'}!`)
       if (user?.role === 'faculty') {
@@ -45,6 +63,31 @@ export const Login = () => {
       toast.error(error.response?.data?.error || error.response?.data?.message || error.message || 'Login failed')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handle2FASubmit = async (e) => {
+    e.preventDefault()
+    if (!twoFactorCode.trim()) {
+      return toast.error('Please enter your 2FA verification code')
+    }
+
+    try {
+      setIsVerifying2FA(true)
+      const user = await verify2FALogin(tempToken, twoFactorCode.trim(), rememberMePref)
+      sessionStorage.setItem('just_logged_in', 'true')
+      toast.success(`Welcome back, ${user?.full_name || user?.username || 'User'}!`)
+      if (user?.role === 'faculty') {
+        navigate('/faculty')
+      } else if (user?.role === 'admin') {
+        navigate('/admin')
+      } else {
+        navigate('/dashboard')
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Invalid or expired 2FA code. Please try again.')
+    } finally {
+      setIsVerifying2FA(false)
     }
   }
 
@@ -78,102 +121,160 @@ export const Login = () => {
         </button>
       </div>
 
-      {/* Header with Explicit Student Badge */}
-      <div className="text-center mb-5">
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-700/60 mb-2">
-          <UserIcon className="w-3.5 h-3.5" />
-          Student Career Portal
-        </span>
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
-          Student Sign In
-        </h2>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Access your resume analysis, skill gaps, and verified job matches
-        </p>
-      </div>
+      {is2FAStep ? (
+        /* 2FA Challenge Step */
+        <div className="py-2">
+          <div className="text-center mb-5">
+            <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+              <ShieldCheckIcon className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Two-Factor Verification
+            </h2>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Enter the 6-digit code from your authenticator app (or one of your backup recovery codes) to continue.
+            </p>
+          </div>
 
-      <form className="space-y-3.5" onSubmit={handleSubmit(onSubmit)}>
-        <Input
-          label="Username or Email"
-          placeholder="e.g. stu_alex or student@university.edu"
-          {...register('username')}
-          error={errors.username?.message}
-        />
-        
-        <Input
-          label="Password"
-          type="password"
-          placeholder="Enter your password"
-          {...register('password')}
-          error={errors.password?.message}
-        />
+          <form onSubmit={handle2FASubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-center">
+                Security Code:
+              </label>
+              <input
+                type="text"
+                maxLength={12}
+                placeholder="000000 or a8b2-4f1c"
+                value={twoFactorCode}
+                onChange={(e) => setTwoFactorCode(e.target.value)}
+                className="w-full text-center text-xl tracking-widest font-mono py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none"
+                autoFocus
+              />
+            </div>
 
-        <div className="flex items-center justify-between text-xs pt-0.5">
-          <label className="flex items-center text-gray-600 dark:text-gray-400 cursor-pointer select-none">
-            <input
-              id="remember-me"
-              type="checkbox"
-              {...register('rememberMe')}
-              className="h-3.5 w-3.5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer"
+            <Button
+              type="submit"
+              className="w-full py-2.5 bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white font-medium shadow-md shadow-primary-500/25 active:scale-[0.99] transition-all"
+              isLoading={isVerifying2FA}
+            >
+              Verify & Sign In
+            </Button>
+
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIs2FAStep(false)
+                  setTwoFactorCode('')
+                  setTempToken('')
+                }}
+                className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 font-medium hover:underline"
+              >
+                ← Cancel and return to login
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : (
+        <>
+          {/* Header with Explicit Student Badge */}
+          <div className="text-center mb-5">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-700/60 mb-2">
+              <UserIcon className="w-3.5 h-3.5" />
+              Student Career Portal
+            </span>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Student Sign In
+            </h2>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Access your resume analysis, skill gaps, and verified job matches
+            </p>
+          </div>
+
+          <form className="space-y-3.5" onSubmit={handleSubmit(onSubmit)}>
+            <Input
+              label="Username or Email"
+              placeholder="e.g. stu_alex or student@university.edu"
+              {...register('username')}
+              error={errors.username?.message}
             />
-            <span className="ml-2">Remember me</span>
-          </label>
+            
+            <Input
+              label="Password"
+              type="password"
+              placeholder="Enter your password"
+              {...register('password')}
+              error={errors.password?.message}
+            />
 
-          <Link to="/forgot-password?role=student" className="text-primary-600 hover:text-primary-700 dark:text-primary-400 font-medium hover:underline">
-            Forgot password?
-          </Link>
-        </div>
+            <div className="flex items-center justify-between text-xs pt-0.5">
+              <label className="flex items-center text-gray-600 dark:text-gray-400 cursor-pointer select-none">
+                <input
+                  id="remember-me"
+                  type="checkbox"
+                  {...register('rememberMe')}
+                  className="h-3.5 w-3.5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer"
+                />
+                <span className="ml-2">Remember me</span>
+              </label>
 
-        <Button
-          type="submit"
-          className="w-full py-2.5 bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white font-medium shadow-md shadow-primary-500/25 active:scale-[0.99] transition-all"
-          isLoading={isLoading}
-        >
-          Sign In
-        </Button>
+              <Link to="/forgot-password?role=student" className="text-primary-600 hover:text-primary-700 dark:text-primary-400 font-medium hover:underline">
+                Forgot password?
+              </Link>
+            </div>
 
-        <p className="text-center text-xs text-gray-500 dark:text-gray-400 pt-1">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-primary-600 hover:text-primary-700 dark:text-primary-400 font-semibold hover:underline">
-            Sign up
-          </Link>
-        </p>
-      </form>
+            <Button
+              type="submit"
+              className="w-full py-2.5 bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white font-medium shadow-md shadow-primary-500/25 active:scale-[0.99] transition-all"
+              isLoading={isLoading}
+            >
+              Sign In
+            </Button>
 
-      {/* Social login */}
-      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-gray-700/60">
-        <div className="relative mb-3 text-center">
-          <span className="px-2 text-[11px] uppercase tracking-wider text-gray-400 dark:text-gray-500 font-medium">
-            Or continue with
-          </span>
-        </div>
+            <p className="text-center text-xs text-gray-500 dark:text-gray-400 pt-1">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-primary-600 hover:text-primary-700 dark:text-primary-400 font-semibold hover:underline">
+                Sign up
+              </Link>
+            </p>
+          </form>
 
-        <div className="grid grid-cols-2 gap-2.5">
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            className="w-full inline-flex justify-center items-center py-2 px-3 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xs bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-700 hover:border-slate-300 transition-all"
-          >
-            <svg className="w-3.5 h-3.5 mr-2" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-            </svg>
-            Google
-          </button>
-          <button
-            type="button"
-            onClick={handleLinkedInLogin}
-            className="w-full inline-flex justify-center items-center py-2 px-3 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xs bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-700 hover:border-slate-300 transition-all"
-          >
-            <svg className="w-3.5 h-3.5 mr-2" fill="#0A66C2" viewBox="0 0 24 24">
-              <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.77a1.47 1.47 0 1 0 0 2.94 1.47 1.47 0 0 0 0-2.94Z"/>
-            </svg>
-            LinkedIn
-          </button>
-        </div>
-      </div>
+          {/* Social login */}
+          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-gray-700/60">
+            <div className="relative mb-3 text-center">
+              <span className="px-2 text-[11px] uppercase tracking-wider text-gray-400 dark:text-gray-500 font-medium">
+                Or continue with
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                className="w-full inline-flex justify-center items-center py-2 px-3 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xs bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-700 hover:border-slate-300 transition-all"
+              >
+                <svg className="w-3.5 h-3.5 mr-2" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                Google
+              </button>
+              <button
+                type="button"
+                onClick={handleLinkedInLogin}
+                className="w-full inline-flex justify-center items-center py-2 px-3 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xs bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-700 hover:border-slate-300 transition-all"
+              >
+                <svg className="w-3.5 h-3.5 mr-2" fill="#0A66C2" viewBox="0 0 24 24">
+                  <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.77a1.47 1.47 0 1 0 0 2.94 1.47 1.47 0 0 0 0-2.94Z"/>
+                </svg>
+                LinkedIn
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
