@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.orm import defer
-from app import db
+from app import db, limiter
 from app.models import Job, JobInterest, User, MentorshipRequest
 from app.api.v1.jobs import jobs_bp
 from app.services.multilevel_cache import cache
@@ -9,6 +9,7 @@ from app.services.job_aggregator import JobAggregatorService
 from app.tasks.job_sync_task import sync_live_jobs_to_db
 
 @jobs_bp.route('', methods=['GET'])
+@limiter.limit("120 per minute; 1000 per hour")
 @cache.cache(ttl=60, key_prefix='jobs_list')
 def get_jobs():
     """Get list of active jobs with pagination, indexed filtering, and deferred heavy columns"""

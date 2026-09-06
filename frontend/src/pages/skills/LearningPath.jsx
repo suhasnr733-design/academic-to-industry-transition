@@ -22,155 +22,15 @@ import {
   UploadIcon,
   RefreshIcon,
   XIcon,
-  PlayIcon
+  PlayIcon,
+  CheckCircleIcon,
+  ExternalLinkIcon
 } from '@heroicons/react/outline'
 
-const resolveSkillVideo = (skObj, fallbackName = '') => {
-  const name = (typeof skObj === 'string' ? skObj : skObj?.skill_name || fallbackName || '').trim()
-  const lower = name.toLowerCase()
+import { resolveSkillVideo, isValidYouTubeVideo } from '../../utils/videoResolver'
+import { clearStageVideoCache } from '../../services/youtubeVideoService'
+export { resolveSkillVideo, isValidYouTubeVideo }
 
-  // Specific topic overrides (Guaranteed 100% exact topic match & working embed URL)
-  if (lower.includes('time management') || lower.includes('productivity') || lower.includes('time')) {
-    return { title: 'Time Management & Productivity Masterclass', embed_url: 'https://www.youtube.com/embed/iONDebHX9qk' }
-  }
-  if (lower.includes('communication') || lower.includes('presentation') || lower.includes('public speaking') || lower.includes('soft skill')) {
-    return { title: 'Professional Communication Skills for Software Engineers', embed_url: 'https://www.youtube.com/embed/HAnw168huqA' }
-  }
-  if (lower.includes('leadership') || lower.includes('management') || lower.includes('teamwork') || lower.includes('collaboration')) {
-    return { title: 'Engineering Leadership & Teamwork Masterclass', embed_url: 'https://www.youtube.com/embed/z44w3jBfJp0' }
-  }
-  if (lower.includes('figma') || lower.includes('ui/ux') || lower.includes('user experience') || lower.includes('design')) {
-    return { title: 'Figma & UI/UX Design Masterclass', embed_url: 'https://www.youtube.com/embed/c9Wg6Cb_YlU' }
-  }
-  if (lower.includes('vs code') || lower.includes('vscode')) {
-    return { title: 'VS Code Tutorial for Beginners - Full Course', embed_url: 'https://www.youtube.com/embed/VqCgcpAypFQ' }
-  }
-  if (lower.includes('postman')) {
-    return { title: 'Postman API Testing Full Course', embed_url: 'https://www.youtube.com/embed/VywxIQ2ZXw4' }
-  }
-  if (lower.includes('jira') || lower.includes('agile')) {
-    return { title: 'Jira & Agile Project Management Tutorial', embed_url: 'https://www.youtube.com/embed/6Ols5_lR9u8' }
-  }
-  if (lower.includes('node') || lower.includes('express')) {
-    return { title: 'Node.js & Express.js Full Course', embed_url: 'https://www.youtube.com/embed/Oe421EPjeBE' }
-  }
-  if (lower.includes('ci/cd') || lower.includes('cicd') || lower.includes('devops')) {
-    return { title: 'CI/CD & DevOps Pipeline Tutorial', embed_url: 'https://www.youtube.com/embed/R8_veQiYBjU' }
-  }
-  if (lower.includes('operating system') || lower === 'os') {
-    return { title: 'Operating Systems Complete Masterclass', embed_url: 'https://www.youtube.com/embed/bkSWJJZNgf8' }
-  }
-  if (lower.includes('oracle')) {
-    return { title: 'Oracle Database & SQL Masterclass', embed_url: 'https://www.youtube.com/embed/2HVMipp755E' }
-  }
-  if (lower.includes('sql')) {
-    return { title: 'SQL & Relational Databases Masterclass', embed_url: 'https://www.youtube.com/embed/HXV3zeQKqGY' }
-  }
-  if (lower.includes('dbms') || lower.includes('database')) {
-    return { title: 'Database Management Systems (DBMS) Masterclass', embed_url: 'https://www.youtube.com/embed/HXV3zeQKqGY' }
-  }
-  if (lower.includes('scikit') || lower.includes('sklearn')) {
-    return { title: 'Scikit-learn Complete Masterclass', embed_url: 'https://www.youtube.com/embed/0B5eIE_1vpU' }
-  }
-  if (lower.includes('pandas') || lower.includes('numpy')) {
-    return { title: 'Python Data Analysis & Pandas Masterclass', embed_url: 'https://www.youtube.com/embed/r-uOLxNrNk8' }
-  }
-  if (lower.includes('nlp') || lower.includes('natural language')) {
-    return { title: 'Natural Language Processing (NLP) Complete Masterclass', embed_url: 'https://www.youtube.com/embed/fNxaJsNG3-s' }
-  }
-  if (lower.includes('pytorch')) {
-    return { title: 'PyTorch for Deep Learning Full Course', embed_url: 'https://www.youtube.com/embed/V_xro1bcAuA' }
-  }
-  if (lower.includes('tensorflow') || lower.includes('keras')) {
-    return { title: 'TensorFlow 2.0 Complete Course', embed_url: 'https://www.youtube.com/embed/tPYj3Ng4Y40' }
-  }
-  if (lower.includes('deep learning') || lower.includes('neural')) {
-    return { title: 'Deep Learning Crash Course for Engineers', embed_url: 'https://www.youtube.com/embed/aircAruvnKk' }
-  }
-  if (lower.includes('flutter') || lower.includes('dart')) {
-    return { title: 'Flutter & Dart Mobile App Development Masterclass', embed_url: 'https://www.youtube.com/embed/pTJJsmejUOQ' }
-  }
-  if (lower.includes('machine learning') || lower === 'ml' || lower === 'ai' || lower.includes('artificial intelligence')) {
-    return { title: 'Machine Learning Course for Beginners', embed_url: 'https://www.youtube.com/embed/i_LwzRVP7bg' }
-  }
-  if (lower === 'c' || lower.startsWith('c ') || lower === 'c programming' || lower === 'c language') {
-    return { title: 'C Programming Tutorial for Beginners - Full Course', embed_url: 'https://www.youtube.com/embed/KJgsSFOSQv0' }
-  }
-  if (lower.includes('c++') || lower.includes('cpp')) {
-    return { title: 'C++ Programming Tutorial for Beginners', embed_url: 'https://www.youtube.com/embed/vLnPwxZdW4Y' }
-  }
-  if (lower.includes('c#') || lower.includes('csharp')) {
-    return { title: 'C# Tutorial for Beginners', embed_url: 'https://www.youtube.com/embed/gfkTfcpWqAY' }
-  }
-  if (lower.includes('css')) {
-    return { title: 'CSS Flexbox & Responsive Design Masterclass', embed_url: 'https://www.youtube.com/embed/1Rs2ND1ryYc' }
-  }
-  if (lower.includes('html')) {
-    return { title: 'HTML Full Course for Beginners', embed_url: 'https://www.youtube.com/embed/pQN-pnXPaVg' }
-  }
-  if (lower.includes('data struct')) {
-    return { title: 'Data Structures Complete Masterclass', embed_url: 'https://www.youtube.com/embed/RBSGKlAvoiM' }
-  }
-  if (lower.includes('linux') || lower.includes('unix') || lower.includes('bash') || lower.includes('shell')) {
-    return { title: 'Linux Operating System & Shell Scripting Masterclass', embed_url: 'https://www.youtube.com/embed/wBp0Rb-ZJak' }
-  }
-  if (lower.includes('algorithm') || lower.includes('problem solv')) {
-    return { title: 'Algorithms & Problem Solving Masterclass', embed_url: 'https://www.youtube.com/embed/0IAPZzGSbME' }
-  }
-  if (lower.includes('javascript') || lower === 'js') {
-    return { title: 'JavaScript Tutorial for Beginners', embed_url: 'https://www.youtube.com/embed/W6NZfCO5SIk' }
-  }
-  if (lower.includes('typescript') || lower === 'ts') {
-    return { title: 'TypeScript Course for Beginners', embed_url: 'https://www.youtube.com/embed/d56mG7DezGs' }
-  }
-  if (lower.includes('java')) {
-    return { title: 'Java Tutorial for Beginners - Full Course', embed_url: 'https://www.youtube.com/embed/eIrMbAQSU34' }
-  }
-  if (lower.includes('python')) {
-    return { title: 'Python for Beginners - Full Course', embed_url: 'https://www.youtube.com/embed/rfscVS0vtbw' }
-  }
-  if (lower.includes('git')) {
-    return { title: 'Git Version Control & Workflow Masterclass', embed_url: 'https://www.youtube.com/embed/8JJ101D3knE' }
-  }
-  if (lower.includes('react')) {
-    return { title: 'React.js Complete Masterclass', embed_url: 'https://www.youtube.com/embed/bMknfKXIFA8' }
-  }
-  if (lower.includes('django')) {
-    return { title: 'Django Full Course for Beginners', embed_url: 'https://www.youtube.com/embed/F5mRW0joWI0' }
-  }
-  if (lower.includes('spring')) {
-    return { title: 'Spring Boot Tutorial for Beginners', embed_url: 'https://www.youtube.com/embed/35EQXmHKZYs' }
-  }
-  if (lower.includes('docker')) {
-    return { title: 'Docker Tutorial for Beginners', embed_url: 'https://www.youtube.com/embed/fqMOX6JJhGo' }
-  }
-  if (lower.includes('kubernetes') || lower.includes('k8s')) {
-    return { title: 'Kubernetes Tutorial for Beginners', embed_url: 'https://www.youtube.com/embed/X48VuDVv0do' }
-  }
-  if (lower.includes('aws') || lower.includes('cloud')) {
-    return { title: 'AWS Cloud Practitioner Full Course', embed_url: 'https://www.youtube.com/embed/k1RI5locZE4' }
-  }
-  if (lower.includes('system design')) {
-    return { title: 'System Design Fundamentals', embed_url: 'https://www.youtube.com/embed/m8Icp_Cid5o' }
-  }
-  if (lower.includes('oop') || lower.includes('object')) {
-    return { title: 'Object-Oriented Programming Masterclass', embed_url: 'https://www.youtube.com/embed/pTB0EiLXUC8' }
-  }
-
-  // If backend provided a custom YouTube API video object
-  if (typeof skObj === 'object' && skObj?.youtube_videos?.length > 0) {
-    const apiVid = skObj.youtube_videos[0]
-    if (apiVid && apiVid.embed_url && !apiVid.embed_url.includes('8hly31xKLI0') && !apiVid.embed_url.includes('bbT_bV0Cc-0') && !apiVid.embed_url.includes('listType=search')) {
-      return apiVid
-    }
-  }
-
-  // 100% embeddable working Computer Science masterclass video fallback
-  return { 
-    title: `${name} Complete Masterclass`, 
-    embed_url: 'https://www.youtube.com/embed/0IAPZzGSbME' 
-  }
-}
 
 export const LearningPath = () => {
   const navigate = useNavigate()
@@ -308,6 +168,9 @@ export const LearningPath = () => {
   const handleSelectResume = (newResumeId) => {
     if (newResumeId === activeResumeId) return
 
+    // Invalidate stage video cache on resume switch
+    clearStageVideoCache()
+
     // 1. Clear previous state completely
     setRoadmapData(null)
     setBookmarks([])
@@ -322,6 +185,8 @@ export const LearningPath = () => {
 
   // Language switch handler
   const handleSelectLanguage = (newLanguage) => {
+    // Invalidate stage video cache on language switch
+    clearStageVideoCache()
     setSelectedLanguage(newLanguage)
     if (activeResumeId) {
       const newParams = { resume_id: activeResumeId, language: newLanguage }
@@ -339,6 +204,51 @@ export const LearningPath = () => {
       setSearchParams(newParams)
     }
   }
+
+  // Ref to the detailed learning section DOM element
+  const detailedSectionRef = useRef(null)
+  const scrollTimeoutRef = useRef(null)
+
+  // Centralized skill selection and smooth navigation handler
+  const handleSelectSkill = useCallback((skillId, shouldScroll = true) => {
+    if (!roadmapData || !roadmapData.skills) return
+
+    // Find target skill by id (numeric or string) or skill_name
+    const targetSkill = roadmapData.skills.find(
+      s => s.id === skillId || String(s.id) === String(skillId) || (s.skill_name && s.skill_name.toLowerCase() === String(skillId).toLowerCase())
+    )
+
+    if (targetSkill) {
+      // 1. Update active skill state immediately
+      setActiveSkillId(targetSkill.id)
+      setAiSkillTarget(targetSkill.skill_name)
+
+      // 2. Smoothly scroll and focus to the detailed learning section
+      if (shouldScroll) {
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current)
+        }
+        scrollTimeoutRef.current = setTimeout(() => {
+          const el = detailedSectionRef.current || document.getElementById('active-skill-card')
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            try {
+              el.focus({ preventScroll: true })
+            } catch (_) {}
+          }
+        }, 50)
+      }
+    }
+  }, [roadmapData])
+
+  // Clean up pending scroll timer on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // Progress update handler
   const handleUpdateStageProgress = async (skillName, stage, isCompleted) => {
@@ -391,7 +301,7 @@ export const LearningPath = () => {
       }
 
       // Refresh state for current active resume
-      fetchLearningData(activeResumeId, selectedLanguage)
+      fetchLearningData(activeResumeId, selectedLanguage, targetDate)
     } catch (err) {
       console.error('Error updating progress:', err)
     }
@@ -494,7 +404,9 @@ export const LearningPath = () => {
     return true
   })
 
-  const activeSkillObj = (roadmapData.skills || []).find(s => s.id === activeSkillId) || filteredSkills[0]
+  const activeSkillObj = (roadmapData?.skills || []).find(
+    s => s.id === activeSkillId || String(s.id) === String(activeSkillId)
+  ) || filteredSkills[0]
 
   const displayDailyPlan = activeSkillObj ? {
     skill_name: activeSkillObj.skill_name,
@@ -540,7 +452,7 @@ export const LearningPath = () => {
         skills={roadmapData?.skills || []}
         matchingSkills={roadmapData?.matching_skills || []}
         missingSkills={roadmapData?.missing_skills || []}
-        onSelectSkill={(id) => setActiveSkillId(id)}
+        onSelectSkill={(id) => handleSelectSkill(id, true)}
       />
 
       {/* Main Section Navigation Tabs (Roadmap vs Bookmarks) */}
@@ -591,13 +503,9 @@ export const LearningPath = () => {
               }}
               onStartLesson={() => {
                 if (displayDailyPlan) {
-                  const targetSkill = (roadmapData.skills || []).find(s => s.skill_name === displayDailyPlan.skill_name) || activeSkillObj
+                  const targetSkill = (roadmapData?.skills || []).find(s => s.skill_name === displayDailyPlan.skill_name) || activeSkillObj
                   if (targetSkill) {
-                    setActiveSkillId(targetSkill.id)
-                    setTimeout(() => {
-                      const el = document.getElementById('active-skill-card') || document.getElementById('skills-section')
-                      if (el) el.scrollIntoView({ behavior: 'smooth' })
-                    }, 100)
+                    handleSelectSkill(targetSkill.id, true)
                   }
                 }
               }}
@@ -631,11 +539,7 @@ export const LearningPath = () => {
           <YourSkillsLearningSection
             skills={roadmapData.skills}
             activeSkillId={activeSkillId}
-            onSelectSkill={(id) => {
-              setActiveSkillId(id)
-              const sk = roadmapData.skills.find(s => s.id === id)
-              if (sk) setAiSkillTarget(sk.skill_name)
-            }}
+            onSelectSkill={(id) => handleSelectSkill(id, true)}
             onOpenRevision={(sk) => setVideoRevisionModal(sk)}
             onStartLesson={(sk) => {
               const savedSecs = localStorage.getItem(`video_ts_${sk.skill_name}`) || (sk.skill_name === 'Data Structures' ? 870 : (sk.skill_name === 'CSS' ? 420 : (sk.skill_name === 'SQL' ? 1250 : 0)))
@@ -655,22 +559,34 @@ export const LearningPath = () => {
           <InteractiveRoadmap 
             skills={roadmapData.skills}
             activeSkillId={activeSkillId}
-            onSelectSkill={(id) => {
-              setActiveSkillId(id)
-              const sk = roadmapData.skills.find(s => s.id === id)
-              if (sk) setAiSkillTarget(sk.skill_name)
-            }}
+            onSelectSkill={(id) => handleSelectSkill(id, true)}
           />
 
           {/* Selected Skill Card View */}
           {activeSkillObj ? (
-            <div id="active-skill-card" className="scroll-mt-6">
+            <div 
+              id="active-skill-card"
+              ref={detailedSectionRef}
+              className="scroll-mt-20 focus:outline-none"
+              tabIndex={-1}
+            >
               <SkillLearningCard
+                key={activeSkillObj.id}
                 skill={activeSkillObj}
                 targetRole={roadmapData.target_role}
                 resumeId={roadmapData.resume_id}
+                selectedLanguage={selectedLanguage}
+                bookmarks={bookmarks}
                 onUpdateStageProgress={handleUpdateStageProgress}
                 onBookmark={handleAddBookmark}
+                onPlayVideo={(video, skName) => {
+                  setVideoStartTime(0)
+                  setActiveChapterIndex(0)
+                  setQuickVideoModal({
+                    skillName: skName || activeSkillObj?.skill_name || 'Technical',
+                    ...video
+                  })
+                }}
                 onOpenAiForSkill={(skillName) => {
                   setAiSkillTarget(skillName)
                   setIsAiOpen(true)
@@ -759,17 +675,89 @@ export const LearningPath = () => {
               })()}
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-              <span className="text-xs text-gray-500 font-medium">
-                Recommended for {roadmapData?.target_role || 'Software Engineer'} preparation
-              </span>
-              <button
-                onClick={() => setQuickVideoModal(null)}
-                className="px-5 py-2 bg-gray-900 hover:bg-gray-800 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
-              >
-                Close Video Player
-              </button>
-            </div>
+            {/* Modal Action Bar with Mark as Watched & Bookmarking */}
+            {(() => {
+              const currentSkillObj = (roadmapData?.skills || []).find(s => s.skill_name === quickVideoModal.skillName)
+              const isLearnDone = currentSkillObj?.stages_status?.learn || false
+              const isBookmarked = (bookmarks || []).some(
+                b => b.title === quickVideoModal.title || (b.url && b.url === (quickVideoModal.url || quickVideoModal.embed_url))
+              )
+
+              return (
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Mark as Watched */}
+                    <button
+                      onClick={() => {
+                        if (quickVideoModal?.id) {
+                          try {
+                            const storageKey = `watched_videos_${activeResumeId || 'default'}`
+                            const saved = localStorage.getItem(storageKey)
+                            const set = saved ? new Set(JSON.parse(saved)) : new Set()
+                            set.add(quickVideoModal.id)
+                            localStorage.setItem(storageKey, JSON.stringify(Array.from(set)))
+                          } catch (_) {}
+                        }
+                        handleUpdateStageProgress(quickVideoModal.skillName, quickVideoModal.stage || 'learn', true)
+                      }}
+                      className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                        isLearnDone
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm'
+                      }`}
+                      aria-label="Mark Learn stage as watched"
+                    >
+                      <CheckCircleIcon className="w-4 h-4" />
+                      <span>{isLearnDone ? '✓ Learn Completed' : '✓ Mark as Watched'}</span>
+                    </button>
+
+                    {/* Bookmark Video */}
+                    <button
+                      onClick={() => {
+                        handleAddBookmark({
+                          skill_name: quickVideoModal.skillName,
+                          resource_type: 'youtube',
+                          title: quickVideoModal.title,
+                          url: quickVideoModal.url || quickVideoModal.embed_url,
+                          thumbnail: quickVideoModal.thumbnail,
+                          provider: 'YouTube'
+                        })
+                      }}
+                      className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                        isBookmarked
+                          ? 'bg-indigo-50 text-indigo-700 border-indigo-300'
+                          : 'bg-gray-50 hover:bg-indigo-50 text-gray-700 border-gray-200'
+                      }`}
+                      aria-label="Bookmark this video"
+                    >
+                      <BookmarkIcon className="w-4 h-4" />
+                      <span>{isBookmarked ? 'Saved' : 'Bookmark'}</span>
+                    </button>
+
+                    {/* Open on YouTube */}
+                    {(quickVideoModal.url || quickVideoModal.id) && (
+                      <a
+                        href={quickVideoModal.url || `https://www.youtube.com/watch?v=${quickVideoModal.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-2 text-xs font-bold text-gray-600 hover:text-red-600 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors"
+                        aria-label="Open video on YouTube"
+                      >
+                        <span>Open on YouTube</span>
+                        <ExternalLinkIcon className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => setQuickVideoModal(null)}
+                    className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
+                  >
+                    Close Video Player
+                  </button>
+                </div>
+              )
+            })()}
           </div>
         </div>
       )}

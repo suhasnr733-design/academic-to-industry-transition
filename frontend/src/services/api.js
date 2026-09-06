@@ -83,11 +83,18 @@ axiosInstance.interceptors.response.use(
       }
     }
 
-    // Show error toast message
-    if (error.response?.data?.message) {
-      toast.error(error.response.data.message)
-    } else if (error.response?.data?.error) {
-      toast.error(error.response.data.error)
+    // Show error toast message unless silent or rate-limited
+    const isSilent = originalRequest?.headers?.['X-Silent-Error'] === 'true' || originalRequest?.headers?.['X-Silent-Error'] === true
+    const is429 = error.response?.status === 429
+
+    if (is429) {
+      console.warn('[API Rate Limit]', error.response?.data?.message || 'Rate limit reached, throttling requests.')
+    } else if (!isSilent) {
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message)
+      } else if (error.response?.data?.error) {
+        toast.error(error.response.data.error)
+      }
     }
 
     return Promise.reject(error)

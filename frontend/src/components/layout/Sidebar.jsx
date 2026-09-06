@@ -1,6 +1,6 @@
 // src/components/layout/Sidebar.jsx
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { cn } from '../../utils/helpers'
 import { useAuth } from '../../hooks/useAuth'
@@ -106,36 +106,67 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse
     ? facultySections 
     : studentSections
 
+  const lastFetchTimeRef = useRef(0)
+  const rateLimitBackoffUntilRef = useRef(0)
+  const isMountedRef = useRef(true)
+
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
   // Fetch pending placement drives and available job count for student badges
   useEffect(() => {
-    if (role === 'student' && user) {
-      const fetchStudentBadgeData = async () => {
+    if (role === 'student' && user?.id) {
+      const fetchStudentBadgeData = async (force = false) => {
+        const now = Date.now()
+        // Respect 429 backoff if active
+        if (now < rateLimitBackoffUntilRef.current) {
+          return
+        }
+        // Deduplicate rapid requests (min 60s cooldown unless forced)
+        if (!force && now - lastFetchTimeRef.current < 60000) {
+          return
+        }
+        lastFetchTimeRef.current = now
+
         try {
+          const reqConfig = { headers: { 'X-Silent-Error': 'true' } }
           const [placementsRes, jobsRes] = await Promise.allSettled([
-            api.get('/placement/my-nominations'),
-            api.get('/jobs')
+            api.get('/placement/my-nominations', reqConfig),
+            api.get('/jobs', reqConfig)
           ])
+
+          if (!isMountedRef.current) return
 
           if (placementsRes.status === 'fulfilled') {
             const noms = placementsRes.value.data?.nominations || []
             const pending = noms.filter(n => n.status === 'pending').length
             setPendingPlacementsCount(pending)
+          } else if (placementsRes.reason?.response?.status === 429) {
+            // Trigger 3-minute backoff on 429 to avoid retry storm
+            rateLimitBackoffUntilRef.current = Date.now() + 180000
           }
 
           if (jobsRes.status === 'fulfilled') {
             const list = jobsRes.value.data?.jobs || []
             setJobCount(list.length)
+          } else if (jobsRes.reason?.response?.status === 429) {
+            // Trigger 3-minute backoff on 429 to avoid retry storm
+            rateLimitBackoffUntilRef.current = Date.now() + 180000
           }
         } catch (e) {
           // ignore background errors
         }
       }
 
-      fetchStudentBadgeData()
-      const interval = setInterval(fetchStudentBadgeData, 25000)
+      fetchStudentBadgeData(false)
+      const interval = setInterval(() => fetchStudentBadgeData(true), 120000)
       return () => clearInterval(interval)
     }
-  }, [role, user])
+  }, [role, user?.id])
 
   const location = useLocation()
   const currentUrl = `${location.pathname}${location.search}`

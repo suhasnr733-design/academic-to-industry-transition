@@ -5,7 +5,7 @@ from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 from sqlalchemy.orm import defer, joinedload
-from app.extensions import db
+from app.extensions import db, limiter
 from app.models import User, PlacementNomination, Notification, Resume
 from app.api.v1.placement import placement_bp
 from app.decorators import faculty_or_admin_required
@@ -156,6 +156,7 @@ def nominate_students():
 # 2. STUDENT: GET ALL MY COMPANY NOMINATIONS / OFFERS
 # ==========================================================
 @placement_bp.route('/my-nominations', methods=['GET'])
+@limiter.limit("120 per minute; 1000 per hour")
 @jwt_required()
 def get_my_nominations():
     """Get active and past company drive nominations for current student"""
