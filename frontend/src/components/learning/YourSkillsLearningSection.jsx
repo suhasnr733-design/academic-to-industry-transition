@@ -182,6 +182,16 @@ export const YourSkillsLearningSection = ({ skills, activeSkillId, onSelectSkill
               <div
                 key={skillItem.id}
                 onClick={() => onSelectSkill(skillItem.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    onSelectSkill(skillItem.id)
+                  }
+                }}
+                aria-label={`Select ${skillItem.skill_name} detailed learning section`}
+                title={`Click to view detailed tutorials, practice, and projects for ${skillItem.skill_name}`}
                 className={`group relative p-4 rounded-2xl border cursor-pointer transition-all duration-300 transform hover:-translate-y-1 overflow-hidden flex flex-col justify-between ${
                   isActive
                     ? 'bg-gradient-to-br from-indigo-50/90 via-white to-blue-50/60 border-indigo-500 shadow-lg ring-2 ring-indigo-500/30'

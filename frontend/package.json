@@ -8,6 +8,11 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
+    "test:video": "node --no-warnings --test src/tests/unit/test_frontend_video_resolver.mjs",
+    "test:phase3": "node --no-warnings --test src/tests/unit/test_phase3_youtube_experience.mjs",
+    "test:duration": "node --no-warnings --test src/tests/unit/test_youtube_duration_integrity.mjs",
+    "test:stage": "node --no-warnings --test src/tests/unit/test_youtube_stage_recommendations.mjs",
+    "test:all-videos": "node --no-warnings --test src/tests/unit/test_frontend_video_resolver.mjs src/tests/unit/test_phase3_youtube_experience.mjs src/tests/unit/test_youtube_duration_integrity.mjs src/tests/unit/test_youtube_stage_recommendations.mjs src/tests/unit/test_youtube_phase331_quality.mjs",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write ."
   },

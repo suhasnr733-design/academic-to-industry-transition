@@ -367,7 +367,7 @@ class LearningService:
 
         prog.progress_percent = (completed_stages / 4.0) * 100.0
 
-        if prog.progress_percent >= 100.0 or is_completed:
+        if prog.progress_percent >= 100.0 or (stage_low == 'complete' and is_completed):
             prog.is_completed = True
             prog.stage = 'complete'
             prog.progress_percent = 100.0

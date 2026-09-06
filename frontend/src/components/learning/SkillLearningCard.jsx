@@ -1,6 +1,4 @@
-// src/components/learning/SkillLearningCard.jsx
-
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { SkillBrandLogo } from './SkillBrandLogo'
 import { SkillQuizModal } from './SkillQuizModal'
 import { 
@@ -20,17 +18,123 @@ import { RecommendedResourceHighlight } from './RecommendedResourceHighlight'
 import { YouTubeResourceList } from './YouTubeResourceList'
 import { PracticeSection } from './PracticeSection'
 import { ProjectRecommendations } from './ProjectRecommendations'
+import { fetchStageVideos, formatStageVideos } from '../../services/youtubeVideoService'
 
 export const SkillLearningCard = ({ 
   skill, 
   targetRole, 
   resumeId,
+  selectedLanguage = 'en',
+  bookmarks = [],
   onUpdateStageProgress,
   onBookmark,
+  onPlayVideo,
   onOpenAiForSkill
 }) => {
   const [activeTab, setActiveTab] = useState('all') // all, youtube, courses, practice, project, assessment
   const [showQuizModal, setShowQuizModal] = useState(false)
+  
+  // Stage-specific YouTube resources state
+  const [currentStage, setCurrentStage] = useState('learn')
+  const [stageVideos, setStageVideos] = useState(skill?.youtube_videos || [])
+  const [isLoadingVideos, setIsLoadingVideos] = useState(false)
+  const [videosError, setVideosError] = useState(null)
+
+  // Per-video watched state with localStorage persistence
+  const [watchedVideoIds, setWatchedVideoIds] = useState(() => {
+    try {
+      const storageKey = `watched_videos_${resumeId || 'default'}`
+      const saved = localStorage.getItem(storageKey)
+      return saved ? new Set(JSON.parse(saved)) : new Set()
+    } catch {
+      return new Set()
+    }
+  })
+
+  const markVideoAsWatched = useCallback((videoId) => {
+    if (!videoId) return
+    setWatchedVideoIds(prev => {
+      if (prev.has(videoId)) return prev
+      const next = new Set(prev)
+      next.add(videoId)
+      try {
+        const storageKey = `watched_videos_${resumeId || 'default'}`
+        localStorage.setItem(storageKey, JSON.stringify(Array.from(next)))
+      } catch (_) {}
+      return next
+    })
+  }, [resumeId])
+
+  const handlePlayVideoWrapper = useCallback((video, skName) => {
+    if (video?.id) {
+      markVideoAsWatched(video.id)
+    }
+    if (onPlayVideo) {
+      onPlayVideo(video, skName)
+    }
+  }, [markVideoAsWatched, onPlayVideo])
+
+  const handleMarkWatchedWrapper = useCallback((skName, stg, video) => {
+    const targetStage = stg || currentStage || 'learn'
+    if (video?.id) {
+      markVideoAsWatched(video.id)
+    }
+    if (onUpdateStageProgress) {
+      onUpdateStageProgress(skName, targetStage, true)
+    }
+  }, [markVideoAsWatched, onUpdateStageProgress, currentStage])
+
+  // Sync stage with active tab
+  useEffect(() => {
+    if (activeTab === 'youtube' || activeTab === 'all') {
+      setCurrentStage('learn')
+    } else if (activeTab === 'practice') {
+      setCurrentStage('practice')
+    } else if (activeTab === 'project') {
+      setCurrentStage('build')
+    } else if (activeTab === 'assessment') {
+      setCurrentStage('assess')
+    }
+  }, [activeTab])
+
+  // Load stage-specific videos with caching
+  const loadVideosForStage = useCallback(async (targetStage, force = false) => {
+    if (!skill?.skill_name) return
+
+    // If stage matches preloaded skill stage and we already have preloaded videos and not forcing refresh
+    const initialStage = (skill.stage || 'learn').trim().toLowerCase()
+    if (targetStage === initialStage && !force && skill.youtube_videos && skill.youtube_videos.length > 0) {
+      setStageVideos(formatStageVideos(skill.youtube_videos, skill.skill_name, targetStage))
+      setIsLoadingVideos(false)
+      setVideosError(null)
+      return
+    }
+
+    try {
+      setIsLoadingVideos(true)
+      setVideosError(null)
+      const fetched = await fetchStageVideos({
+        skill: skill.skill_name,
+        targetRole: targetRole || 'Software Engineer',
+        stage: targetStage,
+        language: selectedLanguage,
+        forceRefresh: force
+      })
+      setStageVideos(fetched)
+    } catch (err) {
+      console.error(`Error loading ${targetStage} videos for ${skill.skill_name}:`, err)
+      setVideosError(err.response?.data?.error || 'Unable to load resources right now.')
+      // Never substitute unrelated videos on error
+      setStageVideos([])
+    } finally {
+      setIsLoadingVideos(false)
+    }
+  }, [skill?.skill_name, skill?.stage, skill?.youtube_videos, targetRole, selectedLanguage])
+
+  // Reset and fetch when skill, stage, language, or resume changes
+  useEffect(() => {
+    loadVideosForStage(currentStage)
+  }, [currentStage, skill?.skill_name, selectedLanguage, resumeId, loadVideosForStage])
 
   if (!skill) return null
 
@@ -162,12 +266,25 @@ export const SkillLearningCard = ({
           />
         )}
 
-        {/* YouTube Video Resources */}
-        {(activeTab === 'all' || activeTab === 'youtube') && (
+        {/* YouTube Video Resources (Shown in All, YouTube, Practice, Project, and Assessment tabs) */}
+        {activeTab !== 'courses' && (
           <YouTubeResourceList 
-            videos={skill.youtube_videos} 
+            videos={stageVideos} 
             skillName={skill.skill_name}
+            stage={currentStage}
+            onSelectStage={(newStage) => {
+              setCurrentStage(newStage)
+            }}
+            isLoading={isLoadingVideos}
+            error={videosError}
+            onRetry={() => loadVideosForStage(currentStage, true)}
+            bookmarks={bookmarks}
+            watchedVideoIds={watchedVideoIds}
+            isWatched={Boolean(skill.stages_status?.[currentStage])}
+            onPlayVideo={handlePlayVideoWrapper}
             onBookmark={onBookmark}
+            onMarkWatched={handleMarkWatchedWrapper}
+            onMarkVideoWatched={markVideoAsWatched}
           />
         )}
 

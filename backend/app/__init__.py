@@ -35,9 +35,21 @@ bcrypt = Bcrypt()
 cors = CORS()
 limiter = Limiter(
     key_func=get_remote_address,
-    default_limits=["100 per hour"],
+    default_limits=["1200 per hour", "120 per minute"],
     storage_uri=os.environ.get('RATELIMIT_STORAGE_URI', 'memory://')
 )
+
+@limiter.request_filter
+def exempt_options_preflight():
+    """Exempt all CORS preflight OPTIONS requests from rate limiting"""
+    try:
+        from flask import request
+        if request and request.method == 'OPTIONS':
+            return True
+    except Exception:
+        pass
+    return False
+
 mail = Mail()
 socketio = None
 
@@ -117,7 +129,7 @@ def create_app(config_class='app.config.DevelopmentConfig'):
         resources={r"/*": {"origins": cors_origins_list}},
         supports_credentials=True,
         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"]
+        allow_headers=["Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "X-Silent-Error"]
     )
 
     def is_origin_allowed(origin):
@@ -142,7 +154,7 @@ def create_app(config_class='app.config.DevelopmentConfig'):
             response.headers['Access-Control-Allow-Origin'] = origin
             response.headers['Access-Control-Allow-Credentials'] = 'true'
             response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
-            response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type, X-Requested-With, Accept, Origin'
+            response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type, X-Requested-With, Accept, Origin, X-Silent-Error'
         return response
 
     limiter.init_app(app)
@@ -224,6 +236,23 @@ def create_app(config_class='app.config.DevelopmentConfig'):
     @app.errorhandler(500)
     def internal_error(error):
         return jsonify({'error': 'Internal Server Error', 'message': str(error)}), 500
+
+    @app.errorhandler(429)
+    def ratelimit_handler(error):
+        desc = getattr(error, 'description', 'Rate limit exceeded. Please try again later.')
+        response = jsonify({
+            'error': 'Too Many Requests',
+            'message': desc,
+            'retry_after': getattr(error, 'retry_after', None)
+        })
+        response.status_code = 429
+        origin = request.headers.get('Origin')
+        if origin and is_origin_allowed(origin):
+            response.headers['Access-Control-Allow-Origin'] = origin
+            response.headers['Access-Control-Allow-Credentials'] = 'true'
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type, X-Requested-With, Accept, Origin, X-Silent-Error'
+        return response
     
     # Initialize database tables and default data
     with app.app_context():
