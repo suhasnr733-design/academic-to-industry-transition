@@ -1329,7 +1329,6 @@ STAGE_CURATED_CATALOG: Dict[str, Dict[str, List[Dict[str, Any]]]] = {
             {'id': 'jS4aFq5-91M', 'title': 'JavaScript Programming - Full Course', 'channel': 'freeCodeCamp.org', 'duration': '7:44:19', 'duration_seconds': 27859, 'badge': '📘 Core Concepts', 'category': 'Web / Frontend'}
         ],
         'practice': [
-            {'id': 'N65RvNkZFGE', 'title': 'JavaScript Practice Exercises For Beginners: Beginner Exercises Part 1', 'channel': 'Code With Bubb', 'duration': '14:06', 'duration_seconds': 846, 'badge': '💻 Hands-on Practice', 'category': 'Web / Frontend'},
             {'id': 'ufBbWIyKY2E', 'title': 'Top 10 Javascript Algorithms to Prepare for Coding Interviews', 'channel': 'freeCodeCamp.org', 'duration': '1:52:52', 'duration_seconds': 6772, 'badge': '🛠️ Guided Exercise', 'category': 'Web / Frontend'}
         ],
         'build': [

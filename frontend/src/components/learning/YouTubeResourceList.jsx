@@ -118,7 +118,7 @@ export const YouTubeResourceList = ({
         {/* Stage Toggle Pills */}
         {onSelectStage && (
           <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl overflow-x-auto text-xs font-bold shrink-0">
-            {stageOptions.map(opt => (
+            {stageOptions.map((opt) => (
               <button
                 key={opt.id}
                 onClick={() => onSelectStage(opt.id)}

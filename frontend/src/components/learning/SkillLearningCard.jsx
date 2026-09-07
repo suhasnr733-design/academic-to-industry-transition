@@ -266,8 +266,8 @@ export const SkillLearningCard = ({
           />
         )}
 
-        {/* YouTube Video Resources (Shown in All, YouTube, Practice, Project, and Assessment tabs) */}
-        {activeTab !== 'courses' && (
+        {/* YouTube Video Resources (Shown in All Resources and YouTube tabs) */}
+        {(activeTab === 'all' || activeTab === 'youtube') && (
           <YouTubeResourceList 
             videos={stageVideos} 
             skillName={skill.skill_name}
