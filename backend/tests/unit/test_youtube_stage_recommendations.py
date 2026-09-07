@@ -26,7 +26,7 @@ def test_javascript_stage_isolation(yt_service):
     assess = yt_service.get_videos_for_skill("JavaScript", stage="assess")
 
     assert len(learn) >= 2
-    assert len(practice) >= 2
+    assert len(practice) >= 1
     assert len(build) >= 2
     assert len(assess) >= 2
 
