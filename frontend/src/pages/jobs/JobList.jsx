@@ -4,6 +4,7 @@ import { useJobs } from '../../hooks/useJobs'
 import { useResume } from '../../hooks/useResume'
 import { Button } from '../../components/common/Button'
 import { getJobDeadlineStatus } from '../../utils/jobDateUtils'
+import { JOB_STAGE_OPTIONS } from '../../constants/jobStages'
 import { 
   BriefcaseIcon, 
   LocationMarkerIcon as MapPinIcon, 
@@ -922,12 +923,11 @@ export const JobList = () => {
                           onChange={(e) => updateInterestStatus(job.interest_id, e.target.value)}
                           className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded px-2 py-0.5 focus:ring-2 focus:ring-primary-500 outline-none cursor-pointer"
                         >
-                          <option value="interested">⭐ Target Role</option>
-                          <option value="applied">📝 Applied</option>
-                          <option value="interviewing">💬 Interviewing</option>
-                          <option value="shortlisted">🎉 Shortlisted</option>
-                          <option value="offer">🏆 Offer Received</option>
-                          <option value="rejected">📦 Archived</option>
+                          {JOB_STAGE_OPTIONS.map((opt) => (
+                            <option key={opt.key} value={opt.key}>
+                              {opt.emoji} {opt.label}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     )}
