@@ -219,12 +219,18 @@ def test_system_design_stage_isolation(yt_service):
 # =====================================================================
 def test_uncurated_stage_safe_empty(yt_service):
     """
-    Power BI currently only has curated 'learn' videos.
+    Power BI currently only has curated 'learn' videos in STAGE_CURATED_CATALOG.
     Requesting 'assess' must NOT return the beginner tutorial disguised with an interview badge!
-    It must return safe empty [].
+    When dynamic search is disabled, it must return safe empty [].
+    When dynamic search is enabled, returned videos must be genuine interview videos, never TmhQCQr_DCA.
     """
+    assess_curated = yt_service.get_videos_for_skill("Power BI", stage="assess", enable_dynamic=False)
+    assert assess_curated == []
+
     assess = yt_service.get_videos_for_skill("Power BI", stage="assess")
-    assert assess == []
+    # Must NEVER return beginner tutorial TmhQCQr_DCA
+    assess_ids = [v['id'] for v in assess]
+    assert 'TmhQCQr_DCA' not in assess_ids
 
     # But learn must still return genuine Power BI video
     learn = yt_service.get_videos_for_skill("Power BI", stage="learn")
