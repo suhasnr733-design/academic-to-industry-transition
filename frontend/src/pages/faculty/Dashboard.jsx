@@ -30,6 +30,7 @@ import {
 } from '@heroicons/react/outline'
 import { PlacementShortlist } from './PlacementShortlist'
 import { CampusDrives } from './CampusDrives'
+import { getStageDetails, OFFICIAL_PLACEMENT_STAGES, getOfficialPlacementDetails } from '../../constants/jobStages'
 
 export const FacultyDashboard = () => {
   const { user } = useAuth()
@@ -766,24 +767,24 @@ export const FacultyDashboard = () => {
                         {student.year_of_study ? `Year ${student.year_of_study}` : 'N/A'}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          student.placement_status === 'placed'
-                            ? 'bg-green-100 text-green-800'
-                            : student.placement_status === 'higher_studies'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {student.placement_status === 'placed' ? (
-                            <>
-                              <BadgeCheckIcon className="h-3.5 w-3.5 mr-1 text-green-600" />
-                              Placed {student.placed_company ? `(${student.placed_company})` : ''}
-                            </>
-                          ) : student.placement_status === 'higher_studies' ? (
-                            'Higher Studies'
-                          ) : (
-                            'Seeking Placement'
+                        <div className="flex flex-col items-start gap-1">
+                          {(() => {
+                            const pDetail = getOfficialPlacementDetails(student.placement_status)
+                            const isPlaced = student.placement_status === 'placed'
+                            return (
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border shadow-2xs ${pDetail.badgeClass}`}>
+                                <span className="mr-1">{pDetail.emoji}</span>
+                                {isPlaced ? `Placed ${student.placed_company ? `(${student.placed_company})` : ''}` : pDetail.label}
+                              </span>
+                            )
+                          })()}
+
+                          {student.job_interests?.some(j => j.status === 'offer') && student.placement_status !== 'placed' && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                              ⚡ 1 Offer Claimed (Unverified)
+                            </span>
                           )}
-                        </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -953,212 +954,261 @@ export const FacultyDashboard = () => {
 
       {/* Student Detail & Placement Update Modal */}
       {selectedStudent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[92vh] shadow-2xl flex flex-col overflow-hidden animate-fadeIn">
+            {/* Modal Header: Fixed at top */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0 bg-white">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center shadow-xs">
                   {selectedStudent.full_name?.[0] || selectedStudent.username?.[0] || 'S'}
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900 text-lg">{selectedStudent.full_name || selectedStudent.username}</h3>
+                  <h3 className="font-bold text-gray-900 text-base sm:text-lg leading-tight">{selectedStudent.full_name || selectedStudent.username}</h3>
                   <p className="text-xs text-gray-500">Student Placement & Academic Record</p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedStudent(null)}
-                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg"
+                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                title="Close modal"
               >
-                <XIcon className="h-6 w-6" />
+                <XIcon className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="p-3 bg-gray-50 rounded-xl">
-                <span className="text-xs text-gray-500 block">Username</span>
-                <span className="font-semibold text-gray-900">@{selectedStudent.username}</span>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-xl">
-                <span className="text-xs text-gray-500 block">Email Address</span>
-                <span className="font-semibold text-gray-900 truncate block">{selectedStudent.email}</span>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-xl">
-                <span className="text-xs text-gray-500 block">Department</span>
-                <span className="font-semibold text-gray-900">{selectedStudent.department || 'General'}</span>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-xl">
-                <span className="text-xs text-gray-500 block">Year of Study</span>
-                <span className="font-semibold text-gray-900">
-                  {selectedStudent.year_of_study ? `Year ${selectedStudent.year_of_study}` : 'Not Specified'}
-                </span>
-              </div>
-            </div>
-
-            {/* Resume Access / Preview */}
-            <div className="p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-100 flex items-center justify-between">
-              <div className="flex items-center space-x-2.5">
-                <DocumentTextIcon className="h-5 w-5 text-indigo-600 shrink-0" />
-                <div>
-                  <span className="text-xs font-bold text-gray-900 block">
-                    {selectedStudent.has_resume ? 'Verified Student Resume' : 'Resume Status'}
-                  </span>
-                  <span className="text-[11px] text-gray-500 block">
-                    {selectedStudent.has_resume ? 'AI skill verified & parsed' : 'No verified resume PDF uploaded yet'}
+            {/* Modal Body: Scrollable */}
+            <div className="px-6 py-4 overflow-y-auto space-y-4 flex-1 overscroll-contain">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-xs text-gray-500 block">Username</span>
+                  <span className="font-semibold text-gray-900">@{selectedStudent.username}</span>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-xs text-gray-500 block">Email Address</span>
+                  <span className="font-semibold text-gray-900 truncate block">{selectedStudent.email}</span>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-xs text-gray-500 block">Department</span>
+                  <span className="font-semibold text-gray-900">{selectedStudent.department || 'General'}</span>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-xs text-gray-500 block">Year of Study</span>
+                  <span className="font-semibold text-gray-900">
+                    {selectedStudent.year_of_study ? `Year ${selectedStudent.year_of_study}` : 'Not Specified'}
                   </span>
                 </div>
               </div>
-              {selectedStudent.has_resume && (
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      toast.loading('Fetching student resume...', { id: 'modal-resume-dl' })
-                      const res = await api.post('/analytics/placement/export-bundle', {
-                        student_ids: [selectedStudent.id]
-                      }, {
-                        responseType: 'blob'
-                      })
-                      const blobUrl = window.URL.createObjectURL(new Blob([res.data], { type: 'application/zip' }))
-                      const link = document.createElement('a')
-                      link.href = blobUrl
-                      link.setAttribute('download', `${selectedStudent.username || 'student'}_resume_bundle.zip`)
-                      document.body.appendChild(link)
-                      link.click()
-                      link.remove()
-                      window.URL.revokeObjectURL(blobUrl)
-                      toast.success('Resume bundle ready!', { id: 'modal-resume-dl' })
-                    } catch (err) {
-                      toast.error('Resume bundle unavailable for export', { id: 'modal-resume-dl' })
-                    }
-                  }}
-                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors shrink-0"
-                >
-                  <DownloadIcon className="h-3.5 w-3.5" />
-                  Download Resume
-                </button>
-              )}
-            </div>
 
-            {/* Student's Target Companies & Job Applications */}
-            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <BriefcaseIcon className="h-4 w-4 text-purple-600" />
-                  Target Companies & Saved Jobs ({selectedStudent.job_interests?.length || 0})
-                </h4>
-                {selectedStudent.job_interests?.length > 0 && (
-                  <span className="text-[11px] text-gray-500">Live Student Pipeline</span>
+              {/* Resume Access / Preview */}
+              <div className="p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-100 flex items-center justify-between">
+                <div className="flex items-center space-x-2.5">
+                  <DocumentTextIcon className="h-5 w-5 text-indigo-600 shrink-0" />
+                  <div>
+                    <span className="text-xs font-bold text-gray-900 block">
+                      {selectedStudent.has_resume ? 'Verified Student Resume' : 'Resume Status'}
+                    </span>
+                    <span className="text-[11px] text-gray-500 block">
+                      {selectedStudent.has_resume ? 'AI skill verified & parsed' : 'No verified resume PDF uploaded yet'}
+                    </span>
+                  </div>
+                </div>
+                {selectedStudent.has_resume && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        toast.loading('Fetching student resume...', { id: 'modal-resume-dl' })
+                        const res = await api.post('/analytics/placement/export-bundle', {
+                          student_ids: [selectedStudent.id]
+                        }, {
+                          responseType: 'blob'
+                        })
+                        const blobUrl = window.URL.createObjectURL(new Blob([res.data], { type: 'application/zip' }))
+                        const link = document.createElement('a')
+                        link.href = blobUrl
+                        link.setAttribute('download', `${selectedStudent.username || 'student'}_resume_bundle.zip`)
+                        document.body.appendChild(link)
+                        link.click()
+                        link.remove()
+                        window.URL.revokeObjectURL(blobUrl)
+                        toast.success('Resume bundle ready!', { id: 'modal-resume-dl' })
+                      } catch (err) {
+                        toast.error('Resume bundle unavailable for export', { id: 'modal-resume-dl' })
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors shrink-0"
+                  >
+                    <DownloadIcon className="h-3.5 w-3.5" />
+                    Download Resume
+                  </button>
                 )}
               </div>
 
-              {selectedStudent.job_interests && selectedStudent.job_interests.length > 0 ? (
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  {selectedStudent.job_interests.map((item) => (
-                    <div
-                      key={item.id}
-                      className="p-2.5 bg-white rounded-lg border border-gray-200/80 shadow-xs flex items-center justify-between text-xs hover:border-purple-200 transition-colors"
-                    >
-                      <div className="min-w-0 pr-2">
-                        <p className="font-bold text-gray-900 truncate">{item.company}</p>
-                        <p className="text-gray-500 text-[11px] truncate">{item.job_title}</p>
-                        {item.notes && (
-                          <p className="text-gray-400 text-[10px] italic mt-0.5 truncate">"{item.notes}"</p>
-                        )}
-                      </div>
-                      <div className="flex items-center space-x-2 shrink-0">
-                        <span
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                            item.status === 'offer'
-                              ? 'bg-green-100 text-green-800'
-                              : item.status === 'interviewing'
-                              ? 'bg-blue-100 text-blue-800'
-                              : item.status === 'applied'
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-amber-100 text-amber-800'
+              {/* Student's Target Companies & Job Applications */}
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <BriefcaseIcon className="h-4 w-4 text-purple-600" />
+                    Target Companies & Saved Jobs ({selectedStudent.job_interests?.length || 0})
+                  </h4>
+                  {selectedStudent.job_interests?.length > 0 && (
+                    <span className="text-[11px] text-gray-500">Live Student Pipeline</span>
+                  )}
+                </div>
+
+                {selectedStudent.job_interests && selectedStudent.job_interests.length > 0 ? (
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {selectedStudent.job_interests.map((item) => {
+                      const stage = getStageDetails(item.status)
+                      const isOffer = item.status === 'offer'
+                      return (
+                        <div
+                          key={item.id}
+                          className={`p-2.5 bg-white rounded-lg border shadow-xs flex items-center justify-between text-xs transition-colors ${
+                            isOffer ? 'border-green-300 bg-green-50/20' : 'border-gray-200/80 hover:border-purple-200'
                           }`}
                         >
-                          {item.status || 'Interested'}
-                        </span>
-                        {item.job_id && (
-                          <a
-                            href={`/jobs/${item.job_id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-1 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded"
-                            title="View Job Details"
-                          >
-                            <EyeIcon className="h-3.5 w-3.5" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                          <div className="min-w-0 pr-2">
+                            <div className="flex items-center gap-1.5">
+                              <p className="font-bold text-gray-900 truncate">{item.company}</p>
+                              {isOffer && (
+                                <span className="px-1.5 py-0.2 bg-green-100 text-green-800 text-[9px] font-bold rounded">
+                                  Offer
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-gray-500 text-[11px] truncate">{item.job_title}</p>
+                            {item.notes && (
+                              <p className="text-gray-400 text-[10px] italic mt-0.5 truncate">"{item.notes}"</p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center space-x-2 shrink-0">
+                            <div className="flex flex-col items-end gap-0.5">
+                              <span
+                                className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold tracking-tight border flex items-center gap-1 shadow-2xs ${stage.badgeClass}`}
+                                title={stage.description}
+                              >
+                                <span>{stage.emoji}</span>
+                                <span>{stage.label}</span>
+                              </span>
+                              <span className="text-[9px] text-gray-400 font-medium">Student Reported</span>
+                            </div>
+
+                            {/* 1-Click Faculty Action to Pre-fill & Verify Placement */}
+                            {isOffer && placementForm.placement_status !== 'placed' && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setPlacementForm({
+                                    placement_status: 'placed',
+                                    placed_company: item.company,
+                                    package_lpa: placementForm.package_lpa || ''
+                                  })
+                                  toast.success(`Pre-filled placement for ${item.company}! Complete LPA & click Save below.`, { duration: 4000 })
+                                }}
+                                className="px-2 py-1 bg-green-600 hover:bg-green-700 active:scale-95 text-white rounded-md text-[10px] font-bold flex items-center gap-1 shadow-xs transition-all"
+                                title="Pre-fill official placement details"
+                              >
+                                <CheckCircleIcon className="h-3.5 w-3.5" />
+                                Verify & Place
+                              </button>
+                            )}
+
+                            {item.job_id && (
+                              <a
+                                href={`/jobs/${item.job_id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded"
+                                title="View Job Details"
+                              >
+                                <EyeIcon className="h-3.5 w-3.5" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-400 italic bg-white p-3 rounded-lg border border-dashed border-gray-200 text-center">
+                    This mentee has not marked interest in any company roles or campus jobs yet.
+                  </p>
+                )}
+              </div>
+
+              <form onSubmit={handleSavePlacement} className="p-4 bg-purple-50/60 rounded-xl border border-purple-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <BadgeCheckIcon className="h-4 w-4 text-purple-600" />
+                    Manage Placement Status
+                  </h4>
+                  <span className="text-[10px] font-bold bg-purple-200/80 text-purple-900 px-2 py-0.5 rounded-full border border-purple-300/60">
+                    Faculty Official Authority
+                  </span>
                 </div>
-              ) : (
-                <p className="text-xs text-gray-400 italic bg-white p-3 rounded-lg border border-dashed border-gray-200 text-center">
-                  This mentee has not marked interest in any company roles or campus jobs yet.
+                <p className="text-[11px] text-gray-500">
+                  Official institutional record. Only authorized faculty can commit verified student placement outcomes.
                 </p>
-              )}
+
+                <div>
+                  <label className="text-xs font-medium text-gray-700 block mb-1">Official Status</label>
+                  <select
+                    value={placementForm.placement_status}
+                    onChange={(e) => setPlacementForm({ ...placementForm, placement_status: e.target.value })}
+                    className="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 font-medium"
+                  >
+                    {OFFICIAL_PLACEMENT_STAGES.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.emoji} {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {placementForm.placement_status === 'placed' && (
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="text-xs font-medium text-gray-700 block mb-1">Company Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Microsoft"
+                        value={placementForm.placed_company}
+                        onChange={(e) => setPlacementForm({ ...placementForm, placed_company: e.target.value })}
+                        className="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-700 block mb-1">Package (LPA)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        placeholder="e.g. 14.5"
+                        value={placementForm.package_lpa}
+                        onChange={(e) => setPlacementForm({ ...placementForm, package_lpa: e.target.value })}
+                        className="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-2 flex justify-end gap-2">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    isLoading={isUpdatingPlacement}
+                    className="bg-purple-600 hover:bg-purple-700 text-white font-semibold"
+                  >
+                    Save & Verify Placement Details
+                  </Button>
+                </div>
+              </form>
             </div>
 
-            <form onSubmit={handleSavePlacement} className="p-4 bg-purple-50/60 rounded-xl border border-purple-100 space-y-3">
-              <h4 className="text-xs font-bold text-purple-900 uppercase tracking-wider">
-                Manage Placement Status
-              </h4>
-
-              <div>
-                <label className="text-xs font-medium text-gray-700 block mb-1">Status</label>
-                <select
-                  value={placementForm.placement_status}
-                  onChange={(e) => setPlacementForm({ ...placementForm, placement_status: e.target.value })}
-                  className="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="seeking">Seeking Placement (Unplaced)</option>
-                  <option value="placed">Placed (Offer Received)</option>
-                  <option value="higher_studies">Higher Studies</option>
-                  <option value="opted_out">Opted Out</option>
-                </select>
-              </div>
-
-              {placementForm.placement_status === 'placed' && (
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  <div>
-                    <label className="text-xs font-medium text-gray-700 block mb-1">Company Name</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Microsoft"
-                      value={placementForm.placed_company}
-                      onChange={(e) => setPlacementForm({ ...placementForm, placed_company: e.target.value })}
-                      className="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-700 block mb-1">Package (LPA)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      placeholder="e.g. 14.5"
-                      value={placementForm.package_lpa}
-                      onChange={(e) => setPlacementForm({ ...placementForm, package_lpa: e.target.value })}
-                      className="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="pt-2 flex justify-end gap-2">
-                <Button
-                  type="submit"
-                  size="sm"
-                  isLoading={isUpdatingPlacement}
-                  className="bg-purple-600 hover:bg-purple-700 text-white font-semibold"
-                >
-                  Save Placement Details
-                </Button>
-              </div>
-            </form>
-
-            <div className="pt-1 flex items-center justify-between">
+            {/* Modal Footer: Fixed at bottom */}
+            <div className="px-6 py-3.5 border-t border-gray-100 bg-gray-50/80 flex items-center justify-between shrink-0">
               {directoryScope === 'mentees' ? (
                 <Button
                   variant="outline"
