@@ -76,6 +76,10 @@ class Config:
     LINKEDIN_CLIENT_SECRET = os.environ.get('LINKEDIN_CLIENT_SECRET')
     LINKEDIN_REDIRECT_URI = os.environ.get('LINKEDIN_REDIRECT_URI', 'http://localhost:5000/api/v1/auth/linkedin/callback')
 
+    # YouTube Data API v3 Configuration
+    YOUTUBE_API_KEY = os.environ.get('YOUTUBE_API_KEY')
+    ENABLE_YOUTUBE_WEB_FALLBACK = os.environ.get('ENABLE_YOUTUBE_WEB_FALLBACK', 'false').lower() in ('true', '1')
+
 class DevelopmentConfig(Config):
     DEBUG = True
     FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
