@@ -5,9 +5,11 @@ import re
 import json
 import logging
 import threading
+import time
 import requests
+import html
 import urllib.parse
-from typing import List, Dict, Any, Optional, Tuple, Union
+from typing import List, Dict, Any, Optional, Tuple, Union, Set
 
 logger = logging.getLogger(__name__)
 
@@ -809,6 +811,56 @@ def normalize_skill_name(skill: str) -> str:
     # Strip trailing punctuation if present
     cleaned = re.sub(r'[^\w\s\.\+#\-/]', '', s).strip()
     return CANONICAL_ALIASES.get(cleaned, cleaned)
+
+
+def get_skill_equivalent_forms(skill: str) -> Set[str]:
+    """
+    Generate generic equivalent aliases and morphological forms for any technical skill.
+    Handles:
+      1. Suffix variations: .js <-> js <-> base (e.g. express.js <-> express js <-> expressjs <-> express)
+         Applies generically across all *.js technologies (react.js, node.js, vue.js, next.js, express.js, etc.)
+      2. Bidirectional canonical lookup (finds all synonyms mapped to the same canonical key in CANONICAL_ALIASES)
+      3. Plural / singular noun inflection (algorithms <-> algorithm, microservices <-> microservice, rest apis <-> rest api)
+      4. Generic framework phrasing (e.g. express framework)
+    """
+    if not skill:
+        return set()
+    s = str(skill).strip().lower()
+    s = re.sub(r'\s+', ' ', s)
+    forms: Set[str] = {s}
+
+    # 1. Canonical lookup and reverse canonical lookup
+    canon = CANONICAL_ALIASES.get(s, s)
+    forms.add(canon)
+    for k, v in CANONICAL_ALIASES.items():
+        if v == canon or v == s:
+            forms.add(k)
+
+    # 2. Generic .js / JS variations for any web/scripting library
+    for item in list(forms):
+        base = None
+        if item.endswith('.js'):
+            base = item[:-3].strip()
+        elif item.endswith(' js'):
+            base = item[:-3].strip()
+        elif item.endswith('js') and len(item) > 4:
+            base = item[:-2].strip()
+
+        if base and len(base) > 2:
+            forms.add(base)
+            forms.add(f"{base}.js")
+            forms.add(f"{base} js")
+            forms.add(f"{base}js")
+
+    # 3. Generic singular / plural noun inflection
+    for item in list(forms):
+        if item.endswith('s') and len(item) > 3 and not item.endswith('.js'):
+            forms.add(item[:-1])
+        elif len(item) > 3 and not item.endswith('.js'):
+            forms.add(f"{item}s")
+
+    # Clean out empty/whitespace strings
+    return {f for f in forms if f and len(f) >= 2}
 
 
 def extract_youtube_id(val: Any) -> Optional[str]:
@@ -1788,6 +1840,7 @@ def is_video_relevant_to_skill(skill: str, title: str) -> bool:
     """
     Check if a YouTube video title is genuinely relevant to the requested skill.
     Prevents unrelated or random videos from being attached to unknown/arbitrary skills.
+    Uses generic skill equivalent forms, canonical aliases, and morphological stemming.
     """
     if not skill or not title:
         return False
@@ -1798,60 +1851,344 @@ def is_video_relevant_to_skill(skill: str, title: str) -> bool:
     if skill_clean in title_clean:
         return True
 
-    # Check canonical aliases (e.g. 'k8s' for 'kubernetes')
-    norm = normalize_skill_name(skill)
-    if norm and norm in title_clean:
-        return True
+    # Check all generic equivalent forms
+    forms = get_skill_equivalent_forms(skill_clean)
+    for f in forms:
+        if len(f) <= 2:
+            pattern = r'(?i)\b' + re.escape(f) + r'\b'
+            if re.search(pattern, title_clean):
+                return True
+        else:
+            if f in title_clean:
+                return True
+            pattern = r'(?i)\b' + re.escape(f) + r'\b'
+            if re.search(pattern, title_clean):
+                return True
 
-    # Check significant tokens (> 2 chars)
-    tokens = [t for t in re.split(r'[\s\.\-_/]+', skill_clean) if len(t) > 2]
+    # Fallback to significant tokens (> 2 chars, excluding generic stop words)
+    tokens = [t for t in re.split(r'[\s\.\-_/]+', skill_clean) if len(t) > 2 and t not in ('and', 'the', 'for', 'with')]
     if tokens:
-        # For multi-word skills, match at least the most specific word
-        return any(t in title_clean for t in tokens)
+        for t in tokens:
+            if t in title_clean:
+                return True
+            if t.endswith('s') and len(t) > 3 and t[:-1] in title_clean:
+                return True
+            if len(t) > 3 and (t + 's') in title_clean:
+                return True
 
     return False
 
 
-def is_video_matching_stage_intent(stage: str, title: str) -> bool:
+def score_stage_intent(stage: str, title: str) -> Tuple[float, float, float]:
     """
-    Ensure non-learn videos actually correspond to the stage semantics.
-    For practice/build/assess, title must contain appropriate intent keywords.
+    Generic weighted stage-intent scoring engine with Compound Phrase Priority.
+    Tier 1 (Compound Phrases) are evaluated first and carry decisive weights.
+    Tier 2 (Individual Keywords) provide contextual signals.
+    Strictly generic across all skills and domains (no skill or video-specific hardcoding).
     """
     stage_clean = (stage or 'learn').strip().lower()
+    title_raw = str(title or '').strip()
+    title_clean = html.unescape(title_raw).lower()
+    if not title_clean:
+        return (0.0, 0.0, 0.0)
+
+    pos_score = 0.0
+    neg_score = 0.0
+
+    # =========================================================================
+    # TIER 1: HIGH-PRIORITY COMPOUND PHRASES
+    # Multi-word semantic units evaluated first
+    # =========================================================================
+
+    # Assess Compound Phrases
+    assess_compounds = [
+        (r'\bcoding\s+interview\s+concepts\b', 5.5),
+        (r'\binterview\s+concepts\b', 5.0),
+        (r'\bcoding\s+interview\s+preparation\b', 5.0),
+        (r'\btechnical\s+interview\s+preparation\b', 5.0),
+        (r'\b(?:most\s+asked|frequently\s+asked)\s+interview\s+questions?\b', 5.0),
+        (r'\b(?:to\s+)?crack\s+interviews?\b', 5.0),
+        (r'\bcracking\s+the\s+[\w\s]*interview\b', 5.0),
+        (r'\binterview\s+questions?\s*(?:&|and)\s*answers?\b', 5.0),
+        (r'\binterview\s+questions?\b', 4.5),
+        (r'\b(?:mock|technical)\s+interview\b', 4.5),
+        (r'\btechnical\s+assessment\b', 4.5),
+        (r'\balgorithms?\s+for\s+(?:coding\s+)?interviews?\b', 4.5),
+        (r'\binterview\s+(?:q&a|prep|preparation)\b', 4.0),
+    ]
+
+    # Practice Compound Phrases
+    practice_compounds = [
+        (r'\b(?:coding\s+exercises?|coding\s+challenges?)\b', 5.0),
+        (r'\b(?:practice\s+problems?|practice\s+exercises?|algorithm\s+exercises?|algorithm\s+practice)\b', 5.0),
+        (r'\b(?:solve\s+coding\s+problems?|solve\s+coding\s+challenges?|solve\s+algorithms?|solving\s+algorithms?)\b', 5.0),
+        (r'\b(?:problem\s+solving|hands-on\s+practice|hands\s+on\s+practice|coding\s+drills?)\b', 4.5),
+        (r'\b(?:implementation\s+exercises?|implementation\s+practice)\b', 4.5),
+        (r'\b(?:crud\s+(?:operations?|tutorial|implementation|practice|exercises?|api)|crud\s+api\s+tutorial)\b', 5.0),
+        (r'\b(?:perform\s+crud|working\s+with\s+[\w\s-]+\s+to\s+perform\s+crud)\b', 5.0),
+        (r'\b(?:crud\s+exercises?|aggregation\s+pipeline\s+practice|query\s+practice|queries\s+practice)\b', 4.5),
+        (r'\b(?:rest\s+api|restful\s+api|apis?)\s+(?:practice|exercises?|testing|crud)\b', 4.5),
+        (r'\b(?:build|building|create|creating)\s+(?:a\s+|an\s+)?(?:rest\s+api|restful\s+api|crud\s+api)s?\'?s?\b', 4.5),
+        (r'\b(?:routes?|routing|middleware)\s+(?:exercises?|practice|tutorial|operations?|implementation)\b', 4.5),
+        (r'\bworking\s+with\s+[\w\s-]+\s+(?:routes?|routing|middleware)\b', 4.5),
+        (r'\b(?:hands-on\s+coding|hands\s+on\s+coding|hands-on\s+tutorial|hands\s+on\s+tutorial)\b', 4.5),
+        (r'\b(?:endpoint\s+testing|api\s+testing|debugging\s+practice|practice\s+lab)\b', 4.5),
+        (r'\b(?:component\s+challenge|hooks\s+exercise|practical\s+[\w\s-]*walkthrough)\b', 4.0),
+        (r'\b(?:hands-on|hands\s+on)\s+(?:lab|exercises?|walkthrough)\b', 4.0),
+        (r'\b(?:practice\s+projects?|project\s+practice|beginner\s+[\w\s-]*projects?)\b', 4.5),
+    ]
+
+    # Build Compound Phrases
+    build_compounds = [
+        (r'\b(?:project\s+tutorial|portfolio\s+project|build\s+and\s+deploy|from\s+scratch)\b', 5.0),
+        (r'\b(?:full\s*stack|fullstack)\s+(?:app|application|project)\b', 5.0),
+        (r'\bhow\s+to\s+(?:make|create|build)\s+(?:a\s+|an\s+)?[\w\s-]+\s+(?:app|application|website|clone|pipeline|project|visualizer|simulator)\b', 5.0),
+        (r'\b(?:visualizer|visualization|simulator|simulation|implementation)\s+project\b', 5.0),
+        (r'\b(?:real-world|real\s+world)\s+(?:project|application|pipeline|implementation)\b', 4.5),
+        (r'\b(?:practical\s+implementation|hands-on\s+implementation|hands\s+on\s+implementation)\b', 4.5),
+        (r'\bcomplete\s+project\s+(?:hands\s+on|implementation)\b', 4.5),
+        (r'\bend\s+to\s+end\s+implementation\b', 4.5),
+        (r'\b(?:learn\s+[\w#\+\.]+\s+by\s+building|by\s+building\s+[\w\s-]+\s+(?:games|apps|projects))\b', 5.0),
+    ]
+
+    # Learn Compound Phrases
+    learn_compounds = [
+        (r'\b(?:full|complete|crash)\s+course(?:\s+for\s+beginners)?\b', 5.0),
+        (r'\bmasterclass\b', 4.5),
+        (r'\b(?:for\s+beginners|beginner(?:\'?s)?\s+(?:tutorial|course|guide))\b', 4.5),
+        (r'\bfundamentals\s+course\b', 4.5),
+        (r'\bcomplete\s+guide\b', 4.5),
+        (r'\b(?:introduction|intro)\s+to\b', 4.0),
+        (r'\bconcepts\s+explained\b', 4.0),
+    ]
+
+    matched_assess_compounds = [w for pat, w in assess_compounds if re.search(pat, title_clean)]
+    matched_practice_compounds = [w for pat, w in practice_compounds if re.search(pat, title_clean)]
+    matched_build_compounds = [w for pat, w in build_compounds if re.search(pat, title_clean)]
+    matched_learn_compounds = [w for pat, w in learn_compounds if re.search(pat, title_clean)]
+
+    # Check Tier 1 compound phrases for each stage
     if stage_clean == 'learn':
-        return True
+        for w in matched_learn_compounds:
+            pos_score += w
+        for w in matched_assess_compounds:
+            neg_score += w
+        for w in matched_build_compounds:
+            neg_score += (w + 1.0)
+        for w in matched_practice_compounds:
+            neg_score += 4.0
 
-    title_clean = (title or '').strip().lower()
-
-    # Beginner courses should NOT be assigned to practice, build, or assess
-    if any(beg in title_clean for beg in ['crash course', 'tutorial for beginners', 'full course for beginners', 'beginners course', 'beginners tutorial']):
-        return False
-
-    if stage_clean == 'practice':
-        practice_kw = [
-            'practice', 'exercise', 'exercises', 'problem', 'problems', 'challenge',
-            'challenges', 'hands-on', 'hands on', 'walkthrough', 'solve', 'solving',
-            'code along', 'coding', 'debugging', 'drills', 'lab', 'workshop'
-        ]
-        return any(kw in title_clean for kw in practice_kw)
+    elif stage_clean == 'practice':
+        for w in matched_practice_compounds:
+            pos_score += w
+        for w in matched_assess_compounds:
+            neg_score += w
+        for w in matched_learn_compounds:
+            # If strong practice compounds matched, apply mild beginner penalty; otherwise full penalty
+            if matched_practice_compounds:
+                neg_score += 1.5
+            else:
+                neg_score += 3.5
 
     elif stage_clean == 'build':
-        build_kw = [
-            'project', 'projects', 'build', 'building', 'app', 'apps', 'clone',
-            'full stack', 'fullstack', 'real world', 'real-world', 'create',
-            'implementation', 'develop', 'portfolio', 'application'
-        ]
-        return any(kw in title_clean for kw in build_kw)
+        for w in matched_build_compounds:
+            pos_score += w
+        for w in matched_assess_compounds:
+            neg_score += w
+        for w in matched_learn_compounds:
+            neg_score += 3.5
 
     elif stage_clean == 'assess':
-        assess_kw = [
-            'interview', 'interviews', 'question', 'questions', 'quiz', 'test',
-            'exam', 'assessment', 'mock', 'prep', 'preparation', 'q&a', 'faang',
-            'leetcode', 'hacker', 'cracking'
+        for w in matched_assess_compounds:
+            pos_score += w
+        for w in matched_learn_compounds:
+            neg_score += 4.0
+        for w in matched_build_compounds:
+            neg_score += 3.5
+
+    # =========================================================================
+    # TIER 2: INDIVIDUAL KEYWORDS & UNIGRAMS
+    # Contextual keywords adding or deducting moderate weight
+    # =========================================================================
+    if stage_clean == 'learn':
+        pos_unigrams = [
+            (r'\bfundamentals?\b', 2.5),
+            (r'\bconcepts?\b', 2.5),
+            (r'\bcourse\b', 2.0),
+            (r'\bguide\b', 2.0),
+            (r'\blearn\s+[\w#\+\.]+', 2.0),
+            (r'\bwhat\s+(?:is|are)\b', 2.0),
+            (r'\bbasics?\b', 1.5),
+            (r'\bdeep\s+dive\b', 1.5),
+            (r'\bhow\s+(?:it|they)\s+works?\b', 1.5),
+            (r'\bin\s+\d+\s+minutes?\b', 1.5),
+            (r'\blecture\b', 1.5),
+            (r'\bdata\s+analysis\b', 1.5),
+            (r'\bexplained\b', 1.5),
+            (r'\boverview\b', 1.5),
+            (r'\b101\b', 1.5),
         ]
-        return any(kw in title_clean for kw in assess_kw)
+        # Only treat unigram "tutorial" as Learn if it's NOT part of a build compound phrase
+        if not matched_build_compounds:
+            pos_unigrams.append((r'\btutorial\b', 2.0))
+
+        neg_unigrams = [
+            (r'\bprojects?\b', 3.0),
+            (r'\bapp\b', 2.0),
+            (r'\binterview\b', 3.5),
+            (r'\bexercises?\b', 3.0),
+        ]
+        for pat, w in pos_unigrams:
+            if re.search(pat, title_clean):
+                pos_score += w
+        if not matched_build_compounds:
+            for pat, w in neg_unigrams:
+                if re.search(pat, title_clean):
+                    neg_score += w
+
+    elif stage_clean == 'practice':
+        pos_unigrams = [
+            (r'\bpractice\b', 3.0),
+            (r'\bexercises?\b', 3.0),
+            (r'\balgorithms?\b', 3.0),
+            (r'\bcrud\b', 2.5),
+            (r'\bproblem\s+solving\b', 3.0),
+            (r'\bsolv(?:ing|e)\s+problems?\b', 2.5),
+            (r'\bproblems?\b', 2.0),
+            (r'\bchallenges?\b', 2.0),
+            (r'\b(?:middleware|routes?|routing|endpoints?)\b', 2.0),
+            (r'\b(?:leetcode|hackerrank|code\s+along|drills?|workshop)\b', 2.0),
+            (r'\b(?:hands-on|hands\s+on|walkthrough|solve|solving|lab)\b', 1.5),
+        ]
+        neg_unigrams = [
+            (r'\bcareer\s+advice\b', 4.5),
+            (r'\binterview\s+(?:tips|advice)\b', 4.0),
+            (r'\bpreparing\s+for\s+(?:a\s+|an\s+)?[\w\s]*interview\b', 3.5),
+            # Mild context: "prepare for interviews" or "coding interview"
+            (r'\bprepare\s+for\s+[\w\s]*interviews?\b', 1.0),
+            (r'\bcoding\s+interviews?\b', 1.0),
+        ]
+        for pat, w in pos_unigrams:
+            if re.search(pat, title_clean):
+                pos_score += w
+        for pat, w in neg_unigrams:
+            if re.search(pat, title_clean):
+                neg_score += w
+
+    elif stage_clean == 'build':
+        pos_unigrams = [
+            (r'\bprojects?\b', 3.0),
+            (r'\bbuild(?:ing)?\b', 3.0),
+            (r'\b(?:app|apps|application|pipeline|clone)\b', 2.5),
+            (r'\b(?:visualizer|visualisation|visualization|simulator|simulation)\b', 2.5),
+            (r'\b(?:create|develop|implementation|implementing|implement)\b', 2.0),
+        ]
+        neg_unigrams = [
+            (r'\btheory\s+only\b', 3.5),
+        ]
+        for pat, w in pos_unigrams:
+            if re.search(pat, title_clean):
+                pos_score += w
+        for pat, w in neg_unigrams:
+            if re.search(pat, title_clean):
+                neg_score += w
+
+    elif stage_clean == 'assess':
+        pos_unigrams = [
+            (r'\b(?:assessment|assessment\s+test|quiz|exam)\b', 3.5),
+            (r'\b(?:interview|interviews|faang|leetcode)\b', 2.5),
+            (r'\b(?:prep|preparation|q&a)\b', 2.0),
+        ]
+        for pat, w in pos_unigrams:
+            if re.search(pat, title_clean):
+                pos_score += w
+
+    net_score = pos_score - neg_score
+    return (round(pos_score, 2), round(neg_score, 2), round(net_score, 2))
+
+
+def is_video_matching_stage_intent(stage: str, title: str) -> bool:
+    """
+    Ensure videos actually correspond to the requested stage semantics.
+    Uses Compound Phrase Priority + weighted scoring.
+    Strictly generic: applies equally across all skills and domains.
+    """
+    stage_clean = (stage or 'learn').strip().lower()
+    title_clean = (title or '').strip().lower()
+    if not title_clean:
+        return False
+
+    pos, neg, net = score_stage_intent(stage_clean, title_clean)
+
+    if stage_clean == 'learn':
+        # Project-only or pure interview videos should NOT pass Learn
+        # unless accompanied by strong foundational/instructional intent
+        return pos >= 1.5 and net > 0.0
+
+    elif stage_clean == 'practice':
+        # Must have genuine practice/problem-solving signals (pos >= 1.5)
+        # Net score must be positive, filtering out pure interview questions/prep
+        # while permitting coding algorithms with interview context
+        return pos >= 1.5 and net > 0.0
+
+    elif stage_clean == 'build':
+        # Must have genuine build/project signals and not be an interview/pure-theory lecture
+        return pos >= 2.0 and net > 0.0
+
+    elif stage_clean == 'assess':
+        # Must have genuine assessment/interview signals and not be beginner lecture/build project
+        return pos >= 2.0 and net > 0.0
 
     return True
+
+
+def is_video_quality_and_duration_valid(stage: str, title: str, duration_seconds: Optional[int]) -> bool:
+    """
+    Generic stage-aware video quality and duration validation.
+    Rejects YouTube shorts and low-information video clips appropriately across all stages.
+    - Shorts hashtags (#short / #shorts) are rejected universally across all stages.
+    - LEARN: Requires duration >= 120s when known (courses/tutorials require meaningful depth).
+    - PRACTICE: Requires duration >= 120s when known (hands-on exercises/problems require meaningful walkthrough).
+    - BUILD: Requires duration >= 180s when known (real project implementation requires meaningful depth).
+    - ASSESS: Duration < 60s is rejected UNLESS the title explicitly represents a focused quiz/question item.
+              Sub-120s multi-item listicles (e.g. 'Top 5 Algorithms' in 47s) are rejected as superficial clips.
+    """
+    stage_clean = (stage or 'learn').strip().lower()
+    title_low = (title or '').strip().lower()
+
+    # Universal Shorts rejection
+    if '#short' in title_low or '#shorts' in title_low:
+        return False
+
+    # If duration is unknown, allow through (Option A: duration is None for unverified dynamic videos)
+    if duration_seconds is None:
+        return True
+
+    if stage_clean == 'learn':
+        return duration_seconds >= 120
+
+    elif stage_clean == 'practice':
+        return duration_seconds >= 120
+
+    elif stage_clean == 'build':
+        return duration_seconds >= 180
+
+    elif stage_clean == 'assess':
+        # Short quiz / question / puzzle exception for sub-60s
+        is_focused_quiz = any(term in title_low for term in ['quiz', 'puzzle', 'mcq', 'question of the day', 'trivia'])
+        if duration_seconds < 60:
+            return is_focused_quiz
+
+        # For 60-120s, reject superficial multi-item listicles (e.g. "Top 5 Algorithms in 1 min")
+        claims_multi_items = bool(re.search(r'\btop\s+\d+\b', title_low) or re.search(r'\b\d+\s+algorithms?\b', title_low))
+        if duration_seconds < 120 and claims_multi_items and not is_focused_quiz:
+            return False
+
+        return True
+
+    return True
+
+
 
 
 # Stage-specific curated catalog with verified, embeddable YouTube videos
@@ -1952,9 +2289,7 @@ STAGE_CURATED_CATALOG: Dict[str, Dict[str, List[Dict[str, Any]]]] = {
         'practice': [
             {'id': 'i53Gi_K3o7I', 'title': '20 System Design Concepts Explained in 10 Minutes', 'channel': 'NeetCode', 'duration': '11:39', 'duration_seconds': 699, 'category': 'Software Architecture'}
         ],
-        'build': [
-            {'id': 'm8Icp_Cid5o', 'title': 'System Design for Beginners Course', 'channel': 'freeCodeCamp.org', 'duration': '1:25:06', 'duration_seconds': 5106, 'category': 'Software Architecture'}
-        ],
+        'build': [],
         'assess': [
             {'id': 'UzLMhqg3_Wc', 'title': 'System Design Introduction For Interview', 'channel': 'Tushar Roy - Coding Made Simple', 'duration': '27:22', 'duration_seconds': 1642, 'category': 'Software Architecture'},
             {'id': 'SgWb6tWx3S8', 'title': 'System Design Mock Interview: Design a Rate Limiter (with Meta Engineering Manager)', 'channel': 'Aced (formerly Exponent)', 'duration': '22:34', 'duration_seconds': 1354, 'category': 'Software Architecture'}
@@ -2170,6 +2505,89 @@ STAGE_REASON_MAP: Dict[str, str] = {
 }
 
 
+class YouTubeQuotaCircuitBreaker:
+    """
+    Generic circuit breaker tailored for YouTube Data API quota protection.
+
+    States:
+      - CLOSED: Normal operation. Requests to YouTube API are permitted.
+      - OPEN: Quota exceeded (HTTP 429, 403 quotaExceeded, or RESOURCE_EXHAUSTED).
+              New search/video API calls are halted immediately to protect quota,
+              avoid slow request timeouts, and prevent stricter IP rate-limits.
+      - HALF_OPEN: Cooldown duration has elapsed; allows a single probe request
+                   to determine if quota has been restored / reset.
+    """
+    def __init__(self, cooldown_seconds: Optional[float] = None, failure_threshold: int = 1):
+        env_cooldown = os.environ.get('YOUTUBE_QUOTA_COOLDOWN_SECONDS')
+        self.cooldown_seconds = float(env_cooldown) if env_cooldown else (cooldown_seconds or 300.0)
+        self.failure_threshold = max(1, failure_threshold)
+        self.state = 'CLOSED'
+        self.failure_count = 0
+        self.last_failure_time: Optional[float] = None
+        self.circuit_open_until: Optional[float] = None
+        self.last_failure_reason: str = ""
+        self._lock = threading.Lock()
+
+    def is_open(self) -> bool:
+        """Check if circuit is currently OPEN, blocking API calls."""
+        with self._lock:
+            if self.state == 'OPEN':
+                if self.circuit_open_until and time.time() >= self.circuit_open_until:
+                    self.state = 'HALF_OPEN'
+                    logger.info("YouTube API quota circuit breaker transitioned from OPEN to HALF_OPEN (probing allowed).")
+                    return False
+                return True
+            return False
+
+    def trip(self, duration: Optional[float] = None, reason: str = "Quota exceeded") -> None:
+        """Trip circuit breaker to OPEN upon receiving HTTP 429 / quotaExceeded response."""
+        with self._lock:
+            dur = duration if duration is not None else self.cooldown_seconds
+            self.state = 'OPEN'
+            self.failure_count += 1
+            self.last_failure_time = time.time()
+            self.circuit_open_until = self.last_failure_time + dur
+            self.last_failure_reason = reason
+            logger.warning(
+                f"YouTube API quota circuit breaker TRIPPED to OPEN: {reason}. "
+                f"Halting API requests for {dur}s (until {time.ctime(self.circuit_open_until)})."
+            )
+
+    def record_success(self) -> None:
+        """Record successful API call; resets circuit to CLOSED if HALF_OPEN."""
+        with self._lock:
+            if self.state == 'HALF_OPEN':
+                logger.info("YouTube API probe call succeeded. Circuit breaker reset to CLOSED.")
+            self.state = 'CLOSED'
+            self.failure_count = 0
+            self.circuit_open_until = None
+
+    def reset(self) -> None:
+        """Manually force circuit breaker back to CLOSED state."""
+        with self._lock:
+            self.state = 'CLOSED'
+            self.failure_count = 0
+            self.last_failure_time = None
+            self.circuit_open_until = None
+            self.last_failure_reason = ""
+            logger.info("YouTube API quota circuit breaker manually reset to CLOSED.")
+
+    def get_status(self) -> Dict[str, Any]:
+        """Return diagnostic status of the circuit breaker."""
+        with self._lock:
+            remaining_cooldown = max(0.0, self.circuit_open_until - time.time()) if self.circuit_open_until else 0.0
+            return {
+                'state': self.state,
+                'is_open': self.state == 'OPEN' and remaining_cooldown > 0,
+                'failure_count': self.failure_count,
+                'last_failure_time': self.last_failure_time,
+                'circuit_open_until': self.circuit_open_until,
+                'remaining_cooldown_seconds': remaining_cooldown,
+                'cooldown_seconds': self.cooldown_seconds,
+                'last_failure_reason': self.last_failure_reason
+            }
+
+
 class YouTubeService:
     """
     Phase 3.4 Open YouTube Recommendation Architecture.
@@ -2188,9 +2606,16 @@ class YouTubeService:
 
     def __init__(self, cache_file: Optional[str] = None):
         self.api_key = os.environ.get('YOUTUBE_API_KEY')
+        is_configured = bool(self.api_key and self.api_key.strip())
+        logger.info(f"YOUTUBE_API_KEY_CONFIGURED={str(is_configured).lower()}")
+        logger.info(f"ENABLE_YOUTUBE_WEB_FALLBACK={str(ENABLE_YOUTUBE_WEB_FALLBACK).lower()}")
         self.cache_file = cache_file or DEFAULT_CACHE_FILE
         self._cache: Dict[str, List[Dict[str, Any]]] = {}
         self._cache_lock = threading.Lock()
+        self._negative_cache: Dict[str, float] = {}
+        env_empty_cooldown = os.environ.get('YOUTUBE_EMPTY_COOLDOWN_SECONDS')
+        self._negative_cooldown: float = float(env_empty_cooldown) if env_empty_cooldown else 300.0
+        self.circuit_breaker = YouTubeQuotaCircuitBreaker()
         self._inflight_locks: Dict[str, threading.Lock] = {}
         self._meta_lock = threading.Lock()
         self._http_session = requests.Session()
@@ -2229,10 +2654,73 @@ class YouTubeService:
             logger.warning(f"Failed to save persistent YouTube cache: {e}")
 
     def clear_cache(self) -> None:
-        """Clear all in-memory and persistent cached YouTube recommendations."""
+        """Clear all in-memory and persistent cached YouTube recommendations, negative cache, and reset circuit breaker."""
         with self._cache_lock:
             self._cache.clear()
+            self._negative_cache.clear()
             self._save_disk_cache()
+        self.circuit_breaker.reset()
+
+    def is_circuit_open(self) -> bool:
+        """Check whether the quota circuit breaker is currently OPEN."""
+        return self.circuit_breaker.is_open()
+
+    def trip_circuit_breaker(self, duration: Optional[float] = None, reason: str = "Quota exceeded") -> None:
+        """Trip the quota circuit breaker to OPEN."""
+        self.circuit_breaker.trip(duration=duration, reason=reason)
+
+    def reset_circuit_breaker(self) -> None:
+        """Reset the quota circuit breaker to CLOSED."""
+        self.circuit_breaker.reset()
+
+    def get_circuit_breaker_status(self) -> Dict[str, Any]:
+        """Return status dictionary of the quota circuit breaker."""
+        return self.circuit_breaker.get_status()
+
+    def is_empty_cooldown_active(self, cache_key: str) -> bool:
+        """Check if an identical request previously returned empty and is still within cooldown."""
+        with self._cache_lock:
+            if cache_key in self._negative_cache:
+                if time.time() < self._negative_cache[cache_key]:
+                    return True
+                else:
+                    del self._negative_cache[cache_key]
+            return False
+
+    def record_empty_result(self, cache_key: str, duration: Optional[float] = None) -> None:
+        """Record an empty result in negative cache to prevent repeated identical searches."""
+        ttl = duration if duration is not None else self._negative_cooldown
+        with self._cache_lock:
+            self._negative_cache[cache_key] = time.time() + ttl
+            logger.info(f"Recorded empty result cooldown for '{cache_key}' (TTL={ttl}s)")
+
+    def _is_quota_exceeded(self, status_code: Optional[int], response_text: str) -> bool:
+        """
+        Generic detection of YouTube Data API v3 quota exhaustion / rate-limiting.
+        Catches:
+          - HTTP 429 (Too Many Requests / RESOURCE_EXHAUSTED)
+          - HTTP 403 with quota error reasons: quotaExceeded, dailyLimitExceeded,
+            rateLimitExceeded, userRateLimitExceeded
+          - Any error message containing RESOURCE_EXHAUSTED or quota exceeded.
+        """
+        if status_code == 429:
+            return True
+        if response_text:
+            low_text = response_text.lower()
+            quota_tokens = [
+                'quotaexceeded',
+                'ratelimitexceeded',
+                'dailylimitexceeded',
+                'userratelimitexceeded',
+                'resource_exhausted',
+                'quota exceeded',
+                'rate limit exceeded',
+            ]
+            if any(token in low_text for token in quota_tokens):
+                return True
+            if status_code == 403 and ('quota' in low_text or 'limit' in low_text):
+                return True
+        return False
 
     def get_inflight_lock(self, key: str) -> threading.Lock:
         """Get or create a per-key lock for in-flight request deduplication"""
@@ -2275,11 +2763,48 @@ class YouTubeService:
         is_frontend_mobile = any(t in skill_low for t in [
             'react', 'vue', 'angular', 'next.js', 'flutter', 'react native', 'ios', 'android', 'html', 'css', 'tailwind'
         ])
+        is_api = any(t in skill_low for t in [
+            'api', 'rest', 'graphql', 'postman', 'soap', 'grpc', 'endpoint'
+        ])
+        is_backend = any(t in skill_low for t in [
+            'express', 'fastapi', 'django', 'flask', 'spring', 'nest', 'node',
+            'backend', 'laravel', 'rails', 'asp.net', 'gin', 'fiber', 'actix', 'ktor'
+        ])
 
         queries: List[str] = []
 
         if stage == 'practice':
-            if is_devops:
+            if is_backend or is_api:
+                queries = [
+                    f"{skill_clean} CRUD practice exercises{suffix}",
+                    f"{skill_clean} REST API practice tutorial{suffix}",
+                    f"{skill_clean} hands on practice exercises{suffix}"
+                ]
+            elif 'mongo' in skill_low:
+                queries = [
+                    f"{skill_clean} CRUD exercises aggregation lab{suffix}",
+                    f"{skill_clean} query practice hands on{suffix}",
+                    f"{skill_clean} practical exercises walkthrough{suffix}"
+                ]
+            elif 'sql' in skill_low:
+                queries = [
+                    f"{skill_clean} query exercises hands on{suffix}",
+                    f"{skill_clean} practice problems with solutions{suffix}",
+                    f"{skill_clean} coding challenges practice{suffix}"
+                ]
+            elif 'react' in skill_low:
+                queries = [
+                    f"{skill_clean} coding exercises challenges{suffix}",
+                    f"{skill_clean} component hooks practice challenges{suffix}",
+                    f"{skill_clean} hands on practice walkthrough{suffix}"
+                ]
+            elif 'terraform' in skill_low:
+                queries = [
+                    f"{skill_clean} hands on lab exercises{suffix}",
+                    f"{skill_clean} infrastructure lab practical walkthrough{suffix}",
+                    f"{skill_clean} hands on practice lab{suffix}"
+                ]
+            elif is_devops:
                 queries = [
                     f"{skill_clean} hands on lab exercises{suffix}",
                     f"{skill_clean} practical walkthrough exercises{suffix}",
@@ -2306,8 +2831,8 @@ class YouTubeService:
             else:
                 queries = [
                     f"{skill_clean} hands on coding exercises{suffix}",
-                    f"{skill_clean} coding challenges with solutions{suffix}",
-                    f"{skill_clean} practical walkthrough exercises{suffix}"
+                    f"{skill_clean} practice exercises problems{suffix}",
+                    f"{skill_clean} practice projects walkthrough{suffix}"
                 ]
 
         elif stage == 'build':
@@ -2337,43 +2862,43 @@ class YouTubeService:
                 ]
             else:
                 queries = [
-                    f"{skill_clean} project tutorial build application{suffix}",
-                    f"{skill_clean} full stack application tutorial from scratch{suffix}",
-                    f"{skill_clean} real world project tutorial{suffix}"
+                    f"{skill_clean} project tutorial{suffix}",
+                    f"{skill_clean} build application from scratch{suffix}",
+                    f"{skill_clean} real world implementation project{suffix}"
                 ]
 
         elif stage == 'assess':
             if is_devops:
                 queries = [
                     f"{skill_clean} technical interview questions and answers{suffix}",
-                    f"top {skill_clean} interview questions{suffix}",
+                    f"{skill_clean} technical interview preparation and assessment{suffix}",
                     f"{skill_clean} scenario based interview questions{suffix}"
                 ]
             elif is_distributed:
                 queries = [
                     f"{skill_clean} technical interview questions and answers{suffix}",
-                    f"top {skill_clean} interview questions{suffix}",
+                    f"{skill_clean} technical interview preparation and assessment{suffix}",
                     f"{skill_clean} system design interview questions{suffix}"
                 ]
             elif is_data:
                 queries = [
                     f"{skill_clean} technical interview questions and answers{suffix}",
-                    f"top {skill_clean} interview questions{suffix}",
+                    f"{skill_clean} technical interview preparation and assessment{suffix}",
                     f"{skill_clean} interview questions for data analysts{suffix}"
                 ]
             else:
                 queries = [
                     f"{skill_clean} technical interview questions and answers{suffix}",
-                    f"top {skill_clean} interview questions{suffix}",
+                    f"{skill_clean} technical interview preparation and assessment quiz{suffix}",
                     f"{skill_clean} mock technical interview questions{suffix}"
                 ]
 
         else:
             # learn stage
             queries = [
-                f"{skill_clean} full course tutorial beginners{suffix}",
-                f"{skill_clean} crash course tutorial{suffix}",
-                f"{skill_clean} complete masterclass tutorial{suffix}"
+                f"{skill_clean} complete course tutorial for beginners{suffix}",
+                f"{skill_clean} fundamentals and concepts explained{suffix}",
+                f"{skill_clean} introduction masterclass tutorial{suffix}"
             ]
 
         # Deduplicate while preserving order, bounded to 3
@@ -2393,6 +2918,47 @@ class YouTubeService:
         queries = self._build_stage_queries(skill, target_role, stage, language)
         return queries[0] if queries else f"{skill} tutorial"
 
+    def _get_disallowed_stage_ids(self, skill: str, target_role: str = '', current_stage: str = 'learn') -> Set[str]:
+        """
+        Ensure cross-stage disjointness: a video accepted for one stage of a skill
+        must NOT be accepted again for other stages of the same skill.
+        Exclusion is based on actual 11-character YouTube video IDs.
+        """
+        disallowed: Set[str] = set()
+        norm_skill = normalize_skill_name(skill)
+        curr_stage = (current_stage or 'learn').strip().lower()
+
+        # 1. Curated Learn single-item mapping (SKILL_VIDEO_MAP)
+        if curr_stage != 'learn' and norm_skill in SKILL_VIDEO_MAP:
+            vid = SKILL_VIDEO_MAP[norm_skill].get('id')
+            if vid:
+                disallowed.add(vid)
+
+        # 2. Stage Curated Catalog: exclude all other stages of this skill
+        if norm_skill in STAGE_CURATED_CATALOG:
+            for other_stage, items in STAGE_CURATED_CATALOG[norm_skill].items():
+                if other_stage != curr_stage:
+                    for it in items:
+                        v_id = extract_youtube_id(it)
+                        if v_id:
+                            disallowed.add(v_id)
+
+        # 3. Persistent and In-Memory Cache: exclude other stages for the same skill
+        with self._cache_lock:
+            prefix = f"{norm_skill}|"
+            for ckey, cached_list in self._cache.items():
+                if ckey.startswith(prefix):
+                    parts = ckey.split('|')
+                    if len(parts) >= 3:
+                        cached_stage = parts[2].strip().lower()
+                        if cached_stage != curr_stage:
+                            for it in cached_list:
+                                v_id = extract_youtube_id(it)
+                                if v_id:
+                                    disallowed.add(v_id)
+
+        return disallowed
+
     def _fetch_from_youtube_api(
         self,
         queries: Union[str, List[str]],
@@ -2405,10 +2971,14 @@ class YouTubeService:
         """
         Query official YouTube Data API v3.
         Supports bounded stage-specific multi-query progression (up to 3 queries).
-        Fetches search results with videoEmbeddable=true, then queries videos endpoint
-        to retrieve exact ISO-8601 duration and verify public embeddability.
+        Enforces cross-stage video exclusion and rejects YouTube shorts for Practice and Build.
+        Guarded by Quota Circuit Breaker.
         """
         if not self.api_key:
+            return []
+
+        if self.is_circuit_open():
+            logger.warning("YouTube API quota circuit breaker is OPEN. Skipping search call.")
             return []
 
         if isinstance(queries, str):
@@ -2422,7 +2992,14 @@ class YouTubeService:
         stage_difficulty = STAGE_DIFFICULTY_MAP.get(stage, 'Intermediate')
         user_lang_code = 'hi' if language in ['hi', 'hindi'] else ('en+hi' if language in ['en+hi', 'bilingual'] else 'en')
 
+        disallowed_ids = self._get_disallowed_stage_ids(skill, target_role, stage)
+        seen_stage_ids = set()
+
         for q in query_list:
+            if self.is_circuit_open():
+                logger.warning("YouTube API quota circuit breaker is OPEN. Halting remaining query attempts.")
+                break
+
             params = {
                 'part': 'snippet',
                 'q': q,
@@ -2436,7 +3013,13 @@ class YouTubeService:
             try:
                 res = self._http_session.get(search_url, params=params, timeout=5)
                 if res.status_code != 200:
-                    logger.warning(f"YouTube search API returned status {res.status_code}: {res.text}")
+                    err_text = res.text
+                    if self.api_key:
+                        err_text = err_text.replace(self.api_key, "[REDACTED]")
+                    logger.warning(f"YouTube search API returned status {res.status_code}: {err_text}")
+                    if self._is_quota_exceeded(res.status_code, err_text):
+                        self.trip_circuit_breaker(reason=f"Search API returned HTTP {res.status_code}")
+                        return []
                     continue
 
                 data = res.json()
@@ -2462,11 +3045,19 @@ class YouTubeService:
                         vid = v_item.get('id')
                         if vid:
                             details_map[vid] = v_item
+                else:
+                    v_err = v_res.text
+                    if self.api_key:
+                        v_err = v_err.replace(self.api_key, "[REDACTED]")
+                    logger.warning(f"YouTube videos API returned status {v_res.status_code}: {v_err}")
+                    if self._is_quota_exceeded(v_res.status_code, v_err):
+                        self.trip_circuit_breaker(reason=f"Videos API returned HTTP {v_res.status_code}")
+                        return []
 
                 videos = []
                 for item in items:
                     video_id = item.get('id', {}).get('videoId')
-                    if not video_id:
+                    if not video_id or video_id in disallowed_ids or video_id in seen_stage_ids:
                         continue
 
                     snippet = item.get('snippet', {})
@@ -2488,6 +3079,10 @@ class YouTubeService:
                     content_details = v_detail.get('contentDetails', {})
                     iso_dur = content_details.get('duration')
                     duration_str, duration_secs = parse_iso8601_duration(iso_dur)
+
+                    # Stage-aware quality and duration validation across all stages
+                    if not is_video_quality_and_duration_valid(stage, v_title, duration_secs):
+                        continue
 
                     badge = stage_pool[len(videos)] if len(videos) < len(stage_pool) else stage_pool[0]
 
@@ -2512,16 +3107,24 @@ class YouTubeService:
                         'match_type': 'official_api'
                     }
                     video_record = apply_canonical_metadata(video_record)
+                    seen_stage_ids.add(video_id)
                     videos.append(video_record)
 
                     if len(videos) >= max_results:
                         break
 
+                self.circuit_breaker.record_success()
                 if videos:
                     return deduplicate_youtube_videos(videos)
 
             except Exception as e:
-                logger.warning(f"YouTube Data API error on query '{q}': {e}")
+                err_str = str(e)
+                if self.api_key:
+                    err_str = err_str.replace(self.api_key, "[REDACTED]")
+                logger.warning(f"YouTube Data API error on query '{q}': {err_str}")
+                if self._is_quota_exceeded(None, err_str):
+                    self.trip_circuit_breaker(reason=f"API Exception: {err_str[:150]}")
+                    return []
                 continue
 
         return []
@@ -2539,8 +3142,8 @@ class YouTubeService:
                 for vid, title in matches:
                     if vid not in seen and not vid.startswith('fallback') and not vid.startswith('search_'):
                         seen.add(vid)
-                        # Pre-filter by relevance and stage intent to avoid wasteful oEmbed network calls
-                        if is_video_relevant_to_skill(skill, title) and is_video_matching_stage_intent(stage, title):
+                        # Pre-filter by relevance, stage intent, and quality to avoid wasteful oEmbed network calls
+                        if is_video_relevant_to_skill(skill, title) and is_video_matching_stage_intent(stage, title) and is_video_quality_and_duration_valid(stage, title, None):
                             candidates.append((vid, title))
                         if len(candidates) >= max_candidates:
                             break
@@ -2570,24 +3173,8 @@ class YouTubeService:
         else:
             query_list = list(queries)[:3]
 
-        # Disallow Learn IDs from being reused in Practice, Build, or Assess
-        disallowed_ids = set()
-        if stage != 'learn':
-            norm_skill = normalize_skill_name(skill)
-            if norm_skill in SKILL_VIDEO_MAP:
-                disallowed_ids.add(SKILL_VIDEO_MAP[norm_skill]['id'])
-            if norm_skill in STAGE_CURATED_CATALOG and 'learn' in STAGE_CURATED_CATALOG[norm_skill]:
-                for it in STAGE_CURATED_CATALOG[norm_skill]['learn']:
-                    vid = extract_youtube_id(it)
-                    if vid:
-                        disallowed_ids.add(vid)
-            with self._cache_lock:
-                for ckey, cached_list in self._cache.items():
-                    if ckey.startswith(f"{skill.lower()}|") and "|learn|" in ckey:
-                        for it in cached_list:
-                            vid = extract_youtube_id(it)
-                            if vid:
-                                disallowed_ids.add(vid)
+        # Disallow IDs already accepted for other stages of this skill
+        disallowed_ids = self._get_disallowed_stage_ids(skill, target_role, stage)
 
         stage_pool = STAGE_BADGE_POOLS.get(stage, STAGE_BADGE_POOLS['learn'])
         stage_difficulty = STAGE_DIFFICULTY_MAP.get(stage, 'Intermediate')
@@ -2611,14 +3198,12 @@ class YouTubeService:
 
                 verified_title = oembed_title or candidate_title
 
-                # Filter out shorts
-                if '#short' in verified_title.lower() or '#shorts' in verified_title.lower():
-                    continue
-
                 # Strict post-validation on authentic title
                 if not is_video_relevant_to_skill(skill, verified_title):
                     continue
                 if not is_video_matching_stage_intent(stage, verified_title):
+                    continue
+                if not is_video_quality_and_duration_valid(stage, verified_title, None):
                     continue
 
                 badge = stage_pool[len(results)] if len(results) < len(stage_pool) else stage_pool[0]
@@ -2646,6 +3231,11 @@ class YouTubeService:
 
                 # Canonical metadata applied if known (injects authentic duration if in VERIFIED_CANONICAL_METADATA)
                 item = apply_canonical_metadata(item)
+
+                # Stage-aware quality and duration validation across all stages
+                if not is_video_quality_and_duration_valid(stage, verified_title, item.get('duration_seconds')):
+                    continue
+
                 results.append(item)
 
                 if len(results) >= max_results:
@@ -2676,12 +3266,15 @@ class YouTubeService:
 
         # 3A: Official YouTube Data API v3 (Preferred Primary)
         if self.api_key:
-            try:
-                videos = self._fetch_from_youtube_api(stage_queries, skill, target_role, stage, language, max_results)
-                if videos:
-                    return videos
-            except Exception as e:
-                logger.warning(f"Official YouTube Data API call failed: {e}")
+            if not self.is_circuit_open():
+                try:
+                    videos = self._fetch_from_youtube_api(stage_queries, skill, target_role, stage, language, max_results)
+                    if videos:
+                        return videos
+                except Exception as e:
+                    logger.warning(f"Official YouTube Data API call failed: {e}")
+            else:
+                logger.warning("Skipping official YouTube Data API search: Quota circuit breaker is OPEN.")
 
         # 3B: Secondary Dynamic Search (Gated strictly behind ENABLE_YOUTUBE_WEB_FALLBACK for offline dev/test)
         if ENABLE_YOUTUBE_WEB_FALLBACK:
@@ -2900,13 +3493,6 @@ class YouTubeService:
 
         cache_key = make_context_key(skill_clean, role_clean, stage_clean, lang_clean, max_results)
 
-        # Tier 2: Check persistent / in-memory cache
-        with self._cache_lock:
-            if cache_key in self._cache:
-                cached = deduplicate_youtube_videos(self._cache[cache_key])
-                self._cache[cache_key] = cached
-                return cached
-
         # Tier 1: Check curated verified catalog (stage-specific)
         curated_videos = self._get_curated_videos(skill_clean, role_clean, stage_clean, lang_clean, max_results)
         if curated_videos:
@@ -2916,13 +3502,54 @@ class YouTubeService:
                 self._save_disk_cache()
             return curated_videos
 
+        # Tier 2: Check persistent / in-memory cache BEFORE calling YouTube API
+        with self._cache_lock:
+            if cache_key in self._cache:
+                valid_cached = [
+                    v for v in self._cache[cache_key]
+                    if v.get('recommendation_source') == 'curated' or (
+                        is_video_matching_stage_intent(stage_clean, v.get('title', ''))
+                        and is_video_quality_and_duration_valid(stage_clean, v.get('title', ''), v.get('duration_seconds'))
+                    )
+                ]
+                if valid_cached:
+                    deduped = deduplicate_youtube_videos(valid_cached)
+                    self._cache[cache_key] = deduped
+                    return deduped
+
+        # Check negative cache cooldown for empty results
+        if self.is_empty_cooldown_active(cache_key):
+            logger.info(f"Identical search request '{cache_key}' in empty result cooldown. Returning safe empty.")
+            return []
+
+        # Check circuit breaker before acquiring lock / executing search
+        if self.is_circuit_open():
+            logger.warning(f"YouTube API quota circuit breaker is OPEN. Returning safe empty for '{cache_key}'.")
+            return []
+
         # In-flight request deduplication
         inflight_lock = self.get_inflight_lock(cache_key)
         with inflight_lock:
             # Double-check cache inside lock
             with self._cache_lock:
                 if cache_key in self._cache:
-                    return deduplicate_youtube_videos(self._cache[cache_key])
+                    valid_cached = [
+                        v for v in self._cache[cache_key]
+                        if v.get('recommendation_source') == 'curated' or (
+                            is_video_matching_stage_intent(stage_clean, v.get('title', ''))
+                            and is_video_quality_and_duration_valid(stage_clean, v.get('title', ''), v.get('duration_seconds'))
+                        )
+                    ]
+                    if valid_cached:
+                        return deduplicate_youtube_videos(valid_cached)
+
+            # Re-check negative cache cooldown inside lock
+            if self.is_empty_cooldown_active(cache_key):
+                return []
+
+            # Re-check circuit breaker inside lock
+            if self.is_circuit_open():
+                return []
 
             # Tier 3: Dynamic Search
             if enable_dynamic:
@@ -2935,6 +3562,9 @@ class YouTubeService:
                         self._cache[cache_key] = dynamic_videos
                         self._save_disk_cache()
                     return dynamic_videos
+                else:
+                    # Dynamic search returned empty; record negative cooldown
+                    self.record_empty_result(cache_key)
 
             # Tier 4: Safe Empty
             logger.info(f"No genuine videos found for skill='{skill_clean}', stage='{stage_clean}'. Returning safe empty.")
