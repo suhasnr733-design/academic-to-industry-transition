@@ -102,3 +102,49 @@ class LearningActivity(db.Model):
             'details': self.details,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
+
+class VideoProgress(db.Model):
+    """Tracks per-video genuine playback progress and watched interval unions"""
+    __tablename__ = 'video_progress'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    resume_id = db.Column(db.Integer, db.ForeignKey('resumes.id', ondelete='SET NULL'), nullable=True, index=True)
+    
+    video_id = db.Column(db.String(30), nullable=False, index=True)
+    video_title = db.Column(db.String(255), nullable=True)
+    skill_name = db.Column(db.String(100), nullable=False, index=True)
+    target_role = db.Column(db.String(100), nullable=True)
+    stage = db.Column(db.String(30), default='learn', nullable=False)
+    
+    # Watched intervals stored as JSON list of [start, end] pairs in seconds
+    watched_intervals = db.Column(db.JSON, default=list, nullable=False)
+    watched_duration = db.Column(db.Float, default=0.0, nullable=False)
+    total_duration = db.Column(db.Float, default=0.0, nullable=False)
+    progress_percent = db.Column(db.Float, default=0.0, nullable=False)
+    is_completed = db.Column(db.Boolean, default=False, nullable=False)
+    last_playback_time = db.Column(db.Float, default=0.0, nullable=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'resume_id': self.resume_id,
+            'video_id': self.video_id,
+            'video_title': self.video_title,
+            'skill_name': self.skill_name,
+            'target_role': self.target_role,
+            'stage': self.stage,
+            'watched_intervals': self.watched_intervals or [],
+            'watched_duration': round(float(self.watched_duration or 0), 2),
+            'total_duration': round(float(self.total_duration or 0), 2),
+            'progress_percent': round(float(self.progress_percent or 0), 1),
+            'is_completed': bool(self.is_completed),
+            'last_playback_time': round(float(self.last_playback_time or 0), 2),
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+

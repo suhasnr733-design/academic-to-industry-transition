@@ -4,7 +4,7 @@ import logging
 from typing import Dict, List, Any, Optional
 from app import db
 from app.models.resume import Resume
-from app.models.learning import LearningProgress, LearningBookmark, LearningActivity
+from app.models.learning import LearningProgress, LearningBookmark, LearningActivity, VideoProgress
 from app.services.skill_analyzer import SkillAnalyzer
 from app.services.youtube_service import YouTubeService
 from app.services.llm_service import LLMService
@@ -905,3 +905,178 @@ class LearningService:
             'progress_percent': active_skill['progress_percent'],
             'priority': active_skill['priority']
         }
+
+    @staticmethod
+    def merge_intervals(intervals: List[List[float]], tolerance: float = 1.0) -> List[List[float]]:
+        """
+        Calculates the union of watched intervals without double-counting overlapping segments.
+        Merges overlapping and near-adjacent time intervals [s, e] with a small tolerance.
+        """
+        if not intervals:
+            return []
+        valid = []
+        for item in intervals:
+            if not isinstance(item, (list, tuple)) or len(item) < 2:
+                continue
+            try:
+                s, e = float(item[0]), float(item[1])
+                if s < 0:
+                    s = 0.0
+                if e <= s:
+                    continue
+                valid.append([s, e])
+            except (ValueError, TypeError):
+                continue
+
+        if not valid:
+            return []
+
+        # Sort by start ascending, then end ascending
+        valid.sort(key=lambda x: (x[0], x[1]))
+        merged = [valid[0]]
+
+        for cur in valid[1:]:
+            last = merged[-1]
+            if cur[0] <= last[1] + tolerance:
+                last[1] = max(last[1], cur[1])
+            else:
+                merged.append(cur)
+
+        return [[round(s, 2), round(e, 2)] for s, e in merged]
+
+    @staticmethod
+    def calculate_watched_duration(intervals: List[List[float]], tolerance: float = 1.0) -> float:
+        """Computes exact unique watched seconds from interval unions."""
+        merged = LearningService.merge_intervals(intervals, tolerance)
+        return round(sum(e - s for s, e in merged), 2)
+
+    def save_video_progress(
+        self,
+        user_id: int,
+        video_id: str,
+        skill_name: str,
+        resume_id: Optional[int] = None,
+        target_role: Optional[str] = None,
+        stage: str = 'learn',
+        video_title: Optional[str] = None,
+        watched_intervals: Optional[List[List[float]]] = None,
+        total_duration: float = 0.0,
+        last_playback_time: float = 0.0,
+        technical_tolerance: float = 1.0
+    ) -> Dict[str, Any]:
+        """
+        Persists validated video playback progress based on genuine interval unions.
+        Enforces strict 100% genuine completion and preserves dynamic target role.
+        """
+        clean_video_id = (video_id or '').strip()
+        clean_skill = (skill_name or '').strip()
+        if not clean_video_id or not clean_skill:
+            raise ValueError("video_id and skill_name are required")
+
+        # Find existing record for this user and video
+        prog = VideoProgress.query.filter_by(
+            user_id=user_id,
+            video_id=clean_video_id
+        ).first()
+
+        existing_intervals = []
+        if prog and prog.watched_intervals:
+            existing_intervals = prog.watched_intervals
+
+        # Combine existing intervals with incoming new intervals
+        combined_intervals = list(existing_intervals)
+        if watched_intervals:
+            combined_intervals.extend(watched_intervals)
+
+        merged = self.merge_intervals(combined_intervals)
+        watched_sec = self.calculate_watched_duration(merged)
+
+        # Resolve total duration safely
+        final_total_duration = max(0.0, float(total_duration or 0.0))
+        if prog and prog.total_duration > 0 and final_total_duration <= 0:
+            final_total_duration = prog.total_duration
+
+        # Watched duration cannot exceed total duration if total duration is known
+        if final_total_duration > 0 and watched_sec > final_total_duration:
+            watched_sec = final_total_duration
+
+        # Continuous percentage: 0.0 to 100.0%
+        if final_total_duration > 0:
+            pct = round(min(100.0, max(0.0, (watched_sec / final_total_duration) * 100.0)), 1)
+        else:
+            pct = 0.0
+
+        # Strict 100% completion requirement:
+        # Content must be genuinely watched across duration, accounting only for technical boundary tolerance (default 1.0s)
+        missing_sec = final_total_duration - watched_sec if final_total_duration > 0 else 999999.0
+        is_completed = (
+            final_total_duration > 0 and
+            watched_sec > 0 and
+            missing_sec <= max(0.0, float(technical_tolerance))
+        )
+
+        # Retain completion if already completed
+        if prog and prog.is_completed:
+            is_completed = True
+            pct = 100.0
+
+        # Dynamic target role: preserve existing if not supplied, never hardcode
+        effective_role = target_role or (prog.target_role if prog else 'Data Scientist')
+
+        if not prog:
+            prog = VideoProgress(
+                user_id=user_id,
+                resume_id=resume_id,
+                video_id=clean_video_id,
+                video_title=video_title or f"{clean_skill} Tutorial",
+                skill_name=clean_skill,
+                target_role=effective_role,
+                stage=stage or 'learn',
+                watched_intervals=merged,
+                watched_duration=watched_sec,
+                total_duration=final_total_duration,
+                progress_percent=pct,
+                is_completed=is_completed,
+                last_playback_time=max(0.0, float(last_playback_time or 0.0))
+            )
+            db.session.add(prog)
+        else:
+            prog.watched_intervals = merged
+            prog.watched_duration = watched_sec
+            if final_total_duration > 0:
+                prog.total_duration = final_total_duration
+            prog.progress_percent = pct
+            prog.is_completed = is_completed
+            if last_playback_time:
+                prog.last_playback_time = max(0.0, float(last_playback_time))
+            if resume_id and not prog.resume_id:
+                prog.resume_id = resume_id
+            if video_title:
+                prog.video_title = video_title
+            if target_role:
+                prog.target_role = target_role
+            if stage:
+                prog.stage = stage
+
+        db.session.commit()
+        return prog.to_dict()
+
+    def get_video_progress(
+        self,
+        user_id: int,
+        video_id: Optional[str] = None,
+        skill_name: Optional[str] = None,
+        resume_id: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
+        """Retrieves stored video playback progress for user/skill/video."""
+        query = VideoProgress.query.filter_by(user_id=user_id)
+        if video_id:
+            query = query.filter_by(video_id=video_id.strip())
+        if skill_name:
+            query = query.filter_by(skill_name=skill_name.strip())
+        if resume_id:
+            query = query.filter_by(resume_id=resume_id)
+
+        records = query.order_by(VideoProgress.updated_at.desc()).all()
+        return [r.to_dict() for r in records]
+

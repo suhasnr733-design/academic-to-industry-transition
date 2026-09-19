@@ -40,21 +40,44 @@ test('Phase 3.3.1 — Watched State & Data Quality Regression Tests', async (t) 
   })
 
   // -------------------------------------------------------------
-  // TEST 3: Mark as Watched transitions video to Watched & calls stage progress
+  // TEST 3: Automatic Playback Completion transitions video & invokes stage progress
   // -------------------------------------------------------------
-  await t.test('TEST 3: Mark as Watched transitions specific video and invokes stage handler', () => {
-    const video = { id: 'ufBbWIyKY2E', title: 'Top 10 Javascript Algorithms' }
+  await t.test('TEST 3: Automatic Playback Completion transitions video and invokes stage handler only upon genuine full watch', () => {
+    const video = { id: 'ufBbWIyKY2E', title: 'Top 10 Javascript Algorithms', duration_seconds: 600 }
     const watchedVideoIds = new Set()
     let progressCall = null
 
-    const handleMarkWatched = (skillName, stage, vid) => {
-      watchedVideoIds.add(vid.id)
-      progressCall = { skillName, stage, isCompleted: true }
+    const handleProgressUpdate = (progressPayload) => {
+      if (progressPayload.is_completed) {
+        watchedVideoIds.add(progressPayload.video_id)
+        progressCall = {
+          skillName: progressPayload.skill_name,
+          stage: progressPayload.stage,
+          isCompleted: true
+        }
+      }
     }
 
-    handleMarkWatched('JavaScript', 'practice', video)
+    // 1. Partial watch (35%) -> does not complete
+    handleProgressUpdate({
+      video_id: video.id,
+      skill_name: 'JavaScript',
+      stage: 'practice',
+      progress_percent: 35.0,
+      is_completed: false
+    })
+    assert.strictEqual(watchedVideoIds.has(video.id), false, 'Partial 35% watch must not mark video as completed')
+    assert.strictEqual(progressCall, null, 'Stage progress must not be marked complete for partial watch')
 
-    assert.strictEqual(watchedVideoIds.has(video.id), true, 'Video must be marked watched')
+    // 2. Genuine full coverage (100%) -> completes
+    handleProgressUpdate({
+      video_id: video.id,
+      skill_name: 'JavaScript',
+      stage: 'practice',
+      progress_percent: 100.0,
+      is_completed: true
+    })
+    assert.strictEqual(watchedVideoIds.has(video.id), true, '100% genuine playback marks video as completed')
     assert.deepStrictEqual(progressCall, {
       skillName: 'JavaScript',
       stage: 'practice',

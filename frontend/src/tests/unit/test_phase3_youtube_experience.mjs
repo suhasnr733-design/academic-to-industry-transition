@@ -138,17 +138,26 @@ test('PHASE 3 — Automated Unit Tests for YouTube Learning Experience', async (
   })
 
   // -------------------------------------------------------------
-  // TEST 7: click Mark as Watched -> handleUpdateStageProgress called
+  // TEST 7: Automatic playback completion -> handleUpdateStageProgress called
   // -------------------------------------------------------------
-  await t.test('TEST 7: onMarkWatched calls progress handler for learn stage', () => {
+  await t.test('TEST 7: onProgressUpdate calls stage progress handler only upon genuine 100% completion', () => {
     let updatedProgress = null
     const mockHandleUpdateStageProgress = (skillName, stage, isCompleted) => {
       updatedProgress = { skillName, stage, isCompleted }
     }
 
-    // Simulate clicking "Mark as Watched"
-    mockHandleUpdateStageProgress('React', 'learn', true)
+    const onProgressUpdate = (progressPayload) => {
+      if (progressPayload.is_completed) {
+        mockHandleUpdateStageProgress(progressPayload.skill_name, progressPayload.stage, true)
+      }
+    }
 
+    // 1. Partial watch (50%) -> should not trigger stage completion
+    onProgressUpdate({ skill_name: 'React', stage: 'learn', progress_percent: 50.0, is_completed: false })
+    assert.strictEqual(updatedProgress, null, '50% progress must not complete learn stage')
+
+    // 2. 100% Genuine completion -> triggers stage completion
+    onProgressUpdate({ skill_name: 'React', stage: 'learn', progress_percent: 100.0, is_completed: true })
     assert.ok(updatedProgress)
     assert.strictEqual(updatedProgress.skillName, 'React')
     assert.strictEqual(updatedProgress.stage, 'learn')
