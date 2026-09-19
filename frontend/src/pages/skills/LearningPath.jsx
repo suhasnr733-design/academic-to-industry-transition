@@ -14,6 +14,7 @@ import { ContinueLearningWidget } from '../../components/learning/ContinueLearni
 import { BookmarksSection } from '../../components/learning/BookmarksSection'
 import { AILearningAssistant } from '../../components/learning/AILearningAssistant'
 import { CompletionCelebrationModal } from '../../components/learning/CompletionCelebrationModal'
+import { YouTubePlayerWithProgress } from '../../components/learning/YouTubePlayerWithProgress'
 
 import { 
   AcademicCapIcon, 
@@ -620,144 +621,27 @@ export const LearningPath = () => {
         />
       )}
 
-      {/* Quick Video Watch Modal */}
+      {/* Automatic Playback-Tracking YouTube Video Modal */}
       {quickVideoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn text-gray-900">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-3xl w-full shadow-2xl border border-indigo-100 space-y-4 relative">
-            <button
-              onClick={() => setQuickVideoModal(null)}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
-            >
-              <XIcon className="w-6 h-6" />
-            </button>
-
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-wider bg-amber-100 text-amber-900 rounded-md border border-amber-200">
-                🎬 Quick Watch Tutorial
-              </span>
-              <span className="text-xs font-bold text-gray-500">
-                • {quickVideoModal.skillName}
-              </span>
-            </div>
-
-            <h3 className="text-xl font-extrabold text-gray-900 line-clamp-1 pr-8">
-              {quickVideoModal.title}
-            </h3>
-
-            {/* Video Player Container */}
-            <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-lg border border-gray-200">
-              {(() => {
-                let activeEmbedUrl = quickVideoModal.embed_url
-                if (!activeEmbedUrl && quickVideoModal.url) {
-                  const match = quickVideoModal.url.match(/(?:v=|\/embed\/|\/watch\?v=)([^&?/]+)/)
-                  if (match && match[1]) {
-                    activeEmbedUrl = `https://www.youtube.com/embed/${match[1]}`
-                  }
-                }
-                if (!activeEmbedUrl) {
-                  activeEmbedUrl = 'https://www.youtube.com/embed/RBSGKlAvoiM'
-                }
-
-                const finalSrc = activeEmbedUrl.includes('autoplay')
-                  ? activeEmbedUrl
-                  : `${activeEmbedUrl}${activeEmbedUrl.includes('?') ? '&' : '?'}start=${videoStartTime || 0}&autoplay=1`
-
-                return (
-                  <iframe
-                    key={`${finalSrc}`}
-                    src={finalSrc}
-                    title={quickVideoModal.title}
-                    className="w-full h-full border-0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                )
-              })()}
-            </div>
-
-            {/* Modal Action Bar with Mark as Watched & Bookmarking */}
-            {(() => {
-              const currentSkillObj = (roadmapData?.skills || []).find(s => s.skill_name === quickVideoModal.skillName)
-              const isLearnDone = currentSkillObj?.stages_status?.learn || false
-              const isBookmarked = (bookmarks || []).some(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
+          <div className="max-w-4xl w-full">
+            <YouTubePlayerWithProgress 
+              video={quickVideoModal}
+              skillName={quickVideoModal.skillName}
+              targetRole={roadmapData?.target_role || 'Data Scientist'}
+              stage={quickVideoModal.stage || 'learn'}
+              resumeId={activeResumeId}
+              isBookmarked={(bookmarks || []).some(
                 b => b.title === quickVideoModal.title || (b.url && b.url === (quickVideoModal.url || quickVideoModal.embed_url))
-              )
-
-              return (
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {/* Mark as Watched */}
-                    <button
-                      onClick={() => {
-                        if (quickVideoModal?.id) {
-                          try {
-                            const storageKey = `watched_videos_${activeResumeId || 'default'}`
-                            const saved = localStorage.getItem(storageKey)
-                            const set = saved ? new Set(JSON.parse(saved)) : new Set()
-                            set.add(quickVideoModal.id)
-                            localStorage.setItem(storageKey, JSON.stringify(Array.from(set)))
-                          } catch (_) {}
-                        }
-                        handleUpdateStageProgress(quickVideoModal.skillName, quickVideoModal.stage || 'learn', true)
-                      }}
-                      className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-                        isLearnDone
-                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                          : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm'
-                      }`}
-                      aria-label="Mark Learn stage as watched"
-                    >
-                      <CheckCircleIcon className="w-4 h-4" />
-                      <span>{isLearnDone ? '✓ Learn Completed' : '✓ Mark as Watched'}</span>
-                    </button>
-
-                    {/* Bookmark Video */}
-                    <button
-                      onClick={() => {
-                        handleAddBookmark({
-                          skill_name: quickVideoModal.skillName,
-                          resource_type: 'youtube',
-                          title: quickVideoModal.title,
-                          url: quickVideoModal.url || quickVideoModal.embed_url,
-                          thumbnail: quickVideoModal.thumbnail,
-                          provider: 'YouTube'
-                        })
-                      }}
-                      className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                        isBookmarked
-                          ? 'bg-indigo-50 text-indigo-700 border-indigo-300'
-                          : 'bg-gray-50 hover:bg-indigo-50 text-gray-700 border-gray-200'
-                      }`}
-                      aria-label="Bookmark this video"
-                    >
-                      <BookmarkIcon className="w-4 h-4" />
-                      <span>{isBookmarked ? 'Saved' : 'Bookmark'}</span>
-                    </button>
-
-                    {/* Open on YouTube */}
-                    {(quickVideoModal.url || quickVideoModal.id) && (
-                      <a
-                        href={quickVideoModal.url || `https://www.youtube.com/watch?v=${quickVideoModal.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-3 py-2 text-xs font-bold text-gray-600 hover:text-red-600 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors"
-                        aria-label="Open video on YouTube"
-                      >
-                        <span>Open on YouTube</span>
-                        <ExternalLinkIcon className="w-3.5 h-3.5" />
-                      </a>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() => setQuickVideoModal(null)}
-                    className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
-                  >
-                    Close Video Player
-                  </button>
-                </div>
-              )
-            })()}
+              )}
+              onBookmark={(bookmarkData) => handleAddBookmark(bookmarkData)}
+              onProgressUpdate={(progressPayload) => {
+                if (progressPayload.is_completed) {
+                  handleUpdateStageProgress(quickVideoModal.skillName, quickVideoModal.stage || 'learn', true)
+                }
+              }}
+              onClose={() => setQuickVideoModal(null)}
+            />
           </div>
         </div>
       )}

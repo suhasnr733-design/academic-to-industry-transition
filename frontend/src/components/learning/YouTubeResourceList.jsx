@@ -72,10 +72,9 @@ export const YouTubeResourceList = ({
   bookmarks = [],
   isWatched = false,
   watchedVideoIds = null,
+  videoProgressMap = {},
   onPlayVideo,
-  onBookmark,
-  onMarkWatched,
-  onMarkVideoWatched
+  onBookmark
 }) => {
   const fallbackImage = 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?auto=format&fit=crop&w=600&q=80'
   const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(skillName + ' tutorial software engineer')}`
@@ -205,18 +204,21 @@ export const YouTubeResourceList = ({
               b => b.title === vid.title || (b.url && (b.url === vid.url || b.url.includes(vid.id)))
             )
 
-            const isCardWatched = Boolean(
-              (watchedVideoIds && (typeof watchedVideoIds.has === 'function' ? watchedVideoIds.has(vid.id) : watchedVideoIds.includes(vid.id))) ||
-              vid.is_watched ||
-              vid.watched ||
-              (watchedVideoIds === null && isWatched)
+            const cardProgress = videoProgressMap?.[vid.id] || vid.progress || null
+            const progressPercent = cardProgress
+              ? Math.min(100, Math.max(0, Math.round(cardProgress.progress_percent || 0)))
+              : (watchedVideoIds && (typeof watchedVideoIds.has === 'function' ? watchedVideoIds.has(vid.id) : watchedVideoIds.includes(vid.id)) ? 100 : (isWatched ? 100 : 0))
+
+            const isCardCompleted = Boolean(
+              cardProgress?.is_completed ||
+              progressPercent >= 100 ||
+              (watchedVideoIds && (typeof watchedVideoIds.has === 'function' ? watchedVideoIds.has(vid.id) : watchedVideoIds.includes(vid.id)))
             )
 
             const handleCardPlay = (e) => {
               e.stopPropagation()
-              if (onMarkVideoWatched) {
-                onMarkVideoWatched(vid.id, vid, skillName, stage)
-              }
+              // Playing a video must NEVER manually mark it as watched.
+              // Playback-based progress is tracked automatically in real time.
               if (onPlayVideo) {
                 onPlayVideo(vid, skillName)
               } else if (vid.url) {
@@ -241,16 +243,6 @@ export const YouTubeResourceList = ({
                     stage: stage
                   }
                 })
-              }
-            }
-
-            const handleCardMarkWatched = (e) => {
-              e.stopPropagation()
-              if (onMarkVideoWatched) {
-                onMarkVideoWatched(vid.id, vid, skillName, stage)
-              }
-              if (onMarkWatched) {
-                onMarkWatched(skillName, stage, vid)
               }
             }
 
@@ -304,6 +296,17 @@ export const YouTubeResourceList = ({
                       {displayDuration}
                     </span>
                   )}
+
+                  {/* Real-Time Continuous Playback Progress Bar */}
+                  <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/60 overflow-hidden z-10">
+                    <div 
+                      data-testid="card-progress-bar-fill"
+                      className={`h-full transition-all duration-300 ${
+                        isCardCompleted ? 'bg-emerald-500' : 'bg-red-600'
+                      }`}
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
                 </div>
 
                 {/* Card Body */}
@@ -340,22 +343,27 @@ export const YouTubeResourceList = ({
                     </button>
 
                     <div className="flex items-center gap-1.5">
-                      {/* Mark as Watched */}
-                      {(onMarkWatched || onMarkVideoWatched) && (
-                        <button
-                          onClick={handleCardMarkWatched}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                            isCardWatched
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                              : 'bg-gray-50 hover:bg-emerald-50 text-gray-600 hover:text-emerald-700 border-gray-200'
-                          }`}
-                          title={isCardWatched ? `${stage} video watched` : `Mark ${stage} video as watched`}
-                          aria-label={isCardWatched ? `${vid.title} watched` : `Mark ${vid.title} as watched`}
-                        >
-                          <CheckCircleIcon className="w-3.5 h-3.5" />
-                          <span className="hidden sm:inline">{isCardWatched ? 'Watched' : 'Mark Watched'}</span>
-                        </button>
-                      )}
+                      {/* Automatic Progress Status Badge (No Manual Marking) */}
+                      <div 
+                        data-testid="card-progress-badge"
+                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                          isCardCompleted
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                            : progressPercent > 0
+                              ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                              : 'bg-gray-50 text-gray-500 border-gray-200'
+                        }`}
+                        title={`${progressPercent}% genuinely watched`}
+                      >
+                        {isCardCompleted ? (
+                          <>
+                            <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>100% Completed</span>
+                          </>
+                        ) : (
+                          <span>{progressPercent}% Watched</span>
+                        )}
+                      </div>
 
                       {/* Bookmark Button */}
                       {onBookmark && (

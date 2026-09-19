@@ -256,7 +256,7 @@ def create_app(config_class='app.config.DevelopmentConfig'):
     
     # Initialize database tables and default data
     with app.app_context():
-        from app.models import User, Job, Resume
+        from app.models import User, Job, Resume, LearningProgress, VideoProgress
         db.create_all()
 
         # Schema migration check for OAuth columns

@@ -5,7 +5,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from app.api.v1.learning import learning_bp
 from app.services.learning_service import LearningService
-from app.models.learning import LearningBookmark, LearningProgress, LearningActivity
+from app.models.learning import LearningBookmark, LearningProgress, LearningActivity, VideoProgress
 from app.models.resume import Resume
 from app.services.llm_service import LLMService
 import logging
@@ -408,7 +408,7 @@ def submit_architecture_defense():
 @learning_bp.route('/youtube', methods=['GET'])
 @jwt_required()
 def get_youtube_resources():
-    """Fetch contextual YouTube videos for a skill and stage"""
+    """Fetch contextual YouTube videos for a skill and stage with stored user progress"""
     try:
         skill = request.args.get('skill', 'SQL')
         target_role = request.args.get('target_role', 'Software Engineer')
@@ -416,6 +416,19 @@ def get_youtube_resources():
         language = request.args.get('language', 'en')
 
         videos = learning_service.youtube_service.get_videos_for_skill(skill=skill, target_role=target_role, stage=stage, language=language)
+
+        # Attach stored video progress for current user if available
+        try:
+            current_user_id = int(get_jwt_identity())
+            user_prog = VideoProgress.query.filter_by(user_id=current_user_id, skill_name=skill).all()
+            prog_map = {p.video_id: p.to_dict() for p in user_prog}
+            for v in videos:
+                vid_id = v.get('id')
+                if vid_id and vid_id in prog_map:
+                    v['progress'] = prog_map[vid_id]
+        except Exception as prog_err:
+            logger.debug(f"Could not attach video progress to youtube resources: {prog_err}")
+
         return jsonify({
             'skill': skill,
             'target_role': target_role,
@@ -426,6 +439,75 @@ def get_youtube_resources():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@learning_bp.route('/video-progress', methods=['POST'])
+@jwt_required()
+def save_video_progress():
+    """Save continuous video playback progress and watched interval unions"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        data = request.get_json() or {}
+
+        video_id = data.get('video_id')
+        skill_name = data.get('skill_name')
+        if not video_id or not skill_name:
+            return jsonify({'error': 'video_id and skill_name are required'}), 400
+
+        resume_id_raw = data.get('resume_id')
+        resume_id = int(resume_id_raw) if resume_id_raw and str(resume_id_raw).isdigit() else None
+
+        result = learning_service.save_video_progress(
+            user_id=current_user_id,
+            video_id=video_id,
+            skill_name=skill_name,
+            resume_id=resume_id,
+            target_role=data.get('target_role'),
+            stage=data.get('stage', 'learn'),
+            video_title=data.get('video_title'),
+            watched_intervals=data.get('watched_intervals', []),
+            total_duration=float(data.get('total_duration') or 0.0),
+            last_playback_time=float(data.get('last_playback_time') or 0.0),
+            technical_tolerance=float(data.get('technical_tolerance') or 1.0)
+        )
+
+        return jsonify({
+            'message': 'Video progress saved successfully',
+            'progress': result
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error saving video progress: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@learning_bp.route('/video-progress', methods=['GET'])
+@jwt_required()
+def get_video_progress():
+    """Retrieve saved video playback progress for user/skill/video"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        video_id = request.args.get('video_id')
+        skill_name = request.args.get('skill_name')
+        resume_id_raw = request.args.get('resume_id')
+        resume_id = int(resume_id_raw) if resume_id_raw and str(resume_id_raw).isdigit() else None
+
+        progress_list = learning_service.get_video_progress(
+            user_id=current_user_id,
+            video_id=video_id,
+            skill_name=skill_name,
+            resume_id=resume_id
+        )
+
+        if video_id:
+            single = progress_list[0] if progress_list else None
+            return jsonify({'progress': single}), 200
+
+        return jsonify({'progress': progress_list, 'total': len(progress_list)}), 200
+
+    except Exception as e:
+        logger.error(f"Error getting video progress: {e}")
+        return jsonify({'error': str(e)}), 500
+
 
 @learning_bp.route('/ai-assist', methods=['POST'])
 @jwt_required(optional=True)

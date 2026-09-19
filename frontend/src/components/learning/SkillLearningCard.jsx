@@ -51,38 +51,36 @@ export const SkillLearningCard = ({
     }
   })
 
-  const markVideoAsWatched = useCallback((videoId) => {
-    if (!videoId) return
-    setWatchedVideoIds(prev => {
-      if (prev.has(videoId)) return prev
-      const next = new Set(prev)
-      next.add(videoId)
-      try {
-        const storageKey = `watched_videos_${resumeId || 'default'}`
-        localStorage.setItem(storageKey, JSON.stringify(Array.from(next)))
-      } catch (_) {}
-      return next
-    })
-  }, [resumeId])
+  const [videoProgressMap, setVideoProgressMap] = useState({})
+
+  // Refresh stored video progress from local cache
+  useEffect(() => {
+    try {
+      const map = {}
+      const prefix = `video_progress_${resumeId || 'default'}_`
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith(prefix)) {
+          const raw = localStorage.getItem(key)
+          if (raw) {
+            const data = JSON.parse(raw)
+            if (data.video_id) {
+              map[data.video_id] = data
+            }
+          }
+        }
+      }
+      setVideoProgressMap(map)
+    } catch (_) {}
+  }, [resumeId, stageVideos])
 
   const handlePlayVideoWrapper = useCallback((video, skName) => {
-    if (video?.id) {
-      markVideoAsWatched(video.id)
-    }
+    // Automatic playback tracking occurs genuinely inside YouTubePlayerWithProgress.
+    // Clicking play never marks a video as watched.
     if (onPlayVideo) {
       onPlayVideo(video, skName)
     }
-  }, [markVideoAsWatched, onPlayVideo])
-
-  const handleMarkWatchedWrapper = useCallback((skName, stg, video) => {
-    const targetStage = stg || currentStage || 'learn'
-    if (video?.id) {
-      markVideoAsWatched(video.id)
-    }
-    if (onUpdateStageProgress) {
-      onUpdateStageProgress(skName, targetStage, true)
-    }
-  }, [markVideoAsWatched, onUpdateStageProgress, currentStage])
+  }, [onPlayVideo])
 
   // Sync stage with active tab
   useEffect(() => {
@@ -280,11 +278,10 @@ export const SkillLearningCard = ({
             onRetry={() => loadVideosForStage(currentStage, true)}
             bookmarks={bookmarks}
             watchedVideoIds={watchedVideoIds}
+            videoProgressMap={videoProgressMap}
             isWatched={Boolean(skill.stages_status?.[currentStage])}
             onPlayVideo={handlePlayVideoWrapper}
             onBookmark={onBookmark}
-            onMarkWatched={handleMarkWatchedWrapper}
-            onMarkVideoWatched={markVideoAsWatched}
           />
         )}
 
