@@ -274,7 +274,16 @@ class LearningService:
 
         # Calculate Overall Metrics
         overall_progress = round(total_progress_sum / total_skills_count, 1) if total_skills_count > 0 else 0.0
-        total_weeks_est = sum(int(s['estimated_duration'].split('-')[0]) for s in roadmap_skills if s['estimated_duration'] and s['estimated_duration'][0].isdigit()) if roadmap_skills else 4
+        
+        # Calculate Remaining Workload & Realistic Completion Duration
+        uncompleted_skills = [s for s in roadmap_skills if not s.get('is_completed')]
+        uncompleted_gaps = [s for s in uncompleted_skills if not s.get('is_existing')]
+        uncompleted_existing = [s for s in uncompleted_skills if s.get('is_existing')]
+        if not uncompleted_skills:
+            total_weeks_est = 0
+        else:
+            # Realistic study workload: ~1.5 weeks per priority gap, ~0.5 weeks to polish existing skills
+            total_weeks_est = max(1, round(len(uncompleted_gaps) * 1.5 + len(uncompleted_existing) * 0.5))
 
         # Calculate Target Date Countdown & Daily Pace
         days_remaining = None
@@ -285,7 +294,8 @@ class LearningService:
                 target_dt = datetime.strptime(target_date_str, '%Y-%m-%d').date()
                 today = date.today()
                 days_diff = (target_dt - today).days
-                days_remaining = max(1, days_diff)
+                # Honest days diff: preserves 0 (today) and negative (overdue) without masking as 1
+                days_remaining = days_diff
             except Exception as e:
                 logger.warning(f"Error parsing target_date {target_date_str}: {e}")
                 days_remaining = None
@@ -417,10 +427,53 @@ class LearningService:
         verified_courses = self.skill_analyzer.course_mapping.get(skill)
 
         scored = []
+        known_course_links = {
+            'JavaScript: The Advanced Concepts': ('Udemy', 'https://www.udemy.com/course/advanced-javascript-concepts/'),
+            'ES6+ Modern JavaScript': ('Udemy', 'https://www.udemy.com/course/javascript-es6-tutorial/'),
+            'Asynchronous JS Deep Dive': ('Udemy', 'https://www.udemy.com/course/asynchronous-javascript/'),
+            'React Complete Guide': ('Udemy', 'https://www.udemy.com/course/react-the-complete-guide-incl-redux/'),
+            'Frontend Development with React': ('Coursera', 'https://www.coursera.org/learn/front-end-react'),
+            'React Native Mastery': ('Udemy', 'https://www.udemy.com/course/the-complete-react-native-and-redux-course/'),
+            'SQL for Data Science': ('Coursera', 'https://www.coursera.org/learn/sql-for-data-science'),
+            'Database Management Systems': ('Coursera', 'https://www.coursera.org/learn/database-management'),
+            'Advanced SQL & Query Optimization': ('Udemy', 'https://www.udemy.com/course/advanced-sql/'),
+            'Python for Data Science': ('Coursera', 'https://www.coursera.org/learn/python-for-applied-data-science-ai'),
+            'Python Programming Essentials': ('Coursera', 'https://www.coursera.org/learn/python-programming-essentials'),
+            'Advanced Python': ('Coursera', 'https://www.coursera.org/learn/advanced-python'),
+            'Java Fundamentals': ('Coursera', 'https://www.coursera.org/learn/java-programming'),
+            'Advanced Java Programming': ('Coursera', 'https://www.coursera.org/learn/advanced-java'),
+            'Spring Framework': ('Udemy', 'https://www.udemy.com/course/spring-hibernate-tutorial/'),
+            'Mastering Data Structures & Algorithms': ('Udemy', 'https://www.udemy.com/course/datastructurescncpp/'),
+            'Data Structures in Java & Python': ('Coursera', 'https://www.coursera.org/search?query=Data+Structures+Java+Python'),
+            'LeetCode Problem Solving Bootcamp': ('LeetCode', 'https://leetcode.com/problemset/all/'),
+            'Design & Analysis of Algorithms': ('Coursera', 'https://www.coursera.org/learn/algorithms-part1'),
+            'Algorithms Specialization (Coursera)': ('Coursera', 'https://www.coursera.org/specializations/algorithms'),
+            'Docker Mastery': ('Udemy', 'https://www.udemy.com/course/docker-mastery/'),
+            'DevOps with Docker': ('Coursera', 'https://www.coursera.org/learn/devops-docker'),
+            'Kubernetes Fundamentals': ('Coursera', 'https://www.coursera.org/learn/kubernetes-cloud-native-fundamentals'),
+            'AWS Certified Solutions Architect': ('Coursera', 'https://www.coursera.org/learn/aws-cloud-solutions-architect'),
+            'AWS Cloud Practitioner': ('Coursera', 'https://www.coursera.org/learn/aws-cloud-practitioner-essentials'),
+            'Node.js Developer Course': ('Udemy', 'https://www.udemy.com/course/the-complete-nodejs-developer-course-2/'),
+            'Building RESTful APIs with Node & Express': ('Coursera', 'https://www.coursera.org/learn/server-side-nodejs'),
+            'RESTful API Design & Architecture': ('Coursera', 'https://www.coursera.org/learn/rest-api-design-development-and-management')
+        }
+
         if verified_courses:
             for idx, title in enumerate(verified_courses):
                 badge = "⭐ Highly Recommended" if idx == 0 else ("Beginner Friendly" if idx == 1 else "Project Based")
-                provider = 'Coursera' if idx == 0 else ('Udemy' if idx == 1 else 'NPTEL')
+                default_provider = 'Coursera' if idx == 0 else ('Udemy' if idx == 1 else 'NPTEL')
+                
+                # Check verified lookup first
+                if title in known_course_links:
+                    provider, course_url = known_course_links[title]
+                else:
+                    provider = default_provider
+                    search_slug = title.replace(' ', '+')
+                    if provider == 'Udemy':
+                        course_url = f"https://www.udemy.com/courses/search/?q={search_slug}"
+                    else:
+                        course_url = f"https://www.coursera.org/search?query={search_slug}"
+
                 difficulty = 'Intermediate' if (is_existing or idx >= 2) else 'Beginner'
                 why_rec = f"Recommended because {skill} is a {'current' if is_existing else 'missing'} skill for {target_role} roles."
 
@@ -430,7 +483,7 @@ class LearningService:
                     'provider': provider,
                     'badge': badge,
                     'difficulty': difficulty,
-                    'url': f"https://www.google.com/search?q={title.replace(' ', '+')}",
+                    'url': course_url,
                     'why_recommended': why_rec
                 })
         else:
@@ -866,24 +919,31 @@ class LearningService:
         est_mins = 30
         pace_label = "🎯 Standard Pace"
 
-        if days_remaining and roadmap_skills:
+        if days_remaining is not None and roadmap_skills:
             uncompleted_skills = [s for s in roadmap_skills if not s.get('is_completed')]
             total_hours = len(uncompleted_skills) * 3
-            computed_mins = max(15, round((total_hours * 60) / days_remaining))
-            est_mins = min(120, computed_mins)
 
-            if days_remaining <= 7:
-                pace_label = "🔥 Sprint Pace (Close Target Date)"
-                est_mins = max(60, min(180, computed_mins))
-            elif days_remaining <= 21:
-                pace_label = "⚡ Crash Course Pace"
-                est_mins = max(45, min(120, computed_mins))
-            elif days_remaining <= 60:
-                pace_label = "🎯 Standard Pace"
-                est_mins = min(55, max(35, computed_mins))
+            if days_remaining < 0:
+                overdue_days = abs(days_remaining)
+                pace_label = f"⚠️ Target Date Passed ({overdue_days}d Overdue)"
+                est_mins = 60
+            elif days_remaining == 0:
+                pace_label = "🎯 Target Date Today"
+                est_mins = 60
             else:
-                pace_label = "☕ Relaxed Pace"
-                est_mins = min(30, max(15, computed_mins))
+                computed_mins = max(15, round((total_hours * 60) / days_remaining))
+                if days_remaining <= 7:
+                    pace_label = "🔥 Sprint Pace (Close Target Date)"
+                    est_mins = max(60, min(180, computed_mins))
+                elif days_remaining <= 21:
+                    pace_label = "⚡ Crash Course Pace"
+                    est_mins = max(45, min(120, computed_mins))
+                elif days_remaining <= 60:
+                    pace_label = "🎯 Standard Pace"
+                    est_mins = min(55, max(35, computed_mins))
+                else:
+                    pace_label = "☕ Relaxed Pace"
+                    est_mins = min(30, max(15, computed_mins))
 
         return {
             'skill_name': skill_name,

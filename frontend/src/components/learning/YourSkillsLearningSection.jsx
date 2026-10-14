@@ -1,6 +1,6 @@
 // src/components/learning/YourSkillsLearningSection.jsx
 
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { SkillBrandLogo } from './SkillBrandLogo'
 import { 
   CheckCircleIcon, 
@@ -13,7 +13,9 @@ import {
   GlobeIcon, 
   FolderIcon,
   SearchIcon,
-  SparklesIcon
+  SparklesIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/outline'
 
 const CATEGORY_ICONS = {
@@ -60,11 +62,42 @@ export const YourSkillsLearningSection = ({ skills, activeSkillId, onSelectSkill
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [statusFilter, setStatusFilter] = useState('all') // all, matching, missing
 
+  const categoryScrollRef = useRef(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+
   if (!skills || skills.length === 0) return null
 
   // Collect available categories present in the skills array
   const categoriesPresent = Array.from(new Set(skills.map(s => s.category || 'Other')))
   const categoryOptions = ['All', ...categoriesPresent]
+
+  // Check category scroll limits for visible affordances
+  const checkCategoryScroll = useCallback(() => {
+    const el = categoryScrollRef.current
+    if (!el) return
+    setCanScrollLeft(el.scrollLeft > 4)
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+  }, [])
+
+  useEffect(() => {
+    checkCategoryScroll()
+    const el = categoryScrollRef.current
+    if (!el) return
+    el.addEventListener('scroll', checkCategoryScroll, { passive: true })
+    window.addEventListener('resize', checkCategoryScroll)
+    return () => {
+      el.removeEventListener('scroll', checkCategoryScroll)
+      window.removeEventListener('resize', checkCategoryScroll)
+    }
+  }, [checkCategoryScroll, categoryOptions])
+
+  const scrollCategories = (direction) => {
+    const el = categoryScrollRef.current
+    if (!el) return
+    const scrollAmount = direction === 'left' ? -220 : 220
+    el.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+  }
 
   // Filter skills by category and status
   const filteredSkills = skills.filter(skill => {
@@ -85,7 +118,7 @@ export const YourSkillsLearningSection = ({ skills, activeSkillId, onSelectSkill
   })
 
   return (
-    <div id="skills-section" className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 mb-8 scroll-mt-6">
+    <div id="skills-section" className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 mb-8 scroll-mt-6 max-w-full">
       {/* Section Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-gray-100 pb-4">
         <div>
@@ -137,31 +170,68 @@ export const YourSkillsLearningSection = ({ skills, activeSkillId, onSelectSkill
         </div>
       </div>
 
-      {/* Category Pills Bar */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-5 text-xs">
-        {categoryOptions.map(cat => {
-          const IconComponent = CATEGORY_ICONS[cat] || FolderIcon
-          const isActive = selectedCategory === cat
-          const count = cat === 'All' ? skills.length : skills.filter(s => (s.category || 'Other') === cat).length
+      {/* Category Pills Bar with Responsive Scroll & Affordance */}
+      <div className="relative mb-5 max-w-full">
+        {canScrollLeft && (
+          <button
+            onClick={() => scrollCategories('left')}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white/95 border border-gray-300 text-gray-700 shadow-md flex items-center justify-center hover:bg-gray-100 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            aria-label="Scroll categories left"
+          >
+            <ChevronLeftIcon className="w-4 h-4" />
+          </button>
+        )}
 
-          return (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap flex items-center gap-1.5 transition-all border ${
-                isActive
-                  ? 'bg-indigo-600 text-white border-indigo-600 shadow'
-                  : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-              }`}
-            >
-              {cat !== 'All' && <IconComponent className="w-3.5 h-3.5" />}
-              <span>{cat}</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'}`}>
-                {count}
-              </span>
-            </button>
-          )
-        })}
+        <div
+          ref={categoryScrollRef}
+          className="flex items-center gap-2 overflow-x-auto pb-2.5 pt-0.5 px-0.5 text-xs scroll-smooth scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 scrollbar-track-transparent [scrollbar-width:thin] focus:outline-none"
+          tabIndex={0}
+          role="region"
+          aria-label="Skill categories filter row"
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowRight') scrollCategories('right')
+            if (e.key === 'ArrowLeft') scrollCategories('left')
+          }}
+        >
+          {categoryOptions.map(cat => {
+            const IconComponent = CATEGORY_ICONS[cat] || FolderIcon
+            const isActive = selectedCategory === cat
+            const count = cat === 'All' ? skills.length : skills.filter(s => (s.category || 'Other') === cat).length
+
+            return (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                onFocus={(e) => {
+                  e.target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+                }}
+                className={`shrink-0 px-3 py-1.5 rounded-xl font-bold whitespace-nowrap flex items-center gap-1.5 transition-all border focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 ${
+                  isActive
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow'
+                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                }`}
+              >
+                {cat !== 'All' && <IconComponent className="w-3.5 h-3.5" />}
+                <span>{cat}</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'}`}>
+                  {count}
+                </span>
+              </button>
+            )
+          })}
+          {/* Spacer to guarantee the final category is never clipped against the container edge */}
+          <div className="shrink-0 w-4 h-1 pointer-events-none" aria-hidden="true" />
+        </div>
+
+        {canScrollRight && (
+          <button
+            onClick={() => scrollCategories('right')}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white/95 border border-gray-300 text-gray-700 shadow-md flex items-center justify-center hover:bg-gray-100 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            aria-label="Scroll categories right"
+          >
+            <ChevronRightIcon className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Skill Cards Grid */}

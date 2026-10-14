@@ -19,6 +19,7 @@ import { YouTubeResourceList } from './YouTubeResourceList'
 import { PracticeSection } from './PracticeSection'
 import { ProjectRecommendations } from './ProjectRecommendations'
 import { fetchStageVideos, formatStageVideos } from '../../services/youtubeVideoService'
+import { getCourseUrl } from '../../utils/courseUrls'
 
 export const SkillLearningCard = ({ 
   skill, 
@@ -312,24 +313,28 @@ export const SkillLearningCard = ({
               Additional Courses for {skill.skill_name}:
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {otherCourses.map((c, i) => (
-                <div key={i} className="p-3.5 rounded-xl border border-gray-200 bg-gray-50/50 flex items-start justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">
-                      {c.provider}
-                    </span>
-                    <h5 className="font-bold text-xs text-gray-900 mt-1">{c.title}</h5>
+              {otherCourses.map((c, i) => {
+                const resolvedUrl = getCourseUrl(c, skill.skill_name, c.provider || 'Coursera')
+                return (
+                  <div key={i} className="p-3.5 rounded-xl border border-gray-200 bg-gray-50/50 flex items-start justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">
+                        {c.provider}
+                      </span>
+                      <h5 className="font-bold text-xs text-gray-900 mt-1">{c.title}</h5>
+                    </div>
+                    <a
+                      href={resolvedUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1 text-gray-400 hover:text-indigo-600 cursor-pointer"
+                      title={`Open ${c.title}`}
+                    >
+                      <ExternalLinkIcon className="w-4 h-4" />
+                    </a>
                   </div>
-                  <a
-                    href={c.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1 text-gray-400 hover:text-indigo-600"
-                  >
-                    <ExternalLinkIcon className="w-4 h-4" />
-                  </a>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}

@@ -16,7 +16,8 @@ import {
   calculateWatchedPercentage,
   detectSeeking,
   isVideoCompleted,
-  formatDuration
+  formatDuration,
+  getSafeFrontendOrigin
 } from '../../services/videoProgressTracker.js'
 
 let passedCount = 0
@@ -167,6 +168,37 @@ console.log('\n--- 5. Testing Duration Formatting ---')
   assert(formatDuration(65) === '1:05', '65s formats to 1:05')
   assert(formatDuration(600) === '10:00', '600s formats to 10:00')
   assert(formatDuration(3665) === '1:01:05', '3665s formats to 1:01:05')
+}
+
+console.log('\n--- 6. Testing Safe Frontend Origin Resolution ---')
+{
+  // 1. Localhost window context
+  const localWin = { location: { origin: 'http://localhost:5173', protocol: 'http:', host: 'localhost:5173' } }
+  assert(getSafeFrontendOrigin(localWin) === 'http://localhost:5173', 'Resolves local dev origin http://localhost:5173')
+
+  // 2. Trailing slash stripping
+  const trailingWin = { location: { origin: 'http://localhost:5173/', protocol: 'http:', host: 'localhost:5173' } }
+  assert(getSafeFrontendOrigin(trailingWin) === 'http://localhost:5173', 'Strips trailing slash from origin to prevent postMessage mismatch')
+
+  // 3. Local loopback IP context (127.0.0.1:5173)
+  const ipWin = { location: { origin: 'http://127.0.0.1:5173', protocol: 'http:', host: '127.0.0.1:5173' } }
+  assert(getSafeFrontendOrigin(ipWin) === 'http://127.0.0.1:5173', 'Resolves loopback IP 127.0.0.1:5173, never falsely returning localhost')
+
+  // 4. LAN IP context (e.g. 192.168.1.5:5173)
+  const lanWin = { location: { origin: 'http://192.168.1.5:5173', protocol: 'http:', host: '192.168.1.5:5173' } }
+  assert(getSafeFrontendOrigin(lanWin) === 'http://192.168.1.5:5173', 'Resolves LAN IP 192.168.1.5:5173 accurately')
+
+  // 5. Production HTTPS domain context
+  const prodWin = { location: { origin: 'https://academic-to-industry-transition.vercel.app', protocol: 'https:', host: 'academic-to-industry-transition.vercel.app' } }
+  assert(getSafeFrontendOrigin(prodWin) === 'https://academic-to-industry-transition.vercel.app', 'Resolves production HTTPS origin, never localhost:5173')
+
+  // 6. Sandboxed iframe or null string origin fallback
+  const nullOriginWin = { location: { origin: 'null', protocol: 'http:', host: 'localhost:5173' } }
+  assert(getSafeFrontendOrigin(nullOriginWin) === 'http://localhost:5173', 'Falls back to protocol + host when origin is "null" string')
+
+  // 7. Environment variable fallback when window is null
+  const envUrl = 'https://my-lms-portal.com'
+  assert(getSafeFrontendOrigin(null, envUrl) === 'https://my-lms-portal.com', 'Falls back to envUrl origin when window context is null')
 }
 
 console.log(`\n===========================================`)

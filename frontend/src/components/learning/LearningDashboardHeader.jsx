@@ -10,6 +10,7 @@ import {
   SparklesIcon,
   XIcon
 } from '@heroicons/react/outline'
+import { calculateInterviewCountdown } from '../../utils/learningDateUtils'
 
 export const LearningDashboardHeader = ({
   targetRole,
@@ -44,6 +45,10 @@ export const LearningDashboardHeader = ({
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false)
   const [isAlignmentModalOpen, setIsAlignmentModalOpen] = useState(false)
 
+  // Instant local countdown computation to reflect date changes immediately without off-by-one errors
+  const countdownInfo = calculateInterviewCountdown(targetDate)
+  const effectivePaceLabel = countdownInfo.isValid ? countdownInfo.paceLabel : (paceLabel || 'Standard Pace')
+
   const targetRoleOptions = [
     'Software Engineer',
     'Data Analyst',
@@ -55,14 +60,14 @@ export const LearningDashboardHeader = ({
   ]
 
   return (
-    <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-2xl p-6 md:p-8 shadow-xl mb-8 border border-indigo-700/30 relative overflow-hidden">
+    <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-2xl p-5 md:p-6 shadow-xl mb-6 border border-indigo-700/30 relative overflow-hidden">
       {/* Background Glow Elements */}
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
         {/* Header Left Info */}
-        <div className="space-y-3 max-w-2xl">
+        <div className="space-y-2.5 max-w-2xl">
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setIsRoleModalOpen(true)}
@@ -81,14 +86,26 @@ export const LearningDashboardHeader = ({
             </button>
             <button
               onClick={() => setIsPaceModalOpen(true)}
-              className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 rounded-full text-xs font-bold flex items-center gap-1 transition-all cursor-pointer transform hover:scale-105 shadow-sm"
+              className={`px-3 py-1 border rounded-full text-xs font-bold flex items-center gap-1 transition-all cursor-pointer transform hover:scale-105 shadow-sm ${
+                countdownInfo.isOverdue
+                  ? 'bg-rose-500/20 hover:bg-rose-500/30 border-rose-400/50 text-rose-300'
+                  : 'bg-amber-500/20 hover:bg-amber-500/30 border-amber-400/40 text-amber-300'
+              }`}
               title="Click to view full pace breakdown"
             >
-              ⏰ {daysRemaining !== null && daysRemaining !== undefined ? `${daysRemaining} Days Remaining` : 'Target Schedule'} ({paceLabel || 'Crash Course Pace'}) ℹ️
+              {countdownInfo.isValid ? (
+                <>
+                  {countdownInfo.badgeText} ({effectivePaceLabel}) ℹ️
+                </>
+              ) : (
+                <>
+                  ⏰ {daysRemaining !== null && daysRemaining !== undefined ? `${daysRemaining} Days Remaining` : 'Target Schedule'} ({paceLabel || 'Standard Pace'}) ℹ️
+                </>
+              )}
             </button>
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-white">
             Your Personalized Learning Roadmap
           </h1>
           <p className="text-indigo-200/80 text-sm md:text-base leading-relaxed">
@@ -152,11 +169,11 @@ export const LearningDashboardHeader = ({
       </div>
 
       {/* Metrics Row (All Clickable) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-indigo-700/40">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5 pt-4 border-t border-indigo-700/40">
         {/* Metric 1: Overall Progress */}
         <div
           onClick={() => setIsProgressModalOpen(true)}
-          className="bg-white/5 hover:bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/10 cursor-pointer transition-all hover:scale-[1.02] shadow-md group"
+          className="bg-white/5 hover:bg-white/10 backdrop-blur-md p-3.5 sm:p-4 rounded-xl border border-white/10 cursor-pointer transition-all hover:scale-[1.02] shadow-md group"
           title="Click to view overall progress breakdown"
         >
           <div className="flex items-center justify-between text-indigo-300 text-xs font-medium gap-1.5 mb-1">
@@ -175,7 +192,7 @@ export const LearningDashboardHeader = ({
         {/* Metric 2: Skills to Master */}
         <div
           onClick={() => setIsSkillGapsModalOpen(true)}
-          className="bg-white/5 hover:bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/10 cursor-pointer transition-all hover:scale-[1.02] shadow-md group"
+          className="bg-white/5 hover:bg-white/10 backdrop-blur-md p-3.5 sm:p-4 rounded-xl border border-white/10 cursor-pointer transition-all hover:scale-[1.02] shadow-md group"
           title="Click to view all priority skill gaps"
         >
           <div className="flex items-center justify-between text-indigo-300 text-xs font-medium gap-1.5 mb-1">
@@ -189,7 +206,7 @@ export const LearningDashboardHeader = ({
         {/* Metric 3: Est. Completion */}
         <div
           onClick={() => setIsDurationModalOpen(true)}
-          className="bg-white/5 hover:bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/10 cursor-pointer transition-all hover:scale-[1.02] shadow-md group"
+          className="bg-white/5 hover:bg-white/10 backdrop-blur-md p-3.5 sm:p-4 rounded-xl border border-white/10 cursor-pointer transition-all hover:scale-[1.02] shadow-md group"
           title="Click to view estimated duration breakdown"
         >
           <div className="flex items-center justify-between text-indigo-300 text-xs font-medium gap-1.5 mb-1">
@@ -203,7 +220,7 @@ export const LearningDashboardHeader = ({
         {/* Metric 4: Career Alignment */}
         <div
           onClick={() => setIsAlignmentModalOpen(true)}
-          className="bg-white/5 hover:bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/10 cursor-pointer transition-all hover:scale-[1.02] shadow-md group"
+          className="bg-white/5 hover:bg-white/10 backdrop-blur-md p-3.5 sm:p-4 rounded-xl border border-white/10 cursor-pointer transition-all hover:scale-[1.02] shadow-md group"
           title="Click to view Career Alignment Report"
         >
           <div className="flex items-center justify-between text-indigo-300 text-xs font-medium gap-1.5 mb-1">
@@ -216,7 +233,7 @@ export const LearningDashboardHeader = ({
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="mt-6 pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="mt-4 pt-3 flex flex-col sm:flex-row items-center justify-between gap-4">
         {/* Search Input */}
         <div className="relative w-full sm:w-80">
           <SearchIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-indigo-300" />
@@ -554,12 +571,20 @@ export const LearningDashboardHeader = ({
             </button>
 
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold text-xl border border-amber-200">
-                ⚡
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-xl border ${
+                countdownInfo.isOverdue
+                  ? 'bg-rose-500/10 text-rose-600 border-rose-200'
+                  : 'bg-amber-500/10 text-amber-600 border-amber-200'
+              }`}>
+                {countdownInfo.isOverdue ? '⚠️' : '⚡'}
               </div>
               <div>
-                <span className="text-xs font-bold text-amber-700 uppercase tracking-wider bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200">
-                  {paceLabel || 'Crash Course Pace'}
+                <span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md border ${
+                  countdownInfo.isOverdue
+                    ? 'bg-rose-50 text-rose-700 border-rose-200'
+                    : 'bg-amber-50 text-amber-700 border-amber-200'
+                }`}>
+                  {effectivePaceLabel}
                 </span>
                 <h3 className="text-xl font-extrabold text-gray-900 mt-0.5">
                   Study Pace Breakdown
@@ -570,17 +595,27 @@ export const LearningDashboardHeader = ({
             <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2.5 text-xs text-gray-700">
               <div className="flex items-center justify-between font-bold border-b border-gray-200 pb-2">
                 <span>Target Interview Date:</span>
-                <span className="text-indigo-600">{targetDate || 'Not Set'}</span>
+                <span className="text-indigo-600">{countdownInfo.formattedDate || targetDate || 'Not Set'}</span>
               </div>
               <div className="flex items-center justify-between font-bold border-b border-gray-200 pb-2">
-                <span>Time Remaining:</span>
-                <span className="text-amber-600">{daysRemaining !== null ? `${daysRemaining} Days` : 'N/A'}</span>
+                <span>Timeline Status:</span>
+                <span className={countdownInfo.isOverdue ? 'text-rose-600 font-extrabold' : 'text-amber-600 font-extrabold'}>
+                  {countdownInfo.isOverdue 
+                    ? `Overdue by ${countdownInfo.overdueDays} Days`
+                    : (countdownInfo.daysRemaining === 0 ? 'Today!' : (countdownInfo.daysRemaining !== null ? `${countdownInfo.daysRemaining} Days Remaining` : 'N/A'))}
+                </span>
               </div>
               <div className="flex items-center justify-between font-bold">
                 <span>Priority Skills to Master:</span>
                 <span className="text-indigo-600">{skillsToMaster} Skills</span>
               </div>
             </div>
+
+            {countdownInfo.isOverdue && (
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-900 text-xs leading-relaxed">
+                <strong>Target Date Passed:</strong> Your target interview date has passed. You can update your target date in the header above to reset your countdown and generate an updated sprint schedule.
+              </div>
+            )}
 
             <div className="space-y-2 text-xs leading-relaxed text-gray-600">
               <h4 className="font-extrabold text-gray-900 uppercase tracking-wider text-[11px]">

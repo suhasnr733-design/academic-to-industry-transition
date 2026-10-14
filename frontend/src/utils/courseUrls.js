@@ -104,6 +104,101 @@ const KNOWN_COURSE_URLS = {
 }
 
 /**
+ * Validates whether a string is a well-formed http/https URL.
+ */
+export const isValidHttpUrl = (urlStr) => {
+  if (!urlStr || typeof urlStr !== 'string') return false
+  try {
+    const parsed = new URL(urlStr)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Distinguishes search queries and search result pages from direct course landing pages.
+ */
+export const isSearchUrl = (urlStr) => {
+  if (!isValidHttpUrl(urlStr)) return false
+  try {
+    const parsed = new URL(urlStr)
+    const pathname = parsed.pathname.toLowerCase()
+    
+    if (
+      pathname.includes('/search') ||
+      pathname.includes('/courses/search') ||
+      pathname.includes('/results')
+    ) {
+      return true
+    }
+    
+    const params = parsed.searchParams
+    if (params.has('query') || params.has('q') || params.has('search_query') || params.has('search')) {
+      return true
+    }
+    
+    return false
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Validates and identifies whether a URL is a direct, exact course landing page.
+ * Distinguishes direct course curriculum/enrollment pages from search results or platform homepages.
+ */
+export const isDirectCourseUrl = (urlStr) => {
+  if (!isValidHttpUrl(urlStr)) return false
+  if (isSearchUrl(urlStr)) return false
+
+  try {
+    const parsed = new URL(urlStr)
+    const host = parsed.hostname.toLowerCase()
+    const pathname = parsed.pathname.toLowerCase()
+
+    // Coursera direct courses, specializations, or certificates
+    if (host.includes('coursera.org')) {
+      return (
+        pathname.startsWith('/learn/') ||
+        pathname.startsWith('/specializations/') ||
+        pathname.startsWith('/professional-certificates/')
+      )
+    }
+
+    // Udemy direct course pages (must have a valid course slug)
+    if (host.includes('udemy.com')) {
+      return pathname.startsWith('/course/') && pathname.length > 8
+    }
+
+    // LeetCode problems or direct problemsets
+    if (host.includes('leetcode.com')) {
+      return pathname.startsWith('/problems/') || pathname === '/problemset/all/'
+    }
+
+    // FreeCodeCamp direct curriculum
+    if (host.includes('freecodecamp.org')) {
+      return pathname.startsWith('/learn/')
+    }
+
+    // edX direct course pages
+    if (host.includes('edx.org')) {
+      return pathname.startsWith('/learn/') || pathname.startsWith('/course/')
+    }
+
+    // NPTEL courses
+    if (host.includes('nptel.ac.in')) {
+      return pathname.startsWith('/courses') && !isSearchUrl(urlStr)
+    }
+
+    // General fallback: valid http(s) URL with path depth and not a root page
+    return pathname.length > 1 && pathname !== '/'
+  } catch {
+    return false
+  }
+}
+
+/**
  * Returns platform search URL for a skill or general query.
  */
 export const getPlatformUrl = (platform, query = '') => {
@@ -135,13 +230,17 @@ export const getPlatformUrl = (platform, query = '') => {
 
 /**
  * Returns the exact webpage URL for a given course name/object.
+ * Handles objects with validated URLs, known catalog entries, platform searches, and fallbacks.
  */
 export const getCourseUrl = (course, skill = '', preferredPlatform = 'Coursera') => {
   if (!course) return getPlatformUrl(preferredPlatform, skill)
 
-  // If already an object with url property
-  if (typeof course === 'object' && course.url) {
-    return course.url
+  // If already an object with url property, validate that it is a well-formed http(s) URL
+  if (typeof course === 'object' && course.url && typeof course.url === 'string') {
+    const candidateUrl = course.url.trim()
+    if (isValidHttpUrl(candidateUrl)) {
+      return candidateUrl
+    }
   }
 
   const courseTitle = (typeof course === 'object' ? (course.title || course.name) : course || '').trim()
@@ -177,8 +276,26 @@ export const getCourseUrl = (course, skill = '', preferredPlatform = 'Coursera')
     return `https://www.edx.org/search?q=${encodeURIComponent(cleanTitle)}`
   }
 
-  // Fallback to Coursera search with the course title
-  return `https://www.coursera.org/search?query=${encodeURIComponent(courseTitle)}`
+  // Fallback to platform search with the course title or skill
+  return getPlatformUrl(preferredPlatform, courseTitle || skill)
+}
+
+/**
+ * Checks whether a given course title or object resolves to an exact known direct course URL
+ * rather than a search query fallback or malformed URL.
+ * Does NOT classify every object with a url property as an exact course link.
+ */
+export const isExactCourseUrl = (course) => {
+  if (!course) return false
+
+  // If course object has a url property: strictly test if it's a direct course page
+  if (typeof course === 'object' && course.url && typeof course.url === 'string') {
+    return isDirectCourseUrl(course.url.trim())
+  }
+
+  // Otherwise resolve the URL via catalog and evaluate directness
+  const resolvedUrl = getCourseUrl(course)
+  return isDirectCourseUrl(resolvedUrl)
 }
 
 /**

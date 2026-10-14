@@ -1119,26 +1119,6 @@
   ],
   "postman|full stack developer|learn|en|4": [
     {
-      "id": "VywxIQ2ZXw4",
-      "title": "Postman Beginner&#39;s Course - API Testing",
-      "channel": "freeCodeCamp.org",
-      "thumbnail": "https://i.ytimg.com/vi/VywxIQ2ZXw4/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=VywxIQ2ZXw4",
-      "embed_url": "https://www.youtube.com/embed/VywxIQ2ZXw4",
-      "duration": "2:09:38",
-      "duration_seconds": 7778,
-      "difficulty": "Beginner Friendly",
-      "badge": "⭐ Masterclass",
-      "skill_name": "Postman",
-      "language": "en",
-      "recommendation_source": "api",
-      "recommendation_category": "Technical Skills",
-      "recommendation_reason": "Curated foundational masterclass for Postman",
-      "learning_focus": "Postman Learn for Full Stack Developer",
-      "stage": "learn",
-      "match_type": "official_api"
-    },
-    {
       "id": "N6_4Gt2qSrQ",
       "title": "Postman Beginner Tutorial 2026 | Complete GUI Tour (v12 Updated) + QUIZ",
       "channel": "Automation Step by Step",
@@ -5100,6 +5080,28 @@
       "stage": "assess",
       "match_type": "exact",
       "category": "Backend"
+    }
+  ],
+  "data structures|full stack developer|learn|en|4": [
+    {
+      "id": "RBSGKlAvoiM",
+      "title": "Data Structures Easy to Advanced Course",
+      "channel": "freeCodeCamp.org",
+      "thumbnail": "https://i.ytimg.com/vi/RBSGKlAvoiM/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=RBSGKlAvoiM",
+      "embed_url": "https://www.youtube.com/embed/RBSGKlAvoiM",
+      "duration": null,
+      "duration_seconds": null,
+      "difficulty": "Beginner Friendly",
+      "badge": "⭐ Masterclass",
+      "skill_name": "Data Structures",
+      "language": "en",
+      "recommendation_source": "curated",
+      "recommendation_category": "Core CS",
+      "recommendation_reason": "Curated foundational masterclass for Data Structures",
+      "learning_focus": "Data Structures Learn for Full Stack Developer",
+      "stage": "learn",
+      "match_type": "exact"
     }
   ]
 }

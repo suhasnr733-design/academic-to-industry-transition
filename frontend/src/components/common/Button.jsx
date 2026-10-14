@@ -4,20 +4,21 @@ import React from 'react'
 import { cn } from '../../utils/helpers'
 
 const variants = {
-  primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-2 focus:ring-primary-500',
-  secondary: 'bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-2 focus:ring-gray-400',
-  success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500',
-  danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500',
-  warning: 'bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-2 focus:ring-yellow-400',
-  outline: 'border-2 border-primary-600 text-primary-600 hover:bg-primary-50 focus:ring-2 focus:ring-primary-500',
-  ghost: 'text-gray-600 hover:bg-gray-100 focus:ring-2 focus:ring-gray-400',
+  primary: 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 focus:ring-2 focus:ring-primary-500 shadow-2xs',
+  secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300 focus:ring-2 focus:ring-gray-300 border border-gray-200/80',
+  success: 'bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 focus:ring-2 focus:ring-emerald-500 shadow-2xs',
+  danger: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 focus:ring-2 focus:ring-red-500 shadow-2xs',
+  warning: 'bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-700 focus:ring-2 focus:ring-amber-400 shadow-2xs',
+  outline: 'border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 focus:ring-2 focus:ring-primary-500',
+  ghost: 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 focus:ring-2 focus:ring-gray-300',
 }
 
 const sizes = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-base',
-  lg: 'px-6 py-3 text-lg',
-  xl: 'px-8 py-4 text-xl',
+  xs: 'h-8 px-2.5 text-xs',
+  sm: 'h-9 px-3.5 text-xs sm:text-sm font-medium',
+  md: 'h-10 px-4 text-sm font-medium',
+  lg: 'h-11 px-5 text-base font-semibold',
+  xl: 'h-12 px-6 text-lg font-semibold',
 }
 
 export const Button = ({
