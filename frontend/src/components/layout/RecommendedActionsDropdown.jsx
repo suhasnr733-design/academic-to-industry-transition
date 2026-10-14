@@ -80,6 +80,9 @@ export const RecommendedActionsDropdown = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Recommended Actions Menu"
+        title={allCoreCompleted 
+          ? "Career Readiness Checklist: 100% Ready" 
+          : `Career Readiness Checklist: ${completedCount} of ${totalCount} completed (${actions.filter(a => !a.isCompleted).map(a => a.title).join(', ')} pending)`}
         className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border ${
           allCoreCompleted
             ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 shadow-sm'
@@ -133,7 +136,7 @@ export const RecommendedActionsDropdown = () => {
                   {isFaculty ? 'Faculty Advisor Actions' : 'Career Readiness Actions'}
                 </h3>
                 <p className="text-xs text-gray-500">
-                  {isFaculty ? 'Track your essential department setup' : 'Track your essential profile setup'}
+                  {isFaculty ? 'Track essential department setup' : '3 core career setup steps (Resume, Profile, Assessment)'}
                 </p>
               </div>
             </div>
@@ -150,8 +153,8 @@ export const RecommendedActionsDropdown = () => {
             </span>
           </div>
 
-          {/* Progress Bar */}
-          <div className="mt-3.5 mb-4">
+          {/* Progress Bar & Status Explanation */}
+          <div className="mt-3.5 mb-3.5">
             <div className="flex justify-between text-xs text-gray-500 mb-1 font-medium">
               <span>{completedCount} of {totalCount} completed</span>
               <span>{progressPercent}%</span>
@@ -168,11 +171,24 @@ export const RecommendedActionsDropdown = () => {
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            {allCoreCompleted && (
+            {allCoreCompleted ? (
               <p className="text-xs text-emerald-700 font-medium mt-1.5 flex items-center gap-1">
                 <CheckCircleSolid className="w-3.5 h-3.5 text-emerald-600" />
                 All onboarding steps completed!
               </p>
+            ) : (
+              <div className="mt-2.5 p-2.5 bg-amber-50/80 rounded-xl border border-amber-200/70 flex items-start gap-2">
+                <InformationCircleIcon className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                <div className="text-[11.5px] text-amber-900 leading-snug">
+                  <span className="font-bold">Pending Steps ({totalCount - completedCount} remaining):</span>{' '}
+                  <span className="text-amber-800">
+                    {actions
+                      .filter(a => !a.isCompleted)
+                      .map(a => a.id === 'profile' ? `Profile (${profileDetails.percentage}% - ${profileDetails.missingHint || 'add college'})` : a.title)
+                      .join(' • ')}
+                  </span>
+                </div>
+              </div>
             )}
           </div>
 
@@ -207,9 +223,13 @@ export const RecommendedActionsDropdown = () => {
                       >
                         {action.title}
                       </p>
-                      {action.isCompleted && (
-                        <span className="text-[10px] bg-emerald-100 text-emerald-800 font-medium px-1.5 py-0.5 rounded">
+                      {action.isCompleted ? (
+                        <span className="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-1.5 py-0.5 rounded">
                           Done
+                        </span>
+                      ) : (
+                        <span className="text-[10px] bg-amber-100 text-amber-800 font-semibold px-1.5 py-0.5 rounded">
+                          Pending
                         </span>
                       )}
                     </div>
@@ -223,7 +243,7 @@ export const RecommendedActionsDropdown = () => {
                   type="button"
                   className={`text-xs font-medium ml-2 shrink-0 flex items-center gap-0.5 ${
                     action.isCompleted
-                      ? 'text-emerald-700 hover:text-emerald-800'
+                      ? 'text-emerald-700 hover:text-emerald-800 font-semibold'
                       : isFaculty
                       ? 'text-purple-600 hover:text-purple-700 font-semibold'
                       : 'text-primary-600 hover:text-primary-700 font-semibold'

@@ -16,6 +16,7 @@ import {
   detectSeeking,
   isVideoCompleted,
   formatDuration,
+  getSafeFrontendOrigin,
   DEFAULT_TECHNICAL_TOLERANCE_SECONDS
 } from '../../services/videoProgressTracker.js'
 import api from '../../services/api'
@@ -31,11 +32,20 @@ function loadYouTubeIframeApi() {
 
   if (ytApiPromise) return ytApiPromise
 
-  ytApiPromise = new Promise((resolve) => {
+  ytApiPromise = new Promise((resolve, reject) => {
+    // Check if already ready
+    if (window.YT && window.YT.Player) {
+      return resolve(window.YT)
+    }
+
     const prevOnReady = window.onYouTubeIframeAPIReady
 
     window.onYouTubeIframeAPIReady = () => {
-      if (typeof prevOnReady === 'function') prevOnReady()
+      if (typeof prevOnReady === 'function') {
+        try {
+          prevOnReady()
+        } catch (_) {}
+      }
       resolve(window.YT)
     }
 
@@ -45,8 +55,18 @@ function loadYouTubeIframeApi() {
       const tag = document.createElement('script')
       tag.src = 'https://www.youtube.com/iframe_api'
       tag.async = true
+      tag.onerror = () => reject(new Error('Failed to load YouTube IFrame API script'))
       document.body.appendChild(tag)
     }
+
+    // Safety polling fallback if onYouTubeIframeAPIReady already triggered
+    const checkInterval = setInterval(() => {
+      if (window.YT && window.YT.Player) {
+        clearInterval(checkInterval)
+        resolve(window.YT)
+      }
+    }, 100)
+    setTimeout(() => clearInterval(checkInterval), 10000)
   })
 
   return ytApiPromise
@@ -69,6 +89,27 @@ export const YouTubePlayerWithProgress = ({
   const tickIntervalRef = useRef(null)
   const lastSaveTimeRef = useRef(0)
 
+  // Stable reference for latest props to prevent player remounts on parent state changes
+  const propsRef = useRef({
+    video,
+    skillName,
+    targetRole,
+    stage,
+    resumeId,
+    onProgressUpdate
+  })
+
+  useEffect(() => {
+    propsRef.current = {
+      video,
+      skillName,
+      targetRole,
+      stage,
+      resumeId,
+      onProgressUpdate
+    }
+  })
+
   // Tracking references (survives render loop without stale closures)
   const trackingRef = useRef({
     videoId: video.id,
@@ -90,6 +131,7 @@ export const YouTubePlayerWithProgress = ({
     isCompleted: false,
     isReady: false
   })
+  const [playerError, setPlayerError] = useState(null)
 
   // Parse YouTube video ID safely
   const resolveVideoId = useCallback(() => {
@@ -163,13 +205,22 @@ export const YouTubePlayerWithProgress = ({
     const cur = trackingRef.current
     if (!cur.videoId || cur.totalDuration <= 0) return
 
+    const {
+      video: curVideo,
+      skillName: curSkill,
+      targetRole: curRole,
+      stage: curStage,
+      resumeId: curResumeId,
+      onProgressUpdate: curOnProgressUpdate
+    } = propsRef.current
+
     const payload = {
       video_id: cur.videoId,
-      video_title: video.title || `${skillName} Tutorial`,
-      skill_name: skillName || video.skill_name || 'General',
-      target_role: targetRole || 'Data Scientist',
-      stage: stage || 'learn',
-      resume_id: resumeId,
+      video_title: curVideo?.title || `${curSkill} Tutorial`,
+      skill_name: curSkill || curVideo?.skill_name || 'General',
+      target_role: curRole || 'Data Scientist',
+      stage: curStage || 'learn',
+      resume_id: curResumeId,
       watched_intervals: cur.intervals,
       watched_duration: cur.watchedDuration,
       total_duration: cur.totalDuration,
@@ -181,11 +232,11 @@ export const YouTubePlayerWithProgress = ({
 
     // Save locally
     try {
-      const localKey = `video_progress_${resumeId || 'default'}_${cur.videoId}`
+      const localKey = `video_progress_${curResumeId || 'default'}_${cur.videoId}`
       localStorage.setItem(localKey, JSON.stringify(payload))
 
       if (cur.isCompleted) {
-        const watchedKey = `watched_videos_${resumeId || 'default'}`
+        const watchedKey = `watched_videos_${curResumeId || 'default'}`
         const rawWatched = localStorage.getItem(watchedKey)
         const set = rawWatched ? new Set(JSON.parse(rawWatched)) : new Set()
         set.add(cur.videoId)
@@ -194,8 +245,8 @@ export const YouTubePlayerWithProgress = ({
     } catch (_) {}
 
     // Notify parent component
-    if (onProgressUpdate) {
-      onProgressUpdate(payload)
+    if (typeof curOnProgressUpdate === 'function') {
+      curOnProgressUpdate(payload)
     }
 
     // Persist to backend
@@ -205,7 +256,11 @@ export const YouTubePlayerWithProgress = ({
       // Graceful offline fallback
       console.debug('[YouTubePlayerWithProgress] Auto-save backend synced locally:', err?.message)
     }
-  }, [video.title, video.skill_name, skillName, targetRole, stage, resumeId, onProgressUpdate])
+  }, [])
+
+  // Stable handler refs
+  const persistProgressRef = useRef(persistProgress)
+  persistProgressRef.current = persistProgress
 
   // Periodic and state-driven tracker tick
   const handleTrackerTick = useCallback(() => {
@@ -272,9 +327,14 @@ export const YouTubePlayerWithProgress = ({
     // Periodic auto-save every 6 seconds during playback
     if (now - lastSaveTimeRef.current > 6000) {
       lastSaveTimeRef.current = now
-      persistProgress(false)
+      if (persistProgressRef.current) {
+        persistProgressRef.current(false)
+      }
     }
-  }, [persistProgress])
+  }, [])
+
+  const handleTrackerTickRef = useRef(handleTrackerTick)
+  handleTrackerTickRef.current = handleTrackerTick
 
   // Stop polling loop
   const stopTrackingLoop = useCallback(() => {
@@ -285,54 +345,87 @@ export const YouTubePlayerWithProgress = ({
     trackingRef.current.isPlaying = false
   }, [])
 
+  const stopTrackingLoopRef = useRef(stopTrackingLoop)
+  stopTrackingLoopRef.current = stopTrackingLoop
+
   // Start polling loop
   const startTrackingLoop = useCallback(() => {
-    stopTrackingLoop()
+    if (stopTrackingLoopRef.current) {
+      stopTrackingLoopRef.current()
+    }
     trackingRef.current.isPlaying = true
     trackingRef.current.lastWallTime = performance.now()
     if (playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
       trackingRef.current.lastPlaybackTime = playerRef.current.getCurrentTime()
     }
-    tickIntervalRef.current = setInterval(handleTrackerTick, 300)
-  }, [handleTrackerTick, stopTrackingLoop])
+    tickIntervalRef.current = setInterval(() => {
+      if (handleTrackerTickRef.current) {
+        handleTrackerTickRef.current()
+      }
+    }, 300)
+  }, [])
+
+  const startTrackingLoopRef = useRef(startTrackingLoop)
+  startTrackingLoopRef.current = startTrackingLoop
 
   // Mount YouTube IFrame API Player
+  // Notice: strictly depends ONLY on videoId. It will NEVER remount during playback or parent re-renders.
   useEffect(() => {
     let isSubscribed = true
-    const containerId = `yt-player-${videoId}`
+    let playerInstance = null
+    const containerId = `yt-player-${videoId}-${Math.random().toString(36).substring(2, 7)}`
+
+    // Create a fresh inner mount container to prevent stale DOM collisions
+    if (containerRef.current) {
+      containerRef.current.innerHTML = ''
+      const mountDiv = document.createElement('div')
+      mountDiv.id = containerId
+      mountDiv.className = 'w-full h-full'
+      containerRef.current.appendChild(mountDiv)
+    }
+
+    const safeOrigin = getSafeFrontendOrigin()
 
     loadYouTubeIframeApi().then((YT) => {
       if (!isSubscribed || !containerRef.current) return
 
-      // Clean up prior player instance if any
+      // Clean up previous instance before mounting new one
       if (playerRef.current && typeof playerRef.current.destroy === 'function') {
         try {
           playerRef.current.destroy()
         } catch (_) {}
+        playerRef.current = null
       }
 
-      // Create player mounting target div
-      containerRef.current.innerHTML = `<div id="${containerId}" class="w-full h-full"></div>`
+      // Configure playerVars with accurate, dynamic origin
+      const playerVars = {
+        enablejsapi: 1,
+        rel: 0,
+        modestbranding: 1,
+        playsinline: 1,
+        controls: 1
+      }
+      if (safeOrigin) {
+        playerVars.origin = safeOrigin
+        playerVars.widget_referrer = safeOrigin
+      }
 
-      playerRef.current = new YT.Player(containerId, {
+      playerInstance = new YT.Player(containerId, {
         videoId,
-        playerVars: {
-          enablejsapi: 1,
-          origin: window.location.origin,
-          rel: 0,
-          modestbranding: 1,
-          playsinline: 1,
-          controls: 1
-        },
+        host: 'https://www.youtube.com',
+        playerVars,
         events: {
           onReady: (event) => {
             if (!isSubscribed) return
+            playerRef.current = event.target
             setProgressState(prev => ({ ...prev, isReady: true }))
 
             // If resuming from previous position
             const resumePos = trackingRef.current.lastPlaybackTime
             if (resumePos > 0 && resumePos < (trackingRef.current.totalDuration - 5)) {
-              event.target.seekTo(resumePos, true)
+              try {
+                event.target.seekTo(resumePos, true)
+              } catch (_) {}
             }
           },
           onStateChange: (event) => {
@@ -340,40 +433,58 @@ export const YouTubePlayerWithProgress = ({
             const state = event.data
 
             if (state === YT.PlayerState.PLAYING) {
-              startTrackingLoop()
+              if (startTrackingLoopRef.current) startTrackingLoopRef.current()
             } else if (state === YT.PlayerState.PAUSED) {
-              stopTrackingLoop()
-              handleTrackerTick()
-              persistProgress(false)
+              if (stopTrackingLoopRef.current) stopTrackingLoopRef.current()
+              if (handleTrackerTickRef.current) handleTrackerTickRef.current()
+              if (persistProgressRef.current) persistProgressRef.current(false)
             } else if (state === YT.PlayerState.ENDED) {
-              stopTrackingLoop()
-              handleTrackerTick()
-              persistProgress(true)
+              if (stopTrackingLoopRef.current) stopTrackingLoopRef.current()
+              if (handleTrackerTickRef.current) handleTrackerTickRef.current()
+              if (persistProgressRef.current) persistProgressRef.current(true)
             } else {
-              stopTrackingLoop()
+              if (stopTrackingLoopRef.current) stopTrackingLoopRef.current()
             }
           },
-          onError: () => {
-            stopTrackingLoop()
+          onError: (event) => {
+            if (!isSubscribed) return
+            if (stopTrackingLoopRef.current) stopTrackingLoopRef.current()
+            setPlayerError({ code: event?.data || 'embed_restricted' })
           }
         }
       })
+      playerRef.current = playerInstance
     }).catch(err => {
       console.warn('[YouTubePlayerWithProgress] Failed loading YouTube iframe API:', err)
     })
 
     return () => {
       isSubscribed = false
-      stopTrackingLoop()
+      if (stopTrackingLoopRef.current) {
+        stopTrackingLoopRef.current()
+      }
       // Auto-save on unmount / modal close
-      persistProgress(true)
-      if (playerRef.current && typeof playerRef.current.destroy === 'function') {
+      if (persistProgressRef.current) {
+        persistProgressRef.current(true)
+      }
+      
+      // Clean up player instance safely
+      if (playerInstance && typeof playerInstance.destroy === 'function') {
+        try {
+          playerInstance.destroy()
+        } catch (_) {}
+      } else if (playerRef.current && typeof playerRef.current.destroy === 'function') {
         try {
           playerRef.current.destroy()
         } catch (_) {}
       }
+      playerRef.current = null
+
+      if (containerRef.current) {
+        containerRef.current.innerHTML = ''
+      }
     }
-  }, [videoId, startTrackingLoop, stopTrackingLoop, handleTrackerTick, persistProgress])
+  }, [videoId])
 
   // Calculate visual progress percentage display
   const displayPercent = Math.min(100, Math.max(0, Math.round(progressState.percentage)))
@@ -419,6 +530,26 @@ export const YouTubePlayerWithProgress = ({
       {/* Video Viewport Container */}
       <div className="relative aspect-video bg-black w-full overflow-hidden shadow-inner">
         <div ref={containerRef} className="w-full h-full" />
+        {playerError && (
+          <div className="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center p-6 text-center z-20 space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold text-2xl border border-amber-500/20">
+              ⚠️
+            </div>
+            <h4 className="text-sm font-bold text-white">This video cannot be embedded directly</h4>
+            <p className="text-xs text-slate-400 max-w-sm">
+              The creator has restricted in-app embedding for this tutorial. You can open and watch it directly on YouTube.
+            </p>
+            <a
+              href={video.url || `https://www.youtube.com/watch?v=${videoId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+            >
+              <span>Watch on YouTube</span>
+              <ExternalLinkIcon className="w-4 h-4" />
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Automatic Real-Time Progress Bar & Metrics */}

@@ -7,6 +7,7 @@ import { useRecommendedActions } from '../../hooks/useRecommendedActions'
 import { api } from '../../services/api'
 import { Button } from '../../components/common/Button'
 import { WelcomeActionsModal } from '../../components/dashboard/WelcomeActionsModal'
+import { matchJobSkills } from '../../utils/skillMatcher'
 import toast from 'react-hot-toast'
 import {
   DocumentIcon,
@@ -41,13 +42,30 @@ export const Dashboard = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { resumes, fetchResumes } = useResume()
-  // Optimization 1: Extract totalJobs alongside jobs from useJobs hook to avoid duplicate API calls
-  const { jobs, total: totalJobs, isLoading: jobsLoading } = useJobs()
+  // Optimization 1: Extract totalJobs alongside jobs & fetchJobs from useJobs hook
+  const { jobs, total: totalJobs, isLoading: jobsLoading, fetchJobs } = useJobs()
+
+  // Resilience: Local dashboard jobs fallback if hook has delay
+  const [dashboardJobs, setDashboardJobs] = useState(() => {
+    try {
+      const raw = sessionStorage.getItem('swr_jobs_cache')
+      return raw ? JSON.parse(raw)?.jobs || [] : []
+    } catch {
+      return []
+    }
+  })
+
+  const effectiveJobs = useMemo(() => {
+    if (jobs && jobs.length > 0) return jobs
+    if (dashboardJobs && dashboardJobs.length > 0) return dashboardJobs
+    return []
+  }, [jobs, dashboardJobs])
 
   // Optimization 3: Hydrate dashboard metrics from SWR session storage for instant 0.00s rendering
   const cachedOverview = getCachedDashboardOverview()
 
-  const [jobCount, setJobCount] = useState(() => cachedOverview?.job_count || totalJobs || jobs?.length || 0)
+  const [jobCount, setJobCount] = useState(() => cachedOverview?.job_count ?? (totalJobs || 0))
+  const displayTotalJobs = totalJobs || (effectiveJobs.length > 0 ? effectiveJobs.length : jobCount) || 0
   const [skillGapCount, setSkillGapCount] = useState(() => cachedOverview?.skill_gap_count || 0)
   const [targetRoleMatch, setTargetRoleMatch] = useState(() => cachedOverview?.target_role_match || 0)
   const [targetRoleTitle, setTargetRoleTitle] = useState(() => cachedOverview?.target_role_title || '')
@@ -80,40 +98,52 @@ export const Dashboard = () => {
   const latestResume = resumes?.[0]
   const completedResume = resumes?.find((r) => r.status === 'completed') || latestResume
 
-  // Filter and sort top matched tech jobs for dashboard
-  const topMatchedJobs = useMemo(() => {
-    if (!jobs || jobs.length === 0) return []
+  // Categorize tech-focused openings vs non-tech roles
+  const nonTechList = useMemo(() => [
+    'account executive', 'account manager', 'sales', 'marketing', 'business development',
+    'bdr', 'sdr', 'recruiter', 'talent acquisition', 'human resources', 'customer success',
+    'customer support', 'client success', 'operations manager', 'copywriter', 'content writer',
+    'tax preparer', 'tax accountant', 'tax manager', 'cpa', 'accounting', 'bookkeeper',
+    'gardener', 'landscaping', 'chiropract', 'housekeeping', 'cashier', 'store associate',
+    'now hiring', 'delivery driver', 'warehouse worker', 'nurse', 'nursing', 'medical', 'cook'
+  ], [])
 
-    const userSkills = (completedResume?.skills || []).map(s => String(s).toLowerCase().trim())
-    const nonTechList = [
-      'account executive', 'account manager', 'sales', 'marketing', 'business development',
-      'bdr', 'sdr', 'recruiter', 'talent acquisition', 'human resources', 'customer success',
-      'customer support', 'client success', 'operations manager', 'copywriter', 'content writer',
-      'tax preparer', 'tax accountant', 'tax manager', 'cpa', 'accounting', 'bookkeeper',
-      'gardener', 'landscaping', 'chiropract', 'housekeeping', 'cashier', 'store associate',
-      'now hiring', 'delivery driver', 'warehouse worker', 'nurse', 'nursing', 'medical', 'cook'
-    ]
-
-    const techOnly = jobs.filter(j => {
+  const techJobs = useMemo(() => {
+    if (!effectiveJobs || effectiveJobs.length === 0) return []
+    return effectiveJobs.filter(j => {
       const title = (j.title || '').toLowerCase()
       return !nonTechList.some(nt => title.includes(nt))
     })
+  }, [effectiveJobs, nonTechList])
 
-    // If no resume uploaded, fallback to displaying top active tech openings
-    if (!completedResume?.skills || completedResume.skills.length === 0) {
-      return techOnly.slice(0, 3)
-    }
+  const techJobCount = techJobs.length
 
-    return [...techOnly].sort((a, b) => {
-      const skillsA = (a.required_skills || []).map(s => String(s).toLowerCase())
-      const skillsB = (b.required_skills || []).map(s => String(s).toLowerCase())
+  // High-precision canonical skill matching without false-positive substring collisions
+  const evaluatedTechJobs = useMemo(() => {
+    if (!techJobs || techJobs.length === 0) return []
 
-      const matchA = skillsA.filter(s => userSkills.some(u => u.includes(s) || s.includes(u))).length
-      const matchB = skillsB.filter(s => userSkills.some(u => u.includes(s) || s.includes(u))).length
+    const userSkills = completedResume?.skills || []
 
-      return matchB - matchA
-    }).slice(0, 3)
-  }, [jobs, completedResume?.skills])
+    return techJobs.map(job => {
+      const { matchCount, matchedSkills } = matchJobSkills(job.required_skills, userSkills)
+      return {
+        ...job,
+        matchCount,
+        matchedSkills
+      }
+    })
+  }, [techJobs, completedResume?.skills])
+
+  // Count of technical roles that have at least 1 verified skill match
+  const matchedTechJobsCount = useMemo(() => {
+    return evaluatedTechJobs.filter(j => j.matchCount > 0).length
+  }, [evaluatedTechJobs])
+
+  // Filter and sort top matched tech jobs for dashboard panel (sorted by matchCount descending, top 3)
+  const topMatchedJobs = useMemo(() => {
+    if (!evaluatedTechJobs || evaluatedTechJobs.length === 0) return []
+    return [...evaluatedTechJobs].sort((a, b) => b.matchCount - a.matchCount).slice(0, 3)
+  }, [evaluatedTechJobs])
 
   useEffect(() => {
     if (!latestResume) return
@@ -153,23 +183,42 @@ export const Dashboard = () => {
         try {
           sessionStorage.setItem(DASHBOARD_SWR_KEY, JSON.stringify(res.data))
         } catch (e) {}
-        return
       }
     } catch (err) {
       console.warn('Dashboard summary endpoint notice, using fallback:', err)
+      // Fallback if needed
+      Promise.allSettled([
+        fetchDashboardMetrics(),
+        fetchAdvisorDetails(),
+        fetchNominations()
+      ])
     }
 
-    // Fallback if needed
-    Promise.allSettled([
-      fetchDashboardMetrics(),
-      fetchAdvisorDetails(),
-      fetchNominations()
-    ])
+    // Direct resilient jobs fetch to guarantee top matched openings are immediately populated
+    try {
+      const jobsRes = await api.get('/jobs', { params: { per_page: 50 } })
+      const fetchedList = jobsRes.data?.jobs || []
+      if (fetchedList.length > 0) {
+        setDashboardJobs(fetchedList)
+        if (jobsRes.data?.total) {
+          setJobCount(jobsRes.data.total)
+        }
+      }
+    } catch (jobsErr) {
+      console.warn('Direct jobs fetch notice:', jobsErr)
+    }
   }
 
   useEffect(() => {
     fetchDashboardOverview()
   }, [completedResume?.id, completedResume?.status])
+
+  // Ensure full jobs list is loaded on mount to populate top matches and dynamic counts
+  useEffect(() => {
+    if (fetchJobs) {
+      fetchJobs({ per_page: 50 })
+    }
+  }, [fetchJobs])
 
   // Optimization 1: Keep jobCount synchronized from useJobs hook without duplicate API calls
   useEffect(() => {
@@ -376,11 +425,13 @@ export const Dashboard = () => {
     },
     {
       name: 'Available Jobs',
-      value: `${jobCount}`,
+      value: jobsLoading && effectiveJobs.length === 0 && displayTotalJobs === 0 ? '...' : `${displayTotalJobs}`,
       icon: BriefcaseIcon,
       color: 'text-emerald-600',
       bg: 'bg-emerald-50',
-      description: 'Active matching openings',
+      description: jobsLoading && effectiveJobs.length === 0 
+        ? 'Loading opportunities...' 
+        : `${techJobCount} technical roles available`,
       actionText: 'Scroll to Jobs',
       onClick: () => {
         if (jobsSectionRef.current) {
@@ -408,72 +459,66 @@ export const Dashboard = () => {
   const activePendingRequest = advisorData.requests?.find(r => r.status === 'pending')
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Login Welcome Modal Popup */}
       <WelcomeActionsModal />
 
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-2xl p-8 text-white shadow-md">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="bg-gradient-to-r from-primary-600 via-primary-500 to-secondary-600 rounded-2xl px-6 py-5 sm:px-7 sm:py-6 text-white shadow-sm min-h-[136px] flex flex-col justify-center">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">
+            <h1 className="text-2xl sm:text-[28px] lg:text-[30px] font-bold tracking-tight text-white leading-tight">
               Welcome back, {user?.full_name || 'Student'} 👋
             </h1>
-            <p className="mt-2 text-white/85 text-sm sm:text-base">
+            <p className="mt-1 sm:mt-1.5 text-white/90 text-sm sm:text-[15px] leading-relaxed max-w-2xl">
               Track your employability insights, resume updates, and top industry job matches.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm font-semibold flex items-center gap-1.5 shadow-2xs"
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
+            <button
               onClick={() => navigate('/dashboard/advanced')}
+              className="h-9 sm:h-10 px-3.5 sm:px-4 text-[13px] sm:text-sm font-semibold rounded-lg bg-white/15 hover:bg-white/25 active:bg-white/30 text-white border border-white/25 backdrop-blur-md inline-flex items-center gap-2 shadow-2xs transition-all duration-150 whitespace-nowrap"
             >
-              <TrendingUpIcon className="h-4 w-4" />
-              Career Analytics
-            </Button>
+              <TrendingUpIcon className="h-4 w-4 shrink-0" />
+              <span>Career Analytics</span>
+            </button>
             {resumes?.length > 0 && (
-              <Button
-                variant="secondary"
-                size="sm"
-                className="bg-white/15 hover:bg-white/25 text-white border-white/20 backdrop-blur-sm"
+              <button
                 onClick={() => fetchResumes && fetchResumes()}
+                className="h-9 sm:h-10 px-3.5 sm:px-4 text-[13px] sm:text-sm font-semibold rounded-lg bg-white/15 hover:bg-white/25 active:bg-white/30 text-white border border-white/25 backdrop-blur-md inline-flex items-center gap-2 shadow-2xs transition-all duration-150 whitespace-nowrap"
               >
-                <RefreshIcon className={`h-4 w-4 mr-2 ${isProcessing ? 'animate-spin' : ''}`} />
-                Refresh Data
-              </Button>
+                <RefreshIcon className={`h-4 w-4 shrink-0 ${isProcessing ? 'animate-spin' : ''}`} />
+                <span>Refresh Data</span>
+              </button>
             )}
-            <Button
-              variant="secondary"
-              size="sm"
-              className="bg-white/15 hover:bg-white/25 text-white border-white/20 backdrop-blur-sm"
+            <button
               onClick={() => navigate('/resume/upload')}
+              className="h-9 sm:h-10 px-3.5 sm:px-4 text-[13px] sm:text-sm font-semibold rounded-lg bg-white text-primary-700 hover:bg-white/95 active:bg-white/90 shadow-2xs inline-flex items-center gap-2 transition-all duration-150 whitespace-nowrap"
             >
-              {completedResume ? 'Update Resume' : 'Upload Resume'}
-            </Button>
+              <span>{completedResume ? 'Update Resume' : 'Upload Resume'}</span>
+            </button>
           </div>
         </div>
       </div>
 
       {/* Company Placement Drives Notification Banner (Under Student Career Suite) */}
       {nominations && nominations.some((n) => n.status === 'pending') && (
-        <div className="bg-gradient-to-r from-amber-500/15 via-purple-500/10 to-indigo-500/10 border border-amber-300 rounded-2xl p-4 sm:p-5 shadow-sm">
+        <div className="bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 border border-amber-300/80 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3.5">
-              <div className="p-2.5 bg-amber-500 text-white rounded-xl shadow-md shadow-amber-500/20 flex-shrink-0">
+              <div className="w-11 h-11 rounded-xl bg-amber-500 text-white shadow-xs flex items-center justify-center shrink-0">
                 <SparklesIcon className="h-6 w-6" />
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-sm sm:text-base font-bold text-gray-900">
+                  <h3 className="text-sm sm:text-[15px] font-bold text-gray-900">
                     Campus Placement Drive Invitations
                   </h3>
-                  <span className="px-2 py-0.5 text-[11px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 rounded-full">
+                  <span className="px-2.5 py-0.5 text-[11px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 rounded-full">
                     {nominations.filter((n) => n.status === 'pending').length} Action Required
                   </span>
                 </div>
-                <p className="text-xs text-gray-600 mt-1">
+                <p className="text-xs sm:text-[13px] text-gray-600 mt-1">
                   You have company shortlist invitations awaiting your RSVP. Review CTC packages and confirm attendance under{' '}
                   <span className="font-semibold text-gray-800">Student Career Suite &rarr; Placement Drives</span>.
                 </p>
@@ -482,7 +527,7 @@ export const Dashboard = () => {
             <Button
               size="sm"
               onClick={() => navigate('/placements')}
-              className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm self-end sm:self-center flex-shrink-0"
+              className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs sm:text-[13px] h-9 px-3.5 flex items-center gap-1.5 shadow-xs shrink-0 self-start sm:self-auto"
             >
               <OfficeBuildingIcon className="h-4 w-4" />
               View Placement Drives
@@ -493,124 +538,128 @@ export const Dashboard = () => {
       )}
 
       {/* Profile & Mentorship Grid Banner */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
         {/* Profile Completeness Card */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100/80 flex flex-col justify-between">
+        <div className="lg:col-span-1 bg-white rounded-xl sm:rounded-2xl shadow-xs border border-slate-200/80 p-5 sm:p-6 flex flex-col justify-between h-full">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-gray-700">Profile Readiness</span>
-              <span className="text-sm font-bold text-primary-600">{profilePercentage}%</span>
+              <span className="text-[14px] sm:text-[15px] font-bold text-gray-800">Profile Readiness</span>
+              <span className="text-xs sm:text-[13px] font-extrabold text-primary-600 bg-primary-50 px-2.5 py-0.5 rounded-full border border-primary-100">
+                {profilePercentage}%
+              </span>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+            <div className="w-full bg-gray-100 rounded-full h-2.5 mt-2.5 overflow-hidden">
               <div
                 className="bg-gradient-to-r from-primary-500 to-secondary-500 h-full rounded-full transition-all duration-500"
                 style={{ width: `${profilePercentage}%` }}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-3">
+            <p className="text-[13px] text-gray-500 mt-3 leading-relaxed">
               {profilePercentage < 100
                 ? (profileDetails?.missingHint
                     ? `Complete your profile — ${profileDetails.missingHint} for higher relevance.`
                     : 'Complete remaining profile information for higher job match relevance.')
-                : 'Your profile is fully configured!'}
+                : 'Your profile is fully configured for maximum industry matching!'}
             </p>
           </div>
-          {profilePercentage < 100 && (
-            <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
-              <button
-                onClick={() => navigate('/profile')}
-                className="text-xs font-semibold text-primary-600 hover:text-primary-700 flex items-center gap-1"
-              >
-                Complete Profile &rarr;
-              </button>
-            </div>
-          )}
+
+          <div className="mt-4 pt-3.5 border-t border-gray-100 flex items-center justify-between text-xs sm:text-[13px]">
+            <span className="text-gray-400 font-medium">Career Profile</span>
+            <button
+              onClick={() => navigate('/profile')}
+              className="font-semibold text-primary-600 hover:text-primary-700 flex items-center gap-1 transition-colors"
+            >
+              {profilePercentage < 100 ? 'Complete Profile' : 'Manage Profile'} &rarr;
+            </button>
+          </div>
         </div>
 
         {/* Academic Advisor & Mentorship Card */}
-        <div className="md:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-100/80 flex flex-col justify-between">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-            <div className="flex items-center space-x-3">
-              <div className="p-2.5 bg-purple-50 text-purple-600 rounded-xl">
-                <AcademicCapIcon className="h-6 w-6" />
+        <div className="lg:col-span-2 bg-white rounded-xl sm:rounded-2xl shadow-xs border border-slate-200/80 p-5 sm:p-6 flex flex-col justify-between h-full">
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+              <div className="flex items-center space-x-3">
+                <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                  <AcademicCapIcon className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-[15px] sm:text-base font-bold text-gray-900">Academic & Career Mentorship</h3>
+                  <p className="text-[13px] text-gray-500 mt-0.5">Connect with faculty advisors for career guidance and resume reviews.</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-base font-bold text-gray-900">Academic & Career Mentorship</h3>
-                <p className="text-xs text-gray-500">Connect with faculty advisors for career guidance and resume reviews.</p>
-              </div>
+
+              {advisorData.has_advisor ? (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 self-start sm:self-auto shrink-0">
+                  <CheckCircleIcon className="h-4 w-4 mr-1 text-emerald-600" />
+                  Assigned Advisor
+                </span>
+              ) : activePendingRequest ? (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 self-start sm:self-auto shrink-0">
+                  <ClockIcon className="h-4 w-4 mr-1 text-amber-600" />
+                  Request Pending
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 self-start sm:self-auto shrink-0">
+                  No Advisor Assigned
+                </span>
+              )}
             </div>
 
-            {advisorData.has_advisor ? (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 self-start sm:self-auto">
-                <CheckCircleIcon className="h-4 w-4 mr-1 text-green-600" />
-                Assigned Advisor
-              </span>
-            ) : activePendingRequest ? (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 self-start sm:self-auto">
-                <ClockIcon className="h-4 w-4 mr-1 text-amber-600" />
-                Request Pending
-              </span>
-            ) : (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 self-start sm:self-auto">
-                No Advisor Assigned
-              </span>
-            )}
-          </div>
-
-          <div className="py-2">
-            {advisorData.has_advisor && advisorData.advisor?.faculty ? (
-              <div className="flex items-center justify-between p-3.5 bg-purple-50/50 rounded-xl border border-purple-100">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center text-sm shadow-sm">
-                    {advisorData.advisor.faculty.full_name?.[0] || 'P'}
+            <div className="py-1">
+              {advisorData.has_advisor && advisorData.advisor?.faculty ? (
+                <div className="flex items-center justify-between p-3.5 bg-purple-50/50 rounded-xl border border-purple-100 gap-3">
+                  <div className="flex items-center space-x-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow-2xs shrink-0">
+                      {advisorData.advisor.faculty.full_name?.[0] || 'P'}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-bold text-gray-900 text-sm truncate">
+                        {advisorData.advisor.faculty.full_name}
+                      </h4>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">
+                        {advisorData.advisor.faculty.department} • {advisorData.advisor.faculty.email}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-gray-900 text-sm">
-                      {advisorData.advisor.faculty.full_name}
-                    </h4>
-                    <p className="text-xs text-gray-500">
-                      {advisorData.advisor.faculty.department} • {advisorData.advisor.faculty.email}
+                  <span className="text-xs font-medium text-purple-700 bg-white px-2.5 py-1 rounded-lg border border-purple-200 shrink-0">
+                    Active Mentorship
+                  </span>
+                </div>
+              ) : activePendingRequest && activePendingRequest.faculty ? (
+                <div className="p-3.5 bg-amber-50/50 rounded-xl border border-amber-200/60 flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-amber-900 truncate">
+                      Mentorship Request Sent to {activePendingRequest.faculty.full_name}
+                    </p>
+                    <p className="text-xs text-amber-700 mt-0.5">
+                      Waiting for the faculty advisor to review and accept your mentorship request.
                     </p>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={handleOpenAdvisorModal}
+                    className="bg-white text-xs border-amber-200 shrink-0 h-8 px-2.5"
+                  >
+                    Change / View
+                  </Button>
                 </div>
-                <span className="text-xs font-medium text-purple-700 bg-white px-2.5 py-1 rounded-lg border border-purple-200">
-                  Active Mentorship
-                </span>
-              </div>
-            ) : activePendingRequest && activePendingRequest.faculty ? (
-              <div className="p-3.5 bg-amber-50/50 rounded-xl border border-amber-200/60 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-amber-900">
-                    Mentorship Request Sent to {activePendingRequest.faculty.full_name}
-                  </p>
-                  <p className="text-xs text-amber-700 mt-0.5">
-                    Waiting for the faculty advisor to review and accept your mentorship request.
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="xs"
-                  onClick={handleOpenAdvisorModal}
-                  className="bg-white text-xs border-amber-200"
-                >
-                  Change / View
-                </Button>
-              </div>
-            ) : (
-              <p className="text-xs text-gray-600 leading-relaxed">
-                Connect with a faculty member in your department to get personalized resume endorsements, skill development recommendations, and placement guidance.
-              </p>
-            )}
+              ) : (
+                <p className="text-[13px] text-gray-600 leading-relaxed py-1">
+                  Connect with a faculty member in your department to get personalized resume endorsements, skill development recommendations, and placement guidance.
+                </p>
+              )}
+            </div>
           </div>
 
-          <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-xs text-gray-400">Department Faculty Network</span>
+          <div className="mt-4 pt-3.5 border-t border-gray-100 flex items-center justify-between">
+            <span className="text-xs text-gray-400 font-medium">Department Faculty Network</span>
             <Button
               size="sm"
               onClick={handleOpenAdvisorModal}
-              className="bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white text-xs font-semibold shadow-xs"
+              className="bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white text-xs sm:text-[13px] font-semibold h-9 px-3.5 shadow-2xs inline-flex items-center gap-1.5"
             >
-              <UserGroupIcon className="h-4 w-4 mr-1.5" />
+              <UserGroupIcon className="h-4 w-4" />
               {advisorData.has_advisor ? 'View Faculty Directory' : 'Find Faculty Advisor'}
             </Button>
           </div>
@@ -618,42 +667,50 @@ export const Dashboard = () => {
       </div>
 
       {/* Interactive Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
         {stats.map((stat) => (
           <div
             key={stat.name}
             onClick={stat.onClick}
-            className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md hover:border-primary-300 hover:translate-y-[-2px] transition-all cursor-pointer border border-gray-100/80 group flex flex-col justify-between"
+            className="bg-white rounded-xl sm:rounded-2xl p-5 sm:p-6 shadow-xs hover:shadow-md border border-slate-200/80 hover:border-primary-200 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group flex flex-col justify-between h-full"
           >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500 group-hover:text-primary-600 transition-colors">{stat.name}</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
-                <p className="text-xs text-gray-400 mt-1">{stat.description}</p>
+            <div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14px] font-medium text-gray-500 group-hover:text-primary-600 transition-colors truncate">
+                    {stat.name}
+                  </p>
+                  <p className="text-[28px] font-bold text-gray-900 leading-tight tracking-tight mt-1.5 truncate">
+                    {stat.value}
+                  </p>
+                </div>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${stat.bg} group-hover:scale-105 transition-transform duration-200`}>
+                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                </div>
               </div>
-              <div className={`p-3 rounded-xl ${stat.bg} group-hover:scale-110 transition-transform flex-shrink-0`}>
-                <stat.icon className={`h-6 w-6 ${stat.color}`} />
-              </div>
+              <p className="text-[13px] text-gray-500 mt-2 line-clamp-1 h-5" title={stat.description}>
+                {stat.description}
+              </p>
             </div>
-            <div className="mt-4 pt-2.5 border-t border-gray-50 flex items-center justify-between text-xs font-semibold text-primary-600 group-hover:text-primary-700">
+            <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-[13px] font-semibold text-primary-600 group-hover:text-primary-700 transition-colors">
               <span>{stat.actionText}</span>
-              <ArrowRightIcon className="h-3.5 w-3.5 transform group-hover:translate-x-1 transition-transform" />
+              <ArrowRightIcon className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
         ))}
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* Active Resume & Core Competencies Card */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100/80 flex flex-col justify-between">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xs p-5 sm:p-6 border border-slate-200/80 flex flex-col justify-between h-full">
           <div>
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
-              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+            <div className="flex items-center justify-between mb-4 pb-3.5 border-b border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <DocumentIcon className="w-5 h-5 text-primary-600" />
                 Active Resume & Core Skills
               </h3>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/resume')}>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/resume')} className="h-8 px-2.5 text-xs sm:text-[13px] font-semibold text-primary-600 hover:text-primary-700">
                 Manage &rarr;
               </Button>
             </div>
@@ -661,16 +718,16 @@ export const Dashboard = () => {
             {completedResume ? (
               <div className="space-y-4">
                 {/* Resume Header Info */}
-                <div className="p-4 bg-gray-50/80 rounded-xl border border-gray-100 flex items-start justify-between">
-                  <div className="flex items-start space-x-3 min-w-0 flex-1">
-                    <div className="p-2.5 rounded-lg bg-white shadow-xs text-primary-600 flex-shrink-0 mt-0.5">
-                      <DocumentIcon className="h-6 w-6" />
+                <div className="p-3.5 bg-gray-50/80 rounded-xl border border-gray-100 flex items-center justify-between gap-3">
+                  <div className="flex items-center space-x-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-lg bg-white shadow-2xs text-primary-600 flex items-center justify-center flex-shrink-0">
+                      <DocumentIcon className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-bold text-gray-900 truncate" title={completedResume.filename}>
                         {completedResume.filename}
                       </p>
-                      <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500">
+                      <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-gray-500">
                         <span>Uploaded {new Date(completedResume.created_at).toLocaleDateString()}</span>
                         {completedResume.file_size && (
                           <>
@@ -681,82 +738,69 @@ export const Dashboard = () => {
                       </div>
                     </div>
                   </div>
-                  <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold rounded-full flex-shrink-0 ml-2">
+                  <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold rounded-full flex-shrink-0">
                     Active
                   </span>
                 </div>
 
                 {/* Target Role & Readiness */}
-                <div className="p-3 bg-purple-50/50 rounded-xl border border-purple-100 flex items-center justify-between text-xs">
-                  <div className="flex items-center space-x-2 text-purple-900">
+                <div className="p-3 bg-purple-50/50 rounded-xl border border-purple-100 flex items-center justify-between gap-2 text-xs sm:text-[13px]">
+                  <div className="flex items-center space-x-2 text-purple-900 truncate min-w-0">
                     <SparklesIcon className="h-4 w-4 text-purple-600 flex-shrink-0" />
-                    <span>Target Career Alignment:</span>
-                    <strong className="font-semibold">{completedResume.recommended_roles?.[0] || 'Software Engineer'}</strong>
+                    <span className="text-purple-700">Target Role:</span>
+                    <strong className="font-semibold text-purple-950 truncate">{completedResume.recommended_roles?.[0] || 'Software Engineer'}</strong>
                   </div>
                   <button
                     onClick={() => navigate('/skills')}
-                    className="font-bold text-purple-700 hover:text-purple-900 underline"
+                    className="font-semibold text-purple-700 hover:text-purple-900 underline flex-shrink-0"
                   >
                     View Gap Analysis
                   </button>
                 </div>
 
-                {/* Extracted Skills Sleek Card (Custom Styled per Reference) */}
-                <div className="bg-[#11141c] text-white rounded-2xl p-5 shadow-lg border border-[#1e2536] space-y-4">
+                {/* Extracted Skills Sleek Dark Card */}
+                <div className="bg-[#11141c] text-white rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-md border border-[#1e2536] space-y-3.5">
                   <div className="flex items-start justify-between">
                     <div>
                       <h4 className="text-base font-bold text-white tracking-tight">Extracted Skills</h4>
                       <p className="text-xs text-gray-400 mt-0.5">AI extracted from your active resume</p>
                     </div>
-                    <span className="px-2.5 py-0.5 bg-[#0f243d] text-[#38bdf8] border border-[#1e3e6b] rounded-full text-xs font-bold">
+                    <span className="px-2.5 py-0.5 bg-[#0f243d] text-[#38bdf8] border border-[#1e3e6b] rounded-full text-xs font-semibold">
                       {extractedSkills.length} Skills
                     </span>
                   </div>
 
-                  {/* Skill Badges with Specific Pastel Themes & Icons */}
-                  <div className="flex flex-wrap gap-2.5 pt-1 items-center">
+                  {/* Skill Badges with Specific Themes & Icons */}
+                  <div className="flex flex-wrap gap-2 pt-1 items-center max-h-48 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                     {extractedSkills.length > 0 ? (
                       extractedSkills.map((skill, idx) => {
                         const name = typeof skill === 'string' ? skill : (skill?.name || skill?.skill || '')
                         const s = name.toLowerCase().trim()
                         
                         let badgeStyle = {
-                          bg: 'bg-[#dbeafe] text-[#2563eb]',
+                          bg: 'bg-blue-500/15 text-blue-300 border border-blue-500/30 hover:bg-blue-500/25',
                           icon: '</>'
                         }
                         
                         if (s.includes('python') || s.includes('java') || s.includes('c++') || s.includes('javascript') || s.includes('typescript') || s.includes('golang') || s.includes('rust') || s.includes('php')) {
-                          badgeStyle = { bg: 'bg-[#dbeafe] text-[#2563eb]', icon: '</>' }
+                          badgeStyle = { bg: 'bg-blue-500/15 text-blue-300 border border-blue-500/30 hover:bg-blue-500/25', icon: '</>' }
                         } else if (s.includes('flask') || s.includes('django') || s.includes('react') || s.includes('node') || s.includes('express') || s.includes('vue') || s.includes('spring') || s.includes('html') || s.includes('css')) {
-                          badgeStyle = { bg: 'bg-[#dcfce7] text-[#16a34a]', icon: '⚙️' }
-                        } else if (s === 'sql' || s.includes('mysql') || s.includes('sqlite')) {
-                          badgeStyle = { bg: 'bg-[#fef3c7] text-[#d97706]', icon: '🗄️' }
-                        } else if (s.includes('postgres') || s.includes('mongo') || s.includes('redis') || s.includes('database')) {
-                          badgeStyle = { bg: 'bg-[#e0e7ff] text-[#4f46e5]', icon: '🗄️' }
+                          badgeStyle = { bg: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25', icon: '⚙️' }
+                        } else if (s === 'sql' || s.includes('mysql') || s.includes('sqlite') || s.includes('postgres') || s.includes('mongo') || s.includes('redis') || s.includes('database')) {
+                          badgeStyle = { bg: 'bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25', icon: '🗄️' }
                         } else if (s.includes('git') || s.includes('github') || s.includes('gitlab')) {
-                          badgeStyle = { bg: 'bg-[#f3f4f6] text-[#4b5563]', icon: 'ᛘ' }
+                          badgeStyle = { bg: 'bg-slate-500/20 text-slate-300 border border-slate-500/30 hover:bg-slate-500/30', icon: 'ᛘ' }
                         } else if (s.includes('docker') || s.includes('k8s') || s.includes('kubernetes') || s.includes('aws') || s.includes('azure') || s.includes('linux') || s.includes('devops')) {
-                          badgeStyle = { bg: 'bg-[#e0f2fe] text-[#0284c7]', icon: '📦' }
+                          badgeStyle = { bg: 'bg-sky-500/15 text-sky-300 border border-sky-500/30 hover:bg-sky-500/25', icon: '📦' }
                         } else if (s.includes('nlp') || s.includes('ai') || s.includes('ml') || s.includes('deep learning') || s.includes('machine learning') || s.includes('data science')) {
-                          badgeStyle = { bg: 'bg-[#f3e8ff] text-[#9333ea]', icon: '🧠' }
-                        } else {
-                          const fallbacks = [
-                            { bg: 'bg-[#dbeafe] text-[#2563eb]', icon: '</>' },
-                            { bg: 'bg-[#dcfce7] text-[#16a34a]', icon: '⚙️' },
-                            { bg: 'bg-[#fef3c7] text-[#d97706]', icon: '🗄️' },
-                            { bg: 'bg-[#e0e7ff] text-[#4f46e5]', icon: '🗄️' },
-                            { bg: 'bg-[#e0f2fe] text-[#0284c7]', icon: '📦' },
-                            { bg: 'bg-[#f3e8ff] text-[#9333ea]', icon: '🧠' }
-                          ]
-                          const h = name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
-                          badgeStyle = fallbacks[h % fallbacks.length]
+                          badgeStyle = { bg: 'bg-purple-500/15 text-purple-300 border border-purple-500/30 hover:bg-purple-500/25', icon: '🧠' }
                         }
 
                         return (
                           <span
                             key={idx}
                             onClick={() => setShowSkillsModal(true)}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-xs cursor-pointer hover:scale-105 transition-transform ${badgeStyle.bg}`}
+                            className={`inline-flex items-center gap-1.5 h-7 px-2.5 rounded-lg text-xs font-semibold shadow-2xs cursor-pointer hover:scale-105 transition-all duration-150 ${badgeStyle.bg}`}
                           >
                             <span className="text-[11px] opacity-90">{badgeStyle.icon}</span>
                             <span>{name}</span>
@@ -772,7 +816,7 @@ export const Dashboard = () => {
                   <div className="flex justify-end pt-1">
                     <button
                       onClick={() => setShowSkillsModal(true)}
-                      className="text-[#3b82f6] hover:text-[#60a5fa] text-xs font-semibold flex items-center gap-1 transition-colors"
+                      className="text-sky-400 hover:text-sky-300 text-xs font-semibold flex items-center gap-1 transition-colors"
                     >
                       View All Skills &rarr;
                     </button>
@@ -783,7 +827,7 @@ export const Dashboard = () => {
               <div className="text-center py-8">
                 <DocumentIcon className="h-12 w-12 text-gray-300 mx-auto" />
                 <p className="mt-2 text-gray-500 text-sm">No active resume on profile</p>
-                <Button className="mt-4" size="sm" onClick={() => navigate('/resume/upload')}>
+                <Button className="mt-4 h-9 px-4 text-xs font-semibold" size="sm" onClick={() => navigate('/resume/upload')}>
                   Upload Resume
                 </Button>
               </div>
@@ -791,21 +835,22 @@ export const Dashboard = () => {
           </div>
 
           {completedResume && (
-            <div className="mt-6 pt-3 border-t border-gray-100 flex items-center justify-between">
+            <div className="mt-6 pt-3.5 border-t border-gray-100 flex items-center justify-between">
               <Button
                 variant="outline"
-                size="xs"
+                size="sm"
                 onClick={() => navigate(`/resume/${completedResume.id}`)}
+                className="h-9 px-3.5 text-xs font-semibold"
               >
                 View Full Analysis
               </Button>
               <Button
                 variant="primary"
-                size="xs"
+                size="sm"
                 onClick={() => navigate('/resume/upload')}
-                className="bg-primary-600 hover:bg-primary-700 text-white"
+                className="bg-primary-600 hover:bg-primary-700 text-white h-9 px-3.5 text-xs font-semibold inline-flex items-center gap-1.5"
               >
-                <RefreshIcon className="h-3.5 w-3.5 mr-1" />
+                <RefreshIcon className="h-3.5 w-3.5" />
                 Update Resume
               </Button>
             </div>
@@ -815,74 +860,147 @@ export const Dashboard = () => {
         {/* Top Matched Jobs (Target of Available Jobs scroll) */}
         <div 
           ref={jobsSectionRef}
-          className={`bg-white rounded-2xl shadow-sm p-6 border border-gray-100/80 flex flex-col justify-between transition-all duration-500 ${
+          className={`bg-white rounded-xl sm:rounded-2xl shadow-xs p-5 sm:p-6 border border-slate-200/80 flex flex-col justify-between h-full transition-all duration-500 ${
             highlightJobs ? 'ring-4 ring-emerald-400/60 ring-offset-2 border-emerald-400' : ''
           }`}
         >
           <div>
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
-              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+            <div className="flex items-center justify-between mb-4 pb-3.5 border-b border-gray-100">
+              <div className="flex items-center gap-2">
                 <BriefcaseIcon className="w-5 h-5 text-emerald-600" />
-                Top Matched Openings
-              </h3>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/jobs')}>
-                View All ({jobCount}) &rarr;
+                <h3 className="text-lg font-bold text-gray-900">
+                  Top Matched Openings
+                </h3>
+                {techJobCount > 0 && (
+                  <span 
+                    title={
+                      matchedTechJobsCount > 0
+                        ? `${matchedTechJobsCount} roles with verified skill matches out of ${techJobCount} technical openings`
+                        : `${techJobCount} technical openings available`
+                    }
+                    className="hidden sm:inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  >
+                    {matchedTechJobsCount > 0 ? `${matchedTechJobsCount} Matched` : `${techJobCount} Tech Roles`}
+                  </span>
+                )}
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/jobs')} className="h-8 px-2.5 text-xs sm:text-[13px] font-semibold text-emerald-600 hover:text-emerald-700">
+                View All ({techJobCount > 0 ? techJobCount : displayTotalJobs}) &rarr;
               </Button>
             </div>
 
-            {topMatchedJobs && topMatchedJobs.length > 0 ? (
-              <div className="space-y-3">
+            {jobsLoading && (!topMatchedJobs || topMatchedJobs.length === 0) ? (
+              <div className="space-y-3.5 animate-pulse">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="p-4 bg-gray-50/70 rounded-xl border border-gray-100 flex items-center justify-between">
+                    <div className="flex items-center space-x-3 flex-1">
+                      <div className="w-10 h-10 rounded-lg bg-gray-200 shrink-0" />
+                      <div className="space-y-2 flex-1">
+                        <div className="h-4 bg-gray-200 rounded w-2/3" />
+                        <div className="h-3 bg-gray-100 rounded w-1/3" />
+                      </div>
+                    </div>
+                    <div className="w-16 h-6 bg-gray-100 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            ) : topMatchedJobs && topMatchedJobs.length > 0 ? (
+              <div className="space-y-3.5">
                 {topMatchedJobs.map((job) => (
                   <div
                     key={job.id}
                     onClick={() => navigate(`/jobs/${job.id}`)}
-                    className="flex items-center justify-between p-3.5 bg-gray-50/80 hover:bg-emerald-50/40 rounded-xl cursor-pointer border border-gray-100 hover:border-emerald-200 transition-all"
+                    className="p-4 bg-gray-50/70 hover:bg-emerald-50/30 rounded-xl cursor-pointer border border-gray-200/70 hover:border-emerald-300 transition-all duration-150 flex flex-col justify-between gap-3 group shadow-2xs"
                   >
-                    <div className="flex items-start space-x-3">
-                      <div className="p-2 rounded-lg bg-white shadow-xs text-emerald-600 mt-0.5">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-white shadow-2xs text-emerald-600 border border-gray-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform mt-0.5">
                         <BriefcaseIcon className="h-5 w-5" />
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-gray-900">{job.title}</p>
-                        <p className="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
-                          <span>{job.company || 'Industry Partner'}</span>
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <h4 className="text-sm sm:text-[15px] font-bold text-gray-900 group-hover:text-emerald-700 transition-colors leading-snug line-clamp-2 break-words">
+                          {job.title}
+                        </h4>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:text-[13px] text-gray-600">
+                          <span className="font-semibold text-gray-800">{job.company || 'Industry Partner'}</span>
                           {job.location && (
                             <>
-                              <span>•</span>
-                              <span>{job.location}</span>
+                              <span className="text-gray-300">•</span>
+                              <span className="text-gray-500">{job.location}</span>
                             </>
                           )}
-                        </p>
+                        </div>
+
+                        {/* Badges placed on a separate row to prevent compressing job info */}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                          {job.matchCount > 0 ? (
+                            <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200/70 whitespace-nowrap">
+                              {job.matchCount} skill{job.matchCount > 1 ? 's' : ''} match
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-700 border border-slate-200/80 whitespace-nowrap">
+                              Technical Opening
+                            </span>
+                          )}
+                          <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600 whitespace-nowrap">
+                            {job.job_type || 'Full-time'}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="text-right shrink-0 ml-3">
-                      <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                        {job.job_type || 'Full Time'}
-                      </span>
-                    </div>
+                    {job.matchedSkills && job.matchedSkills.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-gray-100/90">
+                        <span className="text-[11px] font-medium text-gray-400 shrink-0">Matched:</span>
+                        <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+                          {job.matchedSkills.slice(0, 4).map((sk, sIdx) => (
+                            <span
+                              key={sIdx}
+                              className="px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60"
+                            >
+                              {sk}
+                            </span>
+                          ))}
+                          {job.matchedSkills.length > 4 && (
+                            <span className="text-[11px] text-gray-500 font-medium">
+                              +{job.matchedSkills.length - 4} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="p-6 text-center border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/50">
-                <BriefcaseIcon className="h-10 w-10 text-gray-300 mx-auto" />
-                <p className="mt-2 text-sm font-medium text-gray-800">Explore career opportunities</p>
-                <p className="text-xs text-gray-500 mt-0.5">Discover roles matching your extracted skill profile.</p>
-                <Button className="mt-4" size="sm" onClick={() => navigate('/jobs')}>
-                  Browse Job Portal
-                </Button>
+              <div className="p-6 text-center border-2 border-dashed border-gray-200/80 rounded-xl bg-gray-50/50 flex flex-col items-center justify-center my-auto py-8">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
+                  <BriefcaseIcon className="h-6 w-6" />
+                </div>
+                <h4 className="text-sm font-bold text-gray-900">No Direct Skill Matches Yet</h4>
+                <p className="text-xs text-gray-500 mt-1 max-w-sm leading-relaxed">
+                  No active postings match your current extracted skills. Browse all {displayTotalJobs} available platform openings or update your resume.
+                </p>
+                <div className="mt-4 flex items-center gap-2">
+                  <Button size="sm" onClick={() => navigate('/jobs')} className="bg-emerald-600 hover:bg-emerald-700 text-white h-9 px-4 text-xs font-semibold">
+                    Browse All Openings ({displayTotalJobs})
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/resume/upload')} className="h-9 px-3 text-xs font-semibold">
+                    Update Resume
+                  </Button>
+                </div>
               </div>
             )}
           </div>
 
-          <div className="mt-6 pt-3 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-xs text-gray-500">Curated based on your skill profile</span>
+          <div className="mt-6 pt-3.5 border-t border-gray-100 flex items-center justify-between">
+            <span className="text-xs text-gray-500">
+              Curated from {techJobCount} technical roles based on your skill profile
+            </span>
             <button
               onClick={() => navigate('/jobs')}
-              className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-1"
+              className="text-xs sm:text-[13px] font-semibold text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-1 transition-colors"
             >
-              Explore All Jobs &rarr;
+              Explore All Jobs ({techJobCount > 0 ? techJobCount : displayTotalJobs}) &rarr;
             </button>
           </div>
         </div>

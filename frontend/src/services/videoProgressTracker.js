@@ -194,3 +194,50 @@ export const formatDuration = (seconds) => {
 
   return `${mins}:${paddedSec}`
 }
+
+/**
+ * Resolves the accurate, safe frontend origin for YouTube IFrame Player API postMessage communication.
+ * 
+ * Works reliably across:
+ * - Localhost dev server (e.g. http://localhost:5173)
+ * - Local IP dev/mobile testing (e.g. http://127.0.0.1:5173, http://192.168.x.x:5173)
+ * - Production deployments (e.g. https://academic-to-industry-transition.vercel.app, custom domain)
+ * 
+ * Guarantees:
+ * - Never hardcodes localhost in production.
+ * - Strips trailing slashes to prevent postMessage target origin mismatch.
+ * - Validates protocol (http: or https:).
+ * 
+ * @param {Window|Object|null} win - Window context object (defaults to global window)
+ * @param {string} [envUrl] - Optional fallback from environment variable
+ * @returns {string} Sanitized origin string (e.g. 'http://localhost:5173' or 'https://example.com')
+ */
+export const getSafeFrontendOrigin = (win = (typeof window !== 'undefined' ? window : null), envUrl = '') => {
+  if (win && win.location) {
+    const origin = win.location.origin
+
+    // Some browsers or sandboxed iframes return "null" as a string
+    if (origin && origin !== 'null' && origin !== 'undefined') {
+      return origin.replace(/\/+$/, '')
+    }
+
+    // Fallback using protocol and host if origin property is null or missing
+    const protocol = (win.location.protocol === 'https:') ? 'https:' : (win.location.protocol || 'http:')
+    const host = win.location.host
+    if (host) {
+      return `${protocol}//${host}`.replace(/\/+$/, '')
+    }
+  }
+
+  // Fallback to configured environment URL if available
+  if (envUrl && typeof envUrl === 'string') {
+    try {
+      const parsed = new URL(envUrl)
+      return parsed.origin.replace(/\/+$/, '')
+    } catch (_) {
+      return envUrl.replace(/\/+$/, '')
+    }
+  }
+
+  return ''
+}

@@ -51,7 +51,7 @@ export const Layout = ({ children }) => {
           isCollapsed={false}
           onToggleCollapse={() => {}}
         />
-        <main className="flex-1 flex items-start justify-center px-4 py-6 sm:py-8 relative z-10">
+        <main className="flex-1 flex items-start justify-center px-4 py-6 sm:py-8 pt-20 sm:pt-24 relative z-10">
           {children}
         </main>
         <Footer />
@@ -60,15 +60,15 @@ export const Layout = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-between">
-      <div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-between overflow-x-hidden">
+      <div className="w-full min-w-0 flex-1 flex flex-col">
         <Navbar 
           onMenuClick={toggleSidebar} 
           isCollapsed={isCollapsed}
           onToggleCollapse={toggleCollapse}
         />
         
-        <div className="flex">
+        <div className="flex flex-1 w-full min-w-0 pt-16">
           {isAuthenticated && (
             <Sidebar 
               isOpen={sidebarOpen} 
@@ -78,9 +78,9 @@ export const Layout = ({ children }) => {
             />
           )}
           
-          <main className={`flex-1 transition-all duration-300 ${
-            isAuthenticated ? (isCollapsed ? 'lg:ml-20' : 'lg:ml-64') : ''
-          } p-3 sm:p-4 md:p-5`}>
+          <main className={`flex-1 transition-all duration-300 ease-in-out motion-reduce:transition-none ${
+            isAuthenticated ? (isCollapsed ? 'lg:ml-20' : 'lg:ml-60') : ''
+          } p-4 sm:p-5 md:p-6 lg:p-7 min-w-0 w-full`}>
             {children}
           </main>
         </div>

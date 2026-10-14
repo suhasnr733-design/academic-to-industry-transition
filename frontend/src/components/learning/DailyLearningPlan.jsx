@@ -7,18 +7,22 @@ export const DailyLearningPlan = ({ dailyPlan, onStartLesson, onQuickWatch }) =>
   if (!dailyPlan) return null
 
   return (
-    <div id="daily-goal" className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-indigo-100 rounded-2xl p-5 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 scroll-mt-6">
+    <div id="daily-goal" className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-indigo-100 rounded-2xl p-5 shadow-sm flex flex-col justify-between gap-4 scroll-mt-6 h-full">
       <div className="flex items-start gap-4">
         <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md flex-shrink-0">
           <CalendarIcon className="w-6 h-6" />
         </div>
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
+        <div className="space-y-1 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded">
               Today's Goal
             </span>
             {dailyPlan.pace_label && (
-              <span className="text-[10px] font-extrabold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
+              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded border ${
+                dailyPlan.pace_label.includes('Overdue')
+                  ? 'bg-rose-100 text-rose-800 border-rose-200'
+                  : 'bg-amber-100 text-amber-800 border-amber-200'
+              }`}>
                 {dailyPlan.pace_label}
               </span>
             )}
@@ -36,7 +40,7 @@ export const DailyLearningPlan = ({ dailyPlan, onStartLesson, onQuickWatch }) =>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
+      <div className="flex flex-wrap items-center gap-2 self-start sm:self-end pt-2 border-t border-indigo-100/60 sm:border-0 sm:pt-0">
         {onQuickWatch && (
           <button
             onClick={onQuickWatch}

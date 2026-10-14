@@ -59,8 +59,11 @@ build/
 .DS_Store
 Thumbs.db
 
-# ML Models & Generated Artifacts (keep folder structure, ignore binary files)
+# ML Models & Generated Artifacts (allow essential production model)
 data/models/*.pkl
 data/models/**/*.pkl
 !data/models/.gitkeep
+!data/models/ensemble_model.pkl
+!data/models/scaler.pkl
+!data/models/feature_columns.pkl
 

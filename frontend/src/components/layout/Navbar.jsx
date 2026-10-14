@@ -11,7 +11,9 @@ import {
   HomeIcon,
   CogIcon,
   AcademicCapIcon,
-  UserGroupIcon
+  UserGroupIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/outline'
 import { RecommendedActionsDropdown } from './RecommendedActionsDropdown'
 import { TransitionLogo } from '../common/TransitionLogo'
@@ -49,16 +51,16 @@ export const Navbar = ({ onMenuClick, isCollapsed = false, onToggleCollapse }) =
   const homeHref = isFaculty ? '/faculty' : isAdmin ? '/admin' : '/dashboard'
 
   return (
-    <nav className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800 sticky top-0 z-50">
+    <nav className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800 fixed top-0 left-0 right-0 z-50 h-16">
       <div className="w-full">
         <div className="flex justify-between items-center h-16">
           {/* Logo & Portal Branding (Collapsible with smooth animation on desktop) */}
           <div className={cn(
-            "flex items-center h-16 transition-all duration-300",
+            "flex items-center h-16 transition-all duration-300 ease-in-out motion-reduce:transition-none",
             isAuthenticated && !isAuthPage
               ? isCollapsed
                 ? "lg:w-20 lg:px-4 lg:justify-center lg:border-r lg:border-gray-200/80 dark:lg:border-gray-800 flex-shrink-0"
-                : "lg:w-64 lg:px-4 lg:border-r lg:border-gray-200/80 dark:lg:border-gray-800 flex-shrink-0"
+                : "lg:w-60 lg:px-4 lg:border-r lg:border-gray-200/80 dark:lg:border-gray-800 flex-shrink-0"
               : "px-4 sm:px-6 lg:px-8"
           )}>
             {isAuthenticated && (
@@ -74,22 +76,29 @@ export const Navbar = ({ onMenuClick, isCollapsed = false, onToggleCollapse }) =
             <div 
               onClick={isAuthenticated && !isAuthPage && onToggleCollapse ? onToggleCollapse : undefined}
               className={cn(
-                "flex items-center space-x-2.5 group select-none",
+                "flex items-center space-x-2.5 group select-none transition-all duration-300 ease-in-out",
                 isAuthenticated && !isAuthPage ? "cursor-pointer" : ""
               )}
-              title={isAuthenticated && !isAuthPage ? (isCollapsed ? "Click logo to expand sidebar" : "Click logo to collapse sidebar") : undefined}
+              aria-label={isAuthenticated && !isAuthPage ? (isCollapsed ? "Expand sidebar" : "Collapse sidebar") : undefined}
+              title={isAuthenticated && !isAuthPage ? (isCollapsed ? "Expand sidebar" : "Collapse sidebar") : undefined}
+              role={isAuthenticated && !isAuthPage ? "button" : undefined}
+              tabIndex={isAuthenticated && !isAuthPage ? 0 : undefined}
+              onKeyDown={isAuthenticated && !isAuthPage && onToggleCollapse ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggleCollapse(); } } : undefined}
             >
               <div className="flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
                 <TransitionLogo className="w-8 h-8 drop-shadow-sm" />
               </div>
 
               {/* Text label with smooth width and opacity transition */}
-              <div className={cn(
-                "transition-all duration-300 overflow-hidden whitespace-nowrap",
-                isAuthenticated && !isAuthPage && isCollapsed
-                  ? "lg:w-0 lg:opacity-0"
-                  : "w-auto opacity-100"
-              )}>
+              <div 
+                aria-hidden={isCollapsed ? 'true' : undefined}
+                className={cn(
+                  "transition-all duration-300 ease-in-out motion-reduce:transition-none overflow-hidden whitespace-nowrap",
+                  isAuthenticated && !isAuthPage && isCollapsed
+                    ? "lg:max-w-0 lg:opacity-0 lg:pointer-events-none"
+                    : "max-w-[160px] opacity-100"
+                )}
+              >
                 <span className="text-lg font-bold text-gray-900 dark:text-white leading-none block tracking-tight">
                   Transition<span className="text-primary-600 dark:text-primary-400 font-extrabold tracking-wider ml-0.5">AI</span>
                 </span>

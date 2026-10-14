@@ -191,7 +191,7 @@ export const useRecommendedActions = () => {
         title: 'Complete your profile',
         description: profileDetails.isComplete 
           ? `Profile active (${profileDetails.percentage}% complete)` 
-          : `${profileDetails.percentage}% complete - ${profileDetails.missingHint || 'add college & department'}`,
+          : `${profileDetails.percentage}% complete — ${profileDetails.missingHint || 'add college'} for higher relevance`,
         isCompleted: profileDetails.isComplete,
         link: '/profile',
         badge: profileDetails.isComplete ? 'Complete' : 'Pending',
@@ -202,8 +202,8 @@ export const useRecommendedActions = () => {
         id: 'resume',
         title: 'Upload your resume',
         description: resumeDetails.isComplete 
-          ? `${resumeDetails.count} ${resumeDetails.count === 1 ? 'resume' : 'resumes'} uploaded & analyzed` 
-          : 'Upload your resume to get AI job matches',
+          ? `${resumeDetails.count} ${resumeDetails.count === 1 ? 'resume' : 'resumes'} uploaded & skills extracted` 
+          : 'Upload your resume to extract skills and match jobs',
         isCompleted: resumeDetails.isComplete,
         link: resumeDetails.isComplete ? '/resume' : '/resume/upload',
         badge: resumeDetails.isComplete ? 'Uploaded' : 'Action Required',
@@ -216,8 +216,8 @@ export const useRecommendedActions = () => {
         description: !resumeDetails.isComplete
           ? 'Requires resume upload first to personalize questions'
           : assessmentCompleted 
-            ? `Assessment complete (Score: ${assessmentScore}%)` 
-            : 'Personalized evaluation (Easy → Medium → Hard)',
+            ? `Assessment completed (Score: ${assessmentScore}%)` 
+            : 'Personalized evaluation pending — test your skills',
         isCompleted: Boolean(resumeDetails.isComplete && assessmentCompleted),
         link: !resumeDetails.isComplete ? '/resume/upload' : '/assessment',
         badge: !resumeDetails.isComplete ? 'Resume Required' : assessmentCompleted ? 'Verified' : 'Recommended',

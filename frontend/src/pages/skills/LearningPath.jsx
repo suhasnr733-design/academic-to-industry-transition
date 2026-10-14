@@ -30,6 +30,7 @@ import {
 
 import { resolveSkillVideo, isValidYouTubeVideo } from '../../utils/videoResolver'
 import { clearStageVideoCache } from '../../services/youtubeVideoService'
+import { calculateInterviewCountdown } from '../../utils/learningDateUtils'
 export { resolveSkillVideo, isValidYouTubeVideo }
 
 
@@ -129,8 +130,11 @@ export const LearningPath = () => {
       setRoadmapData(fetchedRoadmap)
 
       if (fetchedRoadmap.skills && fetchedRoadmap.skills.length > 0) {
-        setActiveSkillId(fetchedRoadmap.skills[0].id)
-        setAiSkillTarget(fetchedRoadmap.skills[0].skill_name)
+        const lastSkillName = typeof window !== 'undefined' ? localStorage.getItem(`last_active_skill_${targetResumeId}`) : null
+        const savedSkill = lastSkillName ? fetchedRoadmap.skills.find(s => s.skill_name.toLowerCase() === lastSkillName.toLowerCase()) : null
+        const initialSkill = savedSkill || fetchedRoadmap.skills[0]
+        setActiveSkillId(initialSkill.id)
+        setAiSkillTarget(initialSkill.skill_name)
       } else {
         setActiveSkillId(null)
       }
@@ -224,6 +228,13 @@ export const LearningPath = () => {
       setActiveSkillId(targetSkill.id)
       setAiSkillTarget(targetSkill.skill_name)
 
+      // Persist last active skill for resume
+      if (activeResumeId) {
+        try {
+          localStorage.setItem(`last_active_skill_${activeResumeId}`, targetSkill.skill_name)
+        } catch (_) {}
+      }
+
       // 2. Smoothly scroll and focus to the detailed learning section
       if (shouldScroll) {
         if (scrollTimeoutRef.current) {
@@ -240,7 +251,7 @@ export const LearningPath = () => {
         }, 50)
       }
     }
-  }, [roadmapData])
+  }, [roadmapData, activeResumeId])
 
   // Clean up pending scroll timer on unmount
   useEffect(() => {
@@ -254,6 +265,12 @@ export const LearningPath = () => {
   // Progress update handler
   const handleUpdateStageProgress = async (skillName, stage, isCompleted) => {
     if (!roadmapData || !roadmapData.resume_id) return
+
+    if (activeResumeId) {
+      try {
+        localStorage.setItem(`last_active_skill_${activeResumeId}`, skillName)
+      } catch (_) {}
+    }
 
     // Optimistic local state update
     setRoadmapData(prev => {
@@ -409,21 +426,72 @@ export const LearningPath = () => {
     s => s.id === activeSkillId || String(s.id) === String(activeSkillId)
   ) || filteredSkills[0]
 
-  const displayDailyPlan = activeSkillObj ? {
-    skill_name: activeSkillObj.skill_name,
-    goal_title: `Mastering ${activeSkillObj.skill_name} — ${activeSkillObj.stage ? (activeSkillObj.stage.charAt(0).toUpperCase() + activeSkillObj.stage.slice(1)) : 'Learn'} Phase`,
+  // Identify next uncompleted priority skill for Today's Goal
+  const uncompletedSkills = (roadmapData?.skills || []).filter(s => !s.is_completed)
+  const priorityGoalSkill = uncompletedSkills.find(s => s.priority === 'High' || s.is_priority_gap) ||
+    uncompletedSkills[0] ||
+    activeSkillObj ||
+    (roadmapData?.skills || [])[0]
+
+  // Identify genuine student activity for Continue Learning
+  const lastActiveSkillName = typeof window !== 'undefined'
+    ? localStorage.getItem(`last_active_skill_${activeResumeId}`)
+    : null
+
+  const savedSkill = lastActiveSkillName
+    ? (roadmapData?.skills || []).find(s => s.skill_name.toLowerCase() === lastActiveSkillName.toLowerCase())
+    : null
+
+  // Check if any skill in the roadmap has actual progress (>0%) or any completed stages
+  const skillsWithProgress = (roadmapData?.skills || []).filter(
+    s => (s.progress_percent > 0) || (s.stages_status && Object.values(s.stages_status).some(Boolean))
+  )
+
+  const hasActivity = Boolean(
+    (savedSkill && (savedSkill.progress_percent > 0 || (savedSkill.stages_status && Object.values(savedSkill.stages_status).some(Boolean)))) ||
+    skillsWithProgress.length > 0
+  )
+
+  const activeContinueSkill = (savedSkill && savedSkill.progress_percent > 0)
+    ? savedSkill
+    : (skillsWithProgress[0] || savedSkill || priorityGoalSkill)
+
+  // Stage-specific actionable description for Today's Goal
+  const getStageTaskDescription = (skill) => {
+    if (!skill) return 'Complete your core daily tutorial and practice exercises.'
+    const role = roadmapData?.target_role || 'your target role'
+    switch (skill.stage) {
+      case 'practice':
+        return `Solve 2 hands-on coding challenges for ${skill.skill_name} on LeetCode/HackerRank to build algorithmic muscle.`
+      case 'build':
+        return `Implement a mini-project module utilizing ${skill.skill_name} to strengthen your portfolio.`
+      case 'assess':
+        return `Take the ${skill.skill_name} milestone readiness assessment to benchmark interview preparation.`
+      case 'learn':
+      default:
+        return `Watch 1 core video tutorial and study ${skill.skill_name} fundamentals for ${role}.`
+    }
+  }
+
+  const { paceLabel: calculatedPace } = calculateInterviewCountdown(targetDate)
+  const effectivePaceLabel = calculatedPace || roadmapData?.pace_label || 'Standard Pace'
+
+  const displayDailyPlan = priorityGoalSkill ? {
+    skill_name: priorityGoalSkill.skill_name,
+    goal_title: `Mastering ${priorityGoalSkill.skill_name} — ${priorityGoalSkill.stage ? (priorityGoalSkill.stage.charAt(0).toUpperCase() + priorityGoalSkill.stage.slice(1)) : 'Learn'} Phase`,
     estimated_minutes: roadmapData?.daily_plan?.estimated_minutes || 45,
-    task_description: `Watch 1 core video tutorial and study ${activeSkillObj.skill_name} fundamentals for ${roadmapData?.target_role || 'your target role'}.`,
-    stage: activeSkillObj.stage || 'learn',
-    pace_label: roadmapData?.pace_label || 'Standard Pace'
+    task_description: getStageTaskDescription(priorityGoalSkill),
+    stage: priorityGoalSkill.stage || 'learn',
+    pace_label: effectivePaceLabel
   } : roadmapData?.daily_plan
 
-  const displayContinueLearning = activeSkillObj ? {
-    skill_name: activeSkillObj.skill_name,
-    stage: activeSkillObj.stage || 'learn',
-    progress_percent: activeSkillObj.progress_percent || 0,
-    priority: activeSkillObj.priority || 'High'
-  } : roadmapData?.continue_learning
+  const displayContinueLearning = {
+    hasActivity: hasActivity,
+    skill_name: activeContinueSkill?.skill_name || 'JavaScript',
+    stage: activeContinueSkill?.stage || 'learn',
+    progress_percent: activeContinueSkill?.progress_percent || 0,
+    priority: activeContinueSkill?.priority || 'High'
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-8">
@@ -490,47 +558,49 @@ export const LearningPath = () => {
       ) : (
         <>
           {/* Daily Goal & Continue Learning Widgets */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
             <DailyLearningPlan 
               dailyPlan={displayDailyPlan}
               onQuickWatch={() => {
                 setVideoStartTime(0)
                 setActiveChapterIndex(0)
-                const vid = resolveSkillVideo(activeSkillObj, 'Problem Solving')
+                const targetSkill = (roadmapData?.skills || []).find(s => s.skill_name === displayDailyPlan?.skill_name) || priorityGoalSkill || activeSkillObj
+                const vid = resolveSkillVideo(targetSkill, 'Problem Solving')
                 setQuickVideoModal({
-                  skillName: activeSkillObj?.skill_name || 'Problem Solving',
+                  skillName: targetSkill?.skill_name || 'Technical',
                   ...vid
                 })
               }}
               onStartLesson={() => {
-                if (displayDailyPlan) {
-                  const targetSkill = (roadmapData?.skills || []).find(s => s.skill_name === displayDailyPlan.skill_name) || activeSkillObj
-                  if (targetSkill) {
-                    handleSelectSkill(targetSkill.id, true)
-                  }
+                const targetSkill = (roadmapData?.skills || []).find(s => s.skill_name === displayDailyPlan?.skill_name) || priorityGoalSkill || activeSkillObj
+                if (targetSkill) {
+                  handleSelectSkill(targetSkill.id, true)
                 }
               }}
             />
 
             <ContinueLearningWidget 
               continueData={displayContinueLearning}
-              onVideoRevision={() => setVideoRevisionModal(activeSkillObj)}
+              onVideoRevision={() => {
+                const targetSkill = (roadmapData?.skills || []).find(s => s.skill_name === displayContinueLearning?.skill_name) || activeContinueSkill || activeSkillObj
+                if (targetSkill) {
+                  setVideoRevisionModal(targetSkill)
+                }
+              }}
               onContinue={() => {
-                if (displayContinueLearning) {
-                  const targetSkill = (roadmapData.skills || []).find(s => s.skill_name === displayContinueLearning.skill_name) || activeSkillObj
-                  if (targetSkill) {
-                    setActiveSkillId(targetSkill.id)
-                    const savedSecs = localStorage.getItem(`video_ts_${targetSkill.skill_name}`) || (targetSkill.skill_name === 'Data Structures' ? 870 : (targetSkill.skill_name === 'CSS' ? 420 : (targetSkill.skill_name === 'SQL' ? 1250 : 0)))
-                    const startSecs = parseInt(savedSecs, 10) || 0
-                    setVideoStartTime(startSecs)
-                    setActiveChapterIndex(startSecs >= 1515 ? 2 : (startSecs >= 750 ? 1 : 0))
+                const targetSkill = (roadmapData?.skills || []).find(s => s.skill_name === displayContinueLearning?.skill_name) || activeContinueSkill || priorityGoalSkill || activeSkillObj
+                if (targetSkill) {
+                  handleSelectSkill(targetSkill.id, true)
+                  const savedSecs = localStorage.getItem(`video_ts_${targetSkill.skill_name}`) || 0
+                  const startSecs = parseInt(savedSecs, 10) || 0
+                  setVideoStartTime(startSecs)
+                  setActiveChapterIndex(startSecs >= 1515 ? 2 : (startSecs >= 750 ? 1 : 0))
 
-                    const vid = resolveSkillVideo(targetSkill)
-                    setQuickVideoModal({
-                      skillName: targetSkill.skill_name,
-                      ...vid
-                    })
-                  }
+                  const vid = resolveSkillVideo(targetSkill)
+                  setQuickVideoModal({
+                    skillName: targetSkill.skill_name,
+                    ...vid
+                  })
                 }
               }}
             />
