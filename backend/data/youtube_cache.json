@@ -157,27 +157,6 @@
   ],
   "javascript|full stack developer|practice|en|4": [
     {
-      "id": "N65RvNkZFGE",
-      "title": "JavaScript Practice Exercises For Beginners: Beginner Exercises Part 1",
-      "channel": "Code With Bubb",
-      "thumbnail": "https://i.ytimg.com/vi/N65RvNkZFGE/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=N65RvNkZFGE",
-      "embed_url": "https://www.youtube.com/embed/N65RvNkZFGE",
-      "duration": "14:06",
-      "duration_seconds": 846,
-      "difficulty": "Hands-on Coding",
-      "badge": "💻 Hands-on Practice",
-      "skill_name": "JavaScript",
-      "language": "en",
-      "recommendation_source": "curated",
-      "recommendation_category": "Web / Frontend",
-      "recommendation_reason": "Hands-on practice walkthrough for JavaScript",
-      "learning_focus": "JavaScript Practice for Full Stack Developer",
-      "stage": "practice",
-      "match_type": "exact",
-      "category": "Web / Frontend"
-    },
-    {
       "id": "ufBbWIyKY2E",
       "title": "Top 10 Javascript Algorithms to Prepare for Coding Interviews",
       "channel": "freeCodeCamp.org",

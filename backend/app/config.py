@@ -13,7 +13,9 @@ def resolve_db_uri(raw_uri):
     if not raw_uri:
         return default_db_path
     if raw_uri.startswith('postgres://'):
-        return raw_uri.replace('postgres://', 'postgresql://', 1)
+        return raw_uri.replace('postgres://', 'postgresql+psycopg2://', 1)
+    if raw_uri.startswith('postgresql://'):
+        return raw_uri.replace('postgresql://', 'postgresql+psycopg2://', 1)
     if raw_uri.startswith('sqlite:///'):
         path_part = raw_uri[10:]
         if not os.path.isabs(path_part):
@@ -29,6 +31,7 @@ class Config:
     
     # Database default (safe from OneDrive file locks and permanent)
     SQLALCHEMY_DATABASE_URI = resolve_db_uri(os.environ.get('DATABASE_URL'))
+    DATABASE_URL = SQLALCHEMY_DATABASE_URI
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # JWT
