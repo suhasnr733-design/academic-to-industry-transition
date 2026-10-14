@@ -138,10 +138,12 @@ export const Login = () => {
 
           <form onSubmit={handle2FASubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-center">
+              <label htmlFor="twoFactorCode" className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-center">
                 Security Code:
               </label>
               <input
+                id="twoFactorCode"
+                name="twoFactorCode"
                 type="text"
                 maxLength={12}
                 placeholder="000000 or a8b2-4f1c"

@@ -42,31 +42,6 @@ cors = CORS(
     allow_headers=["Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"]
 )
 
-def is_origin_allowed(origin):
-    if not origin:
-        return False
-    if origin in allowed_exact_origins:
-        return True
-    if re.match(r'^https://academic-to-industry-transition-.*\.vercel\.app$', origin):
-        return True
-    if re.match(r'^https://academic-to-industry-transition.*\.vercel\.app$', origin):
-        return True
-    if re.match(r'^http://localhost(:\d+)?$', origin):
-        return True
-    if re.match(r'^http://127\.0\.0\.1(:\d+)?$', origin):
-        return True
-    return False
-
-@app.after_request
-def add_cors_headers_fallback(response):
-    origin = request.headers.get('Origin')
-    if origin and is_origin_allowed(origin):
-        response.headers['Access-Control-Allow-Origin'] = origin
-        response.headers['Access-Control-Allow-Credentials'] = 'true'
-        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type, X-Requested-With, Accept, Origin'
-    return response
-
 JWT_SECRET = "MySuperSecretKeyForJWT2024ThatIsVeryLong"
 
 class User(db.Model):

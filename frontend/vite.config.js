@@ -94,6 +94,9 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    headers: {
+      'Content-Security-Policy': "default-src 'self' http: https: data: blob: 'unsafe-inline' 'unsafe-eval' ws: wss:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' http: https: ws: wss:;",
+    },
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:5000',

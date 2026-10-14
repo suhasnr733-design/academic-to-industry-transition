@@ -10,16 +10,20 @@ export const Input = forwardRef(({
   className,
   type = 'text',
   required,
+  id,
+  name,
   ...props
 }, ref) => {
   const [showPassword, setShowPassword] = useState(false)
   const isPassword = type === 'password'
   const effectiveType = isPassword ? (showPassword ? 'text' : 'password') : type
+  const computedId = id || name || (label ? label.toLowerCase().replace(/[^a-z0-9]/g, '-') : undefined)
+  const computedName = name || computedId
 
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 tracking-wide">
+        <label htmlFor={computedId} className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 tracking-wide">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -27,6 +31,8 @@ export const Input = forwardRef(({
       <div className="relative">
         <input
           ref={ref}
+          id={computedId}
+          name={computedName}
           type={effectiveType}
           className={cn(
             'w-full px-3.5 py-2.5 bg-white dark:bg-gray-800 border rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400',
