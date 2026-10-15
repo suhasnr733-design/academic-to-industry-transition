@@ -77,15 +77,19 @@ def upload_resume():
         db.session.add(resume)
         db.session.commit()
         
-        # Trigger background processing immediately
+        # Process resume synchronously (instant extraction and scoring)
         try:
             processor = ResumeProcessor()
-            processor.process_resume_async(resume.id)
+            processor.process_resume(resume.id)
+            db.session.refresh(resume)
         except Exception as proc_err:
-            logger.warning(f"Could not start async processing immediately: {proc_err}")
-        
+            logger.error(f"Error processing resume synchronously: {proc_err}")
+
+        # Invalidate in-memory server cache
+        _resume_detail_cache.pop(resume.id, None)
+
         return jsonify({
-            'message': 'Resume uploaded successfully, processing initiated',
+            'message': 'Resume uploaded and processed successfully',
             'resume_id': resume.id,
             'filename': resume.filename,
             'file_size': resume.file_size,
@@ -93,6 +97,8 @@ def upload_resume():
             'status': resume.status,
             'skills': resume.skills or [],
             'employability_score': resume.employability_score,
+            'recommended_roles': resume.recommended_roles or [],
+            'skill_gaps': resume.skill_gaps or [],
             'created_at': resume.created_at.isoformat()
         }), 201
         
