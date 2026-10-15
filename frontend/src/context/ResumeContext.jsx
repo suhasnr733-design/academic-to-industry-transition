@@ -90,21 +90,20 @@ export const ResumeProvider = ({ children }) => {
         status: res.data?.status || 'completed',
         skills: res.data?.skills || [],
         employability_score: res.data?.employability_score || 80,
+        recommended_roles: res.data?.recommended_roles || [],
+        skill_gaps: res.data?.skill_gaps || [],
         created_at: res.data?.created_at || new Date().toISOString()
       }
 
-      // Single active resume policy: replace previous resume in state
+      // Single active resume policy: replace previous resume in state immediately
       setResumes([newResume])
 
-      // Optimization 4: Invalidate cached resume list on new upload
+      // Optimization 4: Directly update session storage with the completed resume
       try {
-        sessionStorage.removeItem(SWR_RESUME_LIST_KEY)
+        sessionStorage.setItem(SWR_RESUME_LIST_KEY, JSON.stringify([newResume]))
       } catch {}
 
-      toast.success('Resume uploaded successfully')
-      
-      // Re-sync with backend
-      await fetchResumes()
+      toast.success('Resume uploaded and processed successfully!')
       return res.data
     } catch (err) {
       toast.error(err.response?.data?.error || err.response?.data?.message || 'Upload failed')
