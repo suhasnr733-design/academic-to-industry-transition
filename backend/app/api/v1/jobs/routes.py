@@ -1,4 +1,6 @@
-from flask import request, jsonify
+import logging
+import threading
+from flask import request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.orm import defer
 from app import db, limiter
@@ -7,6 +9,8 @@ from app.api.v1.jobs import jobs_bp
 from app.services.multilevel_cache import cache
 from app.services.job_aggregator import JobAggregatorService
 from app.tasks.job_sync_task import sync_live_jobs_to_db
+
+logger = logging.getLogger(__name__)
 
 @jobs_bp.route('', methods=['GET'])
 @limiter.limit("120 per minute; 1000 per hour")
@@ -294,15 +298,50 @@ def match_live_jobs():
         'matches': matches
     }), 200
 
-@jobs_bp.route('/sync', methods=['POST'])
+@jobs_bp.route('/sync', methods=['GET', 'POST'])
 def trigger_job_sync():
-    """Manually trigger background sync of external live jobs into the database"""
-    summary = sync_live_jobs_to_db()
+    """Trigger background sync of external live jobs into the database without HTTP timeout"""
+    data = {}
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+    
+    q_param = request.args.get('query')
+    queries = data.get('queries')
+    if not queries and q_param:
+        queries = [q_param]
+        
+    limit_per_query = data.get('limit_per_query') or request.args.get('limit_per_query', 10, type=int)
+    
+    target_queries = queries or [
+        'Software Engineer',
+        'Python Developer',
+        'Frontend Developer',
+        'Data Scientist',
+        'DevOps Engineer'
+    ]
+    
+    app = current_app._get_current_object()
+    
+    def run_sync():
+        with app.app_context():
+            try:
+                logger.info(f"Background job sync started for queries: {target_queries}")
+                summary = sync_live_jobs_to_db(queries=target_queries, limit_per_query=limit_per_query)
+                logger.info(f"Background job sync finished: {summary}")
+            except Exception as e:
+                logger.error(f"Error in background job sync: {e}", exc_info=True)
+            finally:
+                db.session.remove()
+                
+    thread = threading.Thread(target=run_sync, daemon=True)
+    thread.start()
+    
     return jsonify({
-        'status': 'success',
-        'message': 'Live jobs synchronized into database',
-        'summary': summary
-    }), 200
+        'status': 'accepted',
+        'message': 'Live jobs synchronization started in the background',
+        'queries': target_queries,
+        'limit_per_query': limit_per_query
+    }), 202
 
 @jobs_bp.route('/domains', methods=['GET'])
 def get_domains():

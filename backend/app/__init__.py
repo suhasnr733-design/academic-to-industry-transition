@@ -364,5 +364,108 @@ def create_app(config_class='app.config.DevelopmentConfig'):
             db.session.add(faculty_user)
             db.session.commit()
             print("FACULTY USER: Created initial faculty user (faculty / Faculty@123).")
+
+        # Seed initial campus opportunities if jobs table is empty
+        try:
+            from datetime import datetime
+            if Job.query.count() == 0:
+                sample_campus_jobs = [
+                    {
+                        'title': 'Software Development Engineer - I',
+                        'company': 'Google',
+                        'description': 'Design and develop scalable distributed software systems. Work with cloud infrastructure, algorithms, and real-time backend pipelines.',
+                        'required_skills': ['Python', 'Java', 'SQL', 'Data Structures', 'Git'],
+                        'experience_required': 0,
+                        'location': 'Bangalore, India',
+                        'salary_range': '18 - 25 LPA',
+                        'salary_min': 1800000,
+                        'salary_max': 2500000,
+                        'currency': 'INR',
+                        'job_type': 'Full-time',
+                        'domain': 'Software Engineering',
+                        'source': 'internal',
+                        'is_live': False,
+                        'is_active': True,
+                        'posted_date': datetime.utcnow()
+                    },
+                    {
+                        'title': 'Frontend Engineer - React / Next.js',
+                        'company': 'Microsoft',
+                        'description': 'Build accessible, responsive, high-performance web applications using modern JavaScript/TypeScript, React, and CSS architecture.',
+                        'required_skills': ['React', 'TypeScript', 'JavaScript', 'HTML5', 'CSS3', 'TailwindCSS'],
+                        'experience_required': 0,
+                        'location': 'Hyderabad, India',
+                        'salary_range': '16 - 22 LPA',
+                        'salary_min': 1600000,
+                        'salary_max': 2200000,
+                        'currency': 'INR',
+                        'job_type': 'Full-time',
+                        'domain': 'Frontend Development',
+                        'source': 'internal',
+                        'is_live': False,
+                        'is_active': True,
+                        'posted_date': datetime.utcnow()
+                    },
+                    {
+                        'title': 'Cloud & DevOps Associate',
+                        'company': 'Amazon AWS',
+                        'description': 'Maintain reliable CI/CD pipelines, container orchestration with Kubernetes and Docker, and cloud monitoring across AWS environments.',
+                        'required_skills': ['AWS', 'Docker', 'Kubernetes', 'Linux', 'Python', 'CI/CD'],
+                        'experience_required': 0,
+                        'location': 'Bangalore, India',
+                        'salary_range': '15 - 20 LPA',
+                        'salary_min': 1500000,
+                        'salary_max': 2000000,
+                        'currency': 'INR',
+                        'job_type': 'Full-time',
+                        'domain': 'DevOps & Cloud',
+                        'source': 'internal',
+                        'is_live': False,
+                        'is_active': True,
+                        'posted_date': datetime.utcnow()
+                    },
+                    {
+                        'title': 'Data Scientist & AI Associate',
+                        'company': 'IBM',
+                        'description': 'Analyze large structured and unstructured datasets, build predictive machine learning models, and deploy neural network pipelines.',
+                        'required_skills': ['Python', 'Machine Learning', 'TensorFlow', 'Pandas', 'SQL', 'NLP'],
+                        'experience_required': 0,
+                        'location': 'Pune, India',
+                        'salary_range': '12 - 18 LPA',
+                        'salary_min': 1200000,
+                        'salary_max': 1800000,
+                        'currency': 'INR',
+                        'job_type': 'Full-time',
+                        'domain': 'Data Science & AI',
+                        'source': 'internal',
+                        'is_live': False,
+                        'is_active': True,
+                        'posted_date': datetime.utcnow()
+                    },
+                    {
+                        'title': 'Full Stack Graduate Trainee',
+                        'company': 'Infosys',
+                        'description': 'End-to-end full stack development across microservices, REST APIs, responsive UIs, and relational databases.',
+                        'required_skills': ['Java', 'Spring Boot', 'React', 'PostgreSQL', 'Git'],
+                        'experience_required': 0,
+                        'location': 'Mysore / Bangalore',
+                        'salary_range': '6 - 9 LPA',
+                        'salary_min': 600000,
+                        'salary_max': 900000,
+                        'currency': 'INR',
+                        'job_type': 'Full-time',
+                        'domain': 'Full Stack',
+                        'source': 'internal',
+                        'is_live': False,
+                        'is_active': True,
+                        'posted_date': datetime.utcnow()
+                    }
+                ]
+                for job_dict in sample_campus_jobs:
+                    db.session.add(Job(**job_dict))
+                db.session.commit()
+                print("JOBS SEED: Populated initial campus recruitment opportunities.")
+        except Exception as e:
+            logger.warning(f"Jobs initial seed notice: {e}")
             
     return app
