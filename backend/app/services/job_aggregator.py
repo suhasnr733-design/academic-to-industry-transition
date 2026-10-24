@@ -6,6 +6,7 @@ import re
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from flask import current_app
 
 from app.config import Config
 from app.services.job_providers import (
@@ -237,12 +238,8 @@ class JobAggregatorService:
 
         # Asynchronously cache newly found jobs to DB in the background
         if auto_cache and paginated_jobs:
-            try:
-                from flask import current_app
-                app = current_app._get_current_object() if current_app else None
-            except Exception:
-                app = None
-            threading.Thread(target=self._async_cache_to_db, args=(paginated_jobs, app), daemon=True).start()
+            app_obj = current_app._get_current_object() if current_app else None
+            threading.Thread(target=self._async_cache_to_db, args=(paginated_jobs, app_obj), daemon=True).start()
 
         # Optimization 1: Store paginated results into in-memory TTL cache
         self._search_cache[cache_key] = (now, paginated_jobs)
@@ -468,11 +465,9 @@ class JobAggregatorService:
         """Background worker to upsert live jobs to local database without blocking search response"""
         if not app:
             try:
-                from flask import current_app
                 app = current_app._get_current_object() if current_app else None
             except Exception:
-                app = None
-
+                pass
         if not app:
             return
 
@@ -573,7 +568,6 @@ class JobAggregatorService:
 
                 db.session.commit()
 
-                # Invalidate multi-level cache so listings reflect immediately
                 try:
                     from app.services.multilevel_cache import cache
                     cache.memory_cache.clear()
@@ -584,11 +578,6 @@ class JobAggregatorService:
                 logger.info(f"Successfully cached {len(jobs)} live jobs to local DB")
         except Exception as e:
             logger.warning(f"Async DB cache note: {e}")
-            try:
-                from app import db
-                db.session.rollback()
-            except Exception:
-                pass
         finally:
             try:
                 from app import db
