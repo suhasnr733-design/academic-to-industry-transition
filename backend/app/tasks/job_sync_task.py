@@ -91,6 +91,13 @@ def sync_live_jobs_to_db(queries: List[str] = None, limit_per_query: int = 10) -
             db.session.rollback()
             logger.error(f"JobSyncTask error processing query '{query}': {e}")
 
+    try:
+        from app.services.multilevel_cache import cache
+        cache.memory_cache.clear()
+        cache.memory_ttl.clear()
+    except Exception:
+        pass
+
     summary = {
         'status': 'completed',
         'queries_processed': len(queries),
@@ -101,3 +108,4 @@ def sync_live_jobs_to_db(queries: List[str] = None, limit_per_query: int = 10) -
     }
     logger.info(f"JobSyncTask completed: {summary}")
     return summary
+
