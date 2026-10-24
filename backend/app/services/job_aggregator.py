@@ -237,7 +237,12 @@ class JobAggregatorService:
 
         # Asynchronously cache newly found jobs to DB in the background
         if auto_cache and paginated_jobs:
-            threading.Thread(target=self._async_cache_to_db, args=(paginated_jobs,), daemon=True).start()
+            try:
+                from flask import current_app
+                app = current_app._get_current_object() if current_app else None
+            except Exception:
+                app = None
+            threading.Thread(target=self._async_cache_to_db, args=(paginated_jobs, app), daemon=True).start()
 
         # Optimization 1: Store paginated results into in-memory TTL cache
         self._search_cache[cache_key] = (now, paginated_jobs)
@@ -459,14 +464,23 @@ class JobAggregatorService:
             'gap_skills': gap_skills[:4]
         }
 
-    def _async_cache_to_db(self, jobs: List[Dict[str, Any]]) -> None:
+    def _async_cache_to_db(self, jobs: List[Dict[str, Any]], app=None) -> None:
         """Background worker to upsert live jobs to local database without blocking search response"""
+        if not app:
+            try:
+                from flask import current_app
+                app = current_app._get_current_object() if current_app else None
+            except Exception:
+                app = None
+
+        if not app:
+            return
+
         try:
-            from app import create_app, db
+            from app import db
             from app.models.job import Job
             from datetime import datetime
 
-            app = create_app()
             with app.app_context():
                 for job_data in jobs:
                     title = job_data.get('title')
@@ -546,7 +560,7 @@ class JobAggregatorService:
                     Job.expires_at != None,
                     Job.expires_at < now,
                     Job.is_active == True
-                ).update({'is_active': False})
+                ).update({'is_active': False}, synchronize_session=False)
 
                 # 2. Rolling recruitment older than 45 days
                 cutoff_rolling = now - timedelta(days=45)
@@ -555,9 +569,29 @@ class JobAggregatorService:
                     Job.expires_at == None,
                     Job.posted_date < cutoff_rolling,
                     Job.is_active == True
-                ).update({'is_active': False})
+                ).update({'is_active': False}, synchronize_session=False)
 
                 db.session.commit()
-                logger.debug(f"Successfully cached {len(jobs)} live jobs to local DB")
+
+                # Invalidate multi-level cache so listings reflect immediately
+                try:
+                    from app.services.multilevel_cache import cache
+                    cache.memory_cache.clear()
+                    cache.memory_ttl.clear()
+                except Exception:
+                    pass
+
+                logger.info(f"Successfully cached {len(jobs)} live jobs to local DB")
         except Exception as e:
-            logger.debug(f"Async DB cache note: {e}")
+            logger.warning(f"Async DB cache note: {e}")
+            try:
+                from app import db
+                db.session.rollback()
+            except Exception:
+                pass
+        finally:
+            try:
+                from app import db
+                db.session.remove()
+            except Exception:
+                pass
